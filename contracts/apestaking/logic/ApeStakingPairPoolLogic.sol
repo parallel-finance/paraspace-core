@@ -24,15 +24,6 @@ library ApeStakingPairPoolLogic {
     using SafeERC20 for IERC20;
     using WadRayMath for uint256;
 
-    uint256 public constant BAYC_BAKC_PAIR_POOL_ID = 1;
-    uint256 public constant MAYC_BAKC_PAIR_POOL_ID = 2;
-    uint256 public constant BAYC_SINGLE_POOL_ID = 3;
-    uint256 public constant MAYC_SINGLE_POOL_ID = 4;
-
-    uint256 constant BAYC_POOL_ID = 1;
-    uint256 constant MAYC_POOL_ID = 2;
-    uint256 constant BAKC_POOL_ID = 3;
-
     event PairNFTDeposited(
         bool isBAYC,
         uint256 apeTokenId,
@@ -61,11 +52,11 @@ library ApeStakingPairPoolLogic {
         );
 
         if (isBAYC) {
-            vars.apeStakingPoolId = BAYC_POOL_ID;
+            vars.apeStakingPoolId = ApeStakingCommonLogic.BAYC_POOL_ID;
             vars.apeToken = vars.bayc;
             vars.nApe = vars.nBayc;
         } else {
-            vars.apeStakingPoolId = MAYC_POOL_ID;
+            vars.apeStakingPoolId = ApeStakingCommonLogic.MAYC_POOL_ID;
             vars.apeToken = vars.mayc;
             vars.nApe = vars.nMayc;
         }
@@ -93,7 +84,7 @@ library ApeStakingPairPoolLogic {
                 );
                 require(stakedAmount == 0, Errors.APE_POSITION_EXISTED);
                 (stakedAmount, ) = vars.apeCoinStaking.nftPosition(
-                    BAKC_POOL_ID,
+                    ApeStakingCommonLogic.BAKC_POOL_ID,
                     bakcTokenId
                 );
                 require(stakedAmount == 0, Errors.BAKC_POSITION_EXISTED);
@@ -230,12 +221,12 @@ library ApeStakingPairPoolLogic {
         );
 
         if (isBAYC) {
-            vars.apeStakingPoolId = BAYC_POOL_ID;
+            vars.apeStakingPoolId = ApeStakingCommonLogic.BAYC_POOL_ID;
             vars.apeToken = vars.bayc;
             vars.nApe = vars.nBayc;
             vars.positionCap = vars.baycMatchedCap;
         } else {
-            vars.apeStakingPoolId = MAYC_POOL_ID;
+            vars.apeStakingPoolId = ApeStakingCommonLogic.MAYC_POOL_ID;
             vars.apeToken = vars.mayc;
             vars.nApe = vars.nMayc;
             vars.positionCap = vars.maycMatchedCap;

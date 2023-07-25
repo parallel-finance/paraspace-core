@@ -505,12 +505,12 @@ describe("Para Ape Staking Test", () => {
       await paraApeStaking.connect(user4.signer).stakingApe(false, [0, 1, 2])
     );
     await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .stakingBAKC(true, [0, 1], [0, 1])
-    );
-    await waitForTx(
-      await paraApeStaking.connect(user4.signer).stakingBAKC(false, [2], [2])
+      await paraApeStaking.connect(user4.signer).stakingBAKC({
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [2],
+        bakcPairMaycTokenIds: [2],
+      })
     );
     expect((await apeCoinStaking.nftPosition(1, 0)).stakedAmount).to.be.eq(
       parseEther("200000")
@@ -552,12 +552,12 @@ describe("Para Ape Staking Test", () => {
       await paraApeStaking.connect(user4.signer).compoundApe(false, [0, 1, 2])
     );
     await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .compoundBAKC(true, [0, 1], [0, 1])
-    );
-    await waitForTx(
-      await paraApeStaking.connect(user4.signer).compoundBAKC(false, [2], [2])
+      await paraApeStaking.connect(user4.signer).compoundBAKC({
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [2],
+        bakcPairMaycTokenIds: [2],
+      })
     );
     let compoundFee = await paraApeStaking.pendingCApeReward(
       paraApeStaking.address
@@ -578,15 +578,15 @@ describe("Para Ape Staking Test", () => {
     );
     expect(user1PendingReward).to.be.closeTo(
       parseEther("3240"),
-      parseEther("50")
+      parseEther("100")
     );
     expect(user2PendingReward).to.be.closeTo(
       parseEther("3240"),
-      parseEther("50")
+      parseEther("100")
     );
     expect(user3PendingReward).to.be.closeTo(
       parseEther("3240"),
-      parseEther("50")
+      parseEther("100")
     );
 
     await waitForTx(
@@ -607,12 +607,9 @@ describe("Para Ape Staking Test", () => {
     let user1Balance = await cApe.balanceOf(user1.address);
     let user2Balance = await cApe.balanceOf(user2.address);
     let user3Balance = await cApe.balanceOf(user3.address);
-    expect(user1Balance).to.be.closeTo(user1PendingReward, parseEther("1"));
-    expect(user2Balance).to.be.closeTo(user2PendingReward, parseEther("1"));
-    expect(user3Balance).to.be.closeTo(user3PendingReward, parseEther("1"));
-    //base on both baycPairStakingRewardRatio and maycPairStakingRewardRatio are 0
-    expect(user1Balance).to.be.closeTo(user2Balance, parseEther("50"));
-    expect(user1Balance).to.be.closeTo(user3Balance, parseEther("50"));
+    expect(user1Balance).to.be.closeTo(user1PendingReward, parseEther("100"));
+    expect(user2Balance).to.be.closeTo(user2PendingReward, parseEther("100"));
+    expect(user3Balance).to.be.closeTo(user3PendingReward, parseEther("100"));
 
     const newUser1PendingReward = await paraApeStaking.nftPendingReward(
       bayc.address,
@@ -673,8 +670,8 @@ describe("Para Ape Staking Test", () => {
     user1Balance = await cApe.balanceOf(user1.address);
     user2Balance = await cApe.balanceOf(user2.address);
     user3Balance = await cApe.balanceOf(user3.address);
-    expect(user1Balance).to.be.closeTo(user1PendingReward, parseEther("10"));
-    expect(user2Balance).to.be.closeTo(user2PendingReward, parseEther("10"));
+    expect(user1Balance).to.be.closeTo(user1PendingReward, parseEther("1"));
+    expect(user2Balance).to.be.closeTo(user2PendingReward, parseEther("1"));
     expect(user3Balance).to.be.closeTo(
       user3PendingReward.mul(2),
       parseEther("10")
@@ -686,7 +683,7 @@ describe("Para Ape Staking Test", () => {
 
     expect(await cApe.balanceOf(paraApeStaking.address)).to.be.closeTo(
       "0",
-      parseEther("1")
+      parseEther("10")
     );
   });
 
@@ -993,17 +990,30 @@ describe("Para Ape Staking Test", () => {
     );
 
     await expect(
-      paraApeStaking.connect(user4.signer).stakingBAKC(true, [2], [0])
+      paraApeStaking.connect(user4.signer).stakingBAKC({
+        baycTokenIds: [2],
+        bakcPairBaycTokenIds: [0],
+        maycTokenIds: [],
+        bakcPairMaycTokenIds: [],
+      })
     ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
 
     await expect(
-      paraApeStaking.connect(user4.signer).stakingBAKC(true, [0], [2])
+      paraApeStaking.connect(user4.signer).stakingBAKC({
+        baycTokenIds: [0],
+        bakcPairBaycTokenIds: [2],
+        maycTokenIds: [],
+        bakcPairMaycTokenIds: [],
+      })
     ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
 
     await waitForTx(
-      await paraApeStaking
-        .connect(user1.signer)
-        .stakingBAKC(true, [0, 1], [0, 1])
+      await paraApeStaking.connect(user1.signer).stakingBAKC({
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [],
+        bakcPairMaycTokenIds: [],
+      })
     );
   });
 
@@ -1058,25 +1068,41 @@ describe("Para Ape Staking Test", () => {
     );
 
     await waitForTx(
-      await paraApeStaking
-        .connect(user1.signer)
-        .stakingBAKC(true, [0, 1], [0, 1])
+      await paraApeStaking.connect(user1.signer).stakingBAKC({
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [],
+        bakcPairMaycTokenIds: [],
+      })
     );
 
     await advanceTimeAndBlock(parseInt("3600"));
 
     await expect(
-      paraApeStaking.connect(user4.signer).compoundBAKC(true, [2], [1])
+      paraApeStaking.connect(user4.signer).compoundBAKC({
+        baycTokenIds: [2],
+        bakcPairBaycTokenIds: [1],
+        maycTokenIds: [],
+        bakcPairMaycTokenIds: [],
+      })
     ).to.be.reverted;
 
     await expect(
-      paraApeStaking.connect(user4.signer).compoundBAKC(true, [1], [2])
+      paraApeStaking.connect(user4.signer).compoundBAKC({
+        baycTokenIds: [1],
+        bakcPairBaycTokenIds: [2],
+        maycTokenIds: [],
+        bakcPairMaycTokenIds: [],
+      })
     ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
 
     await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .compoundBAKC(true, [0, 1], [0, 1])
+      await paraApeStaking.connect(user4.signer).compoundBAKC({
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [],
+        bakcPairMaycTokenIds: [],
+      })
     );
   });
 
@@ -1119,9 +1145,12 @@ describe("Para Ape Staking Test", () => {
     );
 
     await waitForTx(
-      await paraApeStaking
-        .connect(user1.signer)
-        .stakingBAKC(true, [0, 1], [0, 1])
+      await paraApeStaking.connect(user1.signer).stakingBAKC({
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [],
+        bakcPairMaycTokenIds: [],
+      })
     );
 
     await advanceTimeAndBlock(parseInt("3600"));
@@ -1131,9 +1160,12 @@ describe("Para Ape Staking Test", () => {
     );
 
     await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .compoundBAKC(true, [0, 1], [0, 1])
+      await paraApeStaking.connect(user4.signer).compoundBAKC({
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [],
+        bakcPairMaycTokenIds: [],
+      })
     );
 
     await expect(
@@ -1208,9 +1240,12 @@ describe("Para Ape Staking Test", () => {
     );
 
     await waitForTx(
-      await paraApeStaking
-        .connect(user1.signer)
-        .stakingBAKC(true, [0, 1], [0, 1])
+      await paraApeStaking.connect(user1.signer).stakingBAKC({
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [],
+        bakcPairMaycTokenIds: [],
+      })
     );
 
     await expect(
@@ -1382,7 +1417,7 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(poolAdmin.signer)
-        .setSinglePoolApeRewardRatio(6000, 5000)
+        .setSinglePoolApeRewardRatio(5000)
     );
 
     await supplyAndValidate(bayc, "2", user1, true);
@@ -1406,27 +1441,23 @@ describe("Para Ape Staking Test", () => {
     );
 
     await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .stakingBAKC(true, [0, 1], [0, 1])
-    );
-    await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .stakingBAKC(false, [0, 1], [2, 3])
+      await paraApeStaking.connect(user4.signer).stakingBAKC({
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [0, 1],
+        bakcPairMaycTokenIds: [2, 3],
+      })
     );
 
     await advanceTimeAndBlock(parseInt("3600"));
 
     await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .compoundBAKC(true, [0, 1], [0, 1])
-    );
-    await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .compoundBAKC(false, [0, 1], [2, 3])
+      await paraApeStaking.connect(user4.signer).compoundBAKC({
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [0, 1],
+        bakcPairMaycTokenIds: [2, 3],
+      })
     );
 
     await waitForTx(
@@ -1441,34 +1472,46 @@ describe("Para Ape Staking Test", () => {
         .claimNFT(bakc.address, [0, 1, 2, 3])
     );
 
-    //user1: 900 * 0.5 * 2
+    //user1: 3600 * 0.5 * 0.5
     expect(await cApe.balanceOf(user1.address)).to.be.closeTo(
-      parseEther("1080"),
-      parseEther("50")
+      parseEther("900"),
+      parseEther("10")
     );
-    //user2: 900 * 0.6 * 2
+    //user1: 3600 * 0.5 * 0.5
     expect(await cApe.balanceOf(user2.address)).to.be.closeTo(
       parseEther("900"),
-      parseEther("50")
+      parseEther("10")
     );
-    //user3: 900 * 0.5 * 2 + 900 * 0.4 * 2
+    //user3: 3600 * 0.5
     expect(await cApe.balanceOf(user3.address)).to.be.closeTo(
-      parseEther("1620"),
-      parseEther("50")
+      parseEther("1800"),
+      parseEther("10")
     );
 
     await advanceTimeAndBlock(parseInt("3600"));
 
+    //user1: 900 + 0
+    //user2: 900 + 900
+    //user3: 1800 + 900
+    //user4: 0 + 0
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
         .withdrawNFT(bayc.address, [0, 1])
     );
+    //user1: 900 + 0 + 0
+    //user2: 900 + 900 + 0
+    //user3: 1800 + 900 + 900
+    //user4: 0 + 900
     await waitForTx(
       await paraApeStaking
         .connect(user2.signer)
         .withdrawNFT(mayc.address, [0, 1])
     );
+    //user1: 900 + 0 + 0 + 0
+    //user2: 900 + 900 + 0 + 0
+    //user3: 1800 + 900 + 900 + 0
+    //user4: 0 + 900 + 0 + 0
     await waitForTx(
       await paraApeStaking
         .connect(user3.signer)
@@ -1478,24 +1521,21 @@ describe("Para Ape Staking Test", () => {
       await paraApeStaking.connect(user4.signer).claimCompoundFee(user4.address)
     );
 
-    //user1: 1080
     expect(await cApe.balanceOf(user1.address)).to.be.closeTo(
-      parseEther("1080"),
-      parseEther("50")
-    );
-    //user2: 900
-    expect(await cApe.balanceOf(user2.address)).to.be.closeTo(
       parseEther("900"),
-      parseEther("50")
+      parseEther("10")
     );
-    //user3: 1620 * 2
+    expect(await cApe.balanceOf(user2.address)).to.be.closeTo(
+      parseEther("1800"),
+      parseEther("30")
+    );
     expect(await cApe.balanceOf(user3.address)).to.be.closeTo(
-      parseEther("3240"),
+      parseEther("3600"),
       parseEther("50")
     );
     expect(await cApe.balanceOf(user4.address)).to.be.closeTo(
-      parseEther("1980"),
-      parseEther("50")
+      parseEther("900"),
+      parseEther("10")
     );
   });
 
@@ -1511,7 +1551,7 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(poolAdmin.signer)
-        .setSinglePoolApeRewardRatio(5000, 5000)
+        .setSinglePoolApeRewardRatio(5000)
     );
 
     await supplyAndValidate(bayc, "3", user1, true);
@@ -1541,14 +1581,12 @@ describe("Para Ape Staking Test", () => {
       await paraApeStaking.connect(user4.signer).stakingApe(false, [0, 1, 2])
     );
     await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .stakingBAKC(true, [0, 1], [0, 1])
-    );
-    await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .stakingBAKC(false, [0, 1], [2, 3])
+      await paraApeStaking.connect(user4.signer).stakingBAKC({
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [0, 1],
+        bakcPairMaycTokenIds: [2, 3],
+      })
     );
     expect(
       await variableDebtCApeCoin.balanceOf(paraApeStaking.address)
@@ -1557,39 +1595,55 @@ describe("Para Ape Staking Test", () => {
     await advanceTimeAndBlock(parseInt("3600"));
 
     await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .compoundBAKC(true, [0, 1], [0, 1])
+      await paraApeStaking.connect(user4.signer).compoundBAKC({
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [],
+        bakcPairMaycTokenIds: [],
+      })
     );
     const user3PendingReward0 = await paraApeStaking.nftPendingReward(
       bakc.address,
       [0, 1, 2, 3]
     );
+    expect(user3PendingReward0).to.be.closeTo(
+      parseEther("900"),
+      parseEther("10")
+    );
 
     await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .compoundBAKC(false, [0, 1], [2, 3])
+      await paraApeStaking.connect(user4.signer).compoundBAKC({
+        baycTokenIds: [],
+        bakcPairBaycTokenIds: [],
+        maycTokenIds: [0, 1],
+        bakcPairMaycTokenIds: [2, 3],
+      })
     );
     const user3PendingReward1 = await paraApeStaking.nftPendingReward(
       bakc.address,
       [0, 1, 2, 3]
     );
+    expect(user3PendingReward1).to.be.closeTo(
+      parseEther("1800"),
+      parseEther("10")
+    );
     const user1PendingReward = await paraApeStaking.nftPendingReward(
       bayc.address,
       [0, 1]
+    );
+    //900 * 2 / 3
+    expect(user1PendingReward).to.be.closeTo(
+      parseEther("600"),
+      parseEther("10")
     );
     const user2PendingReward = await paraApeStaking.nftPendingReward(
       mayc.address,
       [0, 1]
     );
-    expect(user3PendingReward0.mul(2)).to.be.closeTo(
-      user3PendingReward1,
-      parseEther("1")
-    );
-    expect(user1PendingReward).to.be.closeTo(
-      user2PendingReward,
-      parseEther("1")
+    //900 * 2 / 3
+    expect(user2PendingReward).to.be.closeTo(
+      parseEther("600"),
+      parseEther("10")
     );
   });
 
@@ -1605,7 +1659,7 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(poolAdmin.signer)
-        .setSinglePoolApeRewardRatio(5000, 5000)
+        .setSinglePoolApeRewardRatio(5000)
     );
 
     await supplyAndValidate(bayc, "3", user1, true);
@@ -1635,14 +1689,12 @@ describe("Para Ape Staking Test", () => {
       await paraApeStaking.connect(user4.signer).stakingApe(false, [0, 1, 2])
     );
     await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .stakingBAKC(true, [0, 1], [0, 1])
-    );
-    await waitForTx(
-      await paraApeStaking
-        .connect(user4.signer)
-        .stakingBAKC(false, [0, 1], [2, 3])
+      await paraApeStaking.connect(user4.signer).stakingBAKC({
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [0, 1],
+        bakcPairMaycTokenIds: [2, 3],
+      })
     );
     expect(
       await variableDebtCApeCoin.balanceOf(paraApeStaking.address)
@@ -1658,6 +1710,11 @@ describe("Para Ape Staking Test", () => {
     const user1PendingReward = await paraApeStaking.nftPendingReward(
       bayc.address,
       [0, 1]
+    );
+    //900 * 2 / 3
+    expect(user1PendingReward).to.be.closeTo(
+      parseEther("600"),
+      parseEther("10")
     );
     const user2PendingReward = await paraApeStaking.nftPendingReward(
       mayc.address,

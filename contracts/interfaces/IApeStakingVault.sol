@@ -2,19 +2,19 @@
 pragma solidity 0.8.10;
 
 interface IApeStakingVault {
-    /**
-     * @dev Emitted during setSinglePoolApeRewardRatio()
-     * @param oldRatio The value of the old baycPairStakingRewardRatio
-     * @param newRatio The value of the new baycPairStakingRewardRatio
-     **/
-    event BaycPairStakingRewardRatioUpdated(uint128 oldRatio, uint128 newRatio);
+    struct BAKCPairActionInfo {
+        uint32[] baycTokenIds;
+        uint32[] bakcPairBaycTokenIds;
+        uint32[] maycTokenIds;
+        uint32[] bakcPairMaycTokenIds;
+    }
 
     /**
      * @dev Emitted during setSinglePoolApeRewardRatio()
-     * @param oldRatio The value of the old maycPairStakingRewardRatio
-     * @param newRatio The value of the new maycPairStakingRewardRatio
+     * @param oldRatio The value of the old ApePairStakingRewardRatio
+     * @param newRatio The value of the new ApePairStakingRewardRatio
      **/
-    event MaycPairStakingRewardRatioUpdated(uint128 oldRatio, uint128 newRatio);
+    event ApePairStakingRewardRatioUpdated(uint256 oldRatio, uint256 newRatio);
 
     /**
      * @notice deposit Ape and BAKC pair into the pool
@@ -107,15 +107,9 @@ interface IApeStakingVault {
 
     /**
      * @notice stake pool's Ape and BAKC into ApeCoinStaking pair staking pool
-     * @param isBAYC if Ape is BAYC
-     * @param apeTokenIds Ape token ids
-     * @param bakcTokenIds BAKC token ids
+     * @param actionInfo detail staking info
      */
-    function stakingBAKC(
-        bool isBAYC,
-        uint32[] calldata apeTokenIds,
-        uint32[] calldata bakcTokenIds
-    ) external;
+    function stakingBAKC(BAKCPairActionInfo calldata actionInfo) external;
 
     /**
      * @notice claim Ape staking reward from ApeCoinStaking and compound as cApe for user
@@ -128,15 +122,9 @@ interface IApeStakingVault {
     /**
      * @notice claim single pool's Ape and BAKC pair staking reward from ApeCoinStaking and compound as cApe for user
      * only ape staking bot can call this function
-     * @param isBAYC if Ape is BAYC
-     * @param apeTokenIds Ape token ids
-     * @param bakcTokenIds BAKC token ids
+     * @param actionInfo detail staking info
      */
-    function compoundBAKC(
-        bool isBAYC,
-        uint32[] calldata apeTokenIds,
-        uint32[] calldata bakcTokenIds
-    ) external;
+    function compoundBAKC(BAKCPairActionInfo calldata actionInfo) external;
 
     /**
      * @notice get single pool nft unclaimed cApe reward

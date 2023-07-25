@@ -20,6 +20,20 @@ library ApeStakingCommonLogic {
     using SafeCast for uint256;
     using WadRayMath for uint256;
 
+    uint256 public constant BAYC_BAKC_PAIR_POOL_ID = 1;
+    uint256 public constant MAYC_BAKC_PAIR_POOL_ID = 2;
+    uint256 public constant BAYC_SINGLE_POOL_ID = 3;
+    uint256 public constant MAYC_SINGLE_POOL_ID = 4;
+    uint256 public constant BAKC_SINGLE_POOL_ID = 5;
+    uint256 public constant BAYC_APECOIN_POOL_ID = 6;
+    uint256 public constant MAYC_APECOIN_POOL_ID = 7;
+    uint256 public constant BAYC_BAKC_APECOIN_POOL_ID = 8;
+    uint256 public constant MAYC_BAKC_APECOIN_POOL_ID = 9;
+
+    uint256 public constant BAYC_POOL_ID = 1;
+    uint256 public constant MAYC_POOL_ID = 2;
+    uint256 public constant BAKC_POOL_ID = 3;
+
     function validateTokenIdArray(uint32[] calldata tokenIds) internal pure {
         uint256 arrayLength = tokenIds.length;
         require(arrayLength > 0, Errors.INVALID_PARAMETER);

@@ -27,15 +27,6 @@ library ApeCoinPoolLogic {
     using SafeERC20 for IERC20;
     using WadRayMath for uint256;
 
-    uint256 public constant BAYC_APECOIN_POOL_ID = 1;
-    uint256 public constant MAYC_APECOIN_POOL_ID = 2;
-    uint256 public constant BAYC_BAKC_APECOIN_POOL_ID = 3;
-    uint256 public constant MAYC_BAKC_APECOIN_POOL_ID = 4;
-
-    uint256 constant BAYC_POOL_ID = 1;
-    uint256 constant MAYC_POOL_ID = 2;
-    uint256 constant BAKC_POOL_ID = 3;
-
     /**
      * @dev Minimum health factor to consider a user position healthy
      * A value of 1e18 results in 1
