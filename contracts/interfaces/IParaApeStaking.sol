@@ -96,15 +96,6 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P, IApeCoinPool {
         mapping(uint256 => TokenStatus) tokenStatus;
     }
 
-    struct ApeCoinPoolState {
-        // total NFT position count
-        uint32 totalPosition;
-        // accumulated cApe reward for per NFT position
-        uint128 accumulatedRewardsPerNft;
-        //tokenId => reward debt position
-        mapping(uint256 => TokenStatus) tokenStatus;
-    }
-
     struct VaultStorage {
         mapping(uint256 => PoolState) poolStates;
         BAKCPoolState bakcPoolState;

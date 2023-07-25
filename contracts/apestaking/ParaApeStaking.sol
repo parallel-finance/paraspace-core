@@ -264,7 +264,7 @@ contract ParaApeStaking is
     /*
      *Ape Coin Staking Pool Logic
      */
-    mapping(uint256 => ApeCoinPoolState) internal apeCoinPoolStates;
+    mapping(uint256 => PoolState) internal apeCoinPoolStates;
 
     function depositApeCoinPool(ApeCoinActionInfo calldata depositInfo)
         external

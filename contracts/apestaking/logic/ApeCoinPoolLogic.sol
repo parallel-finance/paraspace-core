@@ -86,7 +86,7 @@ library ApeCoinPoolLogic {
     }
 
     function depositApeCoinPool(
-        IParaApeStaking.ApeCoinPoolState storage poolState,
+        IParaApeStaking.PoolState storage poolState,
         mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
@@ -157,11 +157,11 @@ library ApeCoinPoolLogic {
             vars.apeCoinStaking.depositMAYC(_nfts);
         }
 
-        poolState.totalPosition += arrayLength.toUint32();
+        poolState.totalPosition += arrayLength.toUint24();
     }
 
     function compoundApeCoinPool(
-        IParaApeStaking.ApeCoinPoolState storage poolState,
+        IParaApeStaking.PoolState storage poolState,
         mapping(address => uint256) storage cApeShareBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
@@ -204,7 +204,7 @@ library ApeCoinPoolLogic {
     }
 
     function claimApeCoinPool(
-        IParaApeStaking.ApeCoinPoolState storage poolState,
+        IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
         uint32[] calldata tokenIds
@@ -215,7 +215,7 @@ library ApeCoinPoolLogic {
     }
 
     function withdrawApeCoinPool(
-        IParaApeStaking.ApeCoinPoolState storage poolState,
+        IParaApeStaking.PoolState storage poolState,
         mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         mapping(address => uint256) storage cApeShareBalance,
@@ -286,8 +286,8 @@ library ApeCoinPoolLogic {
         );
 
         //distribute reward
-        uint32 totalPosition = poolState.totalPosition;
-        totalPosition -= arrayLength.toUint32();
+        uint24 totalPosition = poolState.totalPosition;
+        totalPosition -= arrayLength.toUint24();
         if (vars.totalClaimedApe > totalApeCoinAmount) {
             _distributePoolReward(
                 poolState,
@@ -316,7 +316,7 @@ library ApeCoinPoolLogic {
     }
 
     function depositApeCoinPairPool(
-        IParaApeStaking.ApeCoinPoolState storage poolState,
+        IParaApeStaking.PoolState storage poolState,
         mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
@@ -409,11 +409,11 @@ library ApeCoinPoolLogic {
             vars.apeCoinStaking.depositBAKC(_otherPairs, _nftPairs);
         }
 
-        poolState.totalPosition += arrayLength.toUint32();
+        poolState.totalPosition += arrayLength.toUint24();
     }
 
     function compoundApeCoinPairPool(
-        IParaApeStaking.ApeCoinPoolState storage poolState,
+        IParaApeStaking.PoolState storage poolState,
         mapping(address => uint256) storage cApeShareBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
@@ -467,7 +467,7 @@ library ApeCoinPoolLogic {
     }
 
     function claimApeCoinPairPool(
-        IParaApeStaking.ApeCoinPoolState storage poolState,
+        IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
         uint32[] calldata tokenIds
@@ -478,7 +478,7 @@ library ApeCoinPoolLogic {
     }
 
     function withdrawApeCoinPairPool(
-        IParaApeStaking.ApeCoinPoolState storage poolState,
+        IParaApeStaking.PoolState storage poolState,
         mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         mapping(address => uint256) storage cApeShareBalance,
@@ -567,8 +567,8 @@ library ApeCoinPoolLogic {
         );
 
         //distribute reward
-        uint32 totalPosition = poolState.totalPosition;
-        totalPosition -= arrayLength.toUint32();
+        uint24 totalPosition = poolState.totalPosition;
+        totalPosition -= arrayLength.toUint24();
         if (vars.totalClaimedApe > totalApeCoinAmount) {
             _distributePoolReward(
                 poolState,
@@ -607,8 +607,8 @@ library ApeCoinPoolLogic {
     }
 
     function tryUnstakeApeCoinPoolPosition(
-        IParaApeStaking.ApeCoinPoolState storage singlePoolState,
-        IParaApeStaking.ApeCoinPoolState storage pairPoolState,
+        IParaApeStaking.PoolState storage singlePoolState,
+        IParaApeStaking.PoolState storage pairPoolState,
         mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         mapping(address => uint256) storage cApeShareBalance,
@@ -700,7 +700,7 @@ library ApeCoinPoolLogic {
     }
 
     function calculatePendingReward(
-        IParaApeStaking.ApeCoinPoolState storage poolState,
+        IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
         uint32[] memory tokenIds
@@ -858,7 +858,7 @@ library ApeCoinPoolLogic {
     }
 
     function _claimApeCoinPool(
-        IParaApeStaking.ApeCoinPoolState storage poolState,
+        IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
         bool isSinglePool,
@@ -896,11 +896,11 @@ library ApeCoinPoolLogic {
     }
 
     function _distributePoolReward(
-        IParaApeStaking.ApeCoinPoolState storage poolState,
+        IParaApeStaking.PoolState storage poolState,
         mapping(address => uint256) storage cApeShareBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         uint256 rewardAmount,
-        uint32 totalPosition
+        uint24 totalPosition
     ) internal {
         IAutoCompoundApe(vars.cApe).deposit(address(this), rewardAmount);
 
@@ -910,7 +910,7 @@ library ApeCoinPoolLogic {
             compoundFee = cApeShare.percentMul(vars.compoundFee);
             cApeShare -= compoundFee;
             poolState.accumulatedRewardsPerNft +=
-                cApeShare.toUint128() /
+                cApeShare.toUint104() /
                 totalPosition;
         }
 
