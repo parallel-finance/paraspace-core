@@ -11,6 +11,8 @@ import {
   GOERLI_CHAINID,
   HARDHAT_CHAINID,
   INFURA_KEY,
+  L1_RPC_URL,
+  L2_RPC_URL,
   MAINNET_CHAINID,
   MOONBASE_CHAINID,
   MOONBEAM_CHAINID,
@@ -46,11 +48,13 @@ export const buildForkConfig = ():
 
 export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eEthereumNetwork.goerli]:
+    L1_RPC_URL ||
     RPC_URL ||
     (ALCHEMY_KEY
       ? `https://eth-goerli.alchemyapi.io/v2/${ALCHEMY_KEY}`
       : `https://goerli.infura.io/v3/${INFURA_KEY}`),
   [eEthereumNetwork.mainnet]:
+    L1_RPC_URL ||
     RPC_URL ||
     (ALCHEMY_KEY
       ? `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`
@@ -64,20 +68,29 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eEthereumNetwork.moonbeam]: "https://rpc.api.moonbeam.network",
   [eEthereumNetwork.moonbase]: "https://rpc.testnet.moonbeam.network",
   [eEthereumNetwork.arbitrum]:
-    RPC_URL || `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+    L2_RPC_URL ||
+    RPC_URL ||
+    `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eEthereumNetwork.arbitrumGoerli]:
-    RPC_URL || `https://arb-goerli.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+    L2_RPC_URL ||
+    RPC_URL ||
+    `https://arb-goerli.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eEthereumNetwork.polygon]:
     RPC_URL || `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eEthereumNetwork.polygonMumbai]:
     RPC_URL || `https://polygon-mumbai.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eEthereumNetwork.polygonZkevm]:
-    RPC_URL || `https://polygonzkevm-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+    L2_RPC_URL ||
+    RPC_URL ||
+    `https://polygonzkevm-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eEthereumNetwork.polygonZkevmGoerli]:
-    RPC_URL || `https://polygonzkevm-testnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
-  [eEthereumNetwork.zksync]: RPC_URL || `https://zksync2-mainnet.zksync.io`,
+    L2_RPC_URL ||
+    RPC_URL ||
+    `https://polygonzkevm-testnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  [eEthereumNetwork.zksync]:
+    L2_RPC_URL || RPC_URL || `https://mainnet.era.zksync.io`,
   [eEthereumNetwork.zksyncGoerli]:
-    RPC_URL || `https://zksync2-testnet.zksync.dev`,
+    L2_RPC_URL || RPC_URL || `https://testnet.era.zksync.dev`,
 };
 
 export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {

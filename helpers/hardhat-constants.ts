@@ -164,6 +164,8 @@ export const GLOBAL_OVERRIDES: Overrides = {
 };
 
 export const RPC_URL = process.env.RPC_URL || "";
+export const L1_RPC_URL = process.env.L1_RPC_URL || "";
+export const L2_RPC_URL = process.env.L2_RPC_URL || "";
 export const JSONRPC_VARIANT = process.env.JSONRPC_VARIANT || "hardhat";
 export const VERBOSE = process.env.VERBOSE == "true" ? true : false;
 export const DRY_RUN = process.env.DRY_RUN || "";
