@@ -7,7 +7,6 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../../../interfaces/IPool.sol";
 import {DataTypes} from "../../libraries/types/DataTypes.sol";
 import {PercentageMath} from "../../libraries/math/PercentageMath.sol";
-import "./MintableERC721Logic.sol";
 import "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import "../../../interfaces/INToken.sol";
 
