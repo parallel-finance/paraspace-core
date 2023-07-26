@@ -951,7 +951,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@matterlabs/hardhat-zksync-solc@npm:0.3.17, @matterlabs/hardhat-zksync-solc@npm:^0.3.17":
+"@matterlabs/hardhat-zksync-solc@npm:0.3.17":
   version: 0.3.17
   resolution: "@matterlabs/hardhat-zksync-solc@npm:0.3.17"
   dependencies:
@@ -964,9 +964,24 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@matterlabs/hardhat-zksync-verify@npm:^0.1.7":
-  version: 0.1.7
-  resolution: "@matterlabs/hardhat-zksync-verify@npm:0.1.7"
+"@matterlabs/hardhat-zksync-solc@npm:^0.4.0":
+  version: 0.4.1
+  resolution: "@matterlabs/hardhat-zksync-solc@npm:0.4.1"
+  dependencies:
+    "@nomiclabs/hardhat-docker": ^2.0.0
+    chalk: 4.1.2
+    dockerode: ^3.3.4
+    fs-extra: ^11.1.1
+    semver: ^7.5.1
+  peerDependencies:
+    hardhat: ^2.14.0
+  checksum: 8f5377858d0810124b11bb6a208c805abdf42f04f23b9c7e160abc8b44ef552b38809bc6e7c1a7df9bd29976167e1408d066f62721dbbb082c29c71b47a6954c
+  languageName: node
+  linkType: hard
+
+"@matterlabs/hardhat-zksync-verify@npm:^0.1.8":
+  version: 0.1.8
+  resolution: "@matterlabs/hardhat-zksync-verify@npm:0.1.8"
   dependencies:
     "@matterlabs/hardhat-zksync-solc": 0.3.17
     axios: ^1.4.0
@@ -974,7 +989,7 @@ __metadata:
     dockerode: ^3.3.4
   peerDependencies:
     "@nomiclabs/hardhat-etherscan": ^3.1.2
-  checksum: 65ef5de688b2a51e27af7da77feec35ac37b495cccaebebcc6c73e054a8c841c7006fd412cb9045193f6ca28607bcd44b7d0c21d5a53061cf727fc1c9929b620
+  checksum: dc6b872fd95877ecf4c2f0c68b75917e76f3e4f552a2647d8bb1cffb3dd677d13741efa977e888e3a1531556d9caa2a3e359ed2aa57a02d4f058de4042ef4ea4
   languageName: node
   linkType: hard
 
@@ -1477,8 +1492,8 @@ __metadata:
     "@flashbots/ethers-provider-bundle": ^0.6.1
     "@looksrare/sdk": ^0.7.4
     "@matterlabs/hardhat-zksync-deploy": ^0.6.3
-    "@matterlabs/hardhat-zksync-solc": ^0.3.17
-    "@matterlabs/hardhat-zksync-verify": ^0.1.7
+    "@matterlabs/hardhat-zksync-solc": ^0.4.0
+    "@matterlabs/hardhat-zksync-verify": ^0.1.8
     "@matterlabs/zksync-contracts": ^0.6.1
     "@nomicfoundation/hardhat-network-helpers": ^1.0.6
     "@nomiclabs/hardhat-ethers": ^2.0.0
@@ -7767,6 +7782,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fs-extra@npm:^11.1.1":
+  version: 11.1.1
+  resolution: "fs-extra@npm:11.1.1"
+  dependencies:
+    graceful-fs: ^4.2.0
+    jsonfile: ^6.0.1
+    universalify: ^2.0.0
+  checksum: fb883c68245b2d777fbc1f2082c9efb084eaa2bbf9fddaa366130d196c03608eebef7fb490541276429ee1ca99f317e2d73e96f5ca0999eefedf5a624ae1edfd
+  languageName: node
+  linkType: hard
+
 "fs-extra@npm:^4.0.2, fs-extra@npm:^4.0.3":
   version: 4.0.3
   resolution: "fs-extra@npm:4.0.3"
@@ -13486,6 +13512,17 @@ __metadata:
   bin:
     semver: bin/semver.js
   checksum: ba9c7cbbf2b7884696523450a61fee1a09930d888b7a8d7579025ad93d459b2d1949ee5bbfeb188b2be5f4ac163544c5e98491ad6152df34154feebc2cc337c1
+  languageName: node
+  linkType: hard
+
+"semver@npm:^7.5.1":
+  version: 7.5.4
+  resolution: "semver@npm:7.5.4"
+  dependencies:
+    lru-cache: ^6.0.0
+  bin:
+    semver: bin/semver.js
+  checksum: 12d8ad952fa353b0995bf180cdac205a4068b759a140e5d3c608317098b3575ac2f1e09182206bf2eb26120e1c0ed8fb92c48c592f6099680de56bb071423ca3
   languageName: node
   linkType: hard
 

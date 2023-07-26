@@ -55,8 +55,7 @@ require(`${path.join(__dirname, "tasks/misc")}/set-bre.ts`);
 
 const hardhatConfig: HardhatUserConfig = {
   zksolc: {
-    version: "1.3.13",
-    compilerSource: "binary",
+    version: "latest",
     settings: {
       libraries: ZK_LIBRARIES,
     },
