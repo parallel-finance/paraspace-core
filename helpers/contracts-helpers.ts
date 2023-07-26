@@ -360,7 +360,6 @@ export const withSaveAndVerify = async (
       proxy ? args.slice(args.length - 2) : []
     ) as string[];
 
-    console.log(id);
     if (customData) {
       GLOBAL_OVERRIDES.customData = customData;
     }
