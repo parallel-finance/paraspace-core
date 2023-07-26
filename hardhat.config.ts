@@ -221,6 +221,16 @@ const hardhatConfig: HardhatUserConfig = {
       zksync: true,
       verifyURL: ETHERSCAN_APIS[eEthereumNetwork.zksyncGoerli],
     },
+    linea: {
+      chainId: CHAINS_ID[eEthereumNetwork.linea],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.linea],
+      accounts: DEPLOYER,
+    },
+    lineaGoerli: {
+      chainId: CHAINS_ID[eEthereumNetwork.lineaGoerli],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.lineaGoerli],
+      accounts: DEPLOYER,
+    },
     mainnet: {
       chainId: CHAINS_ID[eEthereumNetwork.mainnet],
       url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
@@ -229,15 +239,19 @@ const hardhatConfig: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
+      localhost: ETHERSCAN_KEY,
       mainnet: ETHERSCAN_KEY,
       goerli: ETHERSCAN_KEY,
-      localhost: ETHERSCAN_KEY,
       arbitrum: ETHERSCAN_KEY,
       arbitrumGoerli: ETHERSCAN_KEY,
       polygon: ETHERSCAN_KEY,
       polygonMumbai: ETHERSCAN_KEY,
       polygonZkevm: ETHERSCAN_KEY,
       polygonZkevmGoerli: ETHERSCAN_KEY,
+      moonbeam: ETHERSCAN_KEY,
+      moonbase: ETHERSCAN_KEY,
+      linea: ETHERSCAN_KEY,
+      lineaGoerli: ETHERSCAN_KEY,
     },
     customChains: [
       eEthereumNetwork.localhost,
@@ -250,6 +264,8 @@ const hardhatConfig: HardhatUserConfig = {
       eEthereumNetwork.polygonZkevmGoerli,
       eEthereumNetwork.moonbeam,
       eEthereumNetwork.moonbase,
+      eEthereumNetwork.linea,
+      eEthereumNetwork.lineaGoerli,
     ].map((network) => ({
       network,
       chainId: CHAINS_ID[network]!,

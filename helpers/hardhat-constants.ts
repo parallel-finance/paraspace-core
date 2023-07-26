@@ -35,6 +35,8 @@ export const POLYGON_ZKEVM_GOERLI_CHAINID = 1442;
 export const POLYGON_MUMBAI_CHAINID = 80001;
 export const ZKSYNC_CHAINID = 324;
 export const ZKSYNC_GOERLI_CHAINID = 280;
+export const LINEA_GOERLI_CHAINID = 59140;
+export const LINEA_CHAINID = 59144;
 
 export const INFURA_KEY = process.env.INFURA_KEY || "";
 export const ALCHEMY_KEY = process.env.ALCHEMY_KEY || "";
@@ -87,6 +89,8 @@ export const ETHERSCAN_NETWORKS = [
   "polygonZkevmGoerli",
   "zksync",
   "zksyncGoerli",
+  "linea",
+  "lineaGoerli",
 ];
 export const ETHERSCAN_APIS = {
   localhost: "http://localhost:4000/api",
@@ -104,6 +108,8 @@ export const ETHERSCAN_APIS = {
     "https://zksync2-testnet-explorer.zksync.dev/contract_verification",
   moonbeam: "https://api-moonbeam.moonscan.io/api",
   moonbase: "https://api-moonbase.moonscan.io/api",
+  linea: "http://explorer.linea.build/api",
+  lineaGoerli: "https://explorer.goerli.linea.build/api",
 };
 export const BROWSER_URLS = {
   localhost: "http://localhost:4000",
@@ -119,6 +125,8 @@ export const BROWSER_URLS = {
   zksyncGoerli: "https://zksync2-testnet-explorer.zksync.dev",
   moonbeam: "https://moonscan.io",
   moonbase: "https://moonbase.moonscan.io",
+  linea: "https://explorer.linea.build",
+  lineaGoerli: "https://explorer.goerli.linea.build",
 };
 
 export const DEPLOY_START = parseInt(process.env.DEPLOY_START || "0");

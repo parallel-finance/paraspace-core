@@ -8,6 +8,7 @@ import {
 import {MocksConfig, MocksUSDConfig} from "./mocks";
 import {
   ArbitrumOracleConfig,
+  LineaOracleConfig,
   MainnetOracleConfig,
   MoonbeamOracleConfig,
   PolygonOracleConfig,
@@ -645,6 +646,34 @@ export const ZkSyncGoerliConfig: IParaSpaceConfiguration = {
   Oracle: ZkSyncOracleConfig,
 };
 
+export const LineaGoerliConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: LineaOracleConfig,
+};
+
 export const ArbitrumConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
@@ -758,6 +787,36 @@ export const ZkSyncConfig: IParaSpaceConfiguration = {
   },
   Mocks: MocksUSDConfig,
   Oracle: ZkSyncOracleConfig,
+};
+
+export const LineaConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    stETH: strategySTETH,
+    wstETH: strategyWSTETH,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: LineaOracleConfig,
 };
 
 export const MainnetConfig: IParaSpaceConfiguration = {
@@ -931,4 +990,6 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.polygonZkevmGoerli]: PolygonZkevmGoerliConfig,
   [eEthereumNetwork.zksync]: ZkSyncConfig,
   [eEthereumNetwork.zksyncGoerli]: ZkSyncGoerliConfig,
+  [eEthereumNetwork.linea]: LineaConfig,
+  [eEthereumNetwork.lineaGoerli]: LineaGoerliConfig,
 };

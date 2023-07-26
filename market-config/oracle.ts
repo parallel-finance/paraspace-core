@@ -47,6 +47,15 @@ export const ZkSyncOracleConfig: IOracleConfig = {
   Nodes: [],
 };
 
+export const LineaOracleConfig: IOracleConfig = {
+  BaseCurrency: ZERO_ADDRESS,
+  BaseCurrencyUnit: BigNumber.from("100000000"),
+  BaseCurrencyDecimals: 8,
+  ExpirationPeriod: 600,
+  DeviationRate: 1000,
+  Nodes: [],
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Testnet
 ////////////////////////////////////////////////////////////////////////////////

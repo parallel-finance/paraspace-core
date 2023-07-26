@@ -96,6 +96,8 @@ export enum eEthereumNetwork {
   polygonZkevmGoerli = "polygonZkevmGoerli",
   zksync = "zksync",
   zksyncGoerli = "zksyncGoerli",
+  linea = "linea",
+  lineaGoerli = "lineaGoerli",
 }
 
 export enum eContractid {
@@ -743,6 +745,8 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.polygonZkevmGoerli]: T;
   [eEthereumNetwork.zksync]: T;
   [eEthereumNetwork.zksyncGoerli]: T;
+  [eEthereumNetwork.linea]: T;
+  [eEthereumNetwork.lineaGoerli]: T;
 }
 
 export enum RateMode {
