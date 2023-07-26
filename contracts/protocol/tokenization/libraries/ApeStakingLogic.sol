@@ -4,6 +4,7 @@ import {ApeCoinStaking} from "../../../dependencies/yoga-labs/ApeCoinStaking.sol
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
+import "./MintableERC721Logic.sol";
 import "../../../interfaces/IPool.sol";
 import {DataTypes} from "../../libraries/types/DataTypes.sol";
 import {PercentageMath} from "../../libraries/math/PercentageMath.sol";
