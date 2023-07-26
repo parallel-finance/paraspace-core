@@ -4,6 +4,7 @@ import {
   isMainnet,
   isPolygon,
   isPublicTestnet,
+  isZkSync,
   setDRE,
 } from "../../helpers/misc-utils";
 import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
@@ -75,9 +76,13 @@ task(
       GLOBAL_OVERRIDES.type = 2;
       GLOBAL_OVERRIDES.maxFeePerGas = isPolygon()
         ? feeData.maxFeePerGas.mul(2)
+        : isZkSync()
+        ? feeData.maxFeePerGas.mul(2)
         : feeData.maxFeePerGas;
       GLOBAL_OVERRIDES.maxPriorityFeePerGas = isPolygon()
         ? feeData.maxFeePerGas.mul(2)
+        : isZkSync()
+        ? feeData.maxPriorityFeePerGas.mul(2)
         : feeData.maxPriorityFeePerGas;
       console.log("  - Type:", GLOBAL_OVERRIDES.type);
       console.log(
