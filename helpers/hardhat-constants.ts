@@ -93,7 +93,7 @@ export const GLOBAL_OVERRIDES: Overrides = {
   // maxFeePerGas: ethers.utils.parseUnits("20", "gwei"),
   // maxPriorityFeePerGas: ethers.utils.parseUnits("1.5", "gwei"),
   // type: 2,
-  // gasLimit: 12_450_000,
+  gasLimit: 12_450_000,
 };
 
 export const RPC_URL = process.env.RPC_URL || "";
