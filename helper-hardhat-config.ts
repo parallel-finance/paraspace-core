@@ -59,7 +59,7 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eEthereumNetwork.ganache]: RPC_URL || "http://localhost:8545",
   [eEthereumNetwork.tenderlyMain]:
     RPC_URL || `https://rpc.tenderly.co/fork/${TENDERLY_FORK_ID}`,
-  [eEthereumNetwork.parallel]: RPC_URL || "http://localhost:29933",
+  [eEthereumNetwork.parallel]: RPC_URL || "http://localhost:9937",
   [eEthereumNetwork.moonbeam]: "https://rpc.api.moonbeam.network",
   [eEthereumNetwork.arbitrum]:
     RPC_URL || `https://arb-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,

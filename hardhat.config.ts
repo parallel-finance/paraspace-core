@@ -148,8 +148,8 @@ const hardhatConfig: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
     },
     moonbeam: {
-      chainId: CHAINS_ID[eEthereumNetwork.moonbeam],
-      url: NETWORKS_RPC_URL[eEthereumNetwork.moonbeam],
+      chainId: CHAINS_ID[eEthereumNetwork.parallel],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.parallel],
       accounts: DEPLOYER,
     },
     hardhat: {

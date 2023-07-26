@@ -124,13 +124,21 @@ export const CommonConfig: Pick<
 export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
-  ParaSpaceTeam: "0xc783df8a850f42e7F7e57013759C285caa701eB6",
-  Treasury: "0xc783df8a850f42e7F7e57013759C285caa701eB6",
+  ParaSpaceTeam: "0x8097c3C354652CB1EEed3E5B65fBa2576470678A", // Alice
+  Treasury: "0x8097c3C354652CB1EEed3E5B65fBa2576470678A",
+  ParaSpaceAdmin: "0x8097c3C354652CB1EEed3E5B65fBa2576470678A",
+  EmergencyAdmins: ["0x8097c3C354652CB1EEed3E5B65fBa2576470678A"],
+  RiskAdmin: "0x8097c3C354652CB1EEed3E5B65fBa2576470678A",
+  GatewayAdmin: "0x8097c3C354652CB1EEed3E5B65fBa2576470678A",
   Tokens: {
     sAPE: "0x0000000000000000000000000000000000000001",
   },
   YogaLabs: {},
-  Uniswap: {},
+  Uniswap: {
+    V3Factory: "0x0000000000000000000000000000000000000001",
+    V3NFTPositionManager: "0x0000000000000000000000000000000000000001",
+    V3Router: "0x0000000000000000000000000000000000000001",
+  },
   Marketplace: {},
   Chainlink: {},
   BendDAO: {},
@@ -604,7 +612,8 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.hardhat]: HardhatParaSpaceConfig,
   [eEthereumNetwork.anvil]: HardhatParaSpaceConfig,
   [eEthereumNetwork.localhost]: HardhatParaSpaceConfig,
-  [eEthereumNetwork.moonbeam]: MoonbeamParaSpaceConfig,
+  // [eEthereumNetwork.moonbeam]: MoonbeamParaSpaceConfig,
+  [eEthereumNetwork.moonbeam]: HardhatParaSpaceConfig,
   [eEthereumNetwork.goerli]: GoerliParaSpaceConfig,
   [eEthereumNetwork.mainnet]: MainnetParaSpaceConfig,
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
