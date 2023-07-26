@@ -274,3 +274,7 @@ export const ZK_LIBRARIES = fs.existsSync(ZK_LIBRARIES_PATH)
 export const DEPLOY_MAX_RETRIES = parseInt(
   process.env.DEPLOY_MAX_RETRIES || "3"
 );
+
+export const DEPLOY_RETRY_INTERVAL = parseInt(
+  process.env.DEPLOY_RETRY_INTERVAL || "1500"
+);

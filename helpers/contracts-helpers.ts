@@ -117,6 +117,7 @@ import {
   ETHERSCAN_KEY,
   ETHERSCAN_APIS,
   ETHERSCAN_VERIFICATION_PROVIDER,
+  DEPLOY_RETRY_INTERVAL,
 } from "./hardhat-constants";
 import {chunk, first, pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
@@ -322,7 +323,7 @@ export const retry = async (fn: any, retries = 0) => {
   } catch (e: any) {
     if (++retries < DEPLOY_MAX_RETRIES) {
       console.log("retrying..., error code:", e?.code);
-      await sleep(1500);
+      await sleep(DEPLOY_RETRY_INTERVAL);
       return await retry(fn, retries);
     } else {
       throw e;
