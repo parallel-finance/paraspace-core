@@ -28,6 +28,8 @@ import {
   ETHERSCAN_VERIFICATION_CONTRACTS,
   ETHERSCAN_KEY,
   MOONBASE_CHAINID,
+  LINEA_CHAINID,
+  LINEA_GOERLI_CHAINID,
 } from "./hardhat-constants";
 import {ConstructorArgs, eContractid, tEthereumAddress} from "./types";
 import dotenv from "dotenv";
@@ -62,6 +64,7 @@ export const isPublicTestnet = (): boolean => {
       POLYGON_ZKEVM_GOERLI_CHAINID,
       POLYGON_MUMBAI_CHAINID,
       MOONBASE_CHAINID,
+      LINEA_GOERLI_CHAINID,
     ].includes(DRE.network.config.chainId!) ||
     [
       eEthereumNetwork.goerli,
@@ -70,6 +73,7 @@ export const isPublicTestnet = (): boolean => {
       eEthereumNetwork.polygonZkevmGoerli,
       eEthereumNetwork.polygonMumbai,
       eEthereumNetwork.moonbase,
+      eEthereumNetwork.lineaGoerli,
     ].includes(FORK as eEthereumNetwork)
   );
 };
@@ -127,13 +131,22 @@ export const isZkSync = (): boolean => {
   );
 };
 
+export const isLinea = (): boolean => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return (
+    [LINEA_CHAINID].includes(DRE.network.config.chainId!) ||
+    [eEthereumNetwork.linea].includes(FORK as eEthereumNetwork)
+  );
+};
+
 export const isMainnet = (): boolean =>
   isEthereum() ||
   isMoonbeam() ||
   isArbitrum() ||
   isZkSync() ||
   isPolygon() ||
-  isPolygonZkEVM();
+  isPolygonZkEVM() ||
+  isLinea();
 
 export const shouldVerifyContract = (contractId: string): boolean => {
   if (!ETHERSCAN_NETWORKS.includes(DRE.network.name)) {
