@@ -8,6 +8,7 @@ import {DRE} from "../../helpers/misc-utils";
 import * as envs from "../../helpers/hardhat-constants";
 import {fromBn} from "evm-bn";
 import {HttpNetworkConfig} from "hardhat/types";
+import * as zk from "zksync-web3";
 
 const info = async () => {
   console.time("info");
@@ -27,6 +28,21 @@ const info = async () => {
   console.log(
     await Promise.all((await getEthersSigners()).map((x) => x.getAddress()))
   );
+
+  if (DRE.network.config.zksync) {
+    console.log(
+      "MainContract",
+      (await (signer as zk.Wallet).getMainContract()).address
+    );
+    console.log(
+      "L1ERC20 BridgeContracts",
+      (await (signer as zk.Wallet).getL1BridgeContracts()).erc20.address
+    );
+    console.log(
+      "L2ERC20 BridgeContracts",
+      (await (signer as zk.Wallet).getL2BridgeContracts()).erc20.address
+    );
+  }
 
   console.timeEnd("info");
 };
