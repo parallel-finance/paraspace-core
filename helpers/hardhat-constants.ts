@@ -163,9 +163,9 @@ export const GLOBAL_OVERRIDES: Overrides = {
   gasLimit: 12_450_000,
 };
 
-export const RPC_URL = process.env.RPC_URL || "";
 export const L1_RPC_URL = process.env.L1_RPC_URL || "";
 export const L2_RPC_URL = process.env.L2_RPC_URL || "";
+export const RPC_URL = process.env.RPC_URL || L1_RPC_URL || L2_RPC_URL || "";
 export const JSONRPC_VARIANT = process.env.JSONRPC_VARIANT || "hardhat";
 export const VERBOSE = process.env.VERBOSE == "true" ? true : false;
 export const DRY_RUN = process.env.DRY_RUN || "";
