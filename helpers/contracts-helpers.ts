@@ -135,9 +135,37 @@ import {
 } from "@flashbots/ethers-provider-bundle";
 import {configureReservesByHelper, initReservesByHelper} from "./init-helpers";
 import shell from "shelljs";
+import walkdir from "walkdir";
+import fs from "fs";
+import * as zk from "zksync-web3";
+import {hexlify} from "ethers/lib/utils";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
+
+export const getZkSyncBytecodeHashes = () => {
+  const obj = {};
+  walkdir.sync("./artifacts-zk", (path, stat) => {
+    if (
+      stat.isDirectory() ||
+      !path.endsWith(".json") ||
+      path.endsWith("dbg.json")
+    ) {
+      return;
+    }
+    try {
+      const artifact = JSON.parse(fs.readFileSync(path, "utf8"));
+      if (artifact.contractName && artifact.bytecode) {
+        const bytecodeHash = hexlify(zk.utils.hashBytecode(artifact.bytecode));
+        obj[bytecodeHash] = artifact.contractName;
+        obj[artifact.contractName] = bytecodeHash;
+      }
+    } catch (e) {
+      //
+    }
+  });
+  return obj;
+};
 
 export const registerContractInDb = async (
   id: string,
@@ -332,7 +360,10 @@ export const withSaveAndVerify = async (
       proxy ? args.slice(args.length - 2) : []
     ) as string[];
 
-    if (customData) GLOBAL_OVERRIDES.customData = customData;
+    console.log(id);
+    if (customData) {
+      GLOBAL_OVERRIDES.customData = customData;
+    }
     const instance = await factory.deploy(...deployArgs, GLOBAL_OVERRIDES);
     delete GLOBAL_OVERRIDES.customData;
     await waitForTx(instance.deployTransaction);

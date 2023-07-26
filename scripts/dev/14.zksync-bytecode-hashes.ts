@@ -1,29 +1,9 @@
 import rawBRE from "hardhat";
-import walkdir from "walkdir";
-import fs from "fs";
-import {utils} from "zksync-web3";
-import {hexlify} from "ethers/lib/utils";
+import {getZkSyncBytecodeHashes} from "../../helpers/contracts-helpers";
 
 const zksyncBytecodeHashes = async () => {
   console.time("zksync-bytecode-hashes");
-  walkdir.sync("./artifacts-zk", (path, stat) => {
-    if (
-      stat.isDirectory() ||
-      !path.endsWith(".json") ||
-      path.endsWith("dbg.json")
-    ) {
-      return;
-    }
-    try {
-      const content = JSON.parse(fs.readFileSync(path, "utf8"));
-      console.log(
-        content.contractName,
-        hexlify(utils.hashBytecode(content.bytecode))
-      );
-    } catch (e) {
-      //
-    }
-  });
+  console.log(getZkSyncBytecodeHashes());
   console.timeEnd("zksync-bytecode-hashes");
 };
 
