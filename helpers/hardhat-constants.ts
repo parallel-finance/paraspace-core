@@ -16,7 +16,7 @@ const getPrivateKeyfromEncryptedJson = (
   keystorePath && fs.existsSync(keystorePath)
     ? ethers.Wallet.fromEncryptedJsonSync(
         fs.readFileSync(keystorePath, "utf8"),
-        input("password: ")
+        DEPLOYER_PASSWORD || input("password: ")
       ).privateKey
     : "";
 
@@ -143,6 +143,7 @@ export const DEPLOYER_MNEMONIC = (
   process.env.DEPLOYER_MNEMONIC ||
   "test test test test test test test test test test test junk"
 ).trim();
+export const DEPLOYER_PASSWORD = process.env.DEPLOYER_PASSWORD || "";
 export const DEPLOYER: HttpNetworkAccountsUserConfig = DEPLOYER_PRIVATE_KEY
   ? [DEPLOYER_PRIVATE_KEY]
   : {
