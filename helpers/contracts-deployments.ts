@@ -1667,13 +1667,14 @@ export const deployERC20OracleWrapper = async (
   pyth: string,
   feedId: string,
   expirationPeriod: string,
+  decimals: string,
   symbol: string,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await getContractFactory("ERC20OracleWrapper"),
     eContractid.Aggregator.concat(upperFirst(symbol)),
-    [pyth, feedId, expirationPeriod],
+    [pyth, feedId, expirationPeriod, decimals],
     verify
   ) as Promise<ERC20OracleWrapper>;
 
