@@ -761,7 +761,7 @@ export const ArbitrumConfig: IParaSpaceConfiguration = {
 export const ZkSyncConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
-  ParaSpaceAdmin: "0x909e36B512Ed45250fdff513523119d825647695",
+  ParaSpaceAdmin: "0x3BeD3C25415e4D980954Dc5FDe2e11D7fb22E582",
   EmergencyAdmins: [
     "0x17816E9A858b161c3E37016D139cf618056CaCD4",
     "0x69FAD68De47D5666Ad668C7D682dDb8FD6322949",
@@ -769,11 +769,12 @@ export const ZkSyncConfig: IParaSpaceConfiguration = {
     "0x001e2bcC5c1BfC3131d33Ba074B12c2F1237FB04",
     "0x4AC3fD073786a971e1B8dE5a526959c9B3B2B407",
   ],
-  RiskAdmin: "0x909e36B512Ed45250fdff513523119d825647695",
-  GatewayAdmin: "0x909e36B512Ed45250fdff513523119d825647695",
-  ParaSpaceTeam: "0x909e36B512Ed45250fdff513523119d825647695",
+  RiskAdmin: "0x3BeD3C25415e4D980954Dc5FDe2e11D7fb22E582",
+  GatewayAdmin: "0x3BeD3C25415e4D980954Dc5FDe2e11D7fb22E582",
+  ParaSpaceTeam: "0x3BeD3C25415e4D980954Dc5FDe2e11D7fb22E582",
   Treasury: "0x909e36B512Ed45250fdff513523119d825647695",
   Tokens: {
+    WETH: "0x5bF39BdE21B95d77fb18F27bBCb07F3648720A2e",
     USDC: "0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4",
     WBTC: "0xBBeB516fb02a01611cBBE0453Fe3c580D7281011",
   },
@@ -782,7 +783,11 @@ export const ZkSyncConfig: IParaSpaceConfiguration = {
   Marketplace: {},
   BendDAO: {},
   Stakefish: {},
-  Chainlink: {},
+  Chainlink: {
+    WETH: "0x279dBcc7417DC8a73F9154fb640E2467209C8C34",
+    USDC: "0x9Dc7257a0a21Ec3EAf0CbFB02fb01A2825a1e14e",
+    WBTC: "0x1474A19D97A9e84A201d481c2F995513d3380412",
+  },
   ReservesConfig: {
     USDC: strategyUSDC,
     WETH: strategyWETH,
