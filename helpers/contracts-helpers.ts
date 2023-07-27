@@ -80,6 +80,7 @@ import {
   NTokenOtherdeed__factory,
   TimeLock__factory,
   P2PPairStaking__factory,
+  NFTFloorOracle__factory,
 } from "../types";
 import {
   Artifact,
@@ -1011,6 +1012,7 @@ export const decodeInputData = (data: string) => {
     ...NTokenOtherdeed__factory.abi,
     ...TimeLock__factory.abi,
     ...P2PPairStaking__factory.abi,
+    ...NFTFloorOracle__factory.abi,
   ];
 
   const decoder = new InputDataDecoder(ABI);
