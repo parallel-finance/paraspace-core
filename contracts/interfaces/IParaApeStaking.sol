@@ -73,21 +73,6 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P, IApeCoinPool {
         mapping(uint256 => TokenStatus) tokenStatus;
     }
 
-    struct ApeCoinActionInfo {
-        address cashToken;
-        uint256 cashAmount;
-        bool isBAYC;
-        uint32[] tokenIds;
-    }
-
-    struct ApeCoinPairActionInfo {
-        address cashToken;
-        uint256 cashAmount;
-        bool isBAYC;
-        uint32[] apeTokenIds;
-        uint32[] bakcTokenIds;
-    }
-
     /**
      * @dev Emitted during setApeStakingBot()
      * @param oldBot The address of the old compound bot

@@ -3,6 +3,7 @@ pragma solidity 0.8.10;
 
 import {IPool} from "../../interfaces/IPool.sol";
 import "../../interfaces/IParaApeStaking.sol";
+import "../../interfaces/IApeCoinPool.sol";
 import {IERC20, SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import "../../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {PercentageMath} from "../../protocol/libraries/math/PercentageMath.sol";
@@ -81,7 +82,7 @@ library ApeCoinPoolLogic {
         mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
-        IParaApeStaking.ApeCoinActionInfo calldata depositInfo
+        IParaApeStaking.ApeCoinDepositInfo calldata depositInfo
     ) external {
         uint256 arrayLength = depositInfo.tokenIds.length;
         require(arrayLength > 0, Errors.INVALID_PARAMETER);
@@ -95,7 +96,6 @@ library ApeCoinPoolLogic {
             vars.nApe = vars.nMayc;
             vars.positionCap = vars.maycMatchedCap;
         }
-        address msgSender = msg.sender;
         uint128 accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
         ApeCoinStaking.SingleNft[]
             memory _nfts = new ApeCoinStaking.SingleNft[](arrayLength);
@@ -103,7 +103,7 @@ library ApeCoinPoolLogic {
             uint32 tokenId = depositInfo.tokenIds[index];
 
             require(
-                msgSender == IERC721(vars.nApe).ownerOf(tokenId),
+                depositInfo.onBehalf == IERC721(vars.nApe).ownerOf(tokenId),
                 Errors.NOT_THE_OWNER
             );
 
@@ -138,7 +138,7 @@ library ApeCoinPoolLogic {
             totalApeCoinNeeded.toUint128(),
             depositInfo.cashToken,
             depositInfo.cashAmount,
-            msgSender
+            depositInfo.onBehalf
         );
 
         //stake in ApeCoinStaking
@@ -211,7 +211,7 @@ library ApeCoinPoolLogic {
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         mapping(address => uint256) storage cApeShareBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
-        IParaApeStaking.ApeCoinActionInfo memory withdrawInfo
+        IParaApeStaking.ApeCoinWithdrawInfo memory withdrawInfo
     ) public {
         uint256 arrayLength = withdrawInfo.tokenIds.length;
         require(arrayLength > 0, Errors.INVALID_PARAMETER);
@@ -311,7 +311,7 @@ library ApeCoinPoolLogic {
         mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
-        IParaApeStaking.ApeCoinPairActionInfo calldata depositInfo
+        IParaApeStaking.ApeCoinPairDepositInfo calldata depositInfo
     ) external {
         uint256 arrayLength = depositInfo.apeTokenIds.length;
         require(
@@ -340,7 +340,8 @@ library ApeCoinPoolLogic {
                 address nApeOwner = IERC721(vars.nApe).ownerOf(apeTokenId);
                 address nBakcOwner = IERC721(vars.nBakc).ownerOf(bakcTokenId);
                 require(
-                    msg.sender == nApeOwner && msg.sender == nBakcOwner,
+                    depositInfo.onBehalf == nApeOwner &&
+                        depositInfo.onBehalf == nBakcOwner,
                     Errors.NOT_THE_OWNER
                 );
             }
@@ -386,7 +387,7 @@ library ApeCoinPoolLogic {
             totalApeCoinNeeded.toUint128(),
             depositInfo.cashToken,
             depositInfo.cashAmount,
-            msg.sender
+            depositInfo.onBehalf
         );
 
         //stake in ApeCoinStaking
@@ -474,7 +475,7 @@ library ApeCoinPoolLogic {
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         mapping(address => uint256) storage cApeShareBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
-        IParaApeStaking.ApeCoinPairActionInfo memory withdrawInfo
+        IParaApeStaking.ApeCoinPairWithdrawInfo memory withdrawInfo
     ) public {
         uint256 arrayLength = withdrawInfo.apeTokenIds.length;
         require(
@@ -637,7 +638,7 @@ library ApeCoinPoolLogic {
                     sApeBalance,
                     cApeShareBalance,
                     vars,
-                    IParaApeStaking.ApeCoinActionInfo({
+                    IApeCoinPool.ApeCoinWithdrawInfo({
                         cashToken: vars.cApe,
                         cashAmount: 0,
                         isBAYC: isBAYC,
@@ -678,7 +679,7 @@ library ApeCoinPoolLogic {
                     sApeBalance,
                     cApeShareBalance,
                     vars,
-                    IParaApeStaking.ApeCoinPairActionInfo({
+                    IApeCoinPool.ApeCoinPairWithdrawInfo({
                         cashToken: vars.cApe,
                         cashAmount: 0,
                         isBAYC: isBAYC,

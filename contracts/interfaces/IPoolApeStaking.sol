@@ -2,6 +2,7 @@
 pragma solidity 0.8.10;
 
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
+import "./IParaApeStaking.sol";
 
 /**
  * @title IPoolApeStaking
@@ -12,4 +13,12 @@ interface IPoolApeStaking {
     function paraApeStaking() external view returns (address);
 
     function borrowPoolCApe(uint256 amount) external returns (uint256);
+
+    function borrowAndStakingApeCoin(
+        IParaApeStaking.ApeCoinDepositInfo[] calldata apeCoinDepositInfo,
+        IParaApeStaking.ApeCoinPairDepositInfo[] calldata pairDepositInfo,
+        address borrowAsset,
+        uint256 borrowAmount,
+        bool openSApeCollateralFlag
+    ) external;
 }

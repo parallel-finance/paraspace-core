@@ -10,6 +10,7 @@ import {IPool} from "../../interfaces/IPool.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import "../libraries/logic/BorrowLogic.sol";
+import "../../interfaces/IParaApeStaking.sol";
 
 contract PoolApeStaking is
     ParaVersionedInitializable,
@@ -20,6 +21,7 @@ contract PoolApeStaking is
     uint256 internal constant POOL_REVISION = 149;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
+    address internal immutable APE_COIN;
     address internal immutable APE_COMPOUND;
     address internal immutable PARA_APE_STAKING;
 
@@ -29,10 +31,12 @@ contract PoolApeStaking is
      */
     constructor(
         IPoolAddressesProvider provider,
+        address apeCoin,
         address apeCompound,
         address apeStakingVault
     ) {
         ADDRESSES_PROVIDER = provider;
+        APE_COIN = apeCoin;
         APE_COMPOUND = apeCompound;
         PARA_APE_STAKING = apeStakingVault;
     }
@@ -56,10 +60,97 @@ contract PoolApeStaking is
         uint256 latestBorrowIndex = BorrowLogic.executeBorrowWithoutCollateral(
             ps._reserves,
             PARA_APE_STAKING,
-            address(APE_COMPOUND),
+            APE_COMPOUND,
             amount
         );
 
         return latestBorrowIndex;
+    }
+
+    function borrowAndStakingApeCoin(
+        IParaApeStaking.ApeCoinDepositInfo[] calldata apeCoinDepositInfo,
+        IParaApeStaking.ApeCoinPairDepositInfo[] calldata pairDepositInfo,
+        address borrowAsset,
+        uint256 borrowAmount,
+        bool openSApeCollateralFlag
+    ) external nonReentrant {
+        require(
+            borrowAsset == APE_COIN || borrowAsset == APE_COMPOUND,
+            Errors.INVALID_ASSET_TYPE
+        );
+        DataTypes.PoolStorage storage ps = poolStorage();
+        address msgSender = msg.sender;
+
+        // 1, prepare borrow asset.
+        if (borrowAmount > 0) {
+            DataTypes.ReserveData storage borrowAssetReserve = ps._reserves[
+                borrowAsset
+            ];
+            // no time lock needed here
+            DataTypes.TimeLockParams memory timeLockParams;
+            IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
+                msgSender,
+                borrowAmount,
+                timeLockParams
+            );
+        }
+
+        // 2, stake
+        uint256 arrayLength = apeCoinDepositInfo.length;
+        for (uint256 index = 0; index < arrayLength; index++) {
+            IParaApeStaking.ApeCoinDepositInfo
+                calldata depositInfo = apeCoinDepositInfo[index];
+            require(
+                msgSender == depositInfo.onBehalf,
+                Errors.CALLER_NOT_ALLOWED
+            );
+            IParaApeStaking(PARA_APE_STAKING).depositApeCoinPool(depositInfo);
+        }
+        arrayLength = pairDepositInfo.length;
+        for (uint256 index = 0; index < arrayLength; index++) {
+            IParaApeStaking.ApeCoinPairDepositInfo
+                calldata depositInfo = pairDepositInfo[index];
+            require(
+                msgSender == depositInfo.onBehalf,
+                Errors.CALLER_NOT_ALLOWED
+            );
+            IParaApeStaking(PARA_APE_STAKING).depositApeCoinPairPool(
+                depositInfo
+            );
+        }
+
+        // 3, check if need to collateralize sAPE
+        if (openSApeCollateralFlag) {
+            DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+                msgSender
+            ];
+            Helpers.setAssetUsedAsCollateral(
+                userConfig,
+                ps._reserves,
+                DataTypes.SApeAddress,
+                msgSender
+            );
+        }
+
+        // 4, execute borrow
+        if (borrowAmount > 0) {
+            BorrowLogic.executeBorrow(
+                ps._reserves,
+                ps._reservesList,
+                ps._usersConfig[msgSender],
+                DataTypes.ExecuteBorrowParams({
+                    asset: borrowAsset,
+                    user: msgSender,
+                    onBehalfOf: msgSender,
+                    amount: borrowAmount,
+                    referralCode: 0,
+                    releaseUnderlying: false,
+                    reservesCount: ps._reservesCount,
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                    priceOracleSentinel: ADDRESSES_PROVIDER
+                        .getPriceOracleSentinel()
+                })
+            );
+        }
     }
 }

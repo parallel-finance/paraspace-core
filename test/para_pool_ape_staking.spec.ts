@@ -5,13 +5,19 @@ import {
   getAutoCompoundApe,
   getParaApeStaking,
   getPTokenSApe,
+  getVariableDebtToken,
 } from "../helpers/contracts-getters";
 import {
   advanceBlock,
   advanceTimeAndBlock,
   waitForTx,
 } from "../helpers/misc-utils";
-import {PTokenSApe, AutoCompoundApe, ParaApeStaking} from "../types";
+import {
+  PTokenSApe,
+  AutoCompoundApe,
+  ParaApeStaking,
+  VariableDebtToken,
+} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
@@ -24,6 +30,7 @@ import {
 import {ProtocolErrors} from "../helpers/types";
 import {parseEther} from "ethers/lib/utils";
 import {BigNumber} from "ethers";
+import {isUsingAsCollateral} from "../helpers/contracts-helpers";
 
 describe("Para Ape staking ape coin pool test", () => {
   let testEnv: TestEnv;
@@ -123,6 +130,239 @@ describe("Para Ape staking ape coin pool test", () => {
     return testEnv;
   };
 
+  it("test borrowAndStakingApeCoin", async () => {
+    const {
+      users: [user1, user2, , user4],
+      ape,
+      bayc,
+      mayc,
+      bakc,
+      nBAKC,
+      apeCoinStaking,
+      pool,
+      protocolDataProvider,
+    } = await loadFixture(fixture);
+
+    //prepare user3 asset
+    await mintAndValidate(ape, "20000000", user4);
+    await waitForTx(
+      await ape.connect(user4.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await ape.connect(user4.signer).approve(cApe.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await cApe.connect(user4.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await pool
+        .connect(user4.signer)
+        .supply(ape.address, parseEther("10000000"), user4.address, 0)
+    );
+    await waitForTx(
+      await cApe
+        .connect(user4.signer)
+        .deposit(user4.address, parseEther("10000000"))
+    );
+    await waitForTx(
+      await pool
+        .connect(user4.signer)
+        .supply(cApe.address, parseEther("10000000"), user4.address, 0)
+    );
+
+    //prepare user1 user2 asset
+    await supplyAndValidate(bayc, "1", user1, true);
+    await supplyAndValidate(bakc, "2", user1, true);
+    await mintAndValidate(ape, "100000", user1);
+    await supplyAndValidate(mayc, "1", user2, true);
+    await waitForTx(
+      await nBAKC
+        .connect(user1.signer)
+        .transferFrom(user1.address, user2.address, 1)
+    );
+    await waitForTx(
+      await ape
+        .connect(user1.signer)
+        .approve(paraApeStaking.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await cApe
+        .connect(user2.signer)
+        .approve(paraApeStaking.address, MAX_UINT_AMOUNT)
+    );
+
+    await changePriceAndValidate(bayc, "100");
+    await changePriceAndValidate(mayc, "50");
+    await changePriceAndValidate(bakc, "25");
+    await changePriceAndValidate(ape, "0.001");
+    await changePriceAndValidate(cApe, "0.001");
+    await changeSApePriceAndValidate(sApeAddress, "0.001");
+
+    //collateral value = 100 * 0.3 + 25 * 0.3 + 250000*0.001 * 0.2 =
+    //borrow value = 150000 * 0.001
+    await expect(
+      pool.connect(user1.signer).borrowAndStakingApeCoin(
+        [
+          {
+            onBehalf: user1.address,
+            cashToken: ape.address,
+            cashAmount: parseEther("200000"),
+            isBAYC: true,
+            tokenIds: [0],
+          },
+        ],
+        [
+          {
+            onBehalf: user1.address,
+            cashToken: ape.address,
+            cashAmount: parseEther("50000"),
+            isBAYC: true,
+            apeTokenIds: [0],
+            bakcTokenIds: [0],
+          },
+        ],
+        ape.address,
+        parseEther("150000"),
+        true
+      )
+    ).to.be.revertedWith(ProtocolErrors.COLLATERAL_CANNOT_COVER_NEW_BORROW);
+
+    await expect(
+      pool.connect(user2.signer).borrowAndStakingApeCoin(
+        [
+          {
+            onBehalf: user1.address,
+            cashToken: ape.address,
+            cashAmount: parseEther("200000"),
+            isBAYC: true,
+            tokenIds: [0],
+          },
+        ],
+        [
+          {
+            onBehalf: user1.address,
+            cashToken: ape.address,
+            cashAmount: parseEther("50000"),
+            isBAYC: true,
+            apeTokenIds: [0],
+            bakcTokenIds: [0],
+          },
+        ],
+        ape.address,
+        parseEther("150000"),
+        true
+      )
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_ALLOWED);
+
+    await changePriceAndValidate(ape, "0.00001");
+    await changePriceAndValidate(cApe, "0.00001");
+    await changeSApePriceAndValidate(sApeAddress, "0.00001");
+
+    //user1 borrow ape to stake
+    await waitForTx(
+      await pool.connect(user1.signer).borrowAndStakingApeCoin(
+        [
+          {
+            onBehalf: user1.address,
+            cashToken: ape.address,
+            cashAmount: parseEther("200000"),
+            isBAYC: true,
+            tokenIds: [0],
+          },
+        ],
+        [
+          {
+            onBehalf: user1.address,
+            cashToken: ape.address,
+            cashAmount: parseEther("50000"),
+            isBAYC: true,
+            apeTokenIds: [0],
+            bakcTokenIds: [0],
+          },
+        ],
+        ape.address,
+        parseEther("150000"),
+        true
+      )
+    );
+
+    //user2 borrow cApe to stake
+    await waitForTx(
+      await pool.connect(user2.signer).borrowAndStakingApeCoin(
+        [
+          {
+            onBehalf: user2.address,
+            cashToken: cApe.address,
+            cashAmount: parseEther("100000"),
+            isBAYC: false,
+            tokenIds: [0],
+          },
+        ],
+        [
+          {
+            onBehalf: user2.address,
+            cashToken: cApe.address,
+            cashAmount: parseEther("50000"),
+            isBAYC: false,
+            apeTokenIds: [0],
+            bakcTokenIds: [1],
+          },
+        ],
+        cApe.address,
+        parseEther("150000"),
+        true
+      )
+    );
+    const sApeData = await pool.getReserveData(sApeAddress);
+    const user1Config = BigNumber.from(
+      (await pool.getUserConfiguration(user1.address)).data
+    );
+    const user2Config = BigNumber.from(
+      (await pool.getUserConfiguration(user2.address)).data
+    );
+    expect(isUsingAsCollateral(user1Config, sApeData.id)).to.be.true;
+    expect(isUsingAsCollateral(user2Config, sApeData.id)).to.be.true;
+
+    const {variableDebtTokenAddress: variableDebtApeCoinAddress} =
+      await protocolDataProvider.getReserveTokensAddresses(ape.address);
+    const variableDebtApeCoin = await getVariableDebtToken(
+      variableDebtApeCoinAddress
+    );
+    const {variableDebtTokenAddress: variableDebtCApeCoinAddress} =
+      await protocolDataProvider.getReserveTokensAddresses(cApe.address);
+    const variableDebtCApeCoin = await getVariableDebtToken(
+      variableDebtCApeCoinAddress
+    );
+    //check user1 debt
+    expect(await variableDebtApeCoin.balanceOf(user1.address)).to.be.closeTo(
+      parseEther("150000"),
+      parseEther("50")
+    );
+    expect(await variableDebtCApeCoin.balanceOf(user1.address)).to.be.equal(
+      "0"
+    );
+
+    //check user2 debt
+    expect(await variableDebtApeCoin.balanceOf(user2.address)).to.be.eq("0");
+    expect(await variableDebtCApeCoin.balanceOf(user2.address)).to.be.closeTo(
+      parseEther("150000"),
+      parseEther("50")
+    );
+
+    expect((await apeCoinStaking.nftPosition(1, 0)).stakedAmount).to.be.eq(
+      parseEther("200000")
+    );
+    expect((await apeCoinStaking.nftPosition(2, 0)).stakedAmount).to.be.eq(
+      parseEther("100000")
+    );
+    expect((await apeCoinStaking.nftPosition(3, 0)).stakedAmount).to.be.eq(
+      parseEther("50000")
+    );
+    expect((await apeCoinStaking.nftPosition(3, 1)).stakedAmount).to.be.eq(
+      parseEther("50000")
+    );
+  });
+
   it("test BAYC + ApeCoin pool logic", async () => {
     const {
       users: [user1, user2, , user4],
@@ -159,6 +399,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("400000"),
         isBAYC: true,
@@ -167,6 +408,7 @@ describe("Para Ape staking ape coin pool test", () => {
     );
     await waitForTx(
       await paraApeStaking.connect(user2.signer).depositApeCoinPool({
+        onBehalf: user2.address,
         cashToken: ape.address,
         cashAmount: parseEther("200000"),
         isBAYC: true,
@@ -179,6 +421,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPairPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("100000"),
         isBAYC: true,
@@ -188,6 +431,7 @@ describe("Para Ape staking ape coin pool test", () => {
     );
     await waitForTx(
       await paraApeStaking.connect(user2.signer).depositApeCoinPairPool({
+        onBehalf: user2.address,
         cashToken: ape.address,
         cashAmount: parseEther("50000"),
         isBAYC: true,
@@ -433,6 +677,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("200000"),
         isBAYC: false,
@@ -441,6 +686,7 @@ describe("Para Ape staking ape coin pool test", () => {
     );
     await waitForTx(
       await paraApeStaking.connect(user2.signer).depositApeCoinPool({
+        onBehalf: user2.address,
         cashToken: ape.address,
         cashAmount: parseEther("100000"),
         isBAYC: false,
@@ -453,6 +699,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPairPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("100000"),
         isBAYC: false,
@@ -462,6 +709,7 @@ describe("Para Ape staking ape coin pool test", () => {
     );
     await waitForTx(
       await paraApeStaking.connect(user2.signer).depositApeCoinPairPool({
+        onBehalf: user2.address,
         cashToken: ape.address,
         cashAmount: parseEther("50000"),
         isBAYC: false,
@@ -710,6 +958,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("200000"),
         isBAYC: true,
@@ -718,6 +967,7 @@ describe("Para Ape staking ape coin pool test", () => {
     );
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPairPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("50000"),
         isBAYC: true,
@@ -727,6 +977,7 @@ describe("Para Ape staking ape coin pool test", () => {
     );
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("100000"),
         isBAYC: false,
@@ -735,6 +986,7 @@ describe("Para Ape staking ape coin pool test", () => {
     );
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPairPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("50000"),
         isBAYC: false,
@@ -896,7 +1148,18 @@ describe("Para Ape staking ape coin pool test", () => {
     await supplyAndValidate(bayc, "1", user1, true);
 
     await expect(
+      paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        onBehalf: user2.address,
+        cashToken: ape.address,
+        cashAmount: parseEther("200000"),
+        isBAYC: true,
+        tokenIds: [0],
+      })
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_ALLOWED);
+
+    await expect(
       paraApeStaking.connect(user2.signer).depositApeCoinPool({
+        onBehalf: user2.address,
         cashToken: ape.address,
         cashAmount: parseEther("200000"),
         isBAYC: true,
@@ -906,6 +1169,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await expect(
       paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("100000"),
         isBAYC: true,
@@ -928,6 +1192,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPairPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("50000"),
         isBAYC: true,
@@ -963,6 +1228,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("200000"),
         isBAYC: true,
@@ -971,6 +1237,7 @@ describe("Para Ape staking ape coin pool test", () => {
     );
     await waitForTx(
       await paraApeStaking.connect(user2.signer).depositApeCoinPool({
+        onBehalf: user2.address,
         cashToken: ape.address,
         cashAmount: parseEther("200000"),
         isBAYC: true,
@@ -980,6 +1247,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPairPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("50000"),
         isBAYC: true,
@@ -1026,6 +1294,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("200000"),
         isBAYC: true,
@@ -1034,6 +1303,7 @@ describe("Para Ape staking ape coin pool test", () => {
     );
     await waitForTx(
       await paraApeStaking.connect(user2.signer).depositApeCoinPool({
+        onBehalf: user2.address,
         cashToken: ape.address,
         cashAmount: parseEther("200000"),
         isBAYC: true,
@@ -1073,7 +1343,19 @@ describe("Para Ape staking ape coin pool test", () => {
     await supplyAndValidate(bakc, "1", user1, true);
 
     await expect(
+      paraApeStaking.connect(user1.signer).depositApeCoinPairPool({
+        onBehalf: user2.address,
+        cashToken: ape.address,
+        cashAmount: parseEther("50000"),
+        isBAYC: true,
+        apeTokenIds: [0],
+        bakcTokenIds: [0],
+      })
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_ALLOWED);
+
+    await expect(
       paraApeStaking.connect(user2.signer).depositApeCoinPairPool({
+        onBehalf: user2.address,
         cashToken: ape.address,
         cashAmount: parseEther("50000"),
         isBAYC: true,
@@ -1084,6 +1366,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await expect(
       paraApeStaking.connect(user1.signer).depositApeCoinPairPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("1"),
         isBAYC: true,
@@ -1107,6 +1390,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("200000"),
         isBAYC: true,
@@ -1149,6 +1433,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPairPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("50000"),
         isBAYC: true,
@@ -1158,6 +1443,7 @@ describe("Para Ape staking ape coin pool test", () => {
     );
     await waitForTx(
       await paraApeStaking.connect(user2.signer).depositApeCoinPairPool({
+        onBehalf: user2.address,
         cashToken: ape.address,
         cashAmount: parseEther("50000"),
         isBAYC: true,
@@ -1168,6 +1454,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("200000"),
         isBAYC: true,
@@ -1219,6 +1506,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPairPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("50000"),
         isBAYC: true,
@@ -1228,6 +1516,7 @@ describe("Para Ape staking ape coin pool test", () => {
     );
     await waitForTx(
       await paraApeStaking.connect(user2.signer).depositApeCoinPairPool({
+        onBehalf: user2.address,
         cashToken: ape.address,
         cashAmount: parseEther("50000"),
         isBAYC: true,
@@ -1284,6 +1573,7 @@ describe("Para Ape staking ape coin pool test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("200000"),
         isBAYC: true,

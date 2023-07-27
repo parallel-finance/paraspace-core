@@ -51,7 +51,7 @@ contract ParaApeStaking is
     address private immutable psApe;
 
     //record all pool states
-    mapping(uint256 => PoolState) internal poolStates;
+    mapping(uint256 => PoolState) public poolStates;
 
     //record user sApe balance
     mapping(address => SApeBalance) private sApeBalance;
@@ -273,11 +273,15 @@ contract ParaApeStaking is
     /*
      *Ape Coin Staking Pool Logic
      */
-    function depositApeCoinPool(ApeCoinActionInfo calldata depositInfo)
+    function depositApeCoinPool(ApeCoinDepositInfo calldata depositInfo)
         external
         whenNotPaused
         nonReentrant
     {
+        require(
+            msg.sender == pool || msg.sender == depositInfo.onBehalf,
+            Errors.CALLER_NOT_ALLOWED
+        );
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = depositInfo.isBAYC
             ? ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID
@@ -344,7 +348,7 @@ contract ParaApeStaking is
         );
     }
 
-    function withdrawApeCoinPool(ApeCoinActionInfo calldata withdrawInfo)
+    function withdrawApeCoinPool(ApeCoinWithdrawInfo calldata withdrawInfo)
         external
         whenNotPaused
         nonReentrant
@@ -365,11 +369,15 @@ contract ParaApeStaking is
         );
     }
 
-    function depositApeCoinPairPool(ApeCoinPairActionInfo calldata depositInfo)
+    function depositApeCoinPairPool(ApeCoinPairDepositInfo calldata depositInfo)
         external
         whenNotPaused
         nonReentrant
     {
+        require(
+            msg.sender == pool || msg.sender == depositInfo.onBehalf,
+            Errors.CALLER_NOT_ALLOWED
+        );
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = depositInfo.isBAYC
             ? ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID
@@ -438,7 +446,7 @@ contract ParaApeStaking is
     }
 
     function withdrawApeCoinPairPool(
-        ApeCoinPairActionInfo calldata withdrawInfo
+        ApeCoinPairWithdrawInfo calldata withdrawInfo
     ) external whenNotPaused nonReentrant {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;

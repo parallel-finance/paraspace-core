@@ -12,7 +12,6 @@ import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../protocol/libraries/math/WadRayMath.sol";
 import "./ApeStakingCommonLogic.sol";
 import "../../protocol/libraries/helpers/Errors.sol";
-import "hardhat/console.sol";
 
 /**
  * @title ApeStakingSinglePoolLogic library
