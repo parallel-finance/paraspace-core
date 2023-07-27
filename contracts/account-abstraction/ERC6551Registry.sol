@@ -25,11 +25,21 @@ contract ERC6551Registry is IERC6551Registry {
             salt
         );
 
-        address _account = Create2.computeAddress(bytes32(salt), keccak256(code));
+        address _account = Create2.computeAddress(
+            bytes32(salt),
+            keccak256(code)
+        );
 
         if (_account.code.length != 0) return _account;
 
-        emit AccountCreated(_account, implementation, chainId, tokenContract, tokenId, salt);
+        emit AccountCreated(
+            _account,
+            implementation,
+            chainId,
+            tokenContract,
+            tokenId,
+            salt
+        );
 
         _account = Create2.deploy(0, bytes32(salt), code);
 

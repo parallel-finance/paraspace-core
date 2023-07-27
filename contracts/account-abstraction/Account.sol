@@ -15,7 +15,6 @@ import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 
 import {BaseAccount as BaseERC4337Account, IEntryPoint, UserOperation} from "./base-account-abstraction/core/BaseAccount.sol";
 
-
 error NotAuthorized();
 error InvalidInput();
 error AccountLocked();
@@ -78,8 +77,7 @@ contract Account is
     }
 
     constructor(address entryPoint_) {
-        if (entryPoint_ == address(0))
-            revert InvalidInput();
+        if (entryPoint_ == address(0)) revert InvalidInput();
 
         _entryPoint = entryPoint_;
     }

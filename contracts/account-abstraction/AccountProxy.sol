@@ -26,4 +26,6 @@ contract AccountProxy is Proxy, ERC1967Upgrade {
     function _implementation() internal view override returns (address) {
         return ERC1967Upgrade._getImplementation();
     }
+
+    //TODO add upgrade functionality
 }
