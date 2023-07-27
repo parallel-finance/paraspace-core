@@ -229,15 +229,19 @@ contract ParaApeStaking is
         return sApeBalance[user].stakedBalance;
     }
 
-    function freeSApeBalance(address user) public view returns (uint256) {
-        return
-            ICApe(cApe).getPooledApeByShares(
-                sApeBalance[user].freeShareBalance
-            );
+    function freeSApeBalance(address user) external view returns (uint256) {
+        uint256 freeShareBalance = sApeBalance[user].freeShareBalance;
+        if (freeShareBalance == 0) {
+            return 0;
+        }
+        return ICApe(cApe).getPooledApeByShares(freeShareBalance);
     }
 
     function totalSApeBalance(address user) external view returns (uint256) {
         IParaApeStaking.SApeBalance memory cache = sApeBalance[user];
+        if (cache.freeShareBalance == 0) {
+            return cache.stakedBalance;
+        }
         return
             ICApe(cApe).getPooledApeByShares(cache.freeShareBalance) +
             cache.stakedBalance;
@@ -464,28 +468,144 @@ contract ParaApeStaking is
         );
     }
 
-    function tryUnstakeApeCoinPoolPosition(
-        bool isBAYC,
-        uint256[] calldata tokenIds
-    ) external whenNotPaused nonReentrant {
-        ApeStakingVaultCacheVars memory vars = _createCacheVars();
-        uint256 singlePoolId = isBAYC
-            ? ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID
-            : ApeStakingCommonLogic.MAYC_APECOIN_POOL_ID;
-        uint256 PairPoolId = isBAYC
-            ? ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID
-            : ApeStakingCommonLogic.MAYC_BAKC_APECOIN_POOL_ID;
+    function nBakcOwnerChangeCallback(uint32[] calldata tokenIds)
+        external
+        whenNotPaused
+        nonReentrant
+    {
+        uint256 arrayLength = tokenIds.length;
+        uint256 poolId = ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID;
+        uint32[] memory singlePoolTokenIds = new uint32[](arrayLength);
+        uint256 singlePoolCount = 0;
 
-        ApeCoinPoolLogic.tryUnstakeApeCoinPoolPosition(
-            poolStates[singlePoolId],
-            poolStates[PairPoolId],
-            apeMatchedCount,
-            sApeBalance,
-            cApeShareBalance,
-            vars,
-            isBAYC,
-            tokenIds
-        );
+        for (uint256 index = 0; index < arrayLength; index++) {
+            uint32 tokenId = tokenIds[index];
+            if (poolStates[poolId].tokenStatus[tokenId].isInPool) {
+                singlePoolTokenIds[singlePoolCount] = tokenId;
+                singlePoolCount++;
+            }
+        }
+
+        if (singlePoolCount > 0) {
+            assembly {
+                mstore(singlePoolTokenIds, singlePoolCount)
+            }
+
+            ApeStakingVaultCacheVars memory vars = _createCacheVars();
+            ApeStakingSinglePoolLogic.claimNFT(
+                poolStates[poolId],
+                vars,
+                bakc,
+                singlePoolTokenIds
+            );
+        }
+    }
+
+    function nApeOwnerChangeCallback(bool isBAYC, uint32[] calldata tokenIds)
+        external
+        whenNotPaused
+        nonReentrant
+    {
+        ApeStakingVaultCacheVars memory vars = _createCacheVars();
+
+        uint32[] memory apeCoinPoolTokenIds = new uint32[](tokenIds.length);
+        uint256 apeCoinPoolCount = 0;
+        //handle nft pool in the scope to avoid stack too deep
+        {
+            uint32[] memory pairPoolTokenIds = new uint32[](tokenIds.length);
+            uint32[] memory pairPoolBakcIds = new uint32[](tokenIds.length);
+            uint32[] memory singlePoolTokenIds = new uint32[](tokenIds.length);
+            uint256 pairPoolCount = 0;
+            uint256 singlePoolCount = 0;
+
+            for (uint256 index = 0; index < tokenIds.length; index++) {
+                uint32 tokenId = tokenIds[index];
+
+                //check if ape in pair pool
+                uint256 poolId = isBAYC
+                    ? ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID
+                    : ApeStakingCommonLogic.MAYC_BAKC_PAIR_POOL_ID;
+                TokenStatus memory tokenStatus = poolStates[poolId].tokenStatus[
+                    tokenId
+                ];
+                if (tokenStatus.isInPool) {
+                    pairPoolTokenIds[pairPoolCount] = tokenId;
+                    pairPoolBakcIds[pairPoolCount] = tokenStatus.bakcTokenId;
+                    pairPoolCount++;
+                    continue;
+                }
+
+                //check if ape in single pool
+                poolId = isBAYC
+                    ? ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID
+                    : ApeStakingCommonLogic.MAYC_SINGLE_POOL_ID;
+                if (poolStates[poolId].tokenStatus[tokenId].isInPool) {
+                    singlePoolTokenIds[singlePoolCount] = tokenId;
+                    singlePoolCount++;
+                    continue;
+                }
+
+                //must be in ape coin pool
+                apeCoinPoolTokenIds[apeCoinPoolCount] = tokenId;
+                apeCoinPoolCount++;
+            }
+
+            if (pairPoolCount > 0) {
+                assembly {
+                    mstore(pairPoolTokenIds, pairPoolCount)
+                    mstore(pairPoolBakcIds, pairPoolCount)
+                }
+                uint256 poolId = isBAYC
+                    ? ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID
+                    : ApeStakingCommonLogic.MAYC_BAKC_PAIR_POOL_ID;
+                ApeStakingPairPoolLogic.claimPairNFT(
+                    poolStates[poolId],
+                    vars,
+                    isBAYC,
+                    pairPoolTokenIds,
+                    pairPoolBakcIds
+                );
+            }
+
+            if (singlePoolCount > 0) {
+                assembly {
+                    mstore(singlePoolTokenIds, singlePoolCount)
+                }
+                uint256 poolId = isBAYC
+                    ? ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID
+                    : ApeStakingCommonLogic.MAYC_SINGLE_POOL_ID;
+                ApeStakingSinglePoolLogic.claimNFT(
+                    poolStates[poolId],
+                    vars,
+                    isBAYC ? bayc : mayc,
+                    singlePoolTokenIds
+                );
+            }
+        }
+
+        if (apeCoinPoolCount > 0) {
+            assembly {
+                mstore(apeCoinPoolTokenIds, apeCoinPoolCount)
+            }
+
+            uint256 singlePoolId = isBAYC
+                ? ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID
+                : ApeStakingCommonLogic.MAYC_APECOIN_POOL_ID;
+            uint256 PairPoolId = isBAYC
+                ? ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID
+                : ApeStakingCommonLogic.MAYC_BAKC_APECOIN_POOL_ID;
+
+            ApeCoinPoolLogic.tryUnstakeApeCoinPoolPosition(
+                poolStates[singlePoolId],
+                poolStates[PairPoolId],
+                apeMatchedCount,
+                sApeBalance,
+                cApeShareBalance,
+                vars,
+                isBAYC,
+                apeCoinPoolTokenIds
+            );
+        }
     }
 
     /*
@@ -897,7 +1017,17 @@ contract ParaApeStaking is
             Errors.NFT_NOT_ALLOWED
         );
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
-        ApeStakingSinglePoolLogic.claimNFT(poolStates, vars, nft, tokenIds);
+        uint256 poolId = (nft == vars.bayc)
+            ? ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID
+            : (nft == vars.mayc)
+            ? ApeStakingCommonLogic.MAYC_SINGLE_POOL_ID
+            : ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID;
+        ApeStakingSinglePoolLogic.claimNFT(
+            poolStates[poolId],
+            vars,
+            nft,
+            tokenIds
+        );
     }
 
     /// @inheritdoc IApeStakingVault

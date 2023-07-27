@@ -71,8 +71,8 @@ interface IApeCoinPool {
         ApeCoinPairWithdrawInfo calldata withdrawInfo
     ) external;
 
-    function tryUnstakeApeCoinPoolPosition(
-        bool isBAYC,
-        uint256[] calldata tokenIds
-    ) external;
+    function nApeOwnerChangeCallback(bool isBAYC, uint32[] calldata tokenIds)
+        external;
+
+    function nBakcOwnerChangeCallback(uint32[] calldata tokenIds) external;
 }

@@ -74,6 +74,7 @@ describe("SApe Pool Operation Test", () => {
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        onBehalf: user1.address,
         cashToken: ape.address,
         cashAmount: parseEther("100000"),
         isBAYC: false,

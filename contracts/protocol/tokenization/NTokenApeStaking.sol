@@ -7,6 +7,7 @@ import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import "../../interfaces/IParaApeStaking.sol";
+import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 
 /**
  * @title ApeCoinStaking NToken
@@ -14,6 +15,8 @@ import "../../interfaces/IParaApeStaking.sol";
  * @notice Implementation of the NToken for the ParaSpace protocol
  */
 abstract contract NTokenApeStaking is NToken {
+    using SafeCast for uint256;
+
     IParaApeStaking immutable paraApeStaking;
 
     /**
@@ -63,9 +66,14 @@ abstract contract NTokenApeStaking is NToken {
         uint256 tokenId,
         bool validate
     ) internal override {
-        uint256[] memory tokenIds = new uint256[](1);
-        tokenIds[0] = tokenId;
-        paraApeStaking.tryUnstakeApeCoinPoolPosition(isBayc(), tokenIds);
+        address underlyingOwner = IERC721(_ERC721Data.underlyingAsset).ownerOf(
+            tokenId
+        );
+        if (underlyingOwner == address(paraApeStaking)) {
+            uint32[] memory tokenIds = new uint32[](1);
+            tokenIds[0] = tokenId.toUint32();
+            paraApeStaking.nApeOwnerChangeCallback(isBayc(), tokenIds);
+        }
         super._transfer(from, to, tokenId, validate);
     }
 
@@ -78,7 +86,25 @@ abstract contract NTokenApeStaking is NToken {
         uint256[] calldata tokenIds,
         DataTypes.TimeLockParams calldata timeLockParams
     ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
-        paraApeStaking.tryUnstakeApeCoinPoolPosition(isBayc(), tokenIds);
+        address underlying = _ERC721Data.underlyingAsset;
+        uint256 arrayLength = tokenIds.length;
+        uint32[] memory unstakeTokenIds = new uint32[](arrayLength);
+        uint256 unstakeTokenIdCount = 0;
+        for (uint256 index = 0; index < arrayLength; index++) {
+            uint32 tokenId = tokenIds[index].toUint32();
+            address underlyingOwner = IERC721(underlying).ownerOf(tokenId);
+            if (underlyingOwner == address(paraApeStaking)) {
+                unstakeTokenIds[unstakeTokenIdCount] = tokenId;
+                unstakeTokenIdCount++;
+            }
+        }
+
+        if (unstakeTokenIdCount > 0) {
+            assembly {
+                mstore(unstakeTokenIds, unstakeTokenIdCount)
+            }
+            paraApeStaking.nApeOwnerChangeCallback(isBayc(), unstakeTokenIds);
+        }
 
         return _burn(from, receiverOfUnderlying, tokenIds, timeLockParams);
     }

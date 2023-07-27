@@ -71,6 +71,7 @@ library ApeCoinPoolLogic {
             Errors.SAPE_FREE_BALANCE_NOT_ENOUGH
         );
         sApeBalanceCache.freeShareBalance -= shareAmount.toUint128();
+        sApeBalance[user] = sApeBalanceCache;
 
         _validateDropSApeBalance(pool, sApeReserveId, user);
 
@@ -504,6 +505,7 @@ library ApeCoinPoolLogic {
             memory _nftPairs = new ApeCoinStaking.PairNftWithdrawWithAmount[](
                 arrayLength
             );
+        bool isBAKCOwnerWithdraw = false;
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 apeTokenId = withdrawInfo.apeTokenIds[index];
             uint32 bakcTokenId = withdrawInfo.bakcTokenIds[index];
@@ -515,6 +517,7 @@ library ApeCoinPoolLogic {
                         bakcTokenId
                     );
                     require(msg.sender == nBakcOwner, Errors.NOT_THE_OWNER);
+                    isBAKCOwnerWithdraw = true;
                 }
             }
 
@@ -554,7 +557,7 @@ library ApeCoinPoolLogic {
             vars,
             totalApeCoinAmount,
             withdrawInfo.cashToken,
-            withdrawInfo.cashAmount,
+            isBAKCOwnerWithdraw ? 0 : withdrawInfo.cashAmount,
             nApeOwner
         );
 
@@ -606,7 +609,7 @@ library ApeCoinPoolLogic {
         mapping(address => uint256) storage cApeShareBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool isBAYC,
-        uint256[] calldata tokenIds
+        uint32[] calldata tokenIds
     ) external {
         require(tokenIds.length > 0, Errors.INVALID_PARAMETER);
 
@@ -615,14 +618,14 @@ library ApeCoinPoolLogic {
             uint32[] memory singlePoolTokenIds = new uint32[](tokenIds.length);
             uint256 singleCount = 0;
             for (uint256 index = 0; index < tokenIds.length; index++) {
-                uint256 tokenId = tokenIds[index];
+                uint32 tokenId = tokenIds[index];
 
                 IParaApeStaking.TokenStatus
                     memory singlePoolTokenStatus = singlePoolState.tokenStatus[
                         tokenId
                     ];
                 if (singlePoolTokenStatus.isInPool) {
-                    singlePoolTokenIds[singleCount] = tokenId.toUint32();
+                    singlePoolTokenIds[singleCount] = tokenId;
                     singleCount++;
                 }
             }
@@ -654,14 +657,14 @@ library ApeCoinPoolLogic {
             uint32[] memory bakcTokenIds = new uint32[](tokenIds.length);
             uint256 pairCount = 0;
             for (uint256 index = 0; index < tokenIds.length; index++) {
-                uint256 tokenId = tokenIds[index];
+                uint32 tokenId = tokenIds[index];
 
                 IParaApeStaking.TokenStatus
                     memory pairPoolTokenStatus = pairPoolState.tokenStatus[
                         tokenId
                     ];
                 if (pairPoolTokenStatus.isInPool) {
-                    parePoolTokenIds[pairCount] = tokenId.toUint32();
+                    parePoolTokenIds[pairCount] = tokenId;
                     bakcTokenIds[pairCount] = pairPoolTokenStatus.bakcTokenId;
                     pairCount++;
                 }
@@ -836,16 +839,16 @@ library ApeCoinPoolLogic {
         sApeBalanceCache.stakedBalance -= totalApeCoinWithdrew;
         sApeBalance[user] = sApeBalanceCache;
 
-        if (cashAmount > 0) {
-            _validateDropSApeBalance(vars.pool, vars.sApeReserveId, user);
-            IERC20(cashToken).safeTransfer(user, cashAmount);
-        }
-
         if (cApeDepositAmount > 0) {
             IAutoCompoundApe(vars.cApe).deposit(
                 address(this),
                 cApeDepositAmount
             );
+        }
+
+        if (cashAmount > 0) {
+            _validateDropSApeBalance(vars.pool, vars.sApeReserveId, user);
+            IERC20(cashToken).safeTransfer(user, cashAmount);
         }
     }
 
@@ -921,7 +924,7 @@ library ApeCoinPoolLogic {
         bool usageAsCollateralEnabled = userConfig.isUsingAsCollateral(
             sApeReserveId
         );
-        if (usageAsCollateralEnabled) {
+        if (usageAsCollateralEnabled && userConfig.isBorrowingAny()) {
             (, , , , , uint256 healthFactor, ) = IPool(pool).getUserAccountData(
                 user
             );

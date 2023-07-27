@@ -383,19 +383,12 @@ library ApeStakingSinglePoolLogic {
     }
 
     function claimNFT(
-        mapping(uint256 => IParaApeStaking.PoolState) storage poolStates,
+        IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         address nft,
         uint32[] calldata tokenIds
     ) external {
         ApeStakingCommonLogic.validateTokenIdArray(tokenIds);
-
-        uint256 poolId = (nft == vars.bayc)
-            ? ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID
-            : (nft == vars.mayc)
-            ? ApeStakingCommonLogic.MAYC_SINGLE_POOL_ID
-            : ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID;
-        IParaApeStaking.PoolState storage poolState = poolStates[poolId];
         _claimNFT(poolState, vars, true, nft, tokenIds);
     }
 

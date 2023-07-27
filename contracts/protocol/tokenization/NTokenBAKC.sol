@@ -10,6 +10,8 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {INToken} from "../../interfaces/INToken.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import "../../interfaces/IParaApeStaking.sol";
+import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 
 /**
  * @title NTokenBAKC
@@ -17,13 +19,19 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
  * @notice Implementation of the NTokenBAKC for the ParaSpace protocol
  */
 contract NTokenBAKC is NToken {
+    using SafeCast for uint256;
+
+    IParaApeStaking immutable paraApeStaking;
+
     /**
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
     constructor(IPool pool, address delegateRegistry)
         NToken(pool, false, delegateRegistry)
-    {}
+    {
+        paraApeStaking = IParaApeStaking(pool.paraApeStaking());
+    }
 
     function initialize(
         IPool initializingPool,
@@ -42,8 +50,58 @@ contract NTokenBAKC is NToken {
             params
         );
 
-        address paraApeStaking = POOL.paraApeStaking();
-        IERC721(underlyingAsset).setApprovalForAll(paraApeStaking, true);
+        IERC721(underlyingAsset).setApprovalForAll(
+            address(paraApeStaking),
+            true
+        );
+    }
+
+    function _transfer(
+        address from,
+        address to,
+        uint256 tokenId,
+        bool validate
+    ) internal override {
+        address underlyingOwner = IERC721(_ERC721Data.underlyingAsset).ownerOf(
+            tokenId
+        );
+        if (underlyingOwner == address(paraApeStaking)) {
+            uint32[] memory tokenIds = new uint32[](1);
+            tokenIds[0] = tokenId.toUint32();
+            paraApeStaking.nBakcOwnerChangeCallback(tokenIds);
+        }
+        super._transfer(from, to, tokenId, validate);
+    }
+
+    /**
+     * @notice Overrides the burn from NToken to withdraw all staked and pending rewards before burning the NToken on liquidation/withdraw
+     */
+    function burn(
+        address from,
+        address receiverOfUnderlying,
+        uint256[] calldata tokenIds,
+        DataTypes.TimeLockParams calldata timeLockParams
+    ) external virtual override onlyPool nonReentrant returns (uint64, uint64) {
+        address underlying = _ERC721Data.underlyingAsset;
+        uint256 arrayLength = tokenIds.length;
+        uint32[] memory claimTokenIds = new uint32[](arrayLength);
+        uint256 tokenIdCount = 0;
+        for (uint256 index = 0; index < arrayLength; index++) {
+            uint32 tokenId = tokenIds[index].toUint32();
+            address underlyingOwner = IERC721(underlying).ownerOf(tokenId);
+            if (underlyingOwner == address(paraApeStaking)) {
+                claimTokenIds[tokenIdCount] = tokenId;
+                tokenIdCount++;
+            }
+        }
+
+        if (tokenIdCount > 0) {
+            assembly {
+                mstore(claimTokenIds, tokenIdCount)
+            }
+            paraApeStaking.nBakcOwnerChangeCallback(claimTokenIds);
+        }
+        return _burn(from, receiverOfUnderlying, tokenIds, timeLockParams);
     }
 
     function getXTokenType() external pure override returns (XTokenType) {

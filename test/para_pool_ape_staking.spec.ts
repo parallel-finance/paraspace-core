@@ -12,12 +12,7 @@ import {
   advanceTimeAndBlock,
   waitForTx,
 } from "../helpers/misc-utils";
-import {
-  PTokenSApe,
-  AutoCompoundApe,
-  ParaApeStaking,
-  VariableDebtToken,
-} from "../types";
+import {PTokenSApe, AutoCompoundApe, ParaApeStaking} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 
