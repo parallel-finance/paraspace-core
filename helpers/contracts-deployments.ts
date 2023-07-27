@@ -33,6 +33,7 @@ import {
   Doodles,
   ERC721Delegate,
   ERC721OracleWrapper,
+  ERC20OracleWrapper,
   ExecutionDelegate,
   ExecutionManager,
   ExecutorWithTimelock,
@@ -1661,6 +1662,20 @@ export const deployERC721OracleWrapper = async (
     [addressesProvider, oracleAddress, asset],
     verify
   ) as Promise<ERC721OracleWrapper>;
+
+export const deployERC20OracleWrapper = async (
+  pyth: string,
+  feedId: string,
+  expirationPeriod: string,
+  symbol: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("ERC20OracleWrapper"),
+    eContractid.Aggregator.concat(upperFirst(symbol)),
+    [pyth, feedId, expirationPeriod],
+    verify
+  ) as Promise<ERC20OracleWrapper>;
 
 export const deployPunks = async (args: [], verify?: boolean) =>
   withSaveAndVerify(
