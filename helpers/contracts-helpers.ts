@@ -416,10 +416,7 @@ ${
     : ""
 } \
   --compiler-version v${COMPILER_VERSION}`;
-        if (VERBOSE) {
-          console.log(forgeVerifyContractCmd);
-        }
-
+        console.log(forgeVerifyContractCmd);
         shell.exec(forgeVerifyContractCmd);
       }
     }
