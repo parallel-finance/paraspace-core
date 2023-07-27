@@ -239,11 +239,12 @@ contract ParaApeStaking is
 
     function totalSApeBalance(address user) external view returns (uint256) {
         IParaApeStaking.SApeBalance memory cache = sApeBalance[user];
-        if (cache.freeShareBalance == 0) {
+        uint256 freeShareBalance = cache.freeShareBalance;
+        if (freeShareBalance == 0) {
             return cache.stakedBalance;
         }
         return
-            ICApe(cApe).getPooledApeByShares(cache.freeShareBalance) +
+            ICApe(cApe).getPooledApeByShares(freeShareBalance) +
             cache.stakedBalance;
     }
 
