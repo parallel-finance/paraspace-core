@@ -40,7 +40,8 @@ contract WETH9 {
     function withdraw(uint256 wad) public {
         require(balanceOf[msg.sender] >= wad);
         balanceOf[msg.sender] -= wad;
-        payable(msg.sender).transfer(wad);
+        (bool success, ) = msg.sender.call{value: wad}(new bytes(0));
+        require(success, "ETH_TRANSFER_FAILED");
         // msg.sender would have ethereum
         emit Withdrawal(msg.sender, wad);
     }
