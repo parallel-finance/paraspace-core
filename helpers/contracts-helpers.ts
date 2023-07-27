@@ -140,6 +140,7 @@ import walkdir from "walkdir";
 import fs from "fs";
 import * as zk from "zksync-web3";
 import {hexlify} from "ethers/lib/utils";
+import {Overrides} from "./hardhat-constants";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -677,7 +678,8 @@ export const createZone = async (
 export const createConduit = async (
   conduitController: ConduitController,
   owner: Signer,
-  conduitKey?: string
+  conduitKey?: string,
+  overrides?: Overrides
 ) => {
   const ownerAddress = await owner.getAddress();
   const assignedConduitKey =
@@ -689,7 +691,7 @@ export const createConduit = async (
 
   await conduitController
     .connect(owner)
-    .createConduit(assignedConduitKey, ownerAddress, GLOBAL_OVERRIDES);
+    .createConduit(assignedConduitKey, ownerAddress, overrides);
 
   return conduitAddress;
 };

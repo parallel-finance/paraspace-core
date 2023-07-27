@@ -36,10 +36,12 @@ export const step_15 = async (verify = false) => {
       verify
     );
     const conduitKey = `${deployerAddress}000000000000000000000000`;
+    GLOBAL_OVERRIDES.gasLimit = 35_000_000;
     const conduit = await createConduit(
       conduitController,
       deployer,
-      conduitKey
+      conduitKey,
+      GLOBAL_OVERRIDES
     );
     const conduitInstance = await getConduit(conduit);
     await waitForTx(
