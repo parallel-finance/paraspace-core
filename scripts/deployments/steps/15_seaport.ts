@@ -64,6 +64,7 @@ export const step_15 = async (verify = false) => {
         GLOBAL_OVERRIDES
       )
     );
+    delete GLOBAL_OVERRIDES.gasLimit;
     await waitForTx(
       await addressesProvider.setMarketplace(
         PARASPACE_SEAPORT_ID,
