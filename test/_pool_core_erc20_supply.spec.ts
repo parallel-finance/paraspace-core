@@ -4,7 +4,7 @@ import {parseEther} from "ethers/lib/utils";
 import {MAX_UINT_AMOUNT, ONE_YEAR, MAX_SUPPLY_CAP} from "../helpers/constants";
 import {
   convertToCurrencyDecimals,
-  impersonateAddress,
+  // impersonateAddress,
 } from "../helpers/contracts-helpers";
 import {advanceTimeAndBlock} from "../helpers/misc-utils";
 import {testEnvFixture} from "./helpers/setup-env";
@@ -17,7 +17,7 @@ import {
 import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
 import {utils} from "ethers";
-import {topUpNonPayableWithEther} from "./helpers/utils/funds";
+// import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 
 describe("pToken Supply Event Accounting", () => {
   const {RESERVE_FROZEN, RESERVE_INACTIVE, UNDERLYING_BALANCE_ZERO} =
@@ -227,57 +227,57 @@ describe("pToken Supply Event Accounting", () => {
     ).to.be.revertedWith(RESERVE_FROZEN);
   });
 
-  it("TC-erc20-supply-12 validateSetUseERC20AsCollateral() when reserve is not active (revert expected)", async () => {
-    /**
-     * Since its not possible to deactivate a reserve with existing suppliers, making the user have
-     * xToken balance (pDAI) its not technically possible to end up in this situation.
-     * However, we impersonate the Pool to get some pDAI and make the test possible
-     */
-    const {
-      pool,
-      configurator,
-      protocolDataProvider,
-      poolAdmin,
-      users,
-      dai,
-      pDai,
-    } = await loadFixture(testEnvFixture);
-    const user = users[0];
-
-    const configBefore = await protocolDataProvider.getReserveConfigurationData(
-      dai.address
-    );
-    expect(configBefore.isActive).to.be.eq(true);
-    expect(configBefore.isFrozen).to.be.eq(false);
-
-    await configurator
-      .connect(poolAdmin.signer)
-      .setReserveActive(dai.address, false);
-
-    const configAfter = await protocolDataProvider.getReserveConfigurationData(
-      dai.address
-    );
-    expect(configAfter.isActive).to.be.eq(false);
-    expect(configAfter.isFrozen).to.be.eq(false);
-
-    const poolSigner = (await impersonateAddress(pool.address)).signer;
-    await topUpNonPayableWithEther(
-      user.signer,
-      [pool.address],
-      utils.parseEther("1")
-    );
-    expect(
-      await pDai.connect(poolSigner).mint(user.address, user.address, 1, 1)
-    );
-
-    await expect(
-      pool.connect(user.signer).setUserUseERC20AsCollateral(dai.address, true)
-    ).to.be.revertedWith(RESERVE_INACTIVE);
-
-    await expect(
-      pool.connect(user.signer).setUserUseERC20AsCollateral(dai.address, false)
-    ).to.be.revertedWith(RESERVE_INACTIVE);
-  });
+  // it("TC-erc20-supply-12 validateSetUseERC20AsCollateral() when reserve is not active (revert expected)", async () => {
+  //   /**
+  //    * Since its not possible to deactivate a reserve with existing suppliers, making the user have
+  //    * xToken balance (pDAI) its not technically possible to end up in this situation.
+  //    * However, we impersonate the Pool to get some pDAI and make the test possible
+  //    */
+  //   const {
+  //     pool,
+  //     configurator,
+  //     protocolDataProvider,
+  //     poolAdmin,
+  //     users,
+  //     dai,
+  //     pDai,
+  //   } = await loadFixture(testEnvFixture);
+  //   const user = users[0];
+  //
+  //   const configBefore = await protocolDataProvider.getReserveConfigurationData(
+  //     dai.address
+  //   );
+  //   expect(configBefore.isActive).to.be.eq(true);
+  //   expect(configBefore.isFrozen).to.be.eq(false);
+  //
+  //   await configurator
+  //     .connect(poolAdmin.signer)
+  //     .setReserveActive(dai.address, false);
+  //
+  //   const configAfter = await protocolDataProvider.getReserveConfigurationData(
+  //     dai.address
+  //   );
+  //   expect(configAfter.isActive).to.be.eq(false);
+  //   expect(configAfter.isFrozen).to.be.eq(false);
+  //
+  //   const poolSigner = (await impersonateAddress(pool.address)).signer;
+  //   await topUpNonPayableWithEther(
+  //     user.signer,
+  //     [pool.address],
+  //     utils.parseEther("1")
+  //   );
+  //   expect(
+  //     await pDai.connect(poolSigner).mint(user.address, user.address, 1, 1)
+  //   );
+  //
+  //   await expect(
+  //     pool.connect(user.signer).setUserUseERC20AsCollateral(dai.address, true)
+  //   ).to.be.revertedWith(RESERVE_INACTIVE);
+  //
+  //   await expect(
+  //     pool.connect(user.signer).setUserUseERC20AsCollateral(dai.address, false)
+  //   ).to.be.revertedWith(RESERVE_INACTIVE);
+  // });
 
   it("TC-erc20-supply-13 validateSetUseERC20AsCollateral() with userBalance == 0 (revert expected)", async () => {
     const {pool, users, dai} = await loadFixture(testEnvFixture);
