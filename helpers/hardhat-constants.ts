@@ -56,7 +56,7 @@ export const FORK_BLOCK_NUMBER = process.env.FORK_BLOCK_NUMBER
   ? parseInt(process.env.FORK_BLOCK_NUMBER)
   : 0;
 
-export const DEFAULT_BLOCK_GAS_LIMIT = 30000000;
+export const DEFAULT_BLOCK_GAS_LIMIT = 40000000;
 export const HARDFORK = "london";
 export const MOCHA_JOBS = parseInt(process.env.MOCHA_JOBS || "4");
 
