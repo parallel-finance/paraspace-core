@@ -74,7 +74,12 @@ const hardhatConfig: HardhatUserConfig = {
     alphaSort: true,
     runOnCompile: false,
     disambiguatePaths: false,
-    except: ["Mock*", "ApeCoinStaking"],
+    except: [
+      "Mock*",
+      "ApeCoinStaking",
+      "SwapRouter",
+      "NonfungiblePositionManager",
+    ],
     strict: true,
   },
   paths: {
