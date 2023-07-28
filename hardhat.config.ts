@@ -262,6 +262,8 @@ const hardhatConfig: HardhatUserConfig = {
       eEthereumNetwork.polygonZkevm,
       eEthereumNetwork.polygonMumbai,
       eEthereumNetwork.polygonZkevmGoerli,
+      eEthereumNetwork.zksync,
+      eEthereumNetwork.zksyncGoerli,
       eEthereumNetwork.moonbeam,
       eEthereumNetwork.moonbase,
       eEthereumNetwork.linea,
