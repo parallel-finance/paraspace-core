@@ -92,7 +92,10 @@ task(
       GLOBAL_OVERRIDES.gasPrice = feeData.gasPrice;
       GLOBAL_OVERRIDES.type = 0;
       console.log("  - Type:", GLOBAL_OVERRIDES.type);
-      console.log("  - GasPrice:", utils.formatUnits(GLOBAL_OVERRIDES.gasPrice, "gwei"));
+      console.log(
+        "  - GasPrice:",
+        utils.formatUnits(GLOBAL_OVERRIDES.gasPrice, "gwei")
+      );
     }
   }
 
