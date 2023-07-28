@@ -437,6 +437,35 @@ library ApeStakingSinglePoolLogic {
         }
     }
 
+    function tryClaimNFT(
+        IParaApeStaking.PoolState storage poolState,
+        IParaApeStaking.ApeStakingVaultCacheVars memory vars,
+        address nft,
+        uint32[] calldata tokenIds
+    ) external {
+        ApeStakingCommonLogic.validateTokenIdArray(tokenIds);
+
+        uint256 arrayLength = tokenIds.length;
+        uint32[] memory singlePoolTokenIds = new uint32[](arrayLength);
+        uint256 singlePoolCount = 0;
+
+        for (uint256 index = 0; index < arrayLength; index++) {
+            uint32 tokenId = tokenIds[index];
+            if (poolState.tokenStatus[tokenId].isInPool) {
+                singlePoolTokenIds[singlePoolCount] = tokenId;
+                singlePoolCount++;
+            }
+        }
+
+        if (singlePoolCount > 0) {
+            assembly {
+                mstore(singlePoolTokenIds, singlePoolCount)
+            }
+
+            _claimNFT(poolState, vars, true, nft, singlePoolTokenIds);
+        }
+    }
+
     function _unstakeApe(
         mapping(uint256 => IParaApeStaking.PoolState) storage poolStates,
         mapping(address => uint256) storage cApeShareBalance,
@@ -702,7 +731,7 @@ library ApeStakingSinglePoolLogic {
         IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         address nft,
-        uint32[] calldata tokenIds
+        uint32[] memory tokenIds
     )
         internal
         view
@@ -747,7 +776,7 @@ library ApeStakingSinglePoolLogic {
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bool needUpdateStatus,
         address nft,
-        uint32[] calldata tokenIds
+        uint32[] memory tokenIds
     ) internal returns (address) {
         (
             address owner,

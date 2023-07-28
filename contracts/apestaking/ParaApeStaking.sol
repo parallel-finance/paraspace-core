@@ -474,32 +474,14 @@ contract ParaApeStaking is
         whenNotPaused
         nonReentrant
     {
-        uint256 arrayLength = tokenIds.length;
+        ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID;
-        uint32[] memory singlePoolTokenIds = new uint32[](arrayLength);
-        uint256 singlePoolCount = 0;
-
-        for (uint256 index = 0; index < arrayLength; index++) {
-            uint32 tokenId = tokenIds[index];
-            if (poolStates[poolId].tokenStatus[tokenId].isInPool) {
-                singlePoolTokenIds[singlePoolCount] = tokenId;
-                singlePoolCount++;
-            }
-        }
-
-        if (singlePoolCount > 0) {
-            assembly {
-                mstore(singlePoolTokenIds, singlePoolCount)
-            }
-
-            ApeStakingVaultCacheVars memory vars = _createCacheVars();
-            ApeStakingSinglePoolLogic.claimNFT(
-                poolStates[poolId],
-                vars,
-                bakc,
-                singlePoolTokenIds
-            );
-        }
+        ApeStakingSinglePoolLogic.tryClaimNFT(
+            poolStates[poolId],
+            vars,
+            bakc,
+            tokenIds
+        );
     }
 
     function nApeOwnerChangeCallback(bool isBAYC, uint32[] calldata tokenIds)
