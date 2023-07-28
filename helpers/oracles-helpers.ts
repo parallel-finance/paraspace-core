@@ -45,6 +45,7 @@ export const setInitialAssetPricesInOracle = async (
   priceOracleInstance: PriceOracle
 ) => {
   for (const [assetSymbol, price] of Object.entries(prices)) {
+    console.log(`set ${assetSymbol} price`);
     await waitForTx(
       await priceOracleInstance.setAssetPrice(
         assetsAddresses[assetSymbol],

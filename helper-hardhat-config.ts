@@ -93,9 +93,18 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
     L2_RPC_URL || RPC_URL || `https://mainnet.era.zksync.io`,
   [eEthereumNetwork.zksyncGoerli]:
     L2_RPC_URL || RPC_URL || `https://testnet.era.zksync.dev`,
-  [eEthereumNetwork.linea]: L2_RPC_URL || RPC_URL || `https://rpc.linea.build`,
+  [eEthereumNetwork.linea]:
+    L2_RPC_URL ||
+    RPC_URL ||
+    (INFURA_KEY
+      ? `https://linea-mainnet.infura.io/v3/${INFURA_KEY}`
+      : "https://rpc.linea.build"),
   [eEthereumNetwork.lineaGoerli]:
-    L2_RPC_URL || RPC_URL || `https://rpc.goerli.linea.build`,
+    L2_RPC_URL ||
+    RPC_URL ||
+    (INFURA_KEY
+      ? `https://linea-goerli.infura.io/v3/${INFURA_KEY}`
+      : `https://rpc.goerli.linea.build`),
 };
 
 export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
