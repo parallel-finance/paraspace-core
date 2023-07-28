@@ -533,21 +533,19 @@ library ApeStakingSinglePoolLogic {
             }
         }
 
-        apePoolState.stakingPosition -= singleStakingCount;
-        IParaApeStaking.PoolState storage bakcPoolState = poolStates[
-            ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID
-        ];
-        bakcPoolState.stakingPosition -= pairStakingCount;
-
-        vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
-            WadRayMath.RAY
-        );
-        vars.latestBorrowIndex = IPool(vars.pool)
-            .getReserveNormalizedVariableDebt(vars.cApe);
+        if (singleStakingCount > 0 || pairStakingCount > 0) {
+            vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
+                WadRayMath.RAY
+            );
+            vars.latestBorrowIndex = IPool(vars.pool)
+                .getReserveNormalizedVariableDebt(vars.cApe);
+        }
+        uint256 totalClaimed = 0;
         if (singleStakingCount > 0) {
             assembly {
                 mstore(_nfts, singleStakingCount)
             }
+            apePoolState.stakingPosition -= singleStakingCount;
 
             vars.balanceBefore = IERC20(vars.apeCoin).balanceOf(address(this));
             if (isBAYC) {
@@ -557,10 +555,7 @@ library ApeStakingSinglePoolLogic {
             }
             vars.balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
             vars.totalClaimedApe = vars.balanceAfter - vars.balanceBefore;
-            IAutoCompoundApe(vars.cApe).deposit(
-                address(this),
-                vars.totalClaimedApe
-            );
+            totalClaimed += vars.totalClaimedApe;
 
             (vars.totalRepay, vars.totalCompoundFee) = ApeStakingCommonLogic
                 .calculateRepayAndCompound(
@@ -574,6 +569,8 @@ library ApeStakingSinglePoolLogic {
             assembly {
                 mstore(_nftPairs, pairStakingCount)
             }
+            poolStates[ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID]
+                .stakingPosition -= pairStakingCount;
 
             vars.balanceBefore = IERC20(vars.apeCoin).balanceOf(address(this));
             ApeCoinStaking.PairNftWithdrawWithAmount[]
@@ -587,10 +584,7 @@ library ApeStakingSinglePoolLogic {
             }
             vars.balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
             vars.totalClaimedApe = vars.balanceAfter - vars.balanceBefore;
-            IAutoCompoundApe(vars.cApe).deposit(
-                address(this),
-                vars.totalClaimedApe
-            );
+            totalClaimed += vars.totalClaimedApe;
 
             (
                 uint256 bakcTotalRepay,
@@ -600,6 +594,9 @@ library ApeStakingSinglePoolLogic {
             vars.totalCompoundFee += bakcCompoundFee;
         }
 
+        if (totalClaimed > 0) {
+            IAutoCompoundApe(vars.cApe).deposit(address(this), totalClaimed);
+        }
         if (vars.totalRepay > 0) {
             IPool(vars.pool).repay(vars.cApe, vars.totalRepay, address(this));
         }
@@ -664,19 +661,20 @@ library ApeStakingSinglePoolLogic {
             }
         }
 
-        assembly {
-            mstore(baycPair, baycPairCount)
-        }
-        assembly {
-            mstore(maycPair, maycPairCount)
-        }
-
-        vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
-            WadRayMath.RAY
-        );
-        vars.latestBorrowIndex = IPool(vars.pool)
-            .getReserveNormalizedVariableDebt(vars.cApe);
         if (baycPairCount > 0 || maycPairCount > 0) {
+            assembly {
+                mstore(baycPair, baycPairCount)
+            }
+            assembly {
+                mstore(maycPair, maycPairCount)
+            }
+
+            vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
+                WadRayMath.RAY
+            );
+            vars.latestBorrowIndex = IPool(vars.pool)
+                .getReserveNormalizedVariableDebt(vars.cApe);
+
             bakcPoolState.stakingPosition -= (baycPairCount + maycPairCount);
 
             vars.balanceBefore = IERC20(vars.apeCoin).balanceOf(address(this));
