@@ -18,6 +18,7 @@ import {
   HARDHAT_CHAINID,
   MAINNET_CHAINID,
   MOONBEAM_CHAINID,
+  PARALLEL_CHAINID,
 } from "./hardhat-constants";
 import {ConstructorArgs, eContractid, tEthereumAddress} from "./types";
 import dotenv from "dotenv";
@@ -44,7 +45,7 @@ export const isLocalTestnet = (): boolean => {
 export const isPublicTestnet = (): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return (
-    [GOERLI_CHAINID, ARBITRUM_GOERLI_CHAINID].includes(
+    [GOERLI_CHAINID, ARBITRUM_GOERLI_CHAINID, PARALLEL_CHAINID].includes(
       DRE.network.config.chainId!
     ) ||
     [eEthereumNetwork.goerli, eEthereumNetwork.arbitrumGoerli].includes(
