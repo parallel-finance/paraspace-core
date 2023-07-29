@@ -16,7 +16,6 @@ import {
   COMPILER_OPTIMIZER_RUNS,
 } from "./helpers/hardhat-constants";
 import {accounts} from "./wallets";
-import {accounts as evmAccounts} from "./evm-wallets";
 import {
   buildForkConfig,
   CHAINS_ID,
