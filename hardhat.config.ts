@@ -140,16 +140,13 @@ const hardhatConfig: HardhatUserConfig = {
       timeout: 300000,
     },
     parallel: {
-      url: NETWORKS_RPC_URL[eEthereumNetwork.parallel],
       chainId: CHAINS_ID[eEthereumNetwork.parallel],
-      accounts: evmAccounts.map(({privateKey}) => privateKey),
-      gasPrice: 4e9,
-      gas: 4e6,
-      allowUnlimitedContractSize: true,
+      url: NETWORKS_RPC_URL[eEthereumNetwork.parallel],
+      accounts: DEPLOYER,
     },
     moonbeam: {
-      chainId: CHAINS_ID[eEthereumNetwork.parallel],
-      url: NETWORKS_RPC_URL[eEthereumNetwork.parallel],
+      chainId: CHAINS_ID[eEthereumNetwork.moonbeam],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.moonbeam],
       accounts: DEPLOYER,
     },
     hardhat: {

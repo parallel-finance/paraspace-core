@@ -24,7 +24,7 @@ export const GOERLI_CHAINID = 5;
 export const FORK_CHAINID = 522;
 export const MAINNET_CHAINID = 1;
 export const PARALLEL_CHAINID = 2012;
-export const MOONBEAM_CHAINID = 2012;
+export const MOONBEAM_CHAINID = 1284;
 export const ARBITRUM_ONE_CHAINID = 42161;
 export const ARBITRUM_GOERLI_CHAINID = 421613;
 
@@ -93,7 +93,7 @@ export const GLOBAL_OVERRIDES: Overrides = {
   // maxFeePerGas: ethers.utils.parseUnits("20", "gwei"),
   // maxPriorityFeePerGas: ethers.utils.parseUnits("1.5", "gwei"),
   // type: 2,
-  gasLimit: 12_450_000,
+  // gasLimit: 12_450_000,
 };
 
 export const RPC_URL = process.env.RPC_URL || "";
