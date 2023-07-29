@@ -10,6 +10,7 @@ import {IPool} from "../../interfaces/IPool.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import "../libraries/logic/BorrowLogic.sol";
+import {GenericLogic} from "../libraries/logic/GenericLogic.sol";
 import "../../interfaces/IParaApeStaking.sol";
 
 contract PoolApeStaking is
@@ -54,7 +55,7 @@ contract PoolApeStaking is
         nonReentrant
         returns (uint256)
     {
-        require(msg.sender == PARA_APE_STAKING);
+        require(msg.sender == PARA_APE_STAKING, Errors.CALLER_NOT_ALLOWED);
         DataTypes.PoolStorage storage ps = poolStorage();
 
         uint256 latestBorrowIndex = BorrowLogic.executeBorrowWithoutCollateral(
@@ -65,6 +66,25 @@ contract PoolApeStaking is
         );
 
         return latestBorrowIndex;
+    }
+
+    function calculateTimeLockParams(address asset, uint256 amount)
+        external
+        returns (DataTypes.TimeLockParams memory)
+    {
+        require(msg.sender == PARA_APE_STAKING, Errors.CALLER_NOT_ALLOWED);
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        DataTypes.TimeLockParams memory timeLockParams = GenericLogic
+            .calculateTimeLockParams(
+                ps._reserves[asset],
+                DataTypes.TimeLockFactorParams({
+                    assetType: DataTypes.AssetType.ERC20,
+                    asset: asset,
+                    amount: amount
+                })
+            );
+        return timeLockParams;
     }
 
     function borrowAndStakingApeCoin(

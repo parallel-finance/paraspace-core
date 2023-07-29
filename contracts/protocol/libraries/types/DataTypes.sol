@@ -399,12 +399,6 @@ library DataTypes {
         uint16 _reservesCount;
         // Auction recovery health factor
         uint64 _auctionRecoveryHealthFactor;
-        // Incentive fee for claim ape reward to compound
-        uint16 _apeCompoundFee;
-        // Map of user's ape compound strategies
-        mapping(address => ApeCompoundStrategy) _apeCompoundStrategies;
-        // Address of ape compound bot
-        address _apeCompoundBot;
     }
 
     struct ReserveConfigData {

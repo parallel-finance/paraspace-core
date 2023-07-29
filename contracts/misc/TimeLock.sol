@@ -34,6 +34,7 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     address private immutable weth;
     address private immutable wpunk;
     address private immutable Punk;
+    address private immutable PARA_APE_STAKING;
 
     /**
      * @dev Only POOL or callerTag asset's xToken can call functions marked by this modifier.
@@ -41,6 +42,7 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     modifier onlyValidCaller(address sourceAsset) {
         require(
             msg.sender == address(POOL) ||
+                msg.sender == PARA_APE_STAKING ||
                 msg.sender == POOL.getReserveXToken(sourceAsset),
             Errors.CALLER_NOT_ALLOWED
         );
@@ -72,6 +74,7 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
             ? IWrappedPunks(_wpunk).punkContract()
             : address(0);
         weth = provider.getWETH();
+        PARA_APE_STAKING = POOL.paraApeStaking();
     }
 
     function initialize() public initializer {

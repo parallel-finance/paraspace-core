@@ -3,6 +3,7 @@ pragma solidity 0.8.10;
 
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import "./IParaApeStaking.sol";
+import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 
 /**
  * @title IPoolApeStaking
@@ -21,4 +22,8 @@ interface IPoolApeStaking {
         uint256 borrowAmount,
         bool openSApeCollateralFlag
     ) external;
+
+    function calculateTimeLockParams(address asset, uint256 amount)
+        external
+        returns (DataTypes.TimeLockParams memory);
 }

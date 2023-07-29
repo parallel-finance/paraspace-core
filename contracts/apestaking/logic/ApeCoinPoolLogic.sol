@@ -4,6 +4,7 @@ pragma solidity 0.8.10;
 import {IPool} from "../../interfaces/IPool.sol";
 import "../../interfaces/IParaApeStaking.sol";
 import "../../interfaces/IApeCoinPool.sol";
+import "../../interfaces/ITimeLock.sol";
 import {IERC20, SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import "../../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {PercentageMath} from "../../protocol/libraries/math/PercentageMath.sol";
@@ -74,8 +75,7 @@ library ApeCoinPoolLogic {
         sApeBalance[user] = sApeBalanceCache;
 
         _validateDropSApeBalance(pool, sApeReserveId, user);
-
-        IERC20(cApe).safeTransfer(receiver, amount);
+        _sendUserFunds(pool, cApe, amount, receiver);
     }
 
     function depositApeCoinPool(
@@ -848,7 +848,7 @@ library ApeCoinPoolLogic {
 
         if (cashAmount > 0) {
             _validateDropSApeBalance(vars.pool, vars.sApeReserveId, user);
-            IERC20(cashToken).safeTransfer(user, cashAmount);
+            _sendUserFunds(vars.pool, cashToken, cashAmount, user);
         }
     }
 
@@ -934,5 +934,33 @@ library ApeCoinPoolLogic {
                 Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
             );
         }
+    }
+
+    function _sendUserFunds(
+        address pool,
+        address asset,
+        uint256 amount,
+        address user
+    ) internal {
+        address receiver = user;
+        DataTypes.TimeLockParams memory timeLockParams = IPool(pool)
+            .calculateTimeLockParams(asset, amount);
+        if (timeLockParams.releaseTime != 0) {
+            ITimeLock timeLock = IPool(pool).TIME_LOCK();
+            uint256[] memory amounts = new uint256[](1);
+            amounts[0] = amount;
+
+            timeLock.createAgreement(
+                DataTypes.AssetType.ERC20,
+                DataTypes.TimeLockActionType.WITHDRAW,
+                address(0),
+                asset,
+                amounts,
+                user,
+                timeLockParams.releaseTime
+            );
+            receiver = address(timeLock);
+        }
+        IERC20(asset).safeTransfer(receiver, amount);
     }
 }
