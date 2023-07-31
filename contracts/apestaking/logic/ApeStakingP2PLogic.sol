@@ -37,6 +37,23 @@ library ApeStakingP2PLogic {
     bytes32 internal constant MATCHED_ORDER_HASH =
         0x7db3dae7d89c86e6881a66a131841305c008b207e41ff86a804b4bb056652808;
 
+    function cancelListing(
+        IApeStakingP2P.ListingOrder calldata listingOrder,
+        mapping(bytes32 => IApeStakingP2P.ListingOrderStatus)
+            storage listingOrderStatus
+    ) external returns (bytes32) {
+        bytes32 orderHash = getListingOrderHash(listingOrder);
+        require(
+            listingOrderStatus[orderHash] !=
+                IApeStakingP2P.ListingOrderStatus.Cancelled,
+            Errors.ORDER_ALREADY_CANCELLED
+        );
+        listingOrderStatus[orderHash] = IApeStakingP2P
+            .ListingOrderStatus
+            .Cancelled;
+        return orderHash;
+    }
+
     function matchPairStakingList(
         IApeStakingP2P.ListingOrder calldata apeOrder,
         IApeStakingP2P.ListingOrder calldata apeCoinOrder,

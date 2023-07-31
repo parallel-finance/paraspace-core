@@ -602,14 +602,10 @@ contract ParaApeStaking is
         nonReentrant
     {
         require(msg.sender == listingOrder.offerer, Errors.NOT_ORDER_OFFERER);
-        bytes32 orderHash = ApeStakingP2PLogic.getListingOrderHash(
-            listingOrder
+        bytes32 orderHash = ApeStakingP2PLogic.cancelListing(
+            listingOrder,
+            listingOrderStatus
         );
-        require(
-            listingOrderStatus[orderHash] != ListingOrderStatus.Cancelled,
-            Errors.ORDER_ALREADY_CANCELLED
-        );
-        listingOrderStatus[orderHash] = ListingOrderStatus.Cancelled;
 
         emit OrderCancelled(orderHash, listingOrder.offerer);
     }
