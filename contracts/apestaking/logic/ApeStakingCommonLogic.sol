@@ -129,4 +129,31 @@ library ApeStakingCommonLogic {
         );
         return (currentDebt - perPositionCap * currentStakingPosition);
     }
+
+    function handleApeTransferIn(
+        mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
+        address ape,
+        address nApe,
+        uint32 tokenId
+    ) internal {
+        uint256 currentMatchCount = apeMatchedCount[ape][tokenId];
+        if (currentMatchCount == 0) {
+            IERC721(ape).safeTransferFrom(nApe, address(this), tokenId);
+        }
+        apeMatchedCount[ape][tokenId] = currentMatchCount + 1;
+    }
+
+    function handleApeTransferOut(
+        mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
+        address ape,
+        address nApe,
+        uint32 tokenId
+    ) internal {
+        uint256 matchedCount = apeMatchedCount[ape][tokenId];
+        matchedCount -= 1;
+        if (matchedCount == 0) {
+            IERC721(ape).safeTransferFrom(address(this), nApe, tokenId);
+        }
+        apeMatchedCount[ape][tokenId] = matchedCount;
+    }
 }

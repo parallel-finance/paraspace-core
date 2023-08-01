@@ -94,7 +94,13 @@ library ApeStakingP2PLogic {
         );
 
         //3 transfer token
-        _handleApeTransfer(apeMatchedCount, apeOrder, vars);
+        address nTokenAddress = _getApeNTokenAddress(vars, apeOrder.token);
+        ApeStakingCommonLogic.handleApeTransferIn(
+            apeMatchedCount,
+            apeOrder.token,
+            nTokenAddress,
+            apeOrder.tokenId
+        );
         uint256 apeCoinCap = getApeCoinStakingCap(
             apeCoinOrder.stakingType,
             vars
@@ -178,7 +184,13 @@ library ApeStakingP2PLogic {
         );
 
         //3 transfer token
-        _handleApeTransfer(apeMatchedCount, apeOrder, vars);
+        address nTokenAddress = _getApeNTokenAddress(vars, apeOrder.token);
+        ApeStakingCommonLogic.handleApeTransferIn(
+            apeMatchedCount,
+            apeOrder.token,
+            nTokenAddress,
+            apeOrder.tokenId
+        );
         IERC721(vars.bakc).safeTransferFrom(
             vars.nBakc,
             address(this),
@@ -321,18 +333,12 @@ library ApeStakingP2PLogic {
         }
 
         //3 transfer token
-        uint256 matchedCount = apeMatchedCount[order.apeToken][
+        ApeStakingCommonLogic.handleApeTransferOut(
+            apeMatchedCount,
+            order.apeToken,
+            apeNToken,
             order.apeTokenId
-        ];
-        if (matchedCount == 1) {
-            IERC721(order.apeToken).safeTransferFrom(
-                address(this),
-                apeNToken,
-                order.apeTokenId
-            );
-        }
-        apeMatchedCount[order.apeToken][order.apeTokenId] = matchedCount - 1;
-
+        );
         _updateUserSApeBalance(
             sApeBalance,
             order.apeCoinOfferer,
@@ -340,6 +346,7 @@ library ApeStakingP2PLogic {
             vars.cApeExchangeRate
         );
         IAutoCompoundApe(vars.cApe).deposit(address(this), withdrawAmount);
+
         if (order.stakingType == IApeStakingP2P.StakingType.BAKCPairStaking) {
             IERC721(vars.bakc).safeTransferFrom(
                 address(this),
@@ -590,23 +597,6 @@ library ApeStakingP2PLogic {
             IERC721(vars.nBakc).ownerOf(bakcOrder.tokenId) == bakcOrder.offerer,
             Errors.NOT_THE_OWNER
         );
-    }
-
-    function _handleApeTransfer(
-        mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
-        IApeStakingP2P.ListingOrder calldata order,
-        IParaApeStaking.ApeStakingVaultCacheVars memory vars
-    ) internal {
-        uint256 currentMatchCount = apeMatchedCount[order.token][order.tokenId];
-        if (currentMatchCount == 0) {
-            address nTokenAddress = _getApeNTokenAddress(vars, order.token);
-            IERC721(order.token).safeTransferFrom(
-                nTokenAddress,
-                address(this),
-                order.tokenId
-            );
-        }
-        apeMatchedCount[order.token][order.tokenId] = currentMatchCount + 1;
     }
 
     function _prepareApeCoin(

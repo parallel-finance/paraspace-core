@@ -137,7 +137,7 @@ library ApeCoinPoolLogic {
                 Errors.NOT_THE_OWNER
             );
 
-            _handleApeTransferIn(
+            ApeStakingCommonLogic.handleApeTransferIn(
                 apeMatchedCount,
                 vars.apeToken,
                 vars.nApe,
@@ -324,7 +324,7 @@ library ApeCoinPoolLogic {
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 tokenId = withdrawInfo.tokenIds[index];
 
-            _handleApeTransferOut(
+            ApeStakingCommonLogic.handleApeTransferOut(
                 apeMatchedCount,
                 vars.apeToken,
                 vars.nApe,
@@ -376,7 +376,7 @@ library ApeCoinPoolLogic {
                 );
             }
 
-            _handleApeTransferIn(
+            ApeStakingCommonLogic.handleApeTransferIn(
                 apeMatchedCount,
                 vars.apeToken,
                 vars.nApe,
@@ -609,7 +609,7 @@ library ApeCoinPoolLogic {
             uint32 apeTokenId = withdrawInfo.apeTokenIds[index];
             uint32 bakcTokenId = withdrawInfo.bakcTokenIds[index];
 
-            _handleApeTransferOut(
+            ApeStakingCommonLogic.handleApeTransferOut(
                 apeMatchedCount,
                 vars.apeToken,
                 vars.nApe,
@@ -767,33 +767,6 @@ library ApeCoinPoolLogic {
         pendingReward = ICApe(vars.cApe).getPooledApeByShares(rewardShares);
 
         return (claimFor, pendingReward, accumulatedRewardsPerNft);
-    }
-
-    function _handleApeTransferIn(
-        mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
-        address ape,
-        address nApe,
-        uint32 tokenId
-    ) internal {
-        uint256 currentMatchCount = apeMatchedCount[ape][tokenId];
-        if (currentMatchCount == 0) {
-            IERC721(ape).safeTransferFrom(nApe, address(this), tokenId);
-        }
-        apeMatchedCount[ape][tokenId] = currentMatchCount + 1;
-    }
-
-    function _handleApeTransferOut(
-        mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
-        address ape,
-        address nApe,
-        uint32 tokenId
-    ) internal {
-        uint256 matchedCount = apeMatchedCount[ape][tokenId];
-        matchedCount -= 1;
-        if (matchedCount == 0) {
-            IERC721(ape).safeTransferFrom(address(this), nApe, tokenId);
-        }
-        apeMatchedCount[ape][tokenId] = matchedCount;
     }
 
     function _prepareApeCoin(
