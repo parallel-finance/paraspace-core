@@ -13,6 +13,7 @@ import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import "./ApeStakingCommonLogic.sol";
 import {WadRayMath} from "../../protocol/libraries/math/WadRayMath.sol";
 import "../../protocol/libraries/helpers/Errors.sol";
+import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 
 /**
  * @title ApeStakingVaultLogic library
@@ -33,7 +34,7 @@ library ApeStakingP2PLogic {
     bytes32 internal constant LISTING_ORDER_HASH =
         0x227f9dd14259caacdbcf45411b33cf1c018f31bd3da27e613a66edf8ae45814f;
 
-    //keccak256("MatchedOrder(uint8 stakingType,address apeToken,uint32 apeTokenId,uint32 apeShare,uint32 bakcTokenId,uint32 bakcShare,address apeCoinOfferer,uint32 apeCoinShare,uint256 apePrincipleAmount)");
+    //keccak256("MatchedOrder(uint8 stakingType,address apeToken,uint32 apeTokenId,uint32 apeShare,uint32 bakcTokenId,uint32 bakcShare,address apeCoinOfferer,uint32 apeCoinShare)");
     bytes32 internal constant MATCHED_ORDER_HASH =
         0x7db3dae7d89c86e6881a66a131841305c008b207e41ff86a804b4bb056652808;
 
@@ -42,6 +43,8 @@ library ApeStakingP2PLogic {
         mapping(bytes32 => IApeStakingP2P.ListingOrderStatus)
             storage listingOrderStatus
     ) external returns (bytes32) {
+        require(msg.sender == listingOrder.offerer, Errors.NOT_ORDER_OFFERER);
+
         bytes32 orderHash = getListingOrderHash(listingOrder);
         require(
             listingOrderStatus[orderHash] !=
@@ -61,6 +64,7 @@ library ApeStakingP2PLogic {
             storage listingOrderStatus,
         mapping(bytes32 => IApeStakingP2P.MatchedOrder) storage matchedOrders,
         mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
+        mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars
     ) external returns (bytes32 orderHash) {
         //1 validate all order
@@ -89,7 +93,16 @@ library ApeStakingP2PLogic {
 
         //3 transfer token
         _handleApeTransfer(apeMatchedCount, apeOrder, vars);
-        uint256 apeAmount = _handleCApeTransferAndConvert(apeCoinOrder, vars);
+        uint256 apeCoinCap = getApeCoinStakingCap(
+            apeCoinOrder.stakingType,
+            vars
+        );
+        _prepareApeCoin(
+            sApeBalance,
+            vars.cApe,
+            apeCoinOrder.offerer,
+            apeCoinCap
+        );
 
         //4 create match order
         IApeStakingP2P.MatchedOrder memory matchedOrder = IApeStakingP2P
@@ -102,7 +115,6 @@ library ApeStakingP2PLogic {
                 bakcShare: 0,
                 apeCoinOfferer: apeCoinOrder.offerer,
                 apeCoinShare: apeCoinOrder.share,
-                apePrincipleAmount: apeAmount,
                 apeCoinListingOrderHash: apeCoinListingOrderHash
             });
         orderHash = getMatchedOrderHash(matchedOrder);
@@ -112,7 +124,7 @@ library ApeStakingP2PLogic {
         ApeCoinStaking.SingleNft[]
             memory singleNft = new ApeCoinStaking.SingleNft[](1);
         singleNft[0].tokenId = apeOrder.tokenId;
-        singleNft[0].amount = apeAmount.toUint224();
+        singleNft[0].amount = apeCoinCap.toUint224();
         if (apeOrder.stakingType == IApeStakingP2P.StakingType.BAYCStaking) {
             vars.apeCoinStaking.depositBAYC(singleNft);
         } else {
@@ -135,6 +147,7 @@ library ApeStakingP2PLogic {
             storage listingOrderStatus,
         mapping(bytes32 => IApeStakingP2P.MatchedOrder) storage matchedOrders,
         mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
+        mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars
     ) external returns (bytes32 orderHash) {
         //1 validate all order
@@ -169,7 +182,16 @@ library ApeStakingP2PLogic {
             address(this),
             bakcOrder.tokenId
         );
-        uint256 apeAmount = _handleCApeTransferAndConvert(apeCoinOrder, vars);
+        uint256 apeCoinCap = getApeCoinStakingCap(
+            apeCoinOrder.stakingType,
+            vars
+        );
+        _prepareApeCoin(
+            sApeBalance,
+            vars.cApe,
+            apeCoinOrder.offerer,
+            apeCoinCap
+        );
 
         //4 create match order
         IApeStakingP2P.MatchedOrder memory matchedOrder = IApeStakingP2P
@@ -182,7 +204,6 @@ library ApeStakingP2PLogic {
                 bakcShare: bakcOrder.share,
                 apeCoinOfferer: apeCoinOrder.offerer,
                 apeCoinShare: apeCoinOrder.share,
-                apePrincipleAmount: apeAmount,
                 apeCoinListingOrderHash: apeCoinListingOrderHash
             });
         orderHash = getMatchedOrderHash(matchedOrder);
@@ -195,7 +216,7 @@ library ApeStakingP2PLogic {
             );
         _stakingPairs[0].mainTokenId = apeOrder.tokenId;
         _stakingPairs[0].bakcTokenId = bakcOrder.tokenId;
-        _stakingPairs[0].amount = apeAmount.toUint184();
+        _stakingPairs[0].amount = apeCoinCap.toUint184();
         ApeCoinStaking.PairNftDepositWithAmount[]
             memory _otherPairs = new ApeCoinStaking.PairNftDepositWithAmount[](
                 0
@@ -220,6 +241,7 @@ library ApeStakingP2PLogic {
         mapping(bytes32 => IApeStakingP2P.MatchedOrder) storage matchedOrders,
         mapping(address => uint256) storage cApeShareBalance,
         mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
+        mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         bytes32 orderHash
     ) external {
@@ -227,14 +249,13 @@ library ApeStakingP2PLogic {
 
         //1 check if have permission to break up
         address apeNToken = _getApeNTokenAddress(vars, order.apeToken);
-        address apeNTokenOwner = IERC721(apeNToken).ownerOf(order.apeTokenId);
-        address nBakcOwner = IERC721(vars.nBakc).ownerOf(order.bakcTokenId);
         require(
-            msg.sender == apeNTokenOwner ||
-                msg.sender == order.apeCoinOfferer ||
-                (msg.sender == nBakcOwner &&
-                    order.stakingType ==
-                    IApeStakingP2P.StakingType.BAKCPairStaking),
+            msg.sender == order.apeCoinOfferer ||
+                msg.sender == IERC721(apeNToken).ownerOf(order.apeTokenId) ||
+                (order.stakingType ==
+                    IApeStakingP2P.StakingType.BAKCPairStaking &&
+                    msg.sender ==
+                    IERC721(vars.nBakc).ownerOf(order.bakcTokenId)),
             Errors.NO_BREAK_UP_PERMISSION
         );
 
@@ -252,6 +273,7 @@ library ApeStakingP2PLogic {
         delete matchedOrders[orderHash];
 
         //4 exit from ApeCoinStaking
+        uint256 apeCoinCap = getApeCoinStakingCap(order.stakingType, vars);
         if (
             order.stakingType == IApeStakingP2P.StakingType.BAYCStaking ||
             order.stakingType == IApeStakingP2P.StakingType.MAYCStaking
@@ -259,7 +281,7 @@ library ApeStakingP2PLogic {
             ApeCoinStaking.SingleNft[]
                 memory _nfts = new ApeCoinStaking.SingleNft[](1);
             _nfts[0].tokenId = order.apeTokenId;
-            _nfts[0].amount = order.apePrincipleAmount.toUint224();
+            _nfts[0].amount = apeCoinCap.toUint224();
             if (order.stakingType == IApeStakingP2P.StakingType.BAYCStaking) {
                 vars.apeCoinStaking.withdrawSelfBAYC(_nfts);
             } else {
@@ -272,7 +294,7 @@ library ApeStakingP2PLogic {
                 );
             _nfts[0].mainTokenId = order.apeTokenId;
             _nfts[0].bakcTokenId = order.bakcTokenId;
-            _nfts[0].amount = order.apePrincipleAmount.toUint184();
+            _nfts[0].amount = apeCoinCap.toUint184();
             _nfts[0].isUncommit = true;
             ApeCoinStaking.PairNftWithdrawWithAmount[]
                 memory _otherPairs = new ApeCoinStaking.PairNftWithdrawWithAmount[](
@@ -297,9 +319,11 @@ library ApeStakingP2PLogic {
         }
         apeMatchedCount[order.apeToken][order.apeTokenId] = matchedCount - 1;
 
-        IAutoCompoundApe(vars.cApe).deposit(
+        _handleApeCoin(
+            sApeBalance,
+            vars.cApe,
             order.apeCoinOfferer,
-            order.apePrincipleAmount
+            apeCoinCap
         );
         if (order.stakingType == IApeStakingP2P.StakingType.BAKCPairStaking) {
             IERC721(vars.bakc).safeTransferFrom(
@@ -502,7 +526,10 @@ library ApeStakingP2PLogic {
             listingOrderStatus,
             apeCoinOrder
         );
-        require(apeCoinOrder.token == vars.cApe, Errors.INVALID_TOKEN);
+        require(
+            apeCoinOrder.token == DataTypes.SApeAddress,
+            Errors.INVALID_TOKEN
+        );
         require(
             listingOrderStatus[orderHash] !=
                 IApeStakingP2P.ListingOrderStatus.Matched,
@@ -546,21 +573,40 @@ library ApeStakingP2PLogic {
         apeMatchedCount[order.token][order.tokenId] = currentMatchCount + 1;
     }
 
-    function _handleCApeTransferAndConvert(
-        IApeStakingP2P.ListingOrder calldata apeCoinOrder,
-        IParaApeStaking.ApeStakingVaultCacheVars memory vars
-    ) internal returns (uint256) {
-        uint256 apeAmount = getApeCoinStakingCap(
-            apeCoinOrder.stakingType,
-            vars
+    function _prepareApeCoin(
+        mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
+        address cApe,
+        address user,
+        uint256 amount
+    ) internal {
+        uint256 freeShareBalanceNeeded = ICApe(cApe).getShareByPooledApe(
+            amount
         );
-        IERC20(vars.cApe).safeTransferFrom(
-            apeCoinOrder.offerer,
-            address(this),
-            apeAmount
+        IParaApeStaking.SApeBalance memory sApeBalanceCache = sApeBalance[user];
+        require(
+            sApeBalanceCache.freeShareBalance >= freeShareBalanceNeeded,
+            Errors.SAPE_FREE_BALANCE_NOT_ENOUGH
         );
-        IAutoCompoundApe(vars.cApe).withdraw(apeAmount);
-        return apeAmount;
+        sApeBalanceCache.freeShareBalance -= freeShareBalanceNeeded.toUint128();
+        sApeBalanceCache.stakedBalance += amount.toUint128();
+        sApeBalance[user] = sApeBalanceCache;
+
+        IAutoCompoundApe(cApe).withdraw(amount);
+    }
+
+    function _handleApeCoin(
+        mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
+        address cApe,
+        address user,
+        uint256 amount
+    ) internal {
+        uint256 freeSApeBalanceAdded = ICApe(cApe).getShareByPooledApe(amount);
+        IParaApeStaking.SApeBalance memory sApeBalanceCache = sApeBalance[user];
+        sApeBalanceCache.freeShareBalance += freeSApeBalanceAdded.toUint128();
+        sApeBalanceCache.stakedBalance -= amount.toUint128();
+        sApeBalance[user] = sApeBalanceCache;
+
+        IAutoCompoundApe(cApe).deposit(address(this), amount);
     }
 
     function _getApeNTokenAddress(
@@ -592,8 +638,7 @@ library ApeStakingP2PLogic {
                     order.bakcTokenId,
                     order.bakcShare,
                     order.apeCoinOfferer,
-                    order.apeCoinShare,
-                    order.apePrincipleAmount
+                    order.apeCoinShare
                 )
             );
     }

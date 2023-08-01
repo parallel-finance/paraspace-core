@@ -36,7 +36,6 @@ interface IApeStakingP2P {
         uint32 bakcShare;
         address apeCoinOfferer;
         uint32 apeCoinShare;
-        uint256 apePrincipleAmount;
         bytes32 apeCoinListingOrderHash;
     }
 

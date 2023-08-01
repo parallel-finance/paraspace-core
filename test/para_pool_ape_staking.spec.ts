@@ -916,7 +916,7 @@ describe("Para Ape staking ape coin pool test", () => {
     );
   });
 
-  it("sApe test", async () => {
+  it("sApe test0", async () => {
     const {
       users: [user1, user2, liquidator],
       ape,
@@ -1128,6 +1128,86 @@ describe("Para Ape staking ape coin pool test", () => {
     expect(user1Balance).to.be.closeTo("0", parseEther("1"));
     expect(liquidatorBalance).to.be.closeTo(
       parseEther("400000"),
+      parseEther("1")
+    );
+  });
+
+  it("sApe test1", async () => {
+    const {
+      users: [user1],
+      ape,
+    } = await loadFixture(fixture);
+    await mintAndValidate(ape, "1000000", user1);
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositFreeSApe(ape.address, parseEther("1000000"))
+    );
+
+    expect(await ape.balanceOf(user1.address)).to.be.equal("0");
+    expect(await paraApeStaking.totalSApeBalance(user1.address)).to.be.closeTo(
+      parseEther("1000000"),
+      parseEther("1")
+    );
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .withdrawFreeSApe(ape.address, parseEther("1000000"))
+    );
+
+    expect(await ape.balanceOf(user1.address)).to.be.closeTo(
+      parseEther("1000000"),
+      parseEther("1")
+    );
+    expect(await paraApeStaking.totalSApeBalance(user1.address)).to.be.closeTo(
+      "0",
+      parseEther("1")
+    );
+
+    await waitForTx(
+      await ape.connect(user1.signer).approve(cApe.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await cApe
+        .connect(user1.signer)
+        .deposit(user1.address, parseEther("1000000"))
+    );
+    expect(await ape.balanceOf(user1.address)).to.be.equal("0");
+    expect(await cApe.balanceOf(user1.address)).to.be.closeTo(
+      parseEther("1000000"),
+      parseEther("1")
+    );
+
+    await waitForTx(
+      await cApe
+        .connect(user1.signer)
+        .approve(paraApeStaking.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositFreeSApe(cApe.address, parseEther("1000000"))
+    );
+    expect(await cApe.balanceOf(user1.address)).to.be.equal("0");
+    expect(await paraApeStaking.totalSApeBalance(user1.address)).to.be.closeTo(
+      parseEther("1000000"),
+      parseEther("1")
+    );
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .withdrawFreeSApe(cApe.address, parseEther("1000000"))
+    );
+
+    expect(await cApe.balanceOf(user1.address)).to.be.closeTo(
+      parseEther("1000000"),
+      parseEther("1")
+    );
+    expect(await paraApeStaking.totalSApeBalance(user1.address)).to.be.closeTo(
+      "0",
       parseEther("1")
     );
   });
@@ -1605,7 +1685,7 @@ describe("Para Ape staking ape coin pool test", () => {
     await expect(
       paraApeStaking
         .connect(user1.signer)
-        .withdrawFreeSApe(user1.address, parseEther("200000"))
+        .withdrawFreeSApe(ape.address, parseEther("200000"))
     ).to.be.revertedWith(ProtocolErrors.SAPE_FREE_BALANCE_NOT_ENOUGH);
 
     await mintAndValidate(weth, "200", liquidator);
@@ -1654,7 +1734,7 @@ describe("Para Ape staking ape coin pool test", () => {
     await expect(
       paraApeStaking
         .connect(user1.signer)
-        .withdrawFreeSApe(user1.address, parseEther("200000"))
+        .withdrawFreeSApe(cApe.address, parseEther("200000"))
     ).to.be.revertedWith(
       ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
     );
@@ -1675,7 +1755,7 @@ describe("Para Ape staking ape coin pool test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .withdrawFreeSApe(user1.address, parseEther("200000"))
+        .withdrawFreeSApe(cApe.address, parseEther("200000"))
     );
 
     expect(await cApe.balanceOf(user1.address)).to.be.closeTo(

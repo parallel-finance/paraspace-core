@@ -8,7 +8,7 @@ import {
   getAutoCompoundApe,
   getParaApeStaking,
 } from "../helpers/contracts-getters";
-import {MAX_UINT_AMOUNT} from "../helpers/constants";
+import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {getSignedListingOrder} from "./helpers/p2ppairstaking-helper";
 import {parseEther} from "ethers/lib/utils";
@@ -60,14 +60,13 @@ describe("P2P Pair Staking Test", () => {
       await cApe.connect(user6.signer).deposit(user6.address, MINIMUM_LIQUIDITY)
     );
 
+    //user2 deposit free sApe
     await waitForTx(
-      await ape.connect(user2.signer).approve(cApe.address, MAX_UINT_AMOUNT)
-    );
-    await waitForTx(
-      await cApe
+      await ape
         .connect(user2.signer)
         .approve(paraApeStaking.address, MAX_UINT_AMOUNT)
     );
+    await mintAndValidate(ape, "1000000", user2);
 
     return testEnv;
   };
@@ -81,17 +80,18 @@ describe("P2P Pair Staking Test", () => {
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "1", user1, true);
-    await mintAndValidate(ape, "1000000", user2);
 
     const apeAmount = await paraApeStaking.getApeCoinStakingCap(0);
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositFreeSApe(ape.address, apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       0,
-      bayc,
+      bayc.address,
       0,
       2000,
       user1
@@ -99,7 +99,7 @@ describe("P2P Pair Staking Test", () => {
     const user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       0,
-      cApe,
+      ONE_ADDRESS,
       0,
       8000,
       user2
@@ -112,6 +112,14 @@ describe("P2P Pair Staking Test", () => {
     );
     const logLength = txReceipt.logs.length;
     const orderHash = txReceipt.logs[logLength - 1].data;
+
+    expect(await paraApeStaking.freeSApeBalance(user2.address)).to.be.closeTo(
+      "0",
+      parseEther("1")
+    );
+    expect(await paraApeStaking.stakedSApeBalance(user2.address)).to.be.equal(
+      apeAmount
+    );
 
     await advanceTimeAndBlock(parseInt("3600"));
 
@@ -151,7 +159,14 @@ describe("P2P Pair Staking Test", () => {
     );
 
     expect(await bayc.balanceOf(nBAYC.address)).to.be.equal(1);
-    almostEqual(await cApe.balanceOf(user2.address), apeAmount);
+    expect(await paraApeStaking.freeSApeBalance(user2.address)).to.be.closeTo(
+      apeAmount,
+      parseEther("1")
+    );
+    expect(await paraApeStaking.stakedSApeBalance(user2.address)).to.be.equal(
+      "0"
+    );
+
     almostEqual(
       await paraApeStaking.pendingCApeReward(user1.address),
       parseEther("720")
@@ -171,23 +186,18 @@ describe("P2P Pair Staking Test", () => {
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
-    await mintAndValidate(ape, "1000000", user2);
-
-    await waitForTx(
-      await mayc
-        .connect(user1.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
 
     const apeAmount = await paraApeStaking.getApeCoinStakingCap(1);
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositFreeSApe(ape.address, apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       1,
-      mayc,
+      mayc.address,
       0,
       2000,
       user1
@@ -195,7 +205,7 @@ describe("P2P Pair Staking Test", () => {
     const user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       1,
-      cApe,
+      ONE_ADDRESS,
       0,
       8000,
       user2
@@ -208,6 +218,14 @@ describe("P2P Pair Staking Test", () => {
     );
     const logLength = txReceipt.logs.length;
     const orderHash = txReceipt.logs[logLength - 1].data;
+
+    expect(await paraApeStaking.freeSApeBalance(user2.address)).to.be.closeTo(
+      "0",
+      parseEther("1")
+    );
+    expect(await paraApeStaking.stakedSApeBalance(user2.address)).to.be.equal(
+      apeAmount
+    );
 
     await advanceTimeAndBlock(parseInt("3600"));
 
@@ -247,7 +265,14 @@ describe("P2P Pair Staking Test", () => {
     );
 
     expect(await mayc.balanceOf(nMAYC.address)).to.be.equal(1);
-    almostEqual(await cApe.balanceOf(user2.address), apeAmount);
+    expect(await paraApeStaking.freeSApeBalance(user2.address)).to.be.closeTo(
+      apeAmount,
+      parseEther("1")
+    );
+    expect(await paraApeStaking.stakedSApeBalance(user2.address)).to.be.equal(
+      "0"
+    );
+
     almostEqual(
       await paraApeStaking.pendingCApeReward(user1.address),
       parseEther("720")
@@ -270,28 +295,18 @@ describe("P2P Pair Staking Test", () => {
 
     await supplyAndValidate(bayc, "1", user1, true);
     await supplyAndValidate(bakc, "1", user3, true);
-    await mintAndValidate(ape, "1000000", user2);
-
-    await waitForTx(
-      await bayc
-        .connect(user1.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
-    await waitForTx(
-      await bakc
-        .connect(user3.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
 
     const apeAmount = await paraApeStaking.getApeCoinStakingCap(2);
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositFreeSApe(ape.address, apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      bayc,
+      bayc.address,
       0,
       2000,
       user1
@@ -299,7 +314,7 @@ describe("P2P Pair Staking Test", () => {
     const user3SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      bakc,
+      bakc.address,
       0,
       2000,
       user3
@@ -307,7 +322,7 @@ describe("P2P Pair Staking Test", () => {
     const user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      cApe,
+      ONE_ADDRESS,
       0,
       6000,
       user2
@@ -325,6 +340,14 @@ describe("P2P Pair Staking Test", () => {
 
     const logLength = txReceipt.logs.length;
     const orderHash = txReceipt.logs[logLength - 1].data;
+
+    expect(await paraApeStaking.freeSApeBalance(user2.address)).to.be.closeTo(
+      "0",
+      parseEther("1")
+    );
+    expect(await paraApeStaking.stakedSApeBalance(user2.address)).to.be.equal(
+      apeAmount
+    );
 
     await advanceTimeAndBlock(parseInt("3600"));
 
@@ -373,7 +396,13 @@ describe("P2P Pair Staking Test", () => {
 
     expect(await bayc.balanceOf(nBAYC.address)).to.be.equal(1);
     expect(await bakc.balanceOf(nBAKC.address)).to.be.equal(1);
-    almostEqual(await cApe.balanceOf(user2.address), apeAmount);
+    expect(await paraApeStaking.freeSApeBalance(user2.address)).to.be.closeTo(
+      apeAmount,
+      parseEther("1")
+    );
+    expect(await paraApeStaking.stakedSApeBalance(user2.address)).to.be.equal(
+      "0"
+    );
 
     almostEqual(
       await paraApeStaking.pendingCApeReward(user1.address),
@@ -401,17 +430,18 @@ describe("P2P Pair Staking Test", () => {
 
     await supplyAndValidate(mayc, "1", user1, true);
     await supplyAndValidate(bakc, "1", user3, true);
-    await mintAndValidate(ape, "1000000", user2);
 
     const apeAmount = await paraApeStaking.getApeCoinStakingCap(2);
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositFreeSApe(ape.address, apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      mayc,
+      mayc.address,
       0,
       2000,
       user1
@@ -419,7 +449,7 @@ describe("P2P Pair Staking Test", () => {
     const user3SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      bakc,
+      bakc.address,
       0,
       2000,
       user3
@@ -427,7 +457,7 @@ describe("P2P Pair Staking Test", () => {
     const user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      cApe,
+      ONE_ADDRESS,
       0,
       6000,
       user2
@@ -445,6 +475,14 @@ describe("P2P Pair Staking Test", () => {
 
     const logLength = txReceipt.logs.length;
     const orderHash = txReceipt.logs[logLength - 1].data;
+
+    expect(await paraApeStaking.freeSApeBalance(user2.address)).to.be.closeTo(
+      "0",
+      parseEther("1")
+    );
+    expect(await paraApeStaking.stakedSApeBalance(user2.address)).to.be.equal(
+      apeAmount
+    );
 
     await advanceTimeAndBlock(parseInt("3600"));
 
@@ -493,7 +531,14 @@ describe("P2P Pair Staking Test", () => {
 
     expect(await mayc.balanceOf(nMAYC.address)).to.be.equal(1);
     expect(await bakc.balanceOf(nBAKC.address)).to.be.equal(1);
-    almostEqual(await cApe.balanceOf(user2.address), apeAmount);
+    expect(await paraApeStaking.freeSApeBalance(user2.address)).to.be.closeTo(
+      apeAmount,
+      parseEther("1")
+    );
+    expect(await paraApeStaking.stakedSApeBalance(user2.address)).to.be.equal(
+      "0"
+    );
+
     almostEqual(
       await paraApeStaking.pendingCApeReward(user1.address),
       parseEther("720")
@@ -518,22 +563,10 @@ describe("P2P Pair Staking Test", () => {
 
     await supplyAndValidate(bayc, "10", user1, true);
     await supplyAndValidate(bakc, "10", user3, true);
-    await mintAndValidate(ape, "10000000", user2);
-
     await waitForTx(
-      await bayc
-        .connect(user1.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
-    await waitForTx(
-      await bakc
-        .connect(user3.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
-    await waitForTx(
-      await cApe
+      await paraApeStaking
         .connect(user2.signer)
-        .deposit(user2.address, parseEther("1000000"))
+        .depositFreeSApe(ape.address, parseEther("1000000"))
     );
 
     const txArray: string[] = [];
@@ -541,7 +574,7 @@ describe("P2P Pair Staking Test", () => {
       const user1SignedOrder = await getSignedListingOrder(
         paraApeStaking,
         2,
-        bayc,
+        bayc.address,
         i,
         2000,
         user1
@@ -549,7 +582,7 @@ describe("P2P Pair Staking Test", () => {
       const user3SignedOrder = await getSignedListingOrder(
         paraApeStaking,
         2,
-        bakc,
+        bakc.address,
         i,
         2000,
         user3
@@ -557,7 +590,7 @@ describe("P2P Pair Staking Test", () => {
       const user2SignedOrder = await getSignedListingOrder(
         paraApeStaking,
         2,
-        cApe,
+        ONE_ADDRESS,
         0,
         6000,
         user2
@@ -597,23 +630,17 @@ describe("P2P Pair Staking Test", () => {
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "1", user1, true);
-    await mintAndValidate(ape, "1000000", user2);
-
+    const apeAmount = await paraApeStaking.getApeCoinStakingCap(0);
     await waitForTx(
-      await bayc
-        .connect(user1.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
-    await waitForTx(
-      await ape
+      await paraApeStaking
         .connect(user2.signer)
-        .approve(paraApeStaking.address, MAX_UINT_AMOUNT)
+        .depositFreeSApe(ape.address, apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       0,
-      bayc,
+      bayc.address,
       0,
       2000,
       user1
@@ -621,7 +648,7 @@ describe("P2P Pair Staking Test", () => {
     const user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       0,
-      ape,
+      ONE_ADDRESS,
       0,
       8000,
       user2
@@ -648,28 +675,17 @@ describe("P2P Pair Staking Test", () => {
 
     await supplyAndValidate(bayc, "1", user1, true);
     await supplyAndValidate(bakc, "1", user2, true);
-    await mintAndValidate(ape, "1000000", user3);
-
+    const apeAmount = await paraApeStaking.getApeCoinStakingCap(2);
     await waitForTx(
-      await bayc
-        .connect(user1.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
-    await waitForTx(
-      await bakc
+      await paraApeStaking
         .connect(user2.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
-    await waitForTx(
-      await ape
-        .connect(user3.signer)
-        .approve(paraApeStaking.address, MAX_UINT_AMOUNT)
+        .depositFreeSApe(ape.address, apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      bayc,
+      bayc.address,
       0,
       2000,
       user1
@@ -677,7 +693,7 @@ describe("P2P Pair Staking Test", () => {
     const user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      bakc,
+      bakc.address,
       0,
       2000,
       user2
@@ -685,7 +701,7 @@ describe("P2P Pair Staking Test", () => {
     const user3SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      ape,
+      ONE_ADDRESS,
       0,
       6000,
       user3
@@ -714,22 +730,17 @@ describe("P2P Pair Staking Test", () => {
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "1", user1, true);
-    await mintAndValidate(ape, "1000000", user2);
-
-    await waitForTx(
-      await bayc
-        .connect(user1.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
     const apeAmount = await paraApeStaking.getApeCoinStakingCap(0);
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositFreeSApe(ape.address, apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       0,
-      bayc,
+      bayc.address,
       0,
       2000,
       user1
@@ -737,7 +748,7 @@ describe("P2P Pair Staking Test", () => {
     const user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       1,
-      cApe,
+      ONE_ADDRESS,
       0,
       8000,
       user2
@@ -760,28 +771,17 @@ describe("P2P Pair Staking Test", () => {
 
     await supplyAndValidate(bayc, "1", user1, true);
     await supplyAndValidate(bakc, "1", user3, true);
-    await mintAndValidate(ape, "1000000", user2);
-
-    await waitForTx(
-      await bayc
-        .connect(user1.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
-    await waitForTx(
-      await bakc
-        .connect(user3.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
-
     const apeAmount = await paraApeStaking.getApeCoinStakingCap(2);
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositFreeSApe(ape.address, apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      bayc,
+      bayc.address,
       0,
       2000,
       user1
@@ -789,7 +789,7 @@ describe("P2P Pair Staking Test", () => {
     const user3SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       1,
-      bakc,
+      bakc.address,
       0,
       2000,
       user3
@@ -797,7 +797,7 @@ describe("P2P Pair Staking Test", () => {
     const user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      cApe,
+      ONE_ADDRESS,
       0,
       6000,
       user2
@@ -822,22 +822,17 @@ describe("P2P Pair Staking Test", () => {
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "1", user1, true);
-    await mintAndValidate(ape, "1000000", user2);
-
-    await waitForTx(
-      await bayc
-        .connect(user1.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
     const apeAmount = await paraApeStaking.getApeCoinStakingCap(0);
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositFreeSApe(ape.address, apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       0,
-      bayc,
+      bayc.address,
       0,
       2000,
       user1
@@ -845,7 +840,7 @@ describe("P2P Pair Staking Test", () => {
     const user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       0,
-      cApe,
+      ONE_ADDRESS,
       0,
       7000,
       user2
@@ -868,28 +863,17 @@ describe("P2P Pair Staking Test", () => {
 
     await supplyAndValidate(bayc, "1", user1, true);
     await supplyAndValidate(bakc, "1", user3, true);
-    await mintAndValidate(ape, "1000000", user2);
-
-    await waitForTx(
-      await bayc
-        .connect(user1.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
-    await waitForTx(
-      await bakc
-        .connect(user3.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
-
     const apeAmount = await paraApeStaking.getApeCoinStakingCap(2);
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositFreeSApe(ape.address, apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      bayc,
+      bayc.address,
       0,
       2000,
       user1
@@ -897,7 +881,7 @@ describe("P2P Pair Staking Test", () => {
     const user3SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      bakc,
+      bakc.address,
       0,
       2000,
       user3
@@ -905,7 +889,7 @@ describe("P2P Pair Staking Test", () => {
     const user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      cApe,
+      ONE_ADDRESS,
       0,
       7000,
       user2
@@ -931,7 +915,7 @@ describe("P2P Pair Staking Test", () => {
     const user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       0,
-      bayc,
+      bayc.address,
       0,
       2000,
       user1
@@ -948,7 +932,7 @@ describe("P2P Pair Staking Test", () => {
 
   it("compound fee work as expected", async () => {
     const {
-      users: [user1, user2, user3],
+      users: [user1, user2],
       bayc,
       ape,
       poolAdmin,
@@ -958,41 +942,26 @@ describe("P2P Pair Staking Test", () => {
       await paraApeStaking.connect(poolAdmin.signer).setCompoundFee(50)
     );
 
-    await supplyAndValidate(bayc, "1", user3, true);
-    await mintAndValidate(ape, "1000000", user2);
-
-    //deposit cApe for user3 to let exchangeRate > 1
-    await waitForTx(
-      await ape.connect(user2.signer).approve(cApe.address, MAX_UINT_AMOUNT)
-    );
-    await waitForTx(
-      await cApe
-        .connect(user2.signer)
-        .deposit(user2.address, parseEther("1000"))
-    );
-
-    await waitForTx(
-      await bayc
-        .connect(user3.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
+    await supplyAndValidate(bayc, "1", user1, true);
     const apeAmount = await paraApeStaking.getApeCoinStakingCap(0);
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositFreeSApe(ape.address, apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       0,
-      bayc,
+      bayc.address,
       0,
       2000,
-      user3
+      user1
     );
     const user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       0,
-      cApe,
+      ONE_ADDRESS,
       0,
       8000,
       user2
@@ -1015,7 +984,7 @@ describe("P2P Pair Staking Test", () => {
     );
 
     almostEqual(
-      await paraApeStaking.pendingCApeReward(user3.address),
+      await paraApeStaking.pendingCApeReward(user1.address),
       parseEther("716.4")
     );
     almostEqual(
@@ -1039,29 +1008,18 @@ describe("P2P Pair Staking Test", () => {
 
     await supplyAndValidate(bayc, "1", user1, true);
     await supplyAndValidate(bakc, "1", user3, true);
-    await mintAndValidate(ape, "1000000", user2);
 
     await waitForTx(
-      await bayc
-        .connect(user1.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
-    await waitForTx(
-      await bakc
-        .connect(user3.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
-    await waitForTx(
-      await cApe
+      await paraApeStaking
         .connect(user2.signer)
-        .deposit(user2.address, parseEther("500000"))
+        .depositFreeSApe(ape.address, parseEther("1000000"))
     );
 
     //match bayc + ApeCoin
     let user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       0,
-      bayc,
+      bayc.address,
       0,
       2000,
       user1
@@ -1069,7 +1027,7 @@ describe("P2P Pair Staking Test", () => {
     let user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       0,
-      cApe,
+      ONE_ADDRESS,
       0,
       8000,
       user2
@@ -1087,7 +1045,7 @@ describe("P2P Pair Staking Test", () => {
     user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      bayc,
+      bayc.address,
       0,
       2000,
       user1
@@ -1095,7 +1053,7 @@ describe("P2P Pair Staking Test", () => {
     const user3SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      bakc,
+      bakc.address,
       0,
       2000,
       user3
@@ -1103,7 +1061,7 @@ describe("P2P Pair Staking Test", () => {
     user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       2,
-      cApe,
+      ONE_ADDRESS,
       0,
       6000,
       user2
@@ -1138,23 +1096,17 @@ describe("P2P Pair Staking Test", () => {
     } = await loadFixture(fixture);
 
     await supplyAndValidate(bayc, "2", user1, true);
-    await mintAndValidate(ape, "1000000", user2);
-
+    const apeAmount = await paraApeStaking.getApeCoinStakingCap(0);
     await waitForTx(
-      await bayc
-        .connect(user1.signer)
-        .setApprovalForAll(paraApeStaking.address, true)
-    );
-    await waitForTx(
-      await cApe
+      await paraApeStaking
         .connect(user2.signer)
-        .deposit(user2.address, parseEther("500000"))
+        .depositFreeSApe(ape.address, apeAmount)
     );
 
     const user1SignedOrder0 = await getSignedListingOrder(
       paraApeStaking,
       0,
-      bayc,
+      bayc.address,
       0,
       2000,
       user1
@@ -1162,7 +1114,7 @@ describe("P2P Pair Staking Test", () => {
     const user1SignedOrder1 = await getSignedListingOrder(
       paraApeStaking,
       0,
-      bayc,
+      bayc.address,
       1,
       2000,
       user1
@@ -1170,7 +1122,7 @@ describe("P2P Pair Staking Test", () => {
     const user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       0,
-      cApe,
+      ONE_ADDRESS,
       0,
       8000,
       user2
@@ -1210,17 +1162,18 @@ describe("P2P Pair Staking Test", () => {
     } = await loadFixture(fixture);
 
     await supplyAndValidate(mayc, "1", user1, true);
-    await mintAndValidate(ape, "1000000", user2);
 
     const apeAmount = await paraApeStaking.getApeCoinStakingCap(1);
     await waitForTx(
-      await cApe.connect(user2.signer).deposit(user2.address, apeAmount)
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositFreeSApe(ape.address, apeAmount)
     );
 
     const user1SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       1,
-      mayc,
+      mayc.address,
       0,
       2000,
       user1
@@ -1228,7 +1181,7 @@ describe("P2P Pair Staking Test", () => {
     const user2SignedOrder = await getSignedListingOrder(
       paraApeStaking,
       1,
-      cApe,
+      ONE_ADDRESS,
       0,
       8000,
       user2

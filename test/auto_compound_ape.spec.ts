@@ -40,7 +40,6 @@ describe("Auto Compound Ape Test", () => {
       users: [user1, user2, , , user3, user4, user5],
       apeCoinStaking,
       pool,
-      poolAdmin,
       nftPositionManager,
     } = testEnv;
 
@@ -82,16 +81,6 @@ describe("Auto Compound Ape Test", () => {
     );
     await waitForTx(
       await ape.connect(user4.signer).approve(cApe.address, MAX_UINT_AMOUNT)
-    );
-
-    await waitForTx(
-      await pool.connect(poolAdmin.signer).setClaimApeForCompoundFee(30)
-    );
-
-    await waitForTx(
-      await pool
-        .connect(poolAdmin.signer)
-        .setClaimApeForCompoundBot(user2.address)
     );
 
     // send extra tokens to the apestaking contract for rewards

@@ -56,15 +56,47 @@ library ApeCoinPoolLogic {
         uint256 bakcTokenId
     );
 
+    function depositFreeSApe(
+        mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
+        address apeCoin,
+        address cApe,
+        address user,
+        address cashAsset,
+        uint128 amount
+    ) external {
+        require(
+            cashAsset == cApe || cashAsset == apeCoin,
+            Errors.INVALID_TOKEN
+        );
+
+        IERC20(cashAsset).safeTransferFrom(user, address(this), amount);
+
+        if (cashAsset == apeCoin) {
+            IAutoCompoundApe(cApe).deposit(address(this), amount);
+        }
+
+        //update sApe balance
+        IParaApeStaking.SApeBalance memory sApeBalanceCache = sApeBalance[user];
+        uint256 shareAmount = ICApe(cApe).getShareByPooledApe(amount);
+        sApeBalanceCache.freeShareBalance += shareAmount.toUint128();
+        sApeBalance[user] = sApeBalanceCache;
+    }
+
     function withdrawFreeSApe(
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         address pool,
+        address apeCoin,
         address cApe,
         uint16 sApeReserveId,
         address user,
-        address receiver,
+        address receiveAsset,
         uint128 amount
     ) external {
+        require(
+            receiveAsset == cApe || receiveAsset == apeCoin,
+            Errors.INVALID_TOKEN
+        );
+
         IParaApeStaking.SApeBalance memory sApeBalanceCache = sApeBalance[user];
         uint256 shareAmount = ICApe(cApe).getShareByPooledApe(amount);
         require(
@@ -75,7 +107,10 @@ library ApeCoinPoolLogic {
         sApeBalance[user] = sApeBalanceCache;
 
         _validateDropSApeBalance(pool, sApeReserveId, user);
-        _sendUserFunds(pool, cApe, amount, receiver);
+        if (receiveAsset == apeCoin) {
+            IAutoCompoundApe(cApe).withdraw(amount);
+        }
+        _sendUserFunds(pool, receiveAsset, amount, user);
     }
 
     function depositApeCoinPool(

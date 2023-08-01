@@ -259,7 +259,22 @@ contract ParaApeStaking is
         sApeBalance[to].freeShareBalance += shareAmount.toUint128();
     }
 
-    function withdrawFreeSApe(address receiver, uint128 amount)
+    function depositFreeSApe(address cashAsset, uint128 amount)
+        external
+        whenNotPaused
+        nonReentrant
+    {
+        ApeCoinPoolLogic.depositFreeSApe(
+            sApeBalance,
+            apeCoin,
+            cApe,
+            msg.sender,
+            cashAsset,
+            amount
+        );
+    }
+
+    function withdrawFreeSApe(address receiveAsset, uint128 amount)
         external
         whenNotPaused
         nonReentrant
@@ -267,10 +282,11 @@ contract ParaApeStaking is
         ApeCoinPoolLogic.withdrawFreeSApe(
             sApeBalance,
             pool,
+            apeCoin,
             cApe,
             sApeReserveId,
             msg.sender,
-            receiver,
+            receiveAsset,
             amount
         );
     }
@@ -601,7 +617,6 @@ contract ParaApeStaking is
         override
         nonReentrant
     {
-        require(msg.sender == listingOrder.offerer, Errors.NOT_ORDER_OFFERER);
         bytes32 orderHash = ApeStakingP2PLogic.cancelListing(
             listingOrder,
             listingOrderStatus
@@ -623,6 +638,7 @@ contract ParaApeStaking is
             listingOrderStatus,
             matchedOrders,
             apeMatchedCount,
+            sApeBalance,
             vars
         );
 
@@ -646,6 +662,7 @@ contract ParaApeStaking is
             listingOrderStatus,
             matchedOrders,
             apeMatchedCount,
+            sApeBalance,
             vars
         );
 
@@ -668,6 +685,7 @@ contract ParaApeStaking is
             matchedOrders,
             cApeShareBalance,
             apeMatchedCount,
+            sApeBalance,
             vars,
             orderHash
         );
