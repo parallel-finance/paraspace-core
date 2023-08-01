@@ -36,7 +36,7 @@ library ApeStakingP2PLogic {
 
     //keccak256("MatchedOrder(uint8 stakingType,address apeToken,uint32 apeTokenId,uint32 apeShare,uint32 bakcTokenId,uint32 bakcShare,address apeCoinOfferer,uint32 apeCoinShare)");
     bytes32 internal constant MATCHED_ORDER_HASH =
-        0x7db3dae7d89c86e6881a66a131841305c008b207e41ff86a804b4bb056652808;
+        0x48f3bc7b1131aafcb847892fa3593862086dbde63aca2af4deccea8f6e8a380e;
 
     function cancelListing(
         IApeStakingP2P.ListingOrder calldata listingOrder,
