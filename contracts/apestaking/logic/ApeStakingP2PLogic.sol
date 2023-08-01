@@ -13,6 +13,7 @@ import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import "./ApeStakingCommonLogic.sol";
 import {WadRayMath} from "../../protocol/libraries/math/WadRayMath.sol";
 import "../../protocol/libraries/helpers/Errors.sol";
+import {UserConfiguration} from "../../protocol/libraries/configuration/UserConfiguration.sol";
 import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 
 /**
@@ -21,6 +22,7 @@ import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
  * @notice Implements the base logic for ape staking vault
  */
 library ApeStakingP2PLogic {
+    using UserConfiguration for DataTypes.UserConfigurationMap;
     using PercentageMath for uint256;
     using SafeCast for uint256;
     using SafeERC20 for IERC20;
@@ -255,25 +257,18 @@ library ApeStakingP2PLogic {
                 (order.stakingType ==
                     IApeStakingP2P.StakingType.BAKCPairStaking &&
                     msg.sender ==
-                    IERC721(vars.nBakc).ownerOf(order.bakcTokenId)),
+                    IERC721(vars.nBakc).ownerOf(order.bakcTokenId)) ||
+                _ifCanLiquidateApeCoinOffererSApe(
+                    vars.pool,
+                    vars.sApeReserveId,
+                    order.apeCoinOfferer
+                ),
             Errors.NO_BREAK_UP_PERMISSION
         );
 
-        //2 claim pending reward and compound
-        bytes32[] memory orderHashes = new bytes32[](1);
-        orderHashes[0] = orderHash;
-        claimForMatchedOrdersAndCompound(
-            matchedOrders,
-            cApeShareBalance,
-            vars,
-            orderHashes
-        );
-
-        //3 delete matched order
-        delete matchedOrders[orderHash];
-
-        //4 exit from ApeCoinStaking
+        //2 exit from ApeCoinStaking
         uint256 apeCoinCap = getApeCoinStakingCap(order.stakingType, vars);
+        uint256 balanceBefore = IERC20(vars.apeCoin).balanceOf(address(this));
         if (
             order.stakingType == IApeStakingP2P.StakingType.BAYCStaking ||
             order.stakingType == IApeStakingP2P.StakingType.MAYCStaking
@@ -306,7 +301,26 @@ library ApeStakingP2PLogic {
                 vars.apeCoinStaking.withdrawBAKC(_otherPairs, _nfts);
             }
         }
-        //5 transfer token
+        uint256 balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
+        uint256 withdrawAmount = balanceAfter - balanceBefore;
+
+        vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(WAD);
+        if (withdrawAmount > apeCoinCap) {
+            uint256 _compoundFeeShare = _distributeReward(
+                cApeShareBalance,
+                vars,
+                order,
+                vars.cApeExchangeRate,
+                withdrawAmount - apeCoinCap
+            );
+            ApeStakingCommonLogic.depositCApeShareForUser(
+                cApeShareBalance,
+                address(this),
+                _compoundFeeShare
+            );
+        }
+
+        //3 transfer token
         uint256 matchedCount = apeMatchedCount[order.apeToken][
             order.apeTokenId
         ];
@@ -319,12 +333,13 @@ library ApeStakingP2PLogic {
         }
         apeMatchedCount[order.apeToken][order.apeTokenId] = matchedCount - 1;
 
-        _handleApeCoin(
+        _updateUserSApeBalance(
             sApeBalance,
-            vars.cApe,
             order.apeCoinOfferer,
-            apeCoinCap
+            apeCoinCap,
+            vars.cApeExchangeRate
         );
+        IAutoCompoundApe(vars.cApe).deposit(address(this), withdrawAmount);
         if (order.stakingType == IApeStakingP2P.StakingType.BAKCPairStaking) {
             IERC721(vars.bakc).safeTransferFrom(
                 address(this),
@@ -333,7 +348,10 @@ library ApeStakingP2PLogic {
             );
         }
 
-        //6 reset ape coin listing order status
+        //4 delete matched order
+        delete matchedOrders[orderHash];
+
+        //5 reset ape coin listing order status
         if (
             listingOrderStatus[order.apeCoinListingOrderHash] !=
             IApeStakingP2P.ListingOrderStatus.Cancelled
@@ -432,6 +450,26 @@ library ApeStakingP2PLogic {
             return (0, 0);
         }
 
+        uint256 _compoundFeeShare = _distributeReward(
+            cApeShareBalance,
+            vars,
+            order,
+            cApeExchangeRate,
+            rewardAmount
+        );
+
+        emit OrderClaimedAndCompounded(orderHash, rewardAmount);
+
+        return (rewardAmount, _compoundFeeShare);
+    }
+
+    function _distributeReward(
+        mapping(address => uint256) storage cApeShareBalance,
+        IParaApeStaking.ApeStakingVaultCacheVars memory vars,
+        IApeStakingP2P.MatchedOrder memory order,
+        uint256 cApeExchangeRate,
+        uint256 rewardAmount
+    ) internal returns (uint256) {
         uint256 rewardShare = rewardAmount.wadDiv(cApeExchangeRate);
         //compound fee
         uint256 _compoundFeeShare = rewardShare.percentMul(vars.compoundFee);
@@ -457,9 +495,7 @@ library ApeStakingP2PLogic {
             );
         }
 
-        emit OrderClaimedAndCompounded(orderHash, rewardAmount);
-
-        return (rewardAmount, _compoundFeeShare);
+        return _compoundFeeShare;
     }
 
     function _validateOrderBasicInfo(
@@ -594,19 +630,17 @@ library ApeStakingP2PLogic {
         IAutoCompoundApe(cApe).withdraw(amount);
     }
 
-    function _handleApeCoin(
+    function _updateUserSApeBalance(
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
-        address cApe,
         address user,
-        uint256 amount
+        uint256 apeCoinAmount,
+        uint256 cApeExchangeRate
     ) internal {
-        uint256 freeSApeBalanceAdded = ICApe(cApe).getShareByPooledApe(amount);
+        uint256 freeSApeBalanceAdded = apeCoinAmount.wadDiv(cApeExchangeRate);
         IParaApeStaking.SApeBalance memory sApeBalanceCache = sApeBalance[user];
         sApeBalanceCache.freeShareBalance += freeSApeBalanceAdded.toUint128();
-        sApeBalanceCache.stakedBalance -= amount.toUint128();
+        sApeBalanceCache.stakedBalance -= apeCoinAmount.toUint128();
         sApeBalance[user] = sApeBalanceCache;
-
-        IAutoCompoundApe(cApe).deposit(address(this), amount);
     }
 
     function _getApeNTokenAddress(
@@ -620,6 +654,28 @@ library ApeStakingP2PLogic {
         } else {
             revert(Errors.INVALID_TOKEN);
         }
+    }
+
+    function _ifCanLiquidateApeCoinOffererSApe(
+        address pool,
+        uint16 sApeReserveId,
+        address user
+    ) internal view returns (bool) {
+        DataTypes.UserConfigurationMap memory userConfig = IPool(pool)
+            .getUserConfiguration(user);
+        bool usageAsCollateralEnabled = userConfig.isUsingAsCollateral(
+            sApeReserveId
+        );
+
+        if (usageAsCollateralEnabled && userConfig.isBorrowingAny()) {
+            (, , , , , uint256 healthFactor, ) = IPool(pool).getUserAccountData(
+                user
+            );
+            return
+                healthFactor <
+                ApeStakingCommonLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD;
+        }
+        return false;
     }
 
     function getMatchedOrderHash(IApeStakingP2P.MatchedOrder memory order)

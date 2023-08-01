@@ -29,12 +29,6 @@ library ApeCoinPoolLogic {
     using SafeERC20 for IERC20;
     using WadRayMath for uint256;
 
-    /**
-     * @dev Minimum health factor to consider a user position healthy
-     * A value of 1e18 results in 1
-     */
-    uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
-
     event ApeCoinPoolDeposited(bool isBAYC, uint256 tokenId);
     event ApeCoinPoolCompounded(bool isBAYC, uint256 tokenId);
     event ApeCoinPoolClaimed(bool isBAYC, uint256 tokenId);
@@ -965,7 +959,8 @@ library ApeCoinPoolLogic {
             );
             //need to check user health factor
             require(
-                healthFactor >= HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+                healthFactor >=
+                    ApeStakingCommonLogic.HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
                 Errors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
             );
         }

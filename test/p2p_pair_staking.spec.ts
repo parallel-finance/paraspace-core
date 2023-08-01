@@ -3,7 +3,12 @@ import {expect} from "chai";
 import {AutoCompoundApe, ParaApeStaking} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
-import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
+import {
+  changePriceAndValidate,
+  changeSApePriceAndValidate,
+  mintAndValidate,
+  supplyAndValidate,
+} from "./helpers/validated-steps";
 import {
   getAutoCompoundApe,
   getParaApeStaking,
@@ -1238,5 +1243,123 @@ describe("P2P Pair Staking Test", () => {
     await waitForTx(
       await paraApeStaking.connect(user1.signer).claimCApeReward(user1.address)
     );
+  });
+
+  it("ApeCoin order staked sApe can be liquidate", async () => {
+    const {
+      users: [user1, user2, liquidator],
+      ape,
+      weth,
+      bayc,
+      pool,
+    } = await loadFixture(fixture);
+    const sApeAddress = ONE_ADDRESS;
+
+    await supplyAndValidate(bayc, "1", user1, true);
+
+    const apeAmount = await paraApeStaking.getApeCoinStakingCap(0);
+    await waitForTx(
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositFreeSApe(ape.address, apeAmount)
+    );
+
+    const user1SignedOrder = await getSignedListingOrder(
+      paraApeStaking,
+      0,
+      bayc.address,
+      0,
+      2000,
+      user1
+    );
+    const user2SignedOrder = await getSignedListingOrder(
+      paraApeStaking,
+      0,
+      ONE_ADDRESS,
+      0,
+      8000,
+      user2
+    );
+
+    const txReceipt = await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .matchPairStakingList(user1SignedOrder, user2SignedOrder)
+    );
+    const logLength = txReceipt.logs.length;
+    const orderHash = txReceipt.logs[logLength - 1].data;
+
+    expect(await paraApeStaking.freeSApeBalance(user2.address)).to.be.closeTo(
+      "0",
+      parseEther("1")
+    );
+    expect(await paraApeStaking.stakedSApeBalance(user2.address)).to.be.equal(
+      apeAmount
+    );
+
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .setUserUseERC20AsCollateral(sApeAddress, true)
+    );
+
+    await changePriceAndValidate(ape, "0.001");
+    await changeSApePriceAndValidate(sApeAddress, "0.001");
+    await supplyAndValidate(weth, "100", liquidator, true);
+
+    //collateral value: 200000 * 0.001 = 200 eth
+    //borrow value: 30 eth
+    await waitForTx(
+      await pool
+        .connect(user2.signer)
+        .borrow(weth.address, parseEther("30"), 0, user2.address)
+    );
+
+    await expect(
+      paraApeStaking.connect(liquidator.signer).breakUpMatchedOrder(orderHash)
+    ).to.be.revertedWith(ProtocolErrors.NO_BREAK_UP_PERMISSION);
+
+    await changePriceAndValidate(ape, "0.0001");
+    await changeSApePriceAndValidate(sApeAddress, "0.0001");
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(liquidator.signer)
+        .breakUpMatchedOrder(orderHash)
+    );
+
+    expect(await paraApeStaking.freeSApeBalance(user2.address)).to.be.closeTo(
+      apeAmount,
+      parseEther("1")
+    );
+    expect(await paraApeStaking.stakedSApeBalance(user2.address)).to.be.equal(
+      "0"
+    );
+    await waitForTx(
+      await pool
+        .connect(liquidator.signer)
+        .liquidateERC20(
+          sApeAddress,
+          weth.address,
+          user2.address,
+          MAX_UINT_AMOUNT,
+          true,
+          {
+            value: parseEther("100"),
+            gasLimit: 5000000,
+          }
+        )
+    );
+
+    expect(await paraApeStaking.freeSApeBalance(user2.address)).to.be.closeTo(
+      "0",
+      parseEther("1")
+    );
+    expect(await paraApeStaking.stakedSApeBalance(user2.address)).to.be.equal(
+      "0"
+    );
+    expect(
+      await paraApeStaking.freeSApeBalance(liquidator.address)
+    ).to.be.closeTo(apeAmount, parseEther("1"));
   });
 });

@@ -20,6 +20,12 @@ library ApeStakingCommonLogic {
     using SafeCast for uint256;
     using WadRayMath for uint256;
 
+    /**
+     * @dev Minimum health factor to consider a user position healthy
+     * A value of 1e18 results in 1
+     */
+    uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
+
     uint256 public constant BAYC_BAKC_PAIR_POOL_ID = 1;
     uint256 public constant MAYC_BAKC_PAIR_POOL_ID = 2;
     uint256 public constant BAYC_SINGLE_POOL_ID = 3;

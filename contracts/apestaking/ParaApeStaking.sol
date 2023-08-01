@@ -680,6 +680,7 @@ contract ParaApeStaking is
     {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;
+        vars.sApeReserveId = sApeReserveId;
         ApeStakingP2PLogic.breakUpMatchedOrder(
             listingOrderStatus,
             matchedOrders,

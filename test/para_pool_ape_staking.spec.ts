@@ -916,7 +916,7 @@ describe("Para Ape staking ape coin pool test", () => {
     );
   });
 
-  it("sApe test0", async () => {
+  it("sApe test0: Ape coin pool sApe", async () => {
     const {
       users: [user1, user2, liquidator],
       ape,
