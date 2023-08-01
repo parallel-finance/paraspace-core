@@ -65,6 +65,8 @@ import {
   timeLockStrategyUSDCWH,
   timeLockStrategyWETHWH,
   timeLockStrategyWBTCWH,
+  timeLockStrategySTDOT,
+  timeLockStrategyEXRP,
 } from "../../market-config/timeLockStrategies";
 
 const TIME_LOCK_STRATEGY = {
@@ -95,6 +97,7 @@ const TIME_LOCK_STRATEGY = {
   cAPE: timeLockStrategyCAPE,
   yAPE: timeLockStrategyYAPE,
   xcDOT: timeLockStrategyXCDOT,
+  stDOT: timeLockStrategySTDOT,
   xcUSDT: timeLockStrategyXCUSDT,
   USDCWH: timeLockStrategyUSDCWH,
   WETHWH: timeLockStrategyWETHWH,
@@ -106,6 +109,8 @@ const TIME_LOCK_STRATEGY = {
   LINK: timeLockStrategyLINK,
   AAVE: timeLockStrategyAAVE,
   UNI: timeLockStrategyUNI,
+  WMATIC: timeLockStrategyWMATIC,
+  stMATIC: timeLockStrategySTMATIC,
   // ERC721
   BAYC: timeLockStrategyBAYC,
   ATK: timeLockStrategyBAYC,
@@ -138,8 +143,7 @@ const TIME_LOCK_STRATEGY = {
   VSL: timeLockStrategyVSL,
   KODA: timeLockStrategyKODA,
   BLOCKS: timeLockStrategyBLOCKS,
-  WMATIC: timeLockStrategyWMATIC,
-  stMATIC: timeLockStrategySTMATIC,
+  EXRP: timeLockStrategyEXRP,
 };
 
 const setTimeLockStrategy = async () => {

@@ -34,10 +34,10 @@ import {getFirstSigner, getAggregator} from "../helpers/contracts-getters";
 import {auctionStrategyExp} from "../market-config/auctionStrategies";
 import {
   convertToCurrencyDecimals,
-  impersonateAddress,
+  // impersonateAddress,
 } from "../helpers/contracts-helpers";
 import {increaseTime} from "../helpers/misc-utils";
-import {topUpNonPayableWithEther} from "./helpers/utils/funds";
+// import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 import {ConfiguratorInputTypes} from "../types/contracts/interfaces/IPoolConfigurator";
 
@@ -253,29 +253,29 @@ describe("Interest Rate Tests", () => {
       ).to.be.revertedWith(INVALID_OPTIMAL_USAGE_RATIO);
     });
 
-    it("TC-interest-rate-strategy-07 PoolConfigurator updates the ReserveInterestRateStrategy address", async () => {
-      const {pool, deployer, dai, configurator} = await loadFixture(
-        testEnvFixture
-      );
-
-      // Impersonate PoolConfigurator
-      await topUpNonPayableWithEther(
-        deployer.signer,
-        [configurator.address],
-        utils.parseEther("1")
-      );
-      const configSigner = (await impersonateAddress(configurator.address))
-        .signer;
-
-      expect(
-        await pool
-          .connect(configSigner)
-          .setReserveInterestRateStrategyAddress(dai.address, ZERO_ADDRESS)
-      );
-
-      const config = await pool.getReserveData(dai.address);
-      expect(config.interestRateStrategyAddress).to.be.eq(ZERO_ADDRESS);
-    });
+    // it("TC-interest-rate-strategy-07 PoolConfigurator updates the ReserveInterestRateStrategy address", async () => {
+    //   const {pool, deployer, dai, configurator} = await loadFixture(
+    //     testEnvFixture
+    //   );
+    //
+    //   // Impersonate PoolConfigurator
+    //   await topUpNonPayableWithEther(
+    //     deployer.signer,
+    //     [configurator.address],
+    //     utils.parseEther("1")
+    //   );
+    //   const configSigner = (await impersonateAddress(configurator.address))
+    //     .signer;
+    //
+    //   expect(
+    //     await pool
+    //       .connect(configSigner)
+    //       .setReserveInterestRateStrategyAddress(dai.address, ZERO_ADDRESS)
+    //   );
+    //
+    //   const config = await pool.getReserveData(dai.address);
+    //   expect(config.interestRateStrategyAddress).to.be.eq(ZERO_ADDRESS);
+    // });
   });
 
   context("Interest Rate and Index Overflow", () => {

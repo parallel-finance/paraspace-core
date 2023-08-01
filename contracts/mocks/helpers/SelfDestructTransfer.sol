@@ -5,6 +5,6 @@ import {Helpers} from "../../protocol/libraries/helpers/Helpers.sol";
 
 contract SelfdestructTransfer {
     function destroyAndTransfer(address payable to) external payable {
-      Helpers.safeTransferETH(to, address(this).balance);
+      revert("selfdestruct is deprecated");
     }
 }

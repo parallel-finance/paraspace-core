@@ -22,6 +22,7 @@ import {
   auctionStrategyWPunks,
   auctionStrategyZero,
   auctionStrategyEXRP,
+  auctionStrategyUniswapV3,
 } from "./auctionStrategies";
 import {
   rateStrategyAAVE,
@@ -887,7 +888,7 @@ export const strategyWPunks: IReserveParams = {
 
 export const strategyUniswapV3: IReserveParams = {
   strategy: rateStrategyNFT,
-  auctionStrategy: auctionStrategyZero,
+  auctionStrategy: auctionStrategyUniswapV3,
   timeLockStrategy: timeLockStrategyUniswapV3,
   baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",

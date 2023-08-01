@@ -86,13 +86,16 @@ task(
       );
       console.log(
         "  - MaxFeePerGas:",
-        utils.formatUnits(feeData.maxFeePerGas, "gwei")
+        utils.formatUnits(GLOBAL_OVERRIDES.maxFeePerGas, "gwei")
       );
     } else if (feeData.gasPrice) {
       GLOBAL_OVERRIDES.gasPrice = feeData.gasPrice;
       GLOBAL_OVERRIDES.type = 0;
       console.log("  - Type:", GLOBAL_OVERRIDES.type);
-      console.log("  - GasPrice:", utils.formatUnits(feeData.gasPrice, "gwei"));
+      console.log(
+        "  - GasPrice:",
+        utils.formatUnits(GLOBAL_OVERRIDES.gasPrice, "gwei")
+      );
     }
   }
 

@@ -297,13 +297,20 @@ export const getEthersSignersAddresses = async (): Promise<
 export const verifyContract = async (
   id: string,
   instance: Contract,
-  args: ConstructorArgs,
+  contractFQN: string | undefined = undefined,
+  constructorArgs: ConstructorArgs,
   libraries?: LibraryAddresses
 ) => {
   if (usingTenderly()) {
     await verifyAtTenderly(id, instance);
   }
-  await verifyEtherscanContract(id, instance.address, args, libraries);
+  await verifyEtherscanContract(
+    id,
+    instance.address,
+    contractFQN,
+    constructorArgs,
+    libraries
+  );
   return instance;
 };
 
@@ -387,7 +394,13 @@ export const withSaveAndVerify = async (
 
     if (verify) {
       if (ETHERSCAN_VERIFICATION_PROVIDER == "hardhat") {
-        await verifyContract(id, instance, deployArgs, normalizedLibraries);
+        await verifyContract(
+          id,
+          instance,
+          artifact.sourceName + ":" + artifact.contractName,
+          deployArgs,
+          normalizedLibraries
+        );
       } else if (ETHERSCAN_VERIFICATION_PROVIDER == "forge") {
         const forgeVerifyContractCmd = `ETHERSCAN_API_KEY=${ETHERSCAN_KEY} ETH_RPC_URL=${
           (DRE.network.config as HttpNetworkConfig).url

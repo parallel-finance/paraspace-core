@@ -273,14 +273,33 @@ export const printContracts = () => {
 export const verifyContracts = async (limit = 1) => {
   const db = getDb();
   const network = DRE.network.name;
-  const entries = Object.entries<DbEntry>(db.getState()).filter(([, value]) => {
-    // constructorArgs must be Array to make the contract verifiable
-    return !!value[network] && Array.isArray(value[network].constructorArgs);
-  });
+  const entries = Object.entries<DbEntry>(db.getState()).filter(
+    ([key, value]) => {
+      // constructorArgs must be Array to make the contract verifiable
+      return (
+        shouldVerifyContract(key) &&
+        !!value[network] &&
+        Array.isArray(value[network].constructorArgs)
+      );
+    }
+  );
 
   await mapLimit(entries, limit, async ([key, value]) => {
     const {address, constructorArgs = [], libraries} = value[network];
-    await verifyEtherscanContract(key, address, constructorArgs, libraries);
+    let contractFQN: string | undefined = undefined;
+    try {
+      const artifact = await DRE.artifacts.readArtifact(key);
+      contractFQN = artifact.sourceName + ":" + artifact.contractName;
+    } catch (e) {
+      //
+    }
+    await verifyEtherscanContract(
+      key,
+      address,
+      contractFQN,
+      constructorArgs,
+      libraries
+    );
   });
 };
 

@@ -23,6 +23,7 @@ const unableVerifyError = "Fail - Unable to verify";
 
 type VerificationArgs = {
   address: string;
+  contract?: string;
   constructorArguments: ConstructorArgs;
   relatedSources?: true;
   libraries?: LibraryAddresses;
@@ -60,21 +61,22 @@ const setIsVerified = async (contractId: string, address: string) => {
 };
 
 export const verifyEtherscanContract = async (
-  contractId: string,
+  id: string,
   address: string,
-  constructorArguments: ConstructorArgs = [],
+  contractFQN: string | undefined = undefined,
+  constructorArgs: ConstructorArgs = [],
   libraries?: LibraryAddresses
 ) => {
-  if (!shouldVerifyContract(contractId)) {
+  if (!shouldVerifyContract(id)) {
     return;
   }
 
-  let isVerified = await getIsVerified(contractId, address);
+  let isVerified = await getIsVerified(id, address);
   if (isVerified) {
     return;
   }
 
-  console.log(`- Verifying ${contractId}`);
+  console.log(`- Verifying ${id}`);
   console.log(`  - address: ${address}`);
 
   try {
@@ -84,7 +86,8 @@ export const verifyEtherscanContract = async (
 
     const params: VerificationArgs = {
       address,
-      constructorArguments,
+      contract: contractFQN,
+      constructorArguments: constructorArgs,
       relatedSources: true,
       libraries,
     };
@@ -97,7 +100,7 @@ export const verifyEtherscanContract = async (
     isVerified = errMsg.includes(ALREADY_VERIFIED);
   }
 
-  if (isVerified) await setIsVerified(contractId, address);
+  if (isVerified) await setIsVerified(id, address);
 };
 
 export const runTaskWithRetry = async (
