@@ -359,17 +359,15 @@ contract ParaApeStaking is
         view
         returns (uint256)
     {
-        ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = isBAYC
             ? ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID
             : ApeStakingCommonLogic.MAYC_APECOIN_POOL_ID;
-        (, uint256 pendingReward, ) = ApeCoinPoolLogic.calculatePendingReward(
-            poolStates[poolId],
-            vars,
-            isBAYC,
-            tokenIds
-        );
-        return pendingReward;
+        return
+            ApeCoinPoolLogic.calculatePendingReward(
+                poolStates[poolId],
+                cApe,
+                tokenIds
+            );
     }
 
     function claimApeCoinPool(bool isBAYC, uint32[] calldata tokenIds)
@@ -456,17 +454,15 @@ contract ParaApeStaking is
         bool isBAYC,
         uint32[] calldata apeTokenIds
     ) external view returns (uint256) {
-        ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = isBAYC
             ? ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID
             : ApeStakingCommonLogic.MAYC_BAKC_APECOIN_POOL_ID;
-        (, uint256 pendingReward, ) = ApeCoinPoolLogic.calculatePendingReward(
-            poolStates[poolId],
-            vars,
-            isBAYC,
-            apeTokenIds
-        );
-        return pendingReward;
+        return
+            ApeCoinPoolLogic.calculatePendingReward(
+                poolStates[poolId],
+                cApe,
+                apeTokenIds
+            );
     }
 
     function claimApeCoinPairPool(bool isBAYC, uint32[] calldata apeTokenIds)
@@ -532,7 +528,6 @@ contract ParaApeStaking is
         //handle nft pool in the scope to avoid stack too deep
         {
             uint32[] memory pairPoolTokenIds = new uint32[](tokenIds.length);
-            uint32[] memory pairPoolBakcIds = new uint32[](tokenIds.length);
             uint32[] memory singlePoolTokenIds = new uint32[](tokenIds.length);
             uint256 pairPoolCount = 0;
             uint256 singlePoolCount = 0;
@@ -549,7 +544,6 @@ contract ParaApeStaking is
                 ];
                 if (tokenStatus.isInPool) {
                     pairPoolTokenIds[pairPoolCount] = tokenId;
-                    pairPoolBakcIds[pairPoolCount] = tokenStatus.bakcTokenId;
                     pairPoolCount++;
                     continue;
                 }
@@ -572,7 +566,6 @@ contract ParaApeStaking is
             if (pairPoolCount > 0) {
                 assembly {
                     mstore(pairPoolTokenIds, pairPoolCount)
-                    mstore(pairPoolBakcIds, pairPoolCount)
                 }
                 uint256 poolId = isBAYC
                     ? ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID
@@ -581,8 +574,7 @@ contract ParaApeStaking is
                     poolStates[poolId],
                     vars,
                     isBAYC,
-                    pairPoolTokenIds,
-                    pairPoolBakcIds
+                    pairPoolTokenIds
                 );
             }
 
@@ -852,33 +844,30 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeStakingVault
-    function pairNFTPendingReward(
-        bool isBAYC,
-        uint32[] calldata apeTokenIds,
-        uint32[] calldata bakcTokenIds
-    ) external view override returns (uint256) {
-        ApeStakingVaultCacheVars memory vars = _createCacheVars();
+    function pairNFTPendingReward(bool isBAYC, uint32[] calldata apeTokenIds)
+        external
+        view
+        override
+        returns (uint256)
+    {
         uint256 poolId = isBAYC
             ? ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID
             : ApeStakingCommonLogic.MAYC_BAKC_PAIR_POOL_ID;
-        (, uint256 pendingReward, ) = ApeStakingPairPoolLogic
-            .calculatePendingReward(
+        return
+            ApeStakingPairPoolLogic.calculatePendingReward(
                 poolStates[poolId],
-                vars,
-                isBAYC,
-                apeTokenIds,
-                bakcTokenIds
+                cApe,
+                apeTokenIds
             );
-
-        return pendingReward;
     }
 
     /// @inheritdoc IApeStakingVault
-    function claimPairNFT(
-        bool isBAYC,
-        uint32[] calldata apeTokenIds,
-        uint32[] calldata bakcTokenIds
-    ) external override whenNotPaused nonReentrant {
+    function claimPairNFT(bool isBAYC, uint32[] calldata apeTokenIds)
+        external
+        override
+        whenNotPaused
+        nonReentrant
+    {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = isBAYC
             ? ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID
@@ -887,8 +876,7 @@ contract ParaApeStaking is
             poolStates[poolId],
             vars,
             isBAYC,
-            apeTokenIds,
-            bakcTokenIds
+            apeTokenIds
         );
     }
 
@@ -1016,11 +1004,17 @@ contract ParaApeStaking is
             nft == bayc || nft == mayc || nft == bakc,
             Errors.NFT_NOT_ALLOWED
         );
-        ApeStakingVaultCacheVars memory vars = _createCacheVars();
-        uint256 pendingReward = ApeStakingSinglePoolLogic
-            .calculatePendingReward(poolStates, vars, nft, tokenIds);
-
-        return pendingReward;
+        uint256 poolId = (nft == bayc)
+            ? ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID
+            : (nft == mayc)
+            ? ApeStakingCommonLogic.MAYC_SINGLE_POOL_ID
+            : ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID;
+        return
+            ApeStakingSinglePoolLogic.calculatePendingReward(
+                poolStates[poolId],
+                cApe,
+                tokenIds
+            );
     }
 
     /// @inheritdoc IApeStakingVault

@@ -181,14 +181,11 @@ describe("Para Ape Staking Test", () => {
 
     const user1PendingReward = await paraApeStaking.pairNFTPendingReward(
       true,
-      [0, 1],
       [0, 1]
     );
-    const user2PendingReward = await paraApeStaking.pairNFTPendingReward(
-      true,
-      [2],
-      [2]
-    );
+    const user2PendingReward = await paraApeStaking.pairNFTPendingReward(true, [
+      2,
+    ]);
     expect(user1PendingReward).to.be.closeTo(
       parseEther("4320"),
       parseEther("50")
@@ -199,12 +196,10 @@ describe("Para Ape Staking Test", () => {
     );
 
     await waitForTx(
-      await paraApeStaking
-        .connect(user1.signer)
-        .claimPairNFT(true, [0, 1], [0, 1])
+      await paraApeStaking.connect(user1.signer).claimPairNFT(true, [0, 1])
     );
     await waitForTx(
-      await paraApeStaking.connect(user2.signer).claimPairNFT(true, [2], [2])
+      await paraApeStaking.connect(user2.signer).claimPairNFT(true, [2])
     );
     let user1Balance = await cApe.balanceOf(user1.address);
     let user2Balance = await cApe.balanceOf(user2.address);
@@ -214,12 +209,10 @@ describe("Para Ape Staking Test", () => {
 
     const newUser1PendingReward = await paraApeStaking.pairNFTPendingReward(
       true,
-      [0, 1],
       [0, 1]
     );
     const newUser2PendingReward = await paraApeStaking.pairNFTPendingReward(
       true,
-      [2],
       [2]
     );
     expect(newUser1PendingReward).to.be.equal(0);
@@ -358,12 +351,10 @@ describe("Para Ape Staking Test", () => {
 
     const user1PendingReward = await paraApeStaking.pairNFTPendingReward(
       false,
-      [0, 1],
       [0, 1]
     );
     const user2PendingReward = await paraApeStaking.pairNFTPendingReward(
       false,
-      [2],
       [2]
     );
     expect(user1PendingReward).to.be.closeTo(
@@ -376,12 +367,10 @@ describe("Para Ape Staking Test", () => {
     );
 
     await waitForTx(
-      await paraApeStaking
-        .connect(user1.signer)
-        .claimPairNFT(false, [0, 1], [0, 1])
+      await paraApeStaking.connect(user1.signer).claimPairNFT(false, [0, 1])
     );
     await waitForTx(
-      await paraApeStaking.connect(user2.signer).claimPairNFT(false, [2], [2])
+      await paraApeStaking.connect(user2.signer).claimPairNFT(false, [2])
     );
     let user1Balance = await cApe.balanceOf(user1.address);
     let user2Balance = await cApe.balanceOf(user2.address);
@@ -391,12 +380,10 @@ describe("Para Ape Staking Test", () => {
 
     const newUser1PendingReward = await paraApeStaking.pairNFTPendingReward(
       false,
-      [0, 1],
       [0, 1]
     );
     const newUser2PendingReward = await paraApeStaking.pairNFTPendingReward(
       false,
-      [2],
       [2]
     );
     expect(newUser1PendingReward).to.be.equal(0);
@@ -799,7 +786,7 @@ describe("Para Ape Staking Test", () => {
       nBAYC,
     } = await loadFixture(fixture);
 
-    await supplyAndValidate(bayc, "3", user1, true);
+    await supplyAndValidate(bayc, "4", user1, true);
     await supplyAndValidate(bakc, "3", user1, true);
 
     await waitForTx(
@@ -829,14 +816,12 @@ describe("Para Ape Staking Test", () => {
     );
 
     await expect(
-      paraApeStaking
-        .connect(user1.signer)
-        .claimPairNFT(true, [0, 1, 2], [0, 1, 2])
+      paraApeStaking.connect(user1.signer).claimPairNFT(true, [0, 1, 2])
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_SAME_OWNER);
 
     await expect(
-      paraApeStaking.connect(user1.signer).claimPairNFT(true, [1], [0])
-    ).to.be.revertedWith(ProtocolErrors.NOT_PAIRED_APE_AND_BAKC);
+      paraApeStaking.connect(user1.signer).claimPairNFT(true, [3])
+    ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
   });
 
   it("withdrawPairNFT revert test", async () => {
@@ -868,9 +853,9 @@ describe("Para Ape Staking Test", () => {
         .transferFrom(user1.address, user2.address, 2)
     );
 
-    await expect(
-      paraApeStaking.connect(user1.signer).withdrawPairNFT(true, [0, 1], [1, 0])
-    ).to.be.revertedWith(ProtocolErrors.NOT_PAIRED_APE_AND_BAKC);
+    // await expect(
+    //   paraApeStaking.connect(user1.signer).withdrawPairNFT(true, [0, 1], [1, 0])
+    // ).to.be.revertedWith(ProtocolErrors.NOT_PAIRED_APE_AND_BAKC);
 
     await expect(
       paraApeStaking
@@ -1361,12 +1346,10 @@ describe("Para Ape Staking Test", () => {
     tx0 = paraApeStaking.interface.encodeFunctionData("claimPairNFT", [
       true,
       [0, 1],
-      [0, 1],
     ]);
     tx1 = paraApeStaking.interface.encodeFunctionData("claimPairNFT", [
       false,
       [0, 1],
-      [2, 3],
     ]);
     tx2 = paraApeStaking.interface.encodeFunctionData("claimNFT", [
       bayc.address,

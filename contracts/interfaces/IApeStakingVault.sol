@@ -57,26 +57,18 @@ interface IApeStakingVault {
      * @notice get Ape and BAKC pair staking unclaimed cApe reward
      * @param isBAYC if Ape is BAYC
      * @param apeTokenIds Ape token ids
-     * @param bakcTokenIds BAKC token ids
      */
-    function pairNFTPendingReward(
-        bool isBAYC,
-        uint32[] calldata apeTokenIds,
-        uint32[] calldata bakcTokenIds
-    ) external returns (uint256);
+    function pairNFTPendingReward(bool isBAYC, uint32[] calldata apeTokenIds)
+        external
+        returns (uint256);
 
     /**
      * @notice claim Ape and BAKC pair staking unclaimed cApe reward
      * to save gas we don't claim pending reward in ApeCoinStaking.
      * @param isBAYC if Ape is BAYC
      * @param apeTokenIds Ape token ids
-     * @param bakcTokenIds BAKC token ids
      */
-    function claimPairNFT(
-        bool isBAYC,
-        uint32[] calldata apeTokenIds,
-        uint32[] calldata bakcTokenIds
-    ) external;
+    function claimPairNFT(bool isBAYC, uint32[] calldata apeTokenIds) external;
 
     /**
      * @notice withdraw Ape and BAKC pair from pool

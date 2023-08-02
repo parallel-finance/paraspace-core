@@ -1035,7 +1035,7 @@ describe("Para Ape staking ape coin pool test", () => {
           user1.address,
           0,
           parseEther("100"),
-          false,
+          true,
           {gasLimit: 5000000}
         )
     );
@@ -1072,7 +1072,7 @@ describe("Para Ape staking ape coin pool test", () => {
           user1.address,
           0,
           parseEther("50"),
-          false,
+          true,
           {gasLimit: 5000000}
         )
     );
@@ -1717,7 +1717,7 @@ describe("Para Ape staking ape coin pool test", () => {
           user1.address,
           0,
           parseEther("100"),
-          false,
+          true,
           {gasLimit: 5000000}
         )
     );
@@ -1841,16 +1841,10 @@ describe("Para Ape staking ape coin pool test", () => {
       })
     );
 
-    const baycPairReward = await paraApeStaking.pairNFTPendingReward(
-      true,
-      [0],
-      [0]
-    );
-    const maycPairReward = await paraApeStaking.pairNFTPendingReward(
-      false,
-      [0],
-      [1]
-    );
+    const baycPairReward = await paraApeStaking.pairNFTPendingReward(true, [0]);
+    const maycPairReward = await paraApeStaking.pairNFTPendingReward(false, [
+      0,
+    ]);
     const baycSingleReward = await paraApeStaking.nftPendingReward(
       bayc.address,
       [1]

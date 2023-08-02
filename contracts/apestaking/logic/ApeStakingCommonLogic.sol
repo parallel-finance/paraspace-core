@@ -156,4 +156,25 @@ library ApeStakingCommonLogic {
         }
         apeMatchedCount[ape][tokenId] = matchedCount;
     }
+
+    function calculatePendingReward(
+        IParaApeStaking.PoolState storage poolState,
+        address cApe,
+        uint32[] memory tokenIds
+    ) internal view returns (uint256) {
+        uint256 rewardShares;
+        uint256 arrayLength = tokenIds.length;
+        uint256 accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
+        for (uint256 index = 0; index < arrayLength; index++) {
+            uint32 tokenId = tokenIds[index];
+
+            IParaApeStaking.TokenStatus memory tokenStatus = poolState
+                .tokenStatus[tokenId];
+            require(tokenStatus.isInPool, Errors.NFT_NOT_IN_POOL);
+
+            rewardShares += (accumulatedRewardsPerNft -
+                tokenStatus.rewardsDebt);
+        }
+        return ICApe(cApe).getPooledApeByShares(rewardShares);
+    }
 }
