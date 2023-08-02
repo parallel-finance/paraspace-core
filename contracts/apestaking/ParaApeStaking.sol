@@ -228,7 +228,7 @@ contract ParaApeStaking is
         address nft,
         uint256 tokenId,
         uint256 poolId
-    ) external returns (bool) {
+    ) external view returns (bool) {
         return
             ApeCoinPoolLogic.isNFTInPoolId(
                 poolStates,

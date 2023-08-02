@@ -58,7 +58,7 @@ library ApeCoinPoolLogic {
         address nft,
         uint256 tokenId,
         uint256 poolId
-    ) external returns (bool) {
+    ) external view returns (bool) {
         if (nft == bayc) {
             if (
                 poolId == ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID ||
