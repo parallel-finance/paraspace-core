@@ -949,9 +949,8 @@ export const dryRunEncodedData = async (
 export const dryRunMultipleEncodedData = async (
   target: tEthereumAddress[],
   data: string[],
-  executionTime?: string
+  executionTime: (string | undefined)[]
 ) => {
-  executionTime = executionTime || (await getExecutionTime());
   if (
     DRY_RUN == DryRunExecutor.TimeLock &&
     (await getContractAddressInDb(eContractid.TimeLockExecutor))
@@ -960,7 +959,7 @@ export const dryRunMultipleEncodedData = async (
       const timeLockData = await getTimeLockData(
         target[i],
         data[i],
-        executionTime
+        executionTime[i] || (await getExecutionTime())
       );
       await insertTimeLockDataInDb(timeLockData);
     }
@@ -970,7 +969,7 @@ export const dryRunMultipleEncodedData = async (
       const {newTarget, newData} = await getTimeLockData(
         target[i],
         data[i],
-        executionTime
+        executionTime[i] || (await getExecutionTime())
       );
       metaTransactions.push({
         to: newTarget,

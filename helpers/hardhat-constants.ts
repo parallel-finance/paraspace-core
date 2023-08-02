@@ -137,6 +137,7 @@ export const ETHERSCAN_APIS = {
 };
 export const BROWSER_URLS = {
   localhost: "http://localhost:4000",
+  mainnet: "https://etherscan.io",
   goerli: "https://goerli.etherscan.io",
   arbitrum: "https://arbiscan.io",
   arbitrumGoerli: "https://goerli.arbiscan.io",
