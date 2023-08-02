@@ -51,7 +51,7 @@ contract ParaApeStaking is
     address private immutable psApe;
 
     //record all pool states
-    mapping(uint256 => PoolState) public poolStates;
+    mapping(uint256 => PoolState) private poolStates;
 
     //record user sApe balance
     mapping(address => SApeBalance) private sApeBalance;
@@ -219,6 +219,26 @@ contract ParaApeStaking is
     ) external onlyPoolAdmin {
         IERC20(token).safeTransfer(to, amount);
         emit RescueERC20(token, to, amount);
+    }
+
+    /*
+     *common Logic
+     */
+    function isNFTInPoolId(
+        address nft,
+        uint256 tokenId,
+        uint256 poolId
+    ) external returns (bool) {
+        return
+            ApeCoinPoolLogic.isNFTInPoolId(
+                poolStates,
+                bayc,
+                mayc,
+                bakc,
+                nft,
+                tokenId,
+                poolId
+            );
     }
 
     /*

@@ -50,6 +50,42 @@ library ApeCoinPoolLogic {
         uint256 bakcTokenId
     );
 
+    function isNFTInPoolId(
+        mapping(uint256 => IParaApeStaking.PoolState) storage poolStates,
+        address bayc,
+        address mayc,
+        address bakc,
+        address nft,
+        uint256 tokenId,
+        uint256 poolId
+    ) external returns (bool) {
+        if (nft == bayc) {
+            if (
+                poolId == ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID ||
+                poolId == ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID ||
+                poolId == ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID ||
+                poolId == ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID
+            ) {
+                return poolStates[poolId].tokenStatus[tokenId].isInPool;
+            }
+        } else if (nft == mayc) {
+            if (
+                poolId == ApeStakingCommonLogic.MAYC_BAKC_PAIR_POOL_ID ||
+                poolId == ApeStakingCommonLogic.MAYC_SINGLE_POOL_ID ||
+                poolId == ApeStakingCommonLogic.MAYC_APECOIN_POOL_ID ||
+                poolId == ApeStakingCommonLogic.MAYC_BAKC_APECOIN_POOL_ID
+            ) {
+                return poolStates[poolId].tokenStatus[tokenId].isInPool;
+            }
+        } else if (nft == bakc) {
+            if (poolId == ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID) {
+                return poolStates[poolId].tokenStatus[tokenId].isInPool;
+            }
+        }
+
+        return false;
+    }
+
     function depositFreeSApe(
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         address apeCoin,
