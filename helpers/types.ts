@@ -14,6 +14,11 @@ export enum DryRunExecutor {
   None = "",
 }
 
+export enum EtherscanVerificationProvider {
+  hardhat = "hardhat",
+  foundry = "foundry",
+}
+
 export enum TimeLockOperation {
   Queue = "queue",
   Execute = "execute",

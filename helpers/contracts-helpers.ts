@@ -38,6 +38,7 @@ import {
   DryRunExecutor,
   TimeLockData,
   TimeLockOperation,
+  EtherscanVerificationProvider,
 } from "./types";
 import {
   ConsiderationItem,
@@ -393,7 +394,9 @@ export const withSaveAndVerify = async (
     }
 
     if (verify) {
-      if (ETHERSCAN_VERIFICATION_PROVIDER == "hardhat") {
+      if (
+        ETHERSCAN_VERIFICATION_PROVIDER == EtherscanVerificationProvider.hardhat
+      ) {
         await verifyContract(
           id,
           instance,
@@ -401,7 +404,9 @@ export const withSaveAndVerify = async (
           deployArgs,
           normalizedLibraries
         );
-      } else if (ETHERSCAN_VERIFICATION_PROVIDER == "forge") {
+      } else if (
+        ETHERSCAN_VERIFICATION_PROVIDER == EtherscanVerificationProvider.foundry
+      ) {
         const forgeVerifyContractCmd = `ETHERSCAN_API_KEY=${ETHERSCAN_KEY} ETH_RPC_URL=${
           (DRE.network.config as HttpNetworkConfig).url
         } VERIFIER_URL=${
