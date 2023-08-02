@@ -522,6 +522,7 @@ contract ParaApeStaking is
         nonReentrant
     {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        vars.compoundFee = compoundFee;
 
         uint32[] memory apeCoinPoolTokenIds = new uint32[](tokenIds.length);
         uint256 apeCoinPoolCount = 0;
