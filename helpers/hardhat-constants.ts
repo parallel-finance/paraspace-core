@@ -100,9 +100,9 @@ export const ETHERSCAN_VERIFICATION_MAX_RETRIES = parseInt(
   process.env.ETHERSCAN_VERIFICATION_MAX_RETRIES || "3"
 );
 export const ETHERSCAN_NETWORKS = [
+  "localhost",
   "mainnet",
   "goerli",
-  "localhost",
   "arbitrum",
   "polygon",
   "matic",
@@ -113,6 +113,8 @@ export const ETHERSCAN_NETWORKS = [
   "zksyncGoerli",
   "linea",
   "lineaGoerli",
+  "moonbeam",
+  "moonbase",
 ];
 export const ETHERSCAN_APIS = {
   localhost: "http://localhost:4000/api",
