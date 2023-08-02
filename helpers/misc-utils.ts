@@ -148,6 +148,12 @@ export const isMainnet = (): boolean =>
   isPolygonZkEVM() ||
   isLinea();
 
+export const safeTransactionServiceUrl = (): string => {
+  return isMoonbeam()
+    ? "https://transaction.multisig.moonbeam.network"
+    : `https://safe-transaction-${FORK || DRE.network.name}.safe.global`;
+};
+
 export const shouldVerifyContract = (contractId: string): boolean => {
   if (!ETHERSCAN_NETWORKS.includes(DRE.network.name)) {
     return false;

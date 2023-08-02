@@ -24,7 +24,6 @@ import {
   getParaSpaceConfig,
   isFork,
   sleep,
-  isMoonbeam,
 } from "./misc-utils";
 import {
   iFunctionSignature,
@@ -88,7 +87,11 @@ import {
   HardhatRuntimeEnvironment,
   HttpNetworkConfig,
 } from "hardhat/types";
-import {getFirstSigner, getTimeLockExecutor} from "./contracts-getters";
+import {
+  getFirstSigner,
+  getSafeSdkAndService,
+  getTimeLockExecutor,
+} from "./contracts-getters";
 import {getDefenderRelaySigner, usingDefender} from "./defender-utils";
 import {usingTenderly, verifyAtTenderly} from "./tenderly-utils";
 import {SignerWithAddress} from "../test/helpers/make-suite";
@@ -127,9 +130,6 @@ import {
   OperationType,
   SafeTransactionDataPartial,
 } from "@safe-global/safe-core-sdk-types";
-import Safe from "@safe-global/safe-core-sdk";
-import EthersAdapter from "@safe-global/safe-ethers-lib";
-import SafeServiceClient from "@safe-global/safe-service-client";
 import {encodeMulti, MetaTransaction} from "ethers-multisend";
 import {
   FlashbotsBundleProvider,
@@ -1047,22 +1047,8 @@ export const proposeSafeTransaction = async (
   withTimeLock = false
 ) => {
   const signer = await getFirstSigner();
-  const ethAdapter = new EthersAdapter({
-    ethers,
-    signerOrProvider: signer,
-  });
   const MULTI_SIG = getParaSpaceConfig().Governance.Multisig;
-
-  const safeSdk: Safe = await Safe.create({
-    ethAdapter,
-    safeAddress: MULTI_SIG,
-  });
-  const safeService = new SafeServiceClient({
-    txServiceUrl: isMoonbeam()
-      ? `https://transaction.multisig.moonbeam.network`
-      : `https://safe-transaction-${FORK || DRE.network.name}.safe.global`,
-    ethAdapter,
-  });
+  const {safeSdk, safeService} = await getSafeSdkAndService(MULTI_SIG);
 
   if (withTimeLock) {
     const {newTarget, newData} = await getTimeLockData(target, data);

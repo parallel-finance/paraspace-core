@@ -107,7 +107,12 @@ import {
   normalizeLibraryAddresses,
   linkLibraries,
 } from "./contracts-helpers";
-import {DRE, getDb, getParaSpaceConfig} from "./misc-utils";
+import {
+  DRE,
+  getDb,
+  getParaSpaceConfig,
+  safeTransactionServiceUrl,
+} from "./misc-utils";
 import {
   eContractid,
   ERC721TokenContractId,
@@ -131,6 +136,9 @@ import {HttpNetworkConfig} from "hardhat/types";
 import {ContractFactory, ethers} from "ethers";
 import {Libraries} from "hardhat-deploy/dist/types";
 import {ZERO_ADDRESS} from "./constants";
+import EthersAdapter from "@safe-global/safe-ethers-lib";
+import Safe from "@safe-global/safe-core-sdk";
+import SafeServiceClient from "@safe-global/safe-service-client";
 
 export const getFirstSigner = async () => {
   if (DRE.network.zksync) {
@@ -205,6 +213,27 @@ export const recordByteCodeOnL1 = async (name: string) => {
     l2Value: "0",
     factoryDeps: [artifact.bytecode],
   });
+};
+
+export const getSafeSdkAndService = async (safeAddress: string) => {
+  const signer = await getFirstSigner();
+  const ethAdapter = new EthersAdapter({
+    ethers,
+    signerOrProvider: signer,
+  });
+
+  const safeSdk: Safe = await Safe.create({
+    ethAdapter,
+    safeAddress,
+  });
+  const safeService = new SafeServiceClient({
+    txServiceUrl: safeTransactionServiceUrl(),
+    ethAdapter,
+  });
+  return {
+    safeSdk,
+    safeService,
+  };
 };
 
 export const getPoolAddressesProvider = async (address?: tEthereumAddress) => {

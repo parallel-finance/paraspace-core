@@ -1,16 +1,12 @@
 import {task} from "hardhat/config";
-import {FORK, TIME_LOCK_SIGS} from "../../helpers/hardhat-constants";
-import {ethers} from "ethers";
+import {TIME_LOCK_SIGS} from "../../helpers/hardhat-constants";
 import {decodeMulti, MetaTransaction} from "ethers-multisend";
-import EthersAdapter from "@safe-global/safe-ethers-lib";
-import SafeServiceClient from "@safe-global/safe-service-client";
 import {findLastIndex} from "lodash";
-import {isMoonbeam} from "../../helpers/misc-utils";
 import {eContractid} from "../../helpers/types";
 
 task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
-  const {getFirstSigner, getTimeLockExecutor} = await import(
+  const {getTimeLockExecutor, getSafeSdkAndService} = await import(
     "../../helpers/contracts-getters"
   );
   const {getContractAddressInDb} = await import(
@@ -21,19 +17,11 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
   const timeLock = (await getContractAddressInDb(eContractid.TimeLockExecutor))
     ? await getTimeLockExecutor()
     : undefined;
-  const signer = await getFirstSigner();
-  const ethAdapter = new EthersAdapter({
-    ethers,
-    signerOrProvider: signer,
-  });
   const paraSpaceConfig = getParaSpaceConfig();
 
-  const safeService = new SafeServiceClient({
-    txServiceUrl: isMoonbeam()
-      ? `https://transaction.multisig.moonbeam.network`
-      : `https://safe-transaction-${FORK || DRE.network.name}.safe.global`,
-    ethAdapter,
-  });
+  const {safeService} = await getSafeSdkAndService(
+    paraSpaceConfig.Governance.Multisig
+  );
   const res = (
     await safeService.getPendingTransactions(
       paraSpaceConfig.Governance.Multisig
