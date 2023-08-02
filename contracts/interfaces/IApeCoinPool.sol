@@ -40,13 +40,6 @@ interface IApeCoinPool {
     function compoundApeCoinPool(bool isBAYC, uint32[] calldata tokenIds)
         external;
 
-    function apeCoinPoolPendingReward(bool isBAYC, uint32[] calldata tokenIds)
-        external
-        view
-        returns (uint256);
-
-    function claimApeCoinPool(bool isBAYC, uint32[] calldata tokenIds) external;
-
     function withdrawApeCoinPool(ApeCoinWithdrawInfo calldata withdrawInfo)
         external;
 
@@ -58,14 +51,6 @@ interface IApeCoinPool {
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
     ) external;
-
-    function apeCoinPairPoolPendingReward(
-        bool isBAYC,
-        uint32[] calldata apeTokenIds
-    ) external view returns (uint256);
-
-    function claimApeCoinPairPool(bool isBAYC, uint32[] calldata apeTokenIds)
-        external;
 
     function withdrawApeCoinPairPool(
         ApeCoinPairWithdrawInfo calldata withdrawInfo

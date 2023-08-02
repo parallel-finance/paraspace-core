@@ -54,23 +54,6 @@ interface IApeStakingVault {
     ) external;
 
     /**
-     * @notice get Ape and BAKC pair staking unclaimed cApe reward
-     * @param isBAYC if Ape is BAYC
-     * @param apeTokenIds Ape token ids
-     */
-    function pairNFTPendingReward(bool isBAYC, uint32[] calldata apeTokenIds)
-        external
-        returns (uint256);
-
-    /**
-     * @notice claim Ape and BAKC pair staking unclaimed cApe reward
-     * to save gas we don't claim pending reward in ApeCoinStaking.
-     * @param isBAYC if Ape is BAYC
-     * @param apeTokenIds Ape token ids
-     */
-    function claimPairNFT(bool isBAYC, uint32[] calldata apeTokenIds) external;
-
-    /**
      * @notice withdraw Ape and BAKC pair from pool
      * if the pair is staking it ApeCoinStaking, it will unstake from ApeCoinStaking first.
      * @param isBAYC if Ape is BAYC
@@ -117,23 +100,6 @@ interface IApeStakingVault {
      * @param actionInfo detail staking info
      */
     function compoundBAKC(BAKCPairActionInfo calldata actionInfo) external;
-
-    /**
-     * @notice get single pool nft unclaimed cApe reward
-     * @param nft Ape or BAKC token address
-     * @param tokenIds nft token ids
-     */
-    function nftPendingReward(address nft, uint32[] calldata tokenIds)
-        external
-        returns (uint256);
-
-    /**
-     * @notice claim single pool nft unclaimed cApe reward
-     * to save gas we don't claim pending reward in ApeCoinStaking.
-     * @param nft Ape or BAKC token address
-     * @param tokenIds nft token ids
-     */
-    function claimNFT(address nft, uint32[] calldata tokenIds) external;
 
     /**
      * @notice withdraw nft from single pool

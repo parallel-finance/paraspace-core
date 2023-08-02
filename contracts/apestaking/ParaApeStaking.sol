@@ -241,6 +241,34 @@ contract ParaApeStaking is
             );
     }
 
+    function getPendingReward(uint256 poolId, uint32[] calldata tokenIds)
+        external
+        view
+        returns (uint256)
+    {
+        return
+            ApeCoinPoolLogic.getPendingReward(
+                poolStates[poolId],
+                cApe,
+                tokenIds
+            );
+    }
+
+    function claimPendingReward(uint256 poolId, uint32[] calldata tokenIds)
+        external
+        whenNotPaused
+        nonReentrant
+    {
+        ApeStakingVaultCacheVars memory vars = _createCacheVars();
+        return
+            ApeCoinPoolLogic.claimPendingReward(
+                poolStates[poolId],
+                vars,
+                poolId,
+                tokenIds
+            );
+    }
+
     /*
      *sApe Logic
      */
@@ -354,39 +382,6 @@ contract ParaApeStaking is
         );
     }
 
-    function apeCoinPoolPendingReward(bool isBAYC, uint32[] calldata tokenIds)
-        external
-        view
-        returns (uint256)
-    {
-        uint256 poolId = isBAYC
-            ? ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID
-            : ApeStakingCommonLogic.MAYC_APECOIN_POOL_ID;
-        return
-            ApeCoinPoolLogic.calculatePendingReward(
-                poolStates[poolId],
-                cApe,
-                tokenIds
-            );
-    }
-
-    function claimApeCoinPool(bool isBAYC, uint32[] calldata tokenIds)
-        external
-        whenNotPaused
-        nonReentrant
-    {
-        ApeStakingVaultCacheVars memory vars = _createCacheVars();
-        uint256 poolId = isBAYC
-            ? ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID
-            : ApeStakingCommonLogic.MAYC_APECOIN_POOL_ID;
-        ApeCoinPoolLogic.claimApeCoinPool(
-            poolStates[poolId],
-            vars,
-            isBAYC,
-            tokenIds
-        );
-    }
-
     function withdrawApeCoinPool(ApeCoinWithdrawInfo calldata withdrawInfo)
         external
         whenNotPaused
@@ -450,38 +445,6 @@ contract ParaApeStaking is
         );
     }
 
-    function apeCoinPairPoolPendingReward(
-        bool isBAYC,
-        uint32[] calldata apeTokenIds
-    ) external view returns (uint256) {
-        uint256 poolId = isBAYC
-            ? ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID
-            : ApeStakingCommonLogic.MAYC_BAKC_APECOIN_POOL_ID;
-        return
-            ApeCoinPoolLogic.calculatePendingReward(
-                poolStates[poolId],
-                cApe,
-                apeTokenIds
-            );
-    }
-
-    function claimApeCoinPairPool(bool isBAYC, uint32[] calldata apeTokenIds)
-        external
-        whenNotPaused
-        nonReentrant
-    {
-        ApeStakingVaultCacheVars memory vars = _createCacheVars();
-        uint256 poolId = isBAYC
-            ? ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID
-            : ApeStakingCommonLogic.MAYC_BAKC_APECOIN_POOL_ID;
-        ApeCoinPoolLogic.claimApeCoinPairPool(
-            poolStates[poolId],
-            vars,
-            isBAYC,
-            apeTokenIds
-        );
-    }
-
     function withdrawApeCoinPairPool(
         ApeCoinPairWithdrawInfo calldata withdrawInfo
     ) external whenNotPaused nonReentrant {
@@ -511,6 +474,7 @@ contract ParaApeStaking is
         ApeStakingSinglePoolLogic.tryClaimNFT(
             poolStates[poolId],
             vars,
+            poolId,
             bakc,
             tokenIds
         );
@@ -571,10 +535,10 @@ contract ParaApeStaking is
                 uint256 poolId = isBAYC
                     ? ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID
                     : ApeStakingCommonLogic.MAYC_BAKC_PAIR_POOL_ID;
-                ApeStakingPairPoolLogic.claimPairNFT(
+                ApeCoinPoolLogic.claimPendingReward(
                     poolStates[poolId],
                     vars,
-                    isBAYC,
+                    poolId,
                     pairPoolTokenIds
                 );
             }
@@ -586,10 +550,10 @@ contract ParaApeStaking is
                 uint256 poolId = isBAYC
                     ? ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID
                     : ApeStakingCommonLogic.MAYC_SINGLE_POOL_ID;
-                ApeStakingSinglePoolLogic.claimNFT(
+                ApeCoinPoolLogic.claimPendingReward(
                     poolStates[poolId],
                     vars,
-                    isBAYC ? bayc : mayc,
+                    poolId,
                     singlePoolTokenIds
                 );
             }
@@ -845,43 +809,6 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeStakingVault
-    function pairNFTPendingReward(bool isBAYC, uint32[] calldata apeTokenIds)
-        external
-        view
-        override
-        returns (uint256)
-    {
-        uint256 poolId = isBAYC
-            ? ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID
-            : ApeStakingCommonLogic.MAYC_BAKC_PAIR_POOL_ID;
-        return
-            ApeStakingPairPoolLogic.calculatePendingReward(
-                poolStates[poolId],
-                cApe,
-                apeTokenIds
-            );
-    }
-
-    /// @inheritdoc IApeStakingVault
-    function claimPairNFT(bool isBAYC, uint32[] calldata apeTokenIds)
-        external
-        override
-        whenNotPaused
-        nonReentrant
-    {
-        ApeStakingVaultCacheVars memory vars = _createCacheVars();
-        uint256 poolId = isBAYC
-            ? ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID
-            : ApeStakingCommonLogic.MAYC_BAKC_PAIR_POOL_ID;
-        ApeStakingPairPoolLogic.claimPairNFT(
-            poolStates[poolId],
-            vars,
-            isBAYC,
-            apeTokenIds
-        );
-    }
-
-    /// @inheritdoc IApeStakingVault
     function withdrawPairNFT(
         bool isBAYC,
         uint32[] calldata apeTokenIds,
@@ -991,55 +918,6 @@ contract ParaApeStaking is
             cApeShareBalance,
             vars,
             actionInfo
-        );
-    }
-
-    /// @inheritdoc IApeStakingVault
-    function nftPendingReward(address nft, uint32[] calldata tokenIds)
-        external
-        view
-        override
-        returns (uint256)
-    {
-        require(
-            nft == bayc || nft == mayc || nft == bakc,
-            Errors.NFT_NOT_ALLOWED
-        );
-        uint256 poolId = (nft == bayc)
-            ? ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID
-            : (nft == mayc)
-            ? ApeStakingCommonLogic.MAYC_SINGLE_POOL_ID
-            : ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID;
-        return
-            ApeStakingSinglePoolLogic.calculatePendingReward(
-                poolStates[poolId],
-                cApe,
-                tokenIds
-            );
-    }
-
-    /// @inheritdoc IApeStakingVault
-    function claimNFT(address nft, uint32[] calldata tokenIds)
-        external
-        override
-        whenNotPaused
-        nonReentrant
-    {
-        require(
-            nft == bayc || nft == mayc || nft == bakc,
-            Errors.NFT_NOT_ALLOWED
-        );
-        ApeStakingVaultCacheVars memory vars = _createCacheVars();
-        uint256 poolId = (nft == vars.bayc)
-            ? ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID
-            : (nft == vars.mayc)
-            ? ApeStakingCommonLogic.MAYC_SINGLE_POOL_ID
-            : ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID;
-        ApeStakingSinglePoolLogic.claimNFT(
-            poolStates[poolId],
-            vars,
-            nft,
-            tokenIds
         );
     }
 

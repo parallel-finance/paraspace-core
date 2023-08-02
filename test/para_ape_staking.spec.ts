@@ -179,13 +179,8 @@ describe("Para Ape Staking Test", () => {
     );
     expect(compoundFee).to.be.closeTo(parseEther("720"), parseEther("10"));
 
-    const user1PendingReward = await paraApeStaking.pairNFTPendingReward(
-      true,
-      [0, 1]
-    );
-    const user2PendingReward = await paraApeStaking.pairNFTPendingReward(true, [
-      2,
-    ]);
+    const user1PendingReward = await paraApeStaking.getPendingReward(1, [0, 1]);
+    const user2PendingReward = await paraApeStaking.getPendingReward(1, [2]);
     expect(user1PendingReward).to.be.closeTo(
       parseEther("4320"),
       parseEther("50")
@@ -196,10 +191,10 @@ describe("Para Ape Staking Test", () => {
     );
 
     await waitForTx(
-      await paraApeStaking.connect(user1.signer).claimPairNFT(true, [0, 1])
+      await paraApeStaking.connect(user1.signer).claimPendingReward(1, [0, 1])
     );
     await waitForTx(
-      await paraApeStaking.connect(user2.signer).claimPairNFT(true, [2])
+      await paraApeStaking.connect(user2.signer).claimPendingReward(1, [2])
     );
     let user1Balance = await cApe.balanceOf(user1.address);
     let user2Balance = await cApe.balanceOf(user2.address);
@@ -207,14 +202,11 @@ describe("Para Ape Staking Test", () => {
     expect(user2Balance).to.be.closeTo(user2PendingReward, parseEther("1"));
     expect(user1Balance).to.be.closeTo(user2Balance.mul(2), parseEther("10"));
 
-    const newUser1PendingReward = await paraApeStaking.pairNFTPendingReward(
-      true,
+    const newUser1PendingReward = await paraApeStaking.getPendingReward(
+      1,
       [0, 1]
     );
-    const newUser2PendingReward = await paraApeStaking.pairNFTPendingReward(
-      true,
-      [2]
-    );
+    const newUser2PendingReward = await paraApeStaking.getPendingReward(1, [2]);
     expect(newUser1PendingReward).to.be.equal(0);
     expect(newUser2PendingReward).to.be.equal(0);
 
@@ -349,14 +341,8 @@ describe("Para Ape Staking Test", () => {
     );
     expect(compoundFee).to.be.closeTo(parseEther("720"), parseEther("10"));
 
-    const user1PendingReward = await paraApeStaking.pairNFTPendingReward(
-      false,
-      [0, 1]
-    );
-    const user2PendingReward = await paraApeStaking.pairNFTPendingReward(
-      false,
-      [2]
-    );
+    const user1PendingReward = await paraApeStaking.getPendingReward(2, [0, 1]);
+    const user2PendingReward = await paraApeStaking.getPendingReward(2, [2]);
     expect(user1PendingReward).to.be.closeTo(
       parseEther("4320"),
       parseEther("50")
@@ -367,10 +353,10 @@ describe("Para Ape Staking Test", () => {
     );
 
     await waitForTx(
-      await paraApeStaking.connect(user1.signer).claimPairNFT(false, [0, 1])
+      await paraApeStaking.connect(user1.signer).claimPendingReward(2, [0, 1])
     );
     await waitForTx(
-      await paraApeStaking.connect(user2.signer).claimPairNFT(false, [2])
+      await paraApeStaking.connect(user2.signer).claimPendingReward(2, [2])
     );
     let user1Balance = await cApe.balanceOf(user1.address);
     let user2Balance = await cApe.balanceOf(user2.address);
@@ -378,14 +364,11 @@ describe("Para Ape Staking Test", () => {
     expect(user2Balance).to.be.closeTo(user2PendingReward, parseEther("1"));
     expect(user1Balance).to.be.closeTo(user2Balance.mul(2), parseEther("10"));
 
-    const newUser1PendingReward = await paraApeStaking.pairNFTPendingReward(
-      false,
+    const newUser1PendingReward = await paraApeStaking.getPendingReward(
+      2,
       [0, 1]
     );
-    const newUser2PendingReward = await paraApeStaking.pairNFTPendingReward(
-      false,
-      [2]
-    );
+    const newUser2PendingReward = await paraApeStaking.getPendingReward(2, [2]);
     expect(newUser1PendingReward).to.be.equal(0);
     expect(newUser2PendingReward).to.be.equal(0);
 
@@ -551,16 +534,16 @@ describe("Para Ape Staking Test", () => {
     );
     expect(compoundFee).to.be.closeTo(parseEther("1080"), parseEther("10"));
 
-    const user1PendingReward = await paraApeStaking.nftPendingReward(
-      bayc.address,
+    const user1PendingReward = await paraApeStaking.getPendingReward(
+      3,
       [0, 1, 2]
     );
-    const user2PendingReward = await paraApeStaking.nftPendingReward(
-      mayc.address,
+    const user2PendingReward = await paraApeStaking.getPendingReward(
+      4,
       [0, 1, 2]
     );
-    const user3PendingReward = await paraApeStaking.nftPendingReward(
-      bakc.address,
+    const user3PendingReward = await paraApeStaking.getPendingReward(
+      5,
       [0, 1, 2]
     );
     expect(user1PendingReward).to.be.closeTo(
@@ -579,17 +562,17 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .claimNFT(bayc.address, [0, 1, 2])
+        .claimPendingReward(3, [0, 1, 2])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user2.signer)
-        .claimNFT(mayc.address, [0, 1, 2])
+        .claimPendingReward(4, [0, 1, 2])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user2.signer)
-        .claimNFT(bakc.address, [0, 1, 2])
+        .claimPendingReward(5, [0, 1, 2])
     );
     let user1Balance = await cApe.balanceOf(user1.address);
     let user2Balance = await cApe.balanceOf(user2.address);
@@ -598,16 +581,16 @@ describe("Para Ape Staking Test", () => {
     expect(user2Balance).to.be.closeTo(user2PendingReward, parseEther("100"));
     expect(user3Balance).to.be.closeTo(user3PendingReward, parseEther("100"));
 
-    const newUser1PendingReward = await paraApeStaking.nftPendingReward(
-      bayc.address,
+    const newUser1PendingReward = await paraApeStaking.getPendingReward(
+      3,
       [0, 1, 2]
     );
-    const newUser2PendingReward = await paraApeStaking.nftPendingReward(
-      mayc.address,
+    const newUser2PendingReward = await paraApeStaking.getPendingReward(
+      4,
       [0, 1, 2]
     );
-    const newUser3PendingReward = await paraApeStaking.nftPendingReward(
-      bakc.address,
+    const newUser3PendingReward = await paraApeStaking.getPendingReward(
+      5,
       [0, 1, 2]
     );
     expect(newUser1PendingReward).to.be.equal(0);
@@ -816,11 +799,11 @@ describe("Para Ape Staking Test", () => {
     );
 
     await expect(
-      paraApeStaking.connect(user1.signer).claimPairNFT(true, [0, 1, 2])
+      paraApeStaking.connect(user1.signer).claimPendingReward(1, [0, 1, 2])
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_SAME_OWNER);
 
     await expect(
-      paraApeStaking.connect(user1.signer).claimPairNFT(true, [3])
+      paraApeStaking.connect(user1.signer).claimPendingReward(1, [3])
     ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
   });
 
@@ -1154,35 +1137,35 @@ describe("Para Ape Staking Test", () => {
     );
 
     await expect(
-      paraApeStaking.connect(user1.signer).claimNFT(bayc.address, [0, 1])
+      paraApeStaking.connect(user1.signer).claimPendingReward(3, [0, 1])
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_SAME_OWNER);
 
     await expect(
-      paraApeStaking.connect(user1.signer).claimNFT(bayc.address, [2])
+      paraApeStaking.connect(user1.signer).claimPendingReward(3, [2])
     ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
 
     await expect(
-      paraApeStaking.connect(user1.signer).claimNFT(bakc.address, [0, 1])
+      paraApeStaking.connect(user1.signer).claimPendingReward(5, [0, 1])
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_SAME_OWNER);
 
     await expect(
-      paraApeStaking.connect(user1.signer).claimNFT(bakc.address, [2])
+      paraApeStaking.connect(user1.signer).claimPendingReward(5, [2])
     ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
 
     await waitForTx(
-      await paraApeStaking.connect(user1.signer).claimNFT(bayc.address, [0])
+      await paraApeStaking.connect(user1.signer).claimPendingReward(3, [0])
     );
 
     await waitForTx(
-      await paraApeStaking.connect(user1.signer).claimNFT(bakc.address, [0])
+      await paraApeStaking.connect(user1.signer).claimPendingReward(5, [0])
     );
 
     await waitForTx(
-      await paraApeStaking.connect(user2.signer).claimNFT(bayc.address, [1])
+      await paraApeStaking.connect(user2.signer).claimPendingReward(3, [1])
     );
 
     await waitForTx(
-      await paraApeStaking.connect(user2.signer).claimNFT(bakc.address, [1])
+      await paraApeStaking.connect(user2.signer).claimPendingReward(5, [1])
     );
   });
 
@@ -1343,20 +1326,20 @@ describe("Para Ape Staking Test", () => {
       await paraApeStaking.connect(user4.signer).compoundApe(false, [2, 3])
     );
 
-    tx0 = paraApeStaking.interface.encodeFunctionData("claimPairNFT", [
-      true,
+    tx0 = paraApeStaking.interface.encodeFunctionData("claimPendingReward", [
+      1,
       [0, 1],
     ]);
-    tx1 = paraApeStaking.interface.encodeFunctionData("claimPairNFT", [
-      false,
+    tx1 = paraApeStaking.interface.encodeFunctionData("claimPendingReward", [
+      2,
       [0, 1],
     ]);
-    tx2 = paraApeStaking.interface.encodeFunctionData("claimNFT", [
-      bayc.address,
+    tx2 = paraApeStaking.interface.encodeFunctionData("claimPendingReward", [
+      3,
       [2, 3],
     ]);
-    tx3 = paraApeStaking.interface.encodeFunctionData("claimNFT", [
-      mayc.address,
+    tx3 = paraApeStaking.interface.encodeFunctionData("claimPendingReward", [
+      4,
       [2, 3],
     ]);
 
@@ -1444,15 +1427,15 @@ describe("Para Ape Staking Test", () => {
     );
 
     await waitForTx(
-      await paraApeStaking.connect(user1.signer).claimNFT(bayc.address, [0, 1])
+      await paraApeStaking.connect(user1.signer).claimPendingReward(3, [0, 1])
     );
     await waitForTx(
-      await paraApeStaking.connect(user2.signer).claimNFT(mayc.address, [0, 1])
+      await paraApeStaking.connect(user2.signer).claimPendingReward(4, [0, 1])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user3.signer)
-        .claimNFT(bakc.address, [0, 1, 2, 3])
+        .claimPendingReward(5, [0, 1, 2, 3])
     );
 
     //user1: 3600 * 0.5 * 0.5
@@ -1585,8 +1568,8 @@ describe("Para Ape Staking Test", () => {
         bakcPairMaycTokenIds: [],
       })
     );
-    const user3PendingReward0 = await paraApeStaking.nftPendingReward(
-      bakc.address,
+    const user3PendingReward0 = await paraApeStaking.getPendingReward(
+      5,
       [0, 1, 2, 3]
     );
     expect(user3PendingReward0).to.be.closeTo(
@@ -1602,27 +1585,21 @@ describe("Para Ape Staking Test", () => {
         bakcPairMaycTokenIds: [2, 3],
       })
     );
-    const user3PendingReward1 = await paraApeStaking.nftPendingReward(
-      bakc.address,
+    const user3PendingReward1 = await paraApeStaking.getPendingReward(
+      5,
       [0, 1, 2, 3]
     );
     expect(user3PendingReward1).to.be.closeTo(
       parseEther("1800"),
       parseEther("10")
     );
-    const user1PendingReward = await paraApeStaking.nftPendingReward(
-      bayc.address,
-      [0, 1]
-    );
+    const user1PendingReward = await paraApeStaking.getPendingReward(3, [0, 1]);
     //900 * 2 / 3
     expect(user1PendingReward).to.be.closeTo(
       parseEther("600"),
       parseEther("10")
     );
-    const user2PendingReward = await paraApeStaking.nftPendingReward(
-      mayc.address,
-      [0, 1]
-    );
+    const user2PendingReward = await paraApeStaking.getPendingReward(4, [0, 1]);
     //900 * 2 / 3
     expect(user2PendingReward).to.be.closeTo(
       parseEther("600"),
@@ -1690,19 +1667,13 @@ describe("Para Ape Staking Test", () => {
         .connect(user3.signer)
         .withdrawNFT(bakc.address, [0, 1, 2, 3])
     );
-    const user1PendingReward = await paraApeStaking.nftPendingReward(
-      bayc.address,
-      [0, 1]
-    );
+    const user1PendingReward = await paraApeStaking.getPendingReward(3, [0, 1]);
     //900 * 2 / 3
     expect(user1PendingReward).to.be.closeTo(
       parseEther("600"),
       parseEther("10")
     );
-    const user2PendingReward = await paraApeStaking.nftPendingReward(
-      mayc.address,
-      [0, 1]
-    );
+    const user2PendingReward = await paraApeStaking.getPendingReward(4, [0, 1]);
     expect(user1PendingReward).to.be.closeTo(
       user2PendingReward,
       parseEther("1")

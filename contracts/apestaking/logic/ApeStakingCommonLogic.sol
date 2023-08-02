@@ -9,6 +9,7 @@ import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../protocol/libraries/math/WadRayMath.sol";
 import {IPool} from "../../interfaces/IPool.sol";
 import "../../protocol/libraries/helpers/Errors.sol";
+import {IERC20, SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 
 /**
  * @title ApeStakingVaultLogic library
@@ -19,6 +20,14 @@ library ApeStakingCommonLogic {
     using PercentageMath for uint256;
     using SafeCast for uint256;
     using WadRayMath for uint256;
+    using SafeERC20 for IERC20;
+
+    event PoolRewardClaimed(
+        uint256 poolId,
+        address nft,
+        uint256 tokenId,
+        uint256 rewardShare
+    );
 
     /**
      * @dev Minimum health factor to consider a user position healthy
@@ -157,24 +166,77 @@ library ApeStakingCommonLogic {
         apeMatchedCount[ape][tokenId] = matchedCount;
     }
 
-    function calculatePendingReward(
+    function claimPendingReward(
         IParaApeStaking.PoolState storage poolState,
-        address cApe,
+        IParaApeStaking.ApeStakingVaultCacheVars memory vars,
+        uint256 poolId,
+        address nft,
+        address nToken,
+        bool needUpdateStatus,
         uint32[] memory tokenIds
-    ) internal view returns (uint256) {
-        uint256 rewardShares;
-        uint256 arrayLength = tokenIds.length;
-        uint256 accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
-        for (uint256 index = 0; index < arrayLength; index++) {
+    ) internal returns (address) {
+        address claimFor;
+        uint256 totalRewardShares;
+        uint128 accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
+        for (uint256 index = 0; index < tokenIds.length; index++) {
             uint32 tokenId = tokenIds[index];
+
+            //just need to check ape ntoken owner
+            {
+                address nApeOwner = IERC721(nToken).ownerOf(tokenId);
+                if (claimFor == address(0)) {
+                    claimFor = nApeOwner;
+                } else {
+                    require(nApeOwner == claimFor, Errors.NOT_THE_SAME_OWNER);
+                }
+            }
 
             IParaApeStaking.TokenStatus memory tokenStatus = poolState
                 .tokenStatus[tokenId];
+
+            //check is in pool
             require(tokenStatus.isInPool, Errors.NFT_NOT_IN_POOL);
 
-            rewardShares += (accumulatedRewardsPerNft -
-                tokenStatus.rewardsDebt);
+            //update reward, to save gas we don't claim pending reward in ApeCoinStaking.
+            uint256 rewardShare = accumulatedRewardsPerNft -
+                tokenStatus.rewardsDebt;
+            totalRewardShares += rewardShare;
+
+            if (needUpdateStatus) {
+                poolState
+                    .tokenStatus[tokenId]
+                    .rewardsDebt = accumulatedRewardsPerNft;
+            }
+
+            //emit event
+            emit PoolRewardClaimed(poolId, nft, tokenId, rewardShare);
         }
-        return ICApe(cApe).getPooledApeByShares(rewardShares);
+
+        if (totalRewardShares > 0) {
+            uint256 pendingReward = ICApe(vars.cApe).getPooledApeByShares(
+                totalRewardShares
+            );
+            IERC20(vars.cApe).safeTransfer(claimFor, pendingReward);
+        }
+
+        return claimFor;
+    }
+
+    function getNftFromPoolId(
+        IParaApeStaking.ApeStakingVaultCacheVars memory vars,
+        uint256 poolId
+    ) internal pure returns (address, address) {
+        if (poolId == ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID) {
+            return (vars.bakc, vars.nBakc);
+        } else if (
+            poolId == ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID ||
+            poolId == ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID ||
+            poolId == ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID ||
+            poolId == ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID
+        ) {
+            return (vars.bayc, vars.nBayc);
+        } else {
+            return (vars.mayc, vars.nMayc);
+        }
     }
 }

@@ -31,7 +31,6 @@ library ApeStakingPairPoolLogic {
     );
     event PairNFTStaked(bool isBAYC, uint256 apeTokenId, uint256 bakcTokenId);
     event PairNFTWithdrew(bool isBAYC, uint256 apeTokenId, uint256 bakcTokenId);
-    event PairNFTClaimed(bool isBAYC, uint256 apeTokenId, uint256 rewardShare);
     event PairNFTCompounded(
         bool isBAYC,
         uint256 apeTokenId,
@@ -211,14 +210,6 @@ library ApeStakingPairPoolLogic {
             Errors.INVALID_PARAMETER
         );
 
-        vars.nApeOwner = _claimPairNFT(
-            poolState,
-            vars,
-            false,
-            isBAYC,
-            apeTokenIds
-        );
-
         if (isBAYC) {
             vars.apeStakingPoolId = ApeStakingCommonLogic.BAYC_POOL_ID;
             vars.apeToken = vars.bayc;
@@ -230,6 +221,19 @@ library ApeStakingPairPoolLogic {
             vars.nApe = vars.nMayc;
             vars.positionCap = vars.maycMatchedCap;
         }
+
+        vars.nApeOwner = ApeStakingCommonLogic.claimPendingReward(
+            poolState,
+            vars,
+            isBAYC
+                ? ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID
+                : ApeStakingCommonLogic.MAYC_BAKC_PAIR_POOL_ID,
+            vars.apeToken,
+            vars.nApe,
+            false,
+            apeTokenIds
+        );
+
         ApeCoinStaking.SingleNft[]
             memory _nfts = new ApeCoinStaking.SingleNft[](arrayLength);
         ApeCoinStaking.PairNftWithdrawWithAmount[]
@@ -354,17 +358,6 @@ library ApeStakingPairPoolLogic {
         }
     }
 
-    function claimPairNFT(
-        IParaApeStaking.PoolState storage poolState,
-        IParaApeStaking.ApeStakingVaultCacheVars memory vars,
-        bool isBAYC,
-        uint32[] calldata apeTokenIds
-    ) external {
-        ApeStakingCommonLogic.validateTokenIdArray(apeTokenIds);
-
-        _claimPairNFT(poolState, vars, true, isBAYC, apeTokenIds);
-    }
-
     function compoundPairNFT(
         IParaApeStaking.PoolState storage poolState,
         mapping(address => uint256) storage cApeShareBalance,
@@ -446,73 +439,5 @@ library ApeStakingPairPoolLogic {
         if (vars.totalCompoundFee > 0) {
             cApeShareBalance[address(this)] += vars.totalCompoundFee;
         }
-    }
-
-    function calculatePendingReward(
-        IParaApeStaking.PoolState storage poolState,
-        address cApe,
-        uint32[] memory tokenIds
-    ) external view returns (uint256) {
-        return
-            ApeStakingCommonLogic.calculatePendingReward(
-                poolState,
-                cApe,
-                tokenIds
-            );
-    }
-
-    function _claimPairNFT(
-        IParaApeStaking.PoolState storage poolState,
-        IParaApeStaking.ApeStakingVaultCacheVars memory vars,
-        bool needUpdateStatus,
-        bool isBAYC,
-        uint32[] calldata apeTokenIds
-    ) internal returns (address) {
-        address claimFor;
-        uint256 totalRewardShares;
-        uint128 accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
-        address nApe = isBAYC ? vars.nBayc : vars.nMayc;
-        for (uint256 index = 0; index < apeTokenIds.length; index++) {
-            uint32 apeTokenId = apeTokenIds[index];
-
-            //just need to check ape ntoken owner
-            {
-                address nApeOwner = IERC721(nApe).ownerOf(apeTokenId);
-                if (claimFor == address(0)) {
-                    claimFor = nApeOwner;
-                } else {
-                    require(nApeOwner == claimFor, Errors.NOT_THE_SAME_OWNER);
-                }
-            }
-
-            IParaApeStaking.TokenStatus memory tokenStatus = poolState
-                .tokenStatus[apeTokenId];
-
-            //check is in pool
-            require(tokenStatus.isInPool, Errors.NFT_NOT_IN_POOL);
-
-            //update reward, to save gas we don't claim pending reward in ApeCoinStaking.
-            uint256 rewardShare = accumulatedRewardsPerNft -
-                tokenStatus.rewardsDebt;
-            totalRewardShares += rewardShare;
-
-            if (needUpdateStatus) {
-                poolState
-                    .tokenStatus[apeTokenId]
-                    .rewardsDebt = accumulatedRewardsPerNft;
-            }
-
-            //emit event
-            emit PairNFTClaimed(isBAYC, apeTokenId, rewardShare);
-        }
-
-        if (totalRewardShares > 0) {
-            uint256 pendingReward = ICApe(vars.cApe).getPooledApeByShares(
-                totalRewardShares
-            );
-            IERC20(vars.cApe).safeTransfer(claimFor, pendingReward);
-        }
-
-        return claimFor;
     }
 }
