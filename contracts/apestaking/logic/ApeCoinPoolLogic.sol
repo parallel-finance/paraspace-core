@@ -49,43 +49,6 @@ library ApeCoinPoolLogic {
         uint256 bakcTokenId
     );
 
-    function poolTokenStatus(
-        mapping(uint256 => IParaApeStaking.PoolState) storage poolStates,
-        address bayc,
-        address mayc,
-        address bakc,
-        uint256 poolId,
-        address nft,
-        uint256 tokenId
-    ) external view returns (IParaApeStaking.TokenStatus memory) {
-        IParaApeStaking.TokenStatus memory tokenStatus;
-        if (nft == bayc) {
-            if (
-                poolId == ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID ||
-                poolId == ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID ||
-                poolId == ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID ||
-                poolId == ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID
-            ) {
-                tokenStatus = poolStates[poolId].tokenStatus[tokenId];
-            }
-        } else if (nft == mayc) {
-            if (
-                poolId == ApeStakingCommonLogic.MAYC_BAKC_PAIR_POOL_ID ||
-                poolId == ApeStakingCommonLogic.MAYC_SINGLE_POOL_ID ||
-                poolId == ApeStakingCommonLogic.MAYC_APECOIN_POOL_ID ||
-                poolId == ApeStakingCommonLogic.MAYC_BAKC_APECOIN_POOL_ID
-            ) {
-                tokenStatus = poolStates[poolId].tokenStatus[tokenId];
-            }
-        } else if (nft == bakc) {
-            if (poolId == ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID) {
-                tokenStatus = poolStates[poolId].tokenStatus[tokenId];
-            }
-        }
-
-        return tokenStatus;
-    }
-
     function getPendingReward(
         IParaApeStaking.PoolState storage poolState,
         address cApe,

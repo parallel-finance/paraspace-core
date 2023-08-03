@@ -224,23 +224,16 @@ contract ParaApeStaking is
     /*
      *common Logic
      */
-    function poolTokenStatus(
-        uint256 poolId,
-        address nft,
-        uint256 tokenId
-    ) external view returns (IParaApeStaking.TokenStatus memory) {
-        return
-            ApeCoinPoolLogic.poolTokenStatus(
-                poolStates,
-                bayc,
-                mayc,
-                bakc,
-                poolId,
-                nft,
-                tokenId
-            );
+    /// @inheritdoc IParaApeStaking
+    function poolTokenStatus(uint256 poolId, uint256 tokenId)
+        external
+        view
+        returns (IParaApeStaking.TokenStatus memory)
+    {
+        return poolStates[poolId].tokenStatus[tokenId];
     }
 
+    /// @inheritdoc IParaApeStaking
     function getPendingReward(uint256 poolId, uint32[] calldata tokenIds)
         external
         view
@@ -254,6 +247,7 @@ contract ParaApeStaking is
             );
     }
 
+    /// @inheritdoc IParaApeStaking
     function claimPendingReward(uint256 poolId, uint32[] calldata tokenIds)
         external
         whenNotPaused

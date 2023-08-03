@@ -80,7 +80,40 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P, IApeCoinPool {
      **/
     event ApeStakingBotUpdated(address oldBot, address newBot);
 
+    /**
+     * @dev Emitted during setCompoundFee()
+     * @param oldValue The old value of compound fee
+     * @param newValue The new value of compound fee
+     **/
     event CompoundFeeUpdated(uint64 oldValue, uint64 newValue);
+
+    /**
+     * @notice Query token status for the specified pool and nft
+     * @param poolId Identify pool
+     * @param tokenId The tokenId of the nft
+     */
+    function poolTokenStatus(uint256 poolId, uint256 tokenId)
+        external
+        view
+        returns (IParaApeStaking.TokenStatus memory);
+
+    /**
+     * @notice Query position pending reward in the pool, will revert if token id is not in the pool
+     * @param poolId Identify pool
+     * @param tokenIds The tokenIds of the nft
+     */
+    function getPendingReward(uint256 poolId, uint32[] calldata tokenIds)
+        external
+        view
+        returns (uint256);
+
+    /**
+     * @notice Claim position pending reward in the pool, will revert if token id is not in the pool
+     * @param poolId Identify pool
+     * @param tokenIds The tokenIds of the nft
+     */
+    function claimPendingReward(uint256 poolId, uint32[] calldata tokenIds)
+        external;
 
     function stakedSApeBalance(address user) external view returns (uint256);
 
