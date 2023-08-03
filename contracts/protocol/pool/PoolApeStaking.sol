@@ -46,10 +46,12 @@ contract PoolApeStaking is
         return POOL_REVISION;
     }
 
+    /// @inheritdoc IPoolApeStaking
     function paraApeStaking() external view returns (address) {
         return PARA_APE_STAKING;
     }
 
+    /// @inheritdoc IPoolApeStaking
     function borrowPoolCApe(uint256 amount)
         external
         nonReentrant
@@ -68,6 +70,7 @@ contract PoolApeStaking is
         return latestBorrowIndex;
     }
 
+    /// @inheritdoc IPoolApeStaking
     function calculateTimeLockParams(address asset, uint256 amount)
         external
         returns (DataTypes.TimeLockParams memory)
@@ -87,6 +90,7 @@ contract PoolApeStaking is
         return timeLockParams;
     }
 
+    /// @inheritdoc IPoolApeStaking
     function borrowAndStakingApeCoin(
         IParaApeStaking.ApeCoinDepositInfo[] calldata apeCoinDepositInfo,
         IParaApeStaking.ApeCoinPairDepositInfo[] calldata pairDepositInfo,

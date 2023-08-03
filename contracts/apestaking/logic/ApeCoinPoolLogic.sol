@@ -75,21 +75,22 @@ library ApeCoinPoolLogic {
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         uint256 poolId,
         uint32[] calldata tokenIds
-    ) external {
+    ) external returns (address) {
         ApeStakingCommonLogic.validateTokenIdArray(tokenIds);
         (address nft, address nToken) = ApeStakingCommonLogic.getNftFromPoolId(
             vars,
             poolId
         );
-        ApeStakingCommonLogic.claimPendingReward(
-            poolState,
-            vars,
-            poolId,
-            nft,
-            nToken,
-            true,
-            tokenIds
-        );
+        return
+            ApeStakingCommonLogic.claimPendingReward(
+                poolState,
+                vars,
+                poolId,
+                nft,
+                nToken,
+                true,
+                tokenIds
+            );
     }
 
     function depositFreeSApe(

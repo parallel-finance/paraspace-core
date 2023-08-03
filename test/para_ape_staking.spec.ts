@@ -571,7 +571,7 @@ describe("Para Ape Staking Test", () => {
     );
     await waitForTx(
       await paraApeStaking
-        .connect(user2.signer)
+        .connect(user3.signer)
         .claimPendingReward(5, [0, 1, 2])
     );
     let user1Balance = await cApe.balanceOf(user1.address);

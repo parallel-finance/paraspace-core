@@ -181,6 +181,8 @@ contract ParaApeStaking is
     }
 
     function setCompoundFee(uint64 _compoundFee) external onlyPoolAdmin {
+        //0.1e4 means 10%
+        require(_compoundFee <= 0.1e4, Errors.INVALID_PARAMETER);
         uint64 oldValue = compoundFee;
         if (oldValue != _compoundFee) {
             compoundFee = _compoundFee;
@@ -254,23 +256,24 @@ contract ParaApeStaking is
         nonReentrant
     {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
-        return
-            ApeCoinPoolLogic.claimPendingReward(
-                poolStates[poolId],
-                vars,
-                poolId,
-                tokenIds
-            );
+        address owner = ApeCoinPoolLogic.claimPendingReward(
+            poolStates[poolId],
+            vars,
+            poolId,
+            tokenIds
+        );
+        require(msg.sender == owner, Errors.CALLER_NOT_ALLOWED);
     }
 
     /*
      *sApe Logic
      */
-
+    /// @inheritdoc IParaApeStaking
     function stakedSApeBalance(address user) external view returns (uint256) {
         return sApeBalance[user].stakedBalance;
     }
 
+    /// @inheritdoc IParaApeStaking
     function freeSApeBalance(address user) external view returns (uint256) {
         uint256 freeShareBalance = sApeBalance[user].freeShareBalance;
         if (freeShareBalance == 0) {
@@ -279,6 +282,7 @@ contract ParaApeStaking is
         return ICApe(cApe).getPooledApeByShares(freeShareBalance);
     }
 
+    /// @inheritdoc IParaApeStaking
     function totalSApeBalance(address user) external view returns (uint256) {
         IParaApeStaking.SApeBalance memory cache = sApeBalance[user];
         uint256 freeShareBalance = cache.freeShareBalance;
@@ -290,6 +294,7 @@ contract ParaApeStaking is
             cache.stakedBalance;
     }
 
+    /// @inheritdoc IParaApeStaking
     function transferFreeSApeBalance(
         address from,
         address to,
@@ -301,6 +306,7 @@ contract ParaApeStaking is
         sApeBalance[to].freeShareBalance += shareAmount.toUint128();
     }
 
+    /// @inheritdoc IParaApeStaking
     function depositFreeSApe(address cashAsset, uint128 amount)
         external
         whenNotPaused
@@ -316,6 +322,7 @@ contract ParaApeStaking is
         );
     }
 
+    /// @inheritdoc IParaApeStaking
     function withdrawFreeSApe(address receiveAsset, uint128 amount)
         external
         whenNotPaused
@@ -336,6 +343,7 @@ contract ParaApeStaking is
     /*
      *Ape Coin Staking Pool Logic
      */
+    /// @inheritdoc IApeCoinPool
     function depositApeCoinPool(ApeCoinDepositInfo calldata depositInfo)
         external
         whenNotPaused
@@ -358,6 +366,7 @@ contract ParaApeStaking is
         );
     }
 
+    /// @inheritdoc IApeCoinPool
     function compoundApeCoinPool(bool isBAYC, uint32[] calldata tokenIds)
         external
         onlyApeStakingBot
@@ -376,6 +385,7 @@ contract ParaApeStaking is
         );
     }
 
+    /// @inheritdoc IApeCoinPool
     function withdrawApeCoinPool(ApeCoinWithdrawInfo calldata withdrawInfo)
         external
         whenNotPaused
@@ -398,6 +408,7 @@ contract ParaApeStaking is
         );
     }
 
+    /// @inheritdoc IApeCoinPool
     function depositApeCoinPairPool(ApeCoinPairDepositInfo calldata depositInfo)
         external
         whenNotPaused
@@ -420,6 +431,7 @@ contract ParaApeStaking is
         );
     }
 
+    /// @inheritdoc IApeCoinPool
     function compoundApeCoinPairPool(
         bool isBAYC,
         uint32[] calldata apeTokenIds,
@@ -440,6 +452,7 @@ contract ParaApeStaking is
         );
     }
 
+    /// @inheritdoc IApeCoinPool
     function withdrawApeCoinPairPool(
         ApeCoinPairWithdrawInfo calldata withdrawInfo
     ) external whenNotPaused nonReentrant {
@@ -460,11 +473,13 @@ contract ParaApeStaking is
         );
     }
 
+    /// @inheritdoc IApeCoinPool
     function nBakcOwnerChangeCallback(uint32[] calldata tokenIds)
         external
         whenNotPaused
         nonReentrant
     {
+        require(msg.sender == nBakc, Errors.CALLER_NOT_ALLOWED);
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID;
         ApeStakingSinglePoolLogic.tryClaimNFT(
@@ -476,11 +491,16 @@ contract ParaApeStaking is
         );
     }
 
+    /// @inheritdoc IApeCoinPool
     function nApeOwnerChangeCallback(bool isBAYC, uint32[] calldata tokenIds)
         external
         whenNotPaused
         nonReentrant
     {
+        require(
+            msg.sender == nBayc || msg.sender == nMayc,
+            Errors.CALLER_NOT_ALLOWED
+        );
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;
 

@@ -115,17 +115,47 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P, IApeCoinPool {
     function claimPendingReward(uint256 poolId, uint32[] calldata tokenIds)
         external;
 
+    /**
+     * @notice Query user's staked sApe balance, staked sApe cannot be liquidated directly
+     * @param user user address
+     */
     function stakedSApeBalance(address user) external view returns (uint256);
 
+    /**
+     * @notice Query user's free sApe balance, free sApe can be liquidated
+     * @param user user address
+     */
     function freeSApeBalance(address user) external view returns (uint256);
 
+    /**
+     * @notice Query user's total sApe balance, total sApe = staked sApe + free sApe
+     * @param user user address
+     */
     function totalSApeBalance(address user) external view returns (uint256);
 
+    /**
+     * @notice transfer free sApe balance from 'from' to 'to', Only psApe can call this function during sApe liquidation
+     * @param from identify send address
+     * @param to identify receive address
+     * @param amount transfer amount
+     */
     function transferFreeSApeBalance(
         address from,
         address to,
         uint256 amount
     ) external;
 
-    function withdrawFreeSApe(address receiver, uint128 amount) external;
+    /**
+     * @notice deposit an `amount` of free sApe.
+     * @param cashAsset The payment asset for the deposit. Can only be ApeCoin or cApe
+     * @param amount The amount of sApe to be deposit
+     **/
+    function depositFreeSApe(address cashAsset, uint128 amount) external;
+
+    /**
+     * @notice withdraw an `amount` of free sApe.
+     * @param receiveAsset The receive asset for the withdraw. Can only be ApeCoin or cApe
+     * @param amount The amount of sApe to be withdraw
+     **/
+    function withdrawFreeSApe(address receiveAsset, uint128 amount) external;
 }
