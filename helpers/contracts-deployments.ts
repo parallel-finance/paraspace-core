@@ -291,6 +291,14 @@ import {
   NTokenChromieSquiggle__factory,
   CLFixedPriceSynchronicityPriceAdapter,
   CLFixedPriceSynchronicityPriceAdapter__factory,
+  ParaAccount__factory,
+  ParaAccount,
+  Account,
+  Account__factory,
+  AccountProxy,
+  AccountProxy__factory,
+  ERC6551Registry,
+  ERC6551Registry__factory,
 } from "../types";
 import {MockContract} from "ethereum-waffle";
 import {
@@ -3121,6 +3129,47 @@ export const deployStakefishValidator = async (
     [depositContract],
     verify
   ) as Promise<StakefishValidatorV1>;
+
+export const deployParaAccount = async (
+  registry: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new ParaAccount__factory(await getFirstSigner()),
+    eContractid.ParaAccount,
+    [registry],
+    verify
+  ) as Promise<ParaAccount>;
+
+export const deployAccount = async (
+  entryPoint: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new Account__factory(await getFirstSigner()),
+    eContractid.Account,
+    [entryPoint],
+    verify
+  ) as Promise<Account>;
+
+export const deployERC6551Registry = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new ERC6551Registry__factory(await getFirstSigner()),
+    eContractid.ERC6551Registry,
+    [],
+    verify
+  ) as Promise<ERC6551Registry>;
+
+export const deployAccountProxy = async (
+  impl: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new AccountProxy__factory(await getFirstSigner()),
+    eContractid.Account,
+    [impl],
+    verify
+  ) as Promise<AccountProxy>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK

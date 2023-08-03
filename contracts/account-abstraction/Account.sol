@@ -15,6 +15,8 @@ import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 
 import {BaseAccount as BaseERC4337Account, IEntryPoint, UserOperation} from "./base-account-abstraction/core/BaseAccount.sol";
 
+import {ParaAccount} from "./ParaAccount.sol";
+
 error NotAuthorized();
 error InvalidInput();
 error AccountLocked();
@@ -84,12 +86,12 @@ contract Account is
 
     /// @dev allows eth transfers by default, but allows account owner to override
     receive() external payable {
-        _handleOverride();
+        // _handleOverride();
     }
 
     /// @dev allows account owner to add additional functions to the account via an override
     fallback() external payable {
-        _handleOverride();
+        // _handleOverride();
     }
 
     /// @dev executes a low-level call against an account if the caller is authorized to make calls
@@ -97,7 +99,7 @@ contract Account is
         address to,
         uint256 value,
         bytes calldata data
-    ) external payable onlyAuthorized onlyUnlocked returns (bytes memory) {
+    ) external payable onlyAuthorized returns (bytes memory) {
         emit TransactionExecuted(to, value, data);
 
         _incrementNonce();
@@ -169,7 +171,7 @@ contract Account is
         view
         returns (bytes4 magicValue)
     {
-        _handleOverrideStatic();
+        // _handleOverrideStatic();
 
         bool isValid = SignatureChecker.isValidSignatureNow(
             owner(),
@@ -217,15 +219,11 @@ contract Account is
     /// @dev Returns the owner of the ERC-721 token which owns this account. By default, the owner
     /// of the token has full permissions on the account.
     function owner() public view returns (address) {
-        (
-            uint256 chainId,
-            address tokenContract,
-            uint256 tokenId
-        ) = ERC6551AccountLib.token();
+        (uint256 chainId, address tokenContract, ) = ERC6551AccountLib.token();
 
         if (chainId != block.chainid) return address(0);
 
-        return IERC721(tokenContract).ownerOf(tokenId);
+        return ParaAccount(tokenContract).accountTokenOwner(address(this));
     }
 
     /// @dev Returns the authorization status for a given caller
@@ -233,12 +231,7 @@ contract Account is
         // authorize entrypoint for 4337 transactions
         if (caller == _entryPoint) return true;
 
-        (
-            uint256 chainId,
-            address tokenContract,
-            uint256 tokenId
-        ) = ERC6551AccountLib.token();
-        address _owner = IERC721(tokenContract).ownerOf(tokenId);
+        address _owner = owner();
 
         // authorize token owner
         if (caller == _owner) return true;

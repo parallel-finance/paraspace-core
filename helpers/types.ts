@@ -289,6 +289,10 @@ export enum eContractid {
   MockBendDaoLendPool = "MockBendDaoLendPool",
   PositionMoverLogic = "PositionMoverLogic",
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
+  Account = "Account",
+  AccountProxy = "AccountProxy",
+  ERC6551Registry = "ERC6551Registry",
+  ParaAccount = "ParaAccount",
 }
 
 /*

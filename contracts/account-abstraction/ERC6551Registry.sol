@@ -5,9 +5,16 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 
 import "./interfaces/IERC6551Registry.sol";
 import "./lib/ERC6551BytecodeLib.sol";
+import {AccountProxy} from "./AccountProxy.sol";
 
 contract ERC6551Registry is IERC6551Registry {
     error InitializationFailed();
+
+    function getBytecode(address impl) internal pure returns (bytes memory) {
+        bytes memory bytecode = type(AccountProxy).creationCode;
+
+        return abi.encodePacked(bytecode, abi.encode(impl));
+    }
 
     function createAccount(
         address implementation,
@@ -24,6 +31,8 @@ contract ERC6551Registry is IERC6551Registry {
             tokenId,
             salt
         );
+
+        // bytes memory code = getBytecode(implementation);
 
         address _account = Create2.computeAddress(
             bytes32(salt),
@@ -67,6 +76,8 @@ contract ERC6551Registry is IERC6551Registry {
                 salt
             )
         );
+
+        // bytes32 bytecodeHash = keccak256(getBytecode(implementation));
 
         return Create2.computeAddress(bytes32(salt), bytecodeHash);
     }
