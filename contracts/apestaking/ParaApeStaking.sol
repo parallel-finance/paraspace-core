@@ -51,7 +51,7 @@ contract ParaApeStaking is
     address private immutable psApe;
 
     //record all pool states
-    mapping(uint256 => PoolState) private poolStates;
+    mapping(uint256 => PoolState) public poolStates;
 
     //record user sApe balance
     mapping(address => SApeBalance) private sApeBalance;
@@ -224,20 +224,20 @@ contract ParaApeStaking is
     /*
      *common Logic
      */
-    function isNFTInPoolId(
+    function poolTokenStatus(
+        uint256 poolId,
         address nft,
-        uint256 tokenId,
-        uint256 poolId
-    ) external view returns (bool) {
+        uint256 tokenId
+    ) external view returns (IParaApeStaking.TokenStatus memory) {
         return
-            ApeCoinPoolLogic.isNFTInPoolId(
+            ApeCoinPoolLogic.poolTokenStatus(
                 poolStates,
                 bayc,
                 mayc,
                 bakc,
+                poolId,
                 nft,
-                tokenId,
-                poolId
+                tokenId
             );
     }
 
@@ -399,7 +399,8 @@ contract ParaApeStaking is
             sApeBalance,
             cApeShareBalance,
             vars,
-            withdrawInfo
+            withdrawInfo,
+            poolId
         );
     }
 
@@ -460,7 +461,8 @@ contract ParaApeStaking is
             sApeBalance,
             cApeShareBalance,
             vars,
-            withdrawInfo
+            withdrawInfo,
+            poolId
         );
     }
 
@@ -564,16 +566,8 @@ contract ParaApeStaking is
                 mstore(apeCoinPoolTokenIds, apeCoinPoolCount)
             }
 
-            uint256 singlePoolId = isBAYC
-                ? ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID
-                : ApeStakingCommonLogic.MAYC_APECOIN_POOL_ID;
-            uint256 PairPoolId = isBAYC
-                ? ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID
-                : ApeStakingCommonLogic.MAYC_BAKC_APECOIN_POOL_ID;
-
             ApeCoinPoolLogic.tryUnstakeApeCoinPoolPosition(
-                poolStates[singlePoolId],
-                poolStates[PairPoolId],
+                poolStates,
                 apeMatchedCount,
                 sApeBalance,
                 cApeShareBalance,

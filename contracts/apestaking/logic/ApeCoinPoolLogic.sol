@@ -49,15 +49,16 @@ library ApeCoinPoolLogic {
         uint256 bakcTokenId
     );
 
-    function isNFTInPoolId(
+    function poolTokenStatus(
         mapping(uint256 => IParaApeStaking.PoolState) storage poolStates,
         address bayc,
         address mayc,
         address bakc,
+        uint256 poolId,
         address nft,
-        uint256 tokenId,
-        uint256 poolId
-    ) external view returns (bool) {
+        uint256 tokenId
+    ) external view returns (IParaApeStaking.TokenStatus memory) {
+        IParaApeStaking.TokenStatus memory tokenStatus;
         if (nft == bayc) {
             if (
                 poolId == ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID ||
@@ -65,7 +66,7 @@ library ApeCoinPoolLogic {
                 poolId == ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID ||
                 poolId == ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID
             ) {
-                return poolStates[poolId].tokenStatus[tokenId].isInPool;
+                tokenStatus = poolStates[poolId].tokenStatus[tokenId];
             }
         } else if (nft == mayc) {
             if (
@@ -74,15 +75,15 @@ library ApeCoinPoolLogic {
                 poolId == ApeStakingCommonLogic.MAYC_APECOIN_POOL_ID ||
                 poolId == ApeStakingCommonLogic.MAYC_BAKC_APECOIN_POOL_ID
             ) {
-                return poolStates[poolId].tokenStatus[tokenId].isInPool;
+                tokenStatus = poolStates[poolId].tokenStatus[tokenId];
             }
         } else if (nft == bakc) {
             if (poolId == ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID) {
-                return poolStates[poolId].tokenStatus[tokenId].isInPool;
+                tokenStatus = poolStates[poolId].tokenStatus[tokenId];
             }
         }
 
-        return false;
+        return tokenStatus;
     }
 
     function getPendingReward(
@@ -308,7 +309,8 @@ library ApeCoinPoolLogic {
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         mapping(address => uint256) storage cApeShareBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
-        IParaApeStaking.ApeCoinWithdrawInfo memory withdrawInfo
+        IParaApeStaking.ApeCoinWithdrawInfo memory withdrawInfo,
+        uint256 poolId
     ) public {
         uint256 arrayLength = withdrawInfo.tokenIds.length;
         require(arrayLength > 0, Errors.INVALID_PARAMETER);
@@ -326,9 +328,7 @@ library ApeCoinPoolLogic {
         address nApeOwner = ApeStakingCommonLogic.claimPendingReward(
             poolState,
             vars,
-            withdrawInfo.isBAYC
-                ? ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID
-                : ApeStakingCommonLogic.MAYC_APECOIN_POOL_ID,
+            poolId,
             vars.apeToken,
             vars.nApe,
             false,
@@ -565,7 +565,8 @@ library ApeCoinPoolLogic {
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         mapping(address => uint256) storage cApeShareBalance,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
-        IParaApeStaking.ApeCoinPairWithdrawInfo memory withdrawInfo
+        IParaApeStaking.ApeCoinPairWithdrawInfo memory withdrawInfo,
+        uint256 poolId
     ) public {
         uint256 arrayLength = withdrawInfo.apeTokenIds.length;
         require(
@@ -584,9 +585,7 @@ library ApeCoinPoolLogic {
         address nApeOwner = ApeStakingCommonLogic.claimPendingReward(
             poolState,
             vars,
-            withdrawInfo.isBAYC
-                ? ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID
-                : ApeStakingCommonLogic.MAYC_BAKC_APECOIN_POOL_ID,
+            poolId,
             vars.apeToken,
             vars.nApe,
             false,
@@ -694,8 +693,7 @@ library ApeCoinPoolLogic {
     }
 
     function tryUnstakeApeCoinPoolPosition(
-        IParaApeStaking.PoolState storage singlePoolState,
-        IParaApeStaking.PoolState storage pairPoolState,
+        mapping(uint256 => IParaApeStaking.PoolState) storage poolStates,
         mapping(address => mapping(uint32 => uint256)) storage apeMatchedCount,
         mapping(address => IParaApeStaking.SApeBalance) storage sApeBalance,
         mapping(address => uint256) storage cApeShareBalance,
@@ -707,15 +705,18 @@ library ApeCoinPoolLogic {
 
         // check single
         {
+            uint256 singlePoolId = isBAYC
+                ? ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID
+                : ApeStakingCommonLogic.MAYC_APECOIN_POOL_ID;
+
             uint32[] memory singlePoolTokenIds = new uint32[](tokenIds.length);
             uint256 singleCount = 0;
             for (uint256 index = 0; index < tokenIds.length; index++) {
                 uint32 tokenId = tokenIds[index];
 
                 IParaApeStaking.TokenStatus
-                    memory singlePoolTokenStatus = singlePoolState.tokenStatus[
-                        tokenId
-                    ];
+                    memory singlePoolTokenStatus = poolStates[singlePoolId]
+                        .tokenStatus[tokenId];
                 if (singlePoolTokenStatus.isInPool) {
                     singlePoolTokenIds[singleCount] = tokenId;
                     singleCount++;
@@ -728,7 +729,7 @@ library ApeCoinPoolLogic {
                 }
 
                 withdrawApeCoinPool(
-                    singlePoolState,
+                    poolStates[singlePoolId],
                     apeMatchedCount,
                     sApeBalance,
                     cApeShareBalance,
@@ -738,13 +739,18 @@ library ApeCoinPoolLogic {
                         cashAmount: 0,
                         isBAYC: isBAYC,
                         tokenIds: singlePoolTokenIds
-                    })
+                    }),
+                    singlePoolId
                 );
             }
         }
 
         // check pair
         {
+            uint256 pairPoolId = isBAYC
+                ? ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID
+                : ApeStakingCommonLogic.MAYC_BAKC_APECOIN_POOL_ID;
+
             uint32[] memory parePoolTokenIds = new uint32[](tokenIds.length);
             uint32[] memory bakcTokenIds = new uint32[](tokenIds.length);
             uint256 pairCount = 0;
@@ -752,9 +758,8 @@ library ApeCoinPoolLogic {
                 uint32 tokenId = tokenIds[index];
 
                 IParaApeStaking.TokenStatus
-                    memory pairPoolTokenStatus = pairPoolState.tokenStatus[
-                        tokenId
-                    ];
+                    memory pairPoolTokenStatus = poolStates[pairPoolId]
+                        .tokenStatus[tokenId];
                 if (pairPoolTokenStatus.isInPool) {
                     parePoolTokenIds[pairCount] = tokenId;
                     bakcTokenIds[pairCount] = pairPoolTokenStatus.bakcTokenId;
@@ -769,7 +774,7 @@ library ApeCoinPoolLogic {
                 }
 
                 withdrawApeCoinPairPool(
-                    pairPoolState,
+                    poolStates[pairPoolId],
                     apeMatchedCount,
                     sApeBalance,
                     cApeShareBalance,
@@ -780,7 +785,8 @@ library ApeCoinPoolLogic {
                         isBAYC: isBAYC,
                         apeTokenIds: parePoolTokenIds,
                         bakcTokenIds: bakcTokenIds
-                    })
+                    }),
+                    pairPoolId
                 );
             }
         }
