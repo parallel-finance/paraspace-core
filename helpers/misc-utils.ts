@@ -29,6 +29,7 @@ import {
   MOONBASE_CHAINID,
   LINEA_CHAINID,
   LINEA_GOERLI_CHAINID,
+  eContractidToContractName,
 } from "./hardhat-constants";
 import {ConstructorArgs, eContractid, tEthereumAddress} from "./types";
 import dotenv from "dotenv";
@@ -294,7 +295,9 @@ export const verifyContracts = async (limit = 1) => {
     const {address, constructorArgs = [], libraries} = value[network];
     let artifact: Artifact | undefined = undefined;
     try {
-      artifact = await DRE.artifacts.readArtifact(key);
+      artifact = await DRE.artifacts.readArtifact(
+        eContractidToContractName[key] || key
+      );
     } catch (e) {
       //
     }
