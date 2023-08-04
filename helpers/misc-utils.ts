@@ -2,10 +2,9 @@ import mapLimit from "async/mapLimit";
 import {isZeroAddress} from "ethereumjs-util";
 import {BigNumber, ContractTransaction, Wallet} from "ethers";
 import {isAddress} from "ethers/lib/utils";
-import {HardhatRuntimeEnvironment} from "hardhat/types";
+import {Artifact, HardhatRuntimeEnvironment} from "hardhat/types";
 import low from "lowdb";
 import {getAdapter} from "./db-adapter";
-import {verifyEtherscanContract} from "./etherscan";
 import {eEthereumNetwork, IParaSpaceConfiguration} from "../helpers/types";
 import {ParaSpaceConfigs} from "../market-config";
 import {
@@ -34,6 +33,7 @@ import {
 import {ConstructorArgs, eContractid, tEthereumAddress} from "./types";
 import dotenv from "dotenv";
 import minimatch from "minimatch";
+import {verifyContract} from "./contracts-helpers";
 
 dotenv.config();
 
@@ -292,20 +292,13 @@ export const verifyContracts = async (limit = 1) => {
 
   await mapLimit(entries, limit, async ([key, value]) => {
     const {address, constructorArgs = [], libraries} = value[network];
-    let contractFQN: string | undefined = undefined;
+    let artifact: Artifact | undefined = undefined;
     try {
-      const artifact = await DRE.artifacts.readArtifact(key);
-      contractFQN = artifact.sourceName + ":" + artifact.contractName;
+      artifact = await DRE.artifacts.readArtifact(key);
     } catch (e) {
       //
     }
-    await verifyEtherscanContract(
-      key,
-      address,
-      contractFQN,
-      constructorArgs,
-      libraries
-    );
+    await verifyContract(key, address, artifact, constructorArgs, libraries);
   });
 };
 

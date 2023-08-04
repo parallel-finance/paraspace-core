@@ -297,22 +297,64 @@ export const getEthersSignersAddresses = async (): Promise<
 
 export const verifyContract = async (
   id: string,
-  instance: Contract,
-  contractFQN: string | undefined = undefined,
+  address: tEthereumAddress,
+  artifact: Artifact | undefined,
   constructorArgs: ConstructorArgs,
   libraries?: LibraryAddresses
 ) => {
   if (usingTenderly()) {
-    await verifyAtTenderly(id, instance);
+    await verifyAtTenderly(id, address);
   }
-  await verifyEtherscanContract(
-    id,
-    instance.address,
-    contractFQN,
-    constructorArgs,
-    libraries
-  );
-  return instance;
+
+  let contractFQN: string | undefined = undefined;
+  if (artifact) {
+    contractFQN = artifact.sourceName + ":" + artifact.contractName;
+  }
+
+  if (
+    ETHERSCAN_VERIFICATION_PROVIDER == EtherscanVerificationProvider.hardhat
+  ) {
+    await verifyEtherscanContract(
+      id,
+      address,
+      contractFQN,
+      constructorArgs,
+      libraries
+    );
+  } else if (
+    ETHERSCAN_VERIFICATION_PROVIDER == EtherscanVerificationProvider.foundry &&
+    artifact
+  ) {
+    const forgeVerifyContractCmd = `ETHERSCAN_API_KEY=${ETHERSCAN_KEY} ETH_RPC_URL=${
+      (DRE.network.config as HttpNetworkConfig).url
+    } VERIFIER_URL=${
+      ETHERSCAN_APIS[DRE.network.name || FORK]
+    } forge verify-contract ${address} \
+  --chain-id ${DRE.network.config.chainId} \
+  --num-of-optimizations ${COMPILER_OPTIMIZER_RUNS} \
+  --watch \
+  ${contractFQN} \
+${
+  constructorArgs.length
+    ? `--constructor-args \
+  $(cast abi-encode "constructor(${first(artifact.abi)
+    .inputs.map((x) => x.type)
+    .join(",")})" ${constructorArgs
+        .map((x) => (Array.isArray(x) ? `"[${x}"]` : `"${x}"`))
+        .join(" ")})`
+    : ""
+} \
+${
+  libraries
+    ? Object.entries(libraries)
+        .map(([k, v]) => `--libraries ${k}:${v}`)
+        .join(" ")
+    : ""
+} \
+  --compiler-version v${COMPILER_VERSION}`;
+    console.log(forgeVerifyContractCmd);
+    shell.exec(forgeVerifyContractCmd);
+  }
 };
 
 export const normalizeLibraryAddresses = (
@@ -394,49 +436,13 @@ export const withSaveAndVerify = async (
     }
 
     if (verify) {
-      if (
-        ETHERSCAN_VERIFICATION_PROVIDER == EtherscanVerificationProvider.hardhat
-      ) {
-        await verifyContract(
-          id,
-          instance,
-          artifact.sourceName + ":" + artifact.contractName,
-          deployArgs,
-          normalizedLibraries
-        );
-      } else if (
-        ETHERSCAN_VERIFICATION_PROVIDER == EtherscanVerificationProvider.foundry
-      ) {
-        const forgeVerifyContractCmd = `ETHERSCAN_API_KEY=${ETHERSCAN_KEY} ETH_RPC_URL=${
-          (DRE.network.config as HttpNetworkConfig).url
-        } VERIFIER_URL=${
-          ETHERSCAN_APIS[DRE.network.name || FORK]
-        } forge verify-contract ${instance.address} \
-  --chain-id ${DRE.network.config.chainId} \
-  --num-of-optimizations ${COMPILER_OPTIMIZER_RUNS} \
-  --watch \
-  ${artifact.sourceName}:${artifact.contractName} \
-${
-  deployArgs.length
-    ? `--constructor-args \
-  $(cast abi-encode "constructor(${first(artifact.abi)
-    .inputs.map((x) => x.type)
-    .join(",")})" ${deployArgs
-        .map((x) => (Array.isArray(x) ? `"[${x}"]` : `"${x}"`))
-        .join(" ")})`
-    : ""
-} \
-${
-  libraries
-    ? Object.entries(libraries)
-        .map(([k, v]) => `--libraries ${k}:${v}`)
-        .join(" ")
-    : ""
-} \
-  --compiler-version v${COMPILER_VERSION}`;
-        console.log(forgeVerifyContractCmd);
-        shell.exec(forgeVerifyContractCmd);
-      }
+      await verifyContract(
+        id,
+        instance.address,
+        artifact,
+        deployArgs,
+        normalizedLibraries
+      );
     }
 
     return instance;
