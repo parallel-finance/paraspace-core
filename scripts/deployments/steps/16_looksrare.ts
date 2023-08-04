@@ -24,18 +24,23 @@ import {
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 
 export const step_16 = async (verify = false) => {
+  const allTokens = await getAllTokens();
   try {
-    if (!isLocalTestnet() && !isPublicTestnet()) {
+    if ((!isLocalTestnet() && !isPublicTestnet()) || !allTokens.WETH) {
       return;
     }
 
-    const allTokens = await getAllTokens();
     const currencyManager = await deployCurrencyManager(verify);
     const addressesProvider = await getPoolAddressesProvider();
 
-    await waitForTx(
-      await currencyManager.addCurrency(allTokens.DAI.address, GLOBAL_OVERRIDES)
-    );
+    if (allTokens.DAI) {
+      await waitForTx(
+        await currencyManager.addCurrency(
+          allTokens.DAI.address,
+          GLOBAL_OVERRIDES
+        )
+      );
+    }
     await waitForTx(
       await currencyManager.addCurrency(
         allTokens.WETH.address,

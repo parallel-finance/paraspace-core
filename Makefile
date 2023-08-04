@@ -19,19 +19,18 @@ init: submodules
 
 .PHONY: test
 test:
-	npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
-
+	npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} --no-compile
 .PHONY: local-test
 local-test:
 	make MOCHA_JOBS=0 DB_PATH=deployed-contracts.json DEPLOY_START=21 NETWORK=localhost test
 
 .PHONY: slow-test
 slow-test:
-	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
+	MOCHA_JOBS=0 DB_PATH=deployed-contracts.json npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} --no-compile
 
 .PHONY: fast-test
 fast-test:
-	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} # --verbose
+	MOCHA_JOBS=4 DB_PATH=:memory: npx hardhat test ./test/${TEST_TARGET} --network ${NETWORK} --no-compile
 
 .PHONY: size
 size:
@@ -39,7 +38,8 @@ size:
 
 .PHONY: build
 build: clean
-	yarn build
+	yarn build --network ${NETWORK}
+	yarn typechain
 
 .PHONY: doc
 doc:
@@ -52,7 +52,7 @@ lint:
 
 .PHONY: coverage
 coverage:
-	yarn coverage
+	yarn coverage --no-compile
 
 .PHONY: format
 format:
@@ -286,7 +286,7 @@ test-stakefish-nft:
 
 .PHONY: run
 run:
-	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK)
+	npx hardhat run $(SCRIPT_PATH) --network $(NETWORK) --no-compile
 
 .PHONY: run-task
 run-task:
@@ -396,6 +396,10 @@ deploy-timelock:
 deploy-renounceOwnership:
 	make TASK_NAME=deploy:renounce-ownership run-task
 
+.PHONY: deploy-all-libraries
+deploy-all-libraries:
+	make TASK_NAME=deploy:all-libraries run-task
+
 .PHONY: ad-hoc
 ad-hoc:
 	make SCRIPT_PATH=./scripts/dev/1.ad-hoc.ts run
@@ -443,6 +447,14 @@ set-timelock-strategy:
 .PHONY: acl
 acl:
 	make SCRIPT_PATH=./scripts/dev/13.acl.ts run
+
+.PHONY: zksync-bytecode-hashes
+zksync-bytecode-hashes:
+	make SCRIPT_PATH=./scripts/dev/14.zksync-bytecode-hashes.ts run
+
+.PHONY: redeploy-market
+redeploy-market:
+	make SCRIPT_PATH=./scripts/dev/15.redeploy-market.ts run
 
 .PHONY: transfer-tokens
 transfer-tokens:
@@ -671,15 +683,16 @@ hardhat:
 .PHONY: anvil
 anvil:
 	anvil \
-		$(if $(FORK),--fork-url https://eth-$(FORK).alchemyapi.io/v2/$(ALCHEMY_KEY) --no-rate-limit,) \
-		$(if $(FORK),--chain-id 522,--chain-id 31337) \
-		--tracing \
+		$(if $(FORK),--fork-url https://eth-$(FORK).alchemyapi.io/v2/$(ALCHEMY_KEY) --chain-id 522 --no-rate-limit,--chain-id 31337) \
+		$(if $(FORK_BLOCK_NUMBER),--fork-block-number $(FORK_BLOCK_NUMBER),) \
+		$(if $(DEPLOYER_MNEMONIC),--mnemonic "${DEPLOYER_MNEMONIC}",--mnemonic "test test test test test test test test test test test junk") \
 		--host 0.0.0.0 \
 		--state-interval 60 \
 		--dump-state state.json \
 		$(if $(wildcard state.json),--load-state state.json,) \
 		--disable-block-gas-limit \
 		--code-size-limit 100000 \
+		--timeout 9000000
 
 .PHONY: image
 image:
@@ -701,7 +714,7 @@ shutdown:
 	docker-compose \
 		down \
 		--remove-orphans > /dev/null 2>&1 || true
-	docker volume prune -f
+	docker volume prune -f || true
 	sudo rm -fr redis-data || true
 	sudo rm -fr logs || true
 	sudo rm -fr state.json || true

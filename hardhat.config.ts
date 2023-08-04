@@ -14,6 +14,19 @@ import {
   VERBOSE,
   COMPILER_VERSION,
   COMPILER_OPTIMIZER_RUNS,
+  ZK_LIBRARIES,
+  ETHERSCAN_APIS,
+  BROWSER_URLS,
+  GOERLI_ETHERSCAN_KEY,
+  ARBITRUM_ETHERSCAN_KEY,
+  ARBITRUM_GOERLI_ETHERSCAN_KEY,
+  POLYGON_ETHERSCAN_KEY,
+  POLYGON_MUMBAI_ETHERSCAN_KEY,
+  POLYGON_ZKEVM_ETHERSCAN_KEY,
+  POLYGON_ZKEVM_GOERLI_ETHERSCAN_KEY,
+  MOONBASE_ETHERSCAN_KEY,
+  LINEA_ETHERSCAN_KEY,
+  LINEA_GOERLI_ETHERSCAN_KEY,
 } from "./helpers/hardhat-constants";
 import {accounts} from "./wallets";
 import {accounts as evmAccounts} from "./evm-wallets";
@@ -26,7 +39,7 @@ import fs from "fs";
 
 dotenv.config();
 
-import "solidity-docgen-forked";
+import "solidity-docgen";
 import "@typechain/hardhat";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
@@ -34,6 +47,9 @@ import "hardhat-gas-reporter";
 import "@tenderly/hardhat-tenderly";
 import "solidity-coverage";
 import "hardhat-contract-sizer";
+import "@matterlabs/hardhat-zksync-deploy";
+import "@matterlabs/hardhat-zksync-solc";
+import "@matterlabs/hardhat-zksync-verify";
 import {eEthereumNetwork} from "./helpers/types";
 
 require(`${path.join(__dirname, "tasks/misc")}/set-bre.ts`);
@@ -48,11 +64,22 @@ require(`${path.join(__dirname, "tasks/misc")}/set-bre.ts`);
 });
 
 const hardhatConfig: HardhatUserConfig = {
+  zksolc: {
+    version: "latest",
+    settings: {
+      libraries: ZK_LIBRARIES,
+    },
+  },
   contractSizer: {
     alphaSort: true,
     runOnCompile: false,
     disambiguatePaths: false,
-    except: ["Mock*", "ApeCoinStaking"],
+    except: [
+      "Mock*",
+      "ApeCoinStaking",
+      "SwapRouter",
+      "NonfungiblePositionManager",
+    ],
     strict: true,
   },
   paths: {
@@ -73,25 +100,13 @@ const hardhatConfig: HardhatUserConfig = {
     // Docs for the compiler https://docs.soliditylang.org/en/v0.8.7/using-the-compiler.html
     compilers: [
       {
-        version: COMPILER_VERSION,
+        version: COMPILER_VERSION.split("+")[0],
         settings: {
           optimizer: {
             enabled: true,
             runs: COMPILER_OPTIMIZER_RUNS,
           },
           evmVersion: "london",
-        },
-      },
-      {
-        version: "0.7.6",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 800,
-          },
-          metadata: {
-            bytecodeHash: "none",
-          },
         },
       },
     ],
@@ -152,6 +167,11 @@ const hardhatConfig: HardhatUserConfig = {
       url: NETWORKS_RPC_URL[eEthereumNetwork.moonbeam],
       accounts: DEPLOYER,
     },
+    moonbase: {
+      chainId: CHAINS_ID[eEthereumNetwork.moonbase],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.moonbase],
+      accounts: DEPLOYER,
+    },
     hardhat: {
       hardfork: HARDFORK,
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
@@ -180,6 +200,52 @@ const hardhatConfig: HardhatUserConfig = {
       url: NETWORKS_RPC_URL[eEthereumNetwork.arbitrumGoerli],
       accounts: DEPLOYER,
     },
+    polygon: {
+      chainId: CHAINS_ID[eEthereumNetwork.polygon],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.polygon],
+      accounts: DEPLOYER,
+    },
+    polygonMumbai: {
+      chainId: CHAINS_ID[eEthereumNetwork.polygonMumbai],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.polygonMumbai],
+      accounts: DEPLOYER,
+    },
+    polygonZkevm: {
+      chainId: CHAINS_ID[eEthereumNetwork.polygonZkevm],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.polygonZkevm],
+      accounts: DEPLOYER,
+    },
+    polygonZkevmGoerli: {
+      chainId: CHAINS_ID[eEthereumNetwork.polygonZkevmGoerli],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.polygonZkevmGoerli],
+      accounts: DEPLOYER,
+    },
+    zksync: {
+      chainId: CHAINS_ID[eEthereumNetwork.zksync],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.zksync],
+      accounts: DEPLOYER,
+      ethNetwork: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
+      zksync: true,
+      verifyURL: ETHERSCAN_APIS[eEthereumNetwork.zksync],
+    },
+    zksyncGoerli: {
+      chainId: CHAINS_ID[eEthereumNetwork.zksyncGoerli],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.zksyncGoerli],
+      accounts: DEPLOYER,
+      ethNetwork: NETWORKS_RPC_URL[eEthereumNetwork.goerli],
+      zksync: true,
+      verifyURL: ETHERSCAN_APIS[eEthereumNetwork.zksyncGoerli],
+    },
+    linea: {
+      chainId: CHAINS_ID[eEthereumNetwork.linea],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.linea],
+      accounts: DEPLOYER,
+    },
+    lineaGoerli: {
+      chainId: CHAINS_ID[eEthereumNetwork.lineaGoerli],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.lineaGoerli],
+      accounts: DEPLOYER,
+    },
     mainnet: {
       chainId: CHAINS_ID[eEthereumNetwork.mainnet],
       url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
@@ -188,29 +254,43 @@ const hardhatConfig: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: {
-      mainnet: ETHERSCAN_KEY,
-      goerli: ETHERSCAN_KEY,
       localhost: ETHERSCAN_KEY,
-      arbitrumOne: ETHERSCAN_KEY,
+      mainnet: ETHERSCAN_KEY,
+      goerli: GOERLI_ETHERSCAN_KEY,
+      arbitrum: ARBITRUM_ETHERSCAN_KEY,
+      arbitrumGoerli: ARBITRUM_GOERLI_ETHERSCAN_KEY,
+      polygon: POLYGON_ETHERSCAN_KEY,
+      polygonMumbai: POLYGON_MUMBAI_ETHERSCAN_KEY,
+      polygonZkevm: POLYGON_ZKEVM_ETHERSCAN_KEY,
+      polygonZkevmGoerli: POLYGON_ZKEVM_GOERLI_ETHERSCAN_KEY,
+      moonbeam: MOONBASE_ETHERSCAN_KEY,
+      moonbase: MOONBASE_ETHERSCAN_KEY,
+      linea: LINEA_ETHERSCAN_KEY,
+      lineaGoerli: LINEA_GOERLI_ETHERSCAN_KEY,
     },
     customChains: [
-      {
-        network: eEthereumNetwork.localhost,
-        chainId: CHAINS_ID[eEthereumNetwork.hardhat]!,
-        urls: {
-          apiURL: "http://localhost:4000/api",
-          browserURL: "http://localhost:4000",
-        },
+      eEthereumNetwork.localhost,
+      eEthereumNetwork.goerli,
+      eEthereumNetwork.arbitrum,
+      eEthereumNetwork.arbitrumGoerli,
+      eEthereumNetwork.polygon,
+      eEthereumNetwork.polygonZkevm,
+      eEthereumNetwork.polygonMumbai,
+      eEthereumNetwork.polygonZkevmGoerli,
+      eEthereumNetwork.zksync,
+      eEthereumNetwork.zksyncGoerli,
+      eEthereumNetwork.moonbeam,
+      eEthereumNetwork.moonbase,
+      eEthereumNetwork.linea,
+      eEthereumNetwork.lineaGoerli,
+    ].map((network) => ({
+      network,
+      chainId: CHAINS_ID[network]!,
+      urls: {
+        apiURL: ETHERSCAN_APIS[network],
+        browserURL: BROWSER_URLS[network],
       },
-      {
-        network: eEthereumNetwork.arbitrum,
-        chainId: CHAINS_ID[eEthereumNetwork.hardhat]!,
-        urls: {
-          apiURL: "https://api.arbiscan.io/api",
-          browserURL: "https://arbiscan.io",
-        },
-      },
-    ],
+    })),
   },
 };
 

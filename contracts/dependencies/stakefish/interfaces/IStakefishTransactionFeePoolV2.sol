@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 interface IStakefishTransactionFeePoolV2 {
     function collectReward(address payable beneficiary, uint256 amountRequested) external;

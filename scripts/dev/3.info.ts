@@ -6,7 +6,9 @@ import {
 } from "../../helpers/contracts-helpers";
 import {DRE} from "../../helpers/misc-utils";
 import * as envs from "../../helpers/hardhat-constants";
-import {accounts} from "../../wallets";
+import {fromBn} from "evm-bn";
+import {HttpNetworkConfig} from "hardhat/types";
+import * as zk from "zksync-web3";
 
 const info = async () => {
   console.time("info");
@@ -14,16 +16,33 @@ const info = async () => {
   const signer = await getFirstSigner();
   const signerAddress = await signer.getAddress();
 
+  console.log(DRE.network.name);
   console.log(await DRE.ethers.provider.getNetwork());
   console.log(await DRE.ethers.provider.getFeeData());
   console.log(envs);
   console.log(await getParaSpaceAdmins());
-  console.log(accounts);
   console.log(signerAddress);
   console.log(await signer.getTransactionCount());
+  console.log((DRE.network.config as HttpNetworkConfig).url);
+  console.log(fromBn(await DRE.ethers.provider.getBalance(signerAddress)));
   console.log(
     await Promise.all((await getEthersSigners()).map((x) => x.getAddress()))
   );
+
+  if (DRE.network.config.zksync) {
+    console.log(
+      "MainContract",
+      (await (signer as zk.Wallet).getMainContract()).address
+    );
+    console.log(
+      "L1ERC20 BridgeContracts",
+      (await (signer as zk.Wallet).getL1BridgeContracts()).erc20.address
+    );
+    console.log(
+      "L2ERC20 BridgeContracts",
+      (await (signer as zk.Wallet).getL2BridgeContracts()).erc20.address
+    );
+  }
 
   console.timeEnd("info");
 };

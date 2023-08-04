@@ -1,11 +1,9 @@
-import mapLimit from "async/mapLimit";
 import {isZeroAddress} from "ethereumjs-util";
 import {BigNumber, ContractTransaction, Wallet} from "ethers";
 import {isAddress} from "ethers/lib/utils";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import low from "lowdb";
 import {getAdapter} from "./db-adapter";
-import {verifyEtherscanContract} from "./etherscan";
 import {eEthereumNetwork, IParaSpaceConfiguration} from "../helpers/types";
 import {ParaSpaceConfigs} from "../market-config";
 import {
@@ -18,9 +16,22 @@ import {
   HARDHAT_CHAINID,
   MAINNET_CHAINID,
   MOONBEAM_CHAINID,
+  POLYGON_MUMBAI_CHAINID,
+  POLYGON_CHAINID,
+  POLYGON_ZKEVM_CHAINID,
+  POLYGON_ZKEVM_GOERLI_CHAINID,
+  ZKSYNC_CHAINID,
+  ZKSYNC_GOERLI_CHAINID,
+  ETHERSCAN_NETWORKS,
+  ETHERSCAN_VERIFICATION_CONTRACTS,
+  ETHERSCAN_KEY,
+  MOONBASE_CHAINID,
+  LINEA_CHAINID,
+  LINEA_GOERLI_CHAINID,
 } from "./hardhat-constants";
 import {ConstructorArgs, eContractid, tEthereumAddress} from "./types";
 import dotenv from "dotenv";
+import minimatch from "minimatch";
 
 dotenv.config();
 
@@ -44,12 +55,24 @@ export const isLocalTestnet = (): boolean => {
 export const isPublicTestnet = (): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return (
-    [GOERLI_CHAINID, ARBITRUM_GOERLI_CHAINID].includes(
-      DRE.network.config.chainId!
-    ) ||
-    [eEthereumNetwork.goerli, eEthereumNetwork.arbitrumGoerli].includes(
-      FORK as eEthereumNetwork
-    )
+    [
+      GOERLI_CHAINID,
+      ARBITRUM_GOERLI_CHAINID,
+      ZKSYNC_GOERLI_CHAINID,
+      POLYGON_ZKEVM_GOERLI_CHAINID,
+      POLYGON_MUMBAI_CHAINID,
+      MOONBASE_CHAINID,
+      LINEA_GOERLI_CHAINID,
+    ].includes(DRE.network.config.chainId!) ||
+    [
+      eEthereumNetwork.goerli,
+      eEthereumNetwork.arbitrumGoerli,
+      eEthereumNetwork.zksyncGoerli,
+      eEthereumNetwork.polygonZkevmGoerli,
+      eEthereumNetwork.polygonMumbai,
+      eEthereumNetwork.moonbase,
+      eEthereumNetwork.lineaGoerli,
+    ].includes(FORK as eEthereumNetwork)
   );
 };
 
@@ -66,7 +89,7 @@ export const isMoonbeam = (): boolean => {
   );
 };
 
-export const isArbitrumOne = (): boolean => {
+export const isArbitrum = (): boolean => {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return (
     [ARBITRUM_ONE_CHAINID].includes(DRE.network.config.chainId!) ||
@@ -80,6 +103,71 @@ export const isEthereum = (): boolean => {
     [MAINNET_CHAINID].includes(DRE.network.config.chainId!) ||
     [eEthereumNetwork.mainnet].includes(FORK as eEthereumNetwork)
   );
+};
+
+export const isPolygon = (): boolean => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return (
+    [POLYGON_CHAINID].includes(DRE.network.config.chainId!) ||
+    [eEthereumNetwork.polygon].includes(FORK as eEthereumNetwork)
+  );
+};
+
+export const isPolygonZkEVM = (): boolean => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return (
+    [POLYGON_ZKEVM_CHAINID].includes(DRE.network.config.chainId!) ||
+    [eEthereumNetwork.polygonZkevm].includes(FORK as eEthereumNetwork)
+  );
+};
+
+export const isZkSync = (): boolean => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return (
+    [ZKSYNC_CHAINID].includes(DRE.network.config.chainId!) ||
+    [eEthereumNetwork.zksync].includes(FORK as eEthereumNetwork)
+  );
+};
+
+export const isLinea = (): boolean => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return (
+    [LINEA_CHAINID].includes(DRE.network.config.chainId!) ||
+    [eEthereumNetwork.linea].includes(FORK as eEthereumNetwork)
+  );
+};
+
+export const isMainnet = (): boolean =>
+  isEthereum() ||
+  isMoonbeam() ||
+  isArbitrum() ||
+  isZkSync() ||
+  isPolygon() ||
+  isPolygonZkEVM() ||
+  isLinea();
+
+export const safeTransactionServiceUrl = (): string => {
+  return isMoonbeam()
+    ? "https://transaction.multisig.moonbeam.network"
+    : `https://safe-transaction-${FORK || DRE.network.name}.safe.global`;
+};
+
+export const shouldVerifyContract = (contractId: string): boolean => {
+  if (!ETHERSCAN_NETWORKS.includes(DRE.network.name)) {
+    return false;
+  }
+
+  if (
+    ETHERSCAN_VERIFICATION_CONTRACTS?.every((p) => !minimatch(contractId, p))
+  ) {
+    return false;
+  }
+
+  if (!ETHERSCAN_KEY) {
+    throw Error("Missing ETHERSCAN_KEY.");
+  }
+
+  return true;
 };
 
 export const sleep = (ms: number) =>
@@ -184,20 +272,6 @@ export const printContracts = () => {
 
   console.log("N# Contracts:", entries.length);
   console.log(contractsPrint.join("\n"));
-};
-
-export const verifyContracts = async (limit = 1) => {
-  const db = getDb();
-  const network = DRE.network.name;
-  const entries = Object.entries<DbEntry>(db.getState()).filter(([, value]) => {
-    // constructorArgs must be Array to make the contract verifiable
-    return !!value[network] && Array.isArray(value[network].constructorArgs);
-  });
-
-  await mapLimit(entries, limit, async ([key, value]) => {
-    const {address, constructorArgs = [], libraries} = value[network];
-    await verifyEtherscanContract(key, address, constructorArgs, libraries);
-  });
 };
 
 export const notFalsyOrZeroAddress = (

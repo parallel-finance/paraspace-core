@@ -24,6 +24,8 @@ import {
   getParaSpaceConfig,
   isFork,
   sleep,
+  DbEntry,
+  shouldVerifyContract,
 } from "./misc-utils";
 import {
   iFunctionSignature,
@@ -37,6 +39,7 @@ import {
   DryRunExecutor,
   TimeLockData,
   TimeLockOperation,
+  EtherscanVerificationProvider,
 } from "./types";
 import {
   ConsiderationItem,
@@ -79,9 +82,18 @@ import {
   NTokenOtherdeed__factory,
   TimeLock__factory,
   P2PPairStaking__factory,
+  NFTFloorOracle__factory,
 } from "../types";
-import {HardhatRuntimeEnvironment, HttpNetworkConfig} from "hardhat/types";
-import {getFirstSigner, getTimeLockExecutor} from "./contracts-getters";
+import {
+  Artifact,
+  HardhatRuntimeEnvironment,
+  HttpNetworkConfig,
+} from "hardhat/types";
+import {
+  getFirstSigner,
+  getSafeSdkAndService,
+  getTimeLockExecutor,
+} from "./contracts-getters";
 import {getDefenderRelaySigner, usingDefender} from "./defender-utils";
 import {usingTenderly, verifyAtTenderly} from "./tenderly-utils";
 import {SignerWithAddress} from "../test/helpers/make-suite";
@@ -90,7 +102,7 @@ import {InitializableImmutableAdminUpgradeabilityProxy} from "../types";
 import {decodeEvents} from "./seaport-helpers/events";
 import {Order, SignatureVersion} from "./blur-helpers/types";
 import {expect} from "chai";
-import {ABI} from "hardhat-deploy/dist/types";
+import {ABI, Libraries} from "hardhat-deploy/dist/types";
 import {ethers} from "ethers";
 import {
   GLOBAL_OVERRIDES,
@@ -106,16 +118,21 @@ import {
   MULTI_SIG_NONCE,
   MULTI_SEND_CHUNK_SIZE,
   PKG_DATA,
+  COMPILER_VERSION,
+  COMPILER_OPTIMIZER_RUNS,
+  DEPLOY_MAX_RETRIES,
+  ETHERSCAN_KEY,
+  ETHERSCAN_APIS,
+  ETHERSCAN_VERIFICATION_PROVIDER,
+  DEPLOY_RETRY_INTERVAL,
+  eContractidToContractName,
 } from "./hardhat-constants";
-import {chunk, pick} from "lodash";
+import {chunk, first, pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
 import {
   OperationType,
   SafeTransactionDataPartial,
 } from "@safe-global/safe-core-sdk-types";
-import Safe from "@safe-global/safe-core-sdk";
-import EthersAdapter from "@safe-global/safe-ethers-lib";
-import SafeServiceClient from "@safe-global/safe-service-client";
 import {encodeMulti, MetaTransaction} from "ethers-multisend";
 import {
   FlashbotsBundleProvider,
@@ -123,9 +140,40 @@ import {
   FlashbotsBundleTransaction,
 } from "@flashbots/ethers-provider-bundle";
 import {configureReservesByHelper, initReservesByHelper} from "./init-helpers";
+import shell from "shelljs";
+import walkdir from "walkdir";
+import fs from "fs";
+import * as zk from "zksync-web3";
+import {hexlify} from "ethers/lib/utils";
+import {Overrides} from "./hardhat-constants";
+import {mapLimit} from "async";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
+
+export const getZkSyncBytecodeHashes = () => {
+  const obj = {};
+  walkdir.sync("./artifacts-zk", (path, stat) => {
+    if (
+      stat.isDirectory() ||
+      !path.endsWith(".json") ||
+      path.endsWith("dbg.json")
+    ) {
+      return;
+    }
+    try {
+      const artifact = JSON.parse(fs.readFileSync(path, "utf8"));
+      if (artifact.contractName && artifact.bytecode) {
+        const bytecodeHash = hexlify(zk.utils.hashBytecode(artifact.bytecode));
+        obj[bytecodeHash] = artifact.contractName;
+        obj[artifact.contractName] = bytecodeHash;
+      }
+    } catch (e) {
+      //
+    }
+  });
+  return obj;
+};
 
 export const registerContractInDb = async (
   id: string,
@@ -251,17 +299,94 @@ export const getEthersSignersAddresses = async (): Promise<
     (await getEthersSigners()).map((signer) => signer.getAddress())
   );
 
+export const verifyContracts = async (limit = 1) => {
+  const db = getDb();
+  const network = DRE.network.name;
+  const entries = Object.entries<DbEntry>(db.getState()).filter(
+    ([key, value]) => {
+      // constructorArgs must be Array to make the contract verifiable
+      return (
+        shouldVerifyContract(key) &&
+        !!value[network] &&
+        Array.isArray(value[network].constructorArgs)
+      );
+    }
+  );
+
+  await mapLimit(entries, limit, async ([key, value]) => {
+    const {address, constructorArgs = [], libraries} = value[network];
+    let artifact: Artifact | undefined = undefined;
+    try {
+      artifact = await DRE.artifacts.readArtifact(
+        eContractidToContractName[key] || key
+      );
+    } catch (e) {
+      //
+    }
+    await verifyContract(key, address, artifact, constructorArgs, libraries);
+  });
+};
+
 export const verifyContract = async (
   id: string,
-  instance: Contract,
-  args: ConstructorArgs,
+  address: tEthereumAddress,
+  artifact: Artifact | undefined,
+  constructorArgs: ConstructorArgs,
   libraries?: LibraryAddresses
 ) => {
   if (usingTenderly()) {
-    await verifyAtTenderly(id, instance);
+    await verifyAtTenderly(id, address);
   }
-  await verifyEtherscanContract(id, instance.address, args, libraries);
-  return instance;
+
+  let contractFQN: string | undefined = undefined;
+  if (artifact) {
+    contractFQN = artifact.sourceName + ":" + artifact.contractName;
+  }
+
+  if (
+    ETHERSCAN_VERIFICATION_PROVIDER == EtherscanVerificationProvider.hardhat
+  ) {
+    await verifyEtherscanContract(
+      id,
+      address,
+      contractFQN,
+      constructorArgs,
+      libraries
+    );
+  } else if (
+    ETHERSCAN_VERIFICATION_PROVIDER == EtherscanVerificationProvider.foundry &&
+    artifact
+  ) {
+    const forgeVerifyContractCmd = `ETHERSCAN_API_KEY=${ETHERSCAN_KEY} ETH_RPC_URL=${
+      (DRE.network.config as HttpNetworkConfig).url
+    } VERIFIER_URL=${
+      ETHERSCAN_APIS[DRE.network.name || FORK]
+    } forge verify-contract ${address} \
+  --chain-id ${DRE.network.config.chainId} \
+  --num-of-optimizations ${COMPILER_OPTIMIZER_RUNS} \
+  --watch \
+  ${contractFQN} \
+${
+  constructorArgs.length
+    ? `--constructor-args \
+  $(cast abi-encode "constructor(${first(artifact.abi)
+    .inputs.map((x) => x.type)
+    .join(",")})" ${constructorArgs
+        .map((x) => (Array.isArray(x) ? `"[${x}"]` : `"${x}"`))
+        .join(" ")})`
+    : ""
+} \
+${
+  libraries
+    ? Object.entries(libraries)
+        .map(([k, v]) => `--libraries ${k}:${v}`)
+        .join(" ")
+    : ""
+} \
+  --compiler-version v${COMPILER_VERSION}`;
+    console.log(forgeVerifyContractCmd);
+    shell.exec(forgeVerifyContractCmd);
+  }
 };
 
 export const normalizeLibraryAddresses = (
@@ -276,50 +401,84 @@ export const normalizeLibraryAddresses = (
   }
 };
 
-export const withSaveAndVerify = async <C extends ContractFactory>(
-  factory: C,
+export const retry = async (fn: any, retries = 0) => {
+  try {
+    return await fn();
+  } catch (e: any) {
+    if (++retries < DEPLOY_MAX_RETRIES) {
+      console.log("retrying..., error code:", e?.code);
+      await sleep(DEPLOY_RETRY_INTERVAL);
+      return await retry(fn, retries);
+    } else {
+      throw e;
+    }
+  }
+};
+
+export const withSaveAndVerify = async (
+  {
+    artifact,
+    factory,
+    customData,
+  }: {
+    artifact: Artifact;
+    factory: ContractFactory;
+    customData: any;
+  },
   id: string,
   args: ConstructorArgs,
   verify = true,
   proxy = false,
   libraries?: ParaSpaceLibraryAddresses,
   signatures?: iFunctionSignature[]
-) => {
-  const addressInDb = await getContractAddressInDb(id);
-  if (DEPLOY_INCREMENTAL && isNotFalsyOrZeroAddress(addressInDb)) {
-    console.log("contract address is already in db ", id);
-    return await factory.attach(addressInDb);
-  }
+) =>
+  retry(async () => {
+    const addressInDb = await getContractAddressInDb(id);
+    if (DEPLOY_INCREMENTAL && isNotFalsyOrZeroAddress(addressInDb)) {
+      console.log("contract address is already in db", id);
+      return await factory.attach(addressInDb);
+    }
 
-  const normalizedLibraries = normalizeLibraryAddresses(libraries);
-  const deployArgs = proxy ? args.slice(0, args.length - 2) : args;
-  const [impl, initData] = (
-    proxy ? args.slice(args.length - 2) : []
-  ) as string[];
-  const instance = await factory.deploy(...deployArgs, GLOBAL_OVERRIDES);
-  await waitForTx(instance.deployTransaction);
-  await registerContractInDb(
-    id,
-    instance,
-    deployArgs,
-    normalizedLibraries,
-    signatures
-  );
+    const normalizedLibraries = normalizeLibraryAddresses(libraries);
+    const deployArgs = proxy ? args.slice(0, args.length - 2) : args;
+    const [impl, initData] = (
+      proxy ? args.slice(args.length - 2) : []
+    ) as string[];
 
-  if (verify) {
-    await verifyContract(id, instance, deployArgs, normalizedLibraries);
-  }
-
-  if (proxy) {
-    await waitForTx(
-      await (
-        instance as InitializableImmutableAdminUpgradeabilityProxy
-      ).initialize(impl, initData, GLOBAL_OVERRIDES)
+    if (customData) {
+      GLOBAL_OVERRIDES.customData = customData;
+    }
+    const instance = await factory.deploy(...deployArgs, GLOBAL_OVERRIDES);
+    delete GLOBAL_OVERRIDES.customData;
+    await waitForTx(instance.deployTransaction);
+    await registerContractInDb(
+      id,
+      instance,
+      deployArgs,
+      normalizedLibraries,
+      signatures
     );
-  }
 
-  return instance;
-};
+    if (proxy) {
+      await waitForTx(
+        await (
+          instance as InitializableImmutableAdminUpgradeabilityProxy
+        ).initialize(impl, initData, GLOBAL_OVERRIDES)
+      );
+    }
+
+    if (verify) {
+      await verifyContract(
+        id,
+        instance.address,
+        artifact,
+        deployArgs,
+        normalizedLibraries
+      );
+    }
+
+    return instance;
+  });
 
 export const convertToCurrencyDecimals = async (
   tokenAddress: tEthereumAddress,
@@ -573,7 +732,8 @@ export const createZone = async (
 export const createConduit = async (
   conduitController: ConduitController,
   owner: Signer,
-  conduitKey?: string
+  conduitKey?: string,
+  overrides?: Overrides
 ) => {
   const ownerAddress = await owner.getAddress();
   const assignedConduitKey =
@@ -585,7 +745,7 @@ export const createConduit = async (
 
   await conduitController
     .connect(owner)
-    .createConduit(assignedConduitKey, ownerAddress, GLOBAL_OVERRIDES);
+    .createConduit(assignedConduitKey, ownerAddress, overrides);
 
   return conduitAddress;
 };
@@ -655,7 +815,7 @@ export const getParaSpaceAdmins = async (): Promise<{
 };
 
 export const getFunctionSignatures = (
-  abi: string | ReadonlyArray<Fragment | Fragment | string> | ABI
+  abi: string | ReadonlyArray<Fragment | Fragment | string> | Readonly<ABI>
 ): Array<iFunctionSignature> => {
   const i = new utils.Interface(abi);
   return Object.keys(i.functions).map((f) => {
@@ -827,9 +987,8 @@ export const dryRunEncodedData = async (
 export const dryRunMultipleEncodedData = async (
   target: tEthereumAddress[],
   data: string[],
-  executionTime?: string
+  executionTime: (string | undefined)[]
 ) => {
-  executionTime = executionTime || (await getExecutionTime());
   if (
     DRY_RUN == DryRunExecutor.TimeLock &&
     (await getContractAddressInDb(eContractid.TimeLockExecutor))
@@ -838,7 +997,7 @@ export const dryRunMultipleEncodedData = async (
       const timeLockData = await getTimeLockData(
         target[i],
         data[i],
-        executionTime
+        executionTime[i] || (await getExecutionTime())
       );
       await insertTimeLockDataInDb(timeLockData);
     }
@@ -848,7 +1007,7 @@ export const dryRunMultipleEncodedData = async (
       const {newTarget, newData} = await getTimeLockData(
         target[i],
         data[i],
-        executionTime
+        executionTime[i] || (await getExecutionTime())
       );
       metaTransactions.push({
         to: newTarget,
@@ -905,6 +1064,7 @@ export const decodeInputData = (data: string) => {
     ...NTokenOtherdeed__factory.abi,
     ...TimeLock__factory.abi,
     ...P2PPairStaking__factory.abi,
+    ...NFTFloorOracle__factory.abi,
   ];
 
   const decoder = new InputDataDecoder(ABI);
@@ -924,22 +1084,8 @@ export const proposeSafeTransaction = async (
   withTimeLock = false
 ) => {
   const signer = await getFirstSigner();
-  const ethAdapter = new EthersAdapter({
-    ethers,
-    signerOrProvider: signer,
-  });
   const MULTI_SIG = getParaSpaceConfig().Governance.Multisig;
-
-  const safeSdk: Safe = await Safe.create({
-    ethAdapter,
-    safeAddress: MULTI_SIG,
-  });
-  const safeService = new SafeServiceClient({
-    txServiceUrl: `https://safe-transaction-${
-      FORK || DRE.network.name
-    }.safe.global`,
-    ethAdapter,
-  });
+  const {safeSdk, safeService} = await getSafeSdkAndService(MULTI_SIG);
 
   if (withTimeLock) {
     const {newTarget, newData} = await getTimeLockData(target, data);
@@ -1087,4 +1233,82 @@ export const initAndConfigureReserves = async (
 
   console.log("configuring reserves");
   await configureReservesByHelper(reserves, allTokenAddresses);
+};
+
+export const linkRawLibrary = (
+  bytecode: string,
+  libraryName: string,
+  libraryAddress: string
+): string => {
+  const address = libraryAddress.replace("0x", "");
+  let encodedLibraryName;
+  if (libraryName.startsWith("$") && libraryName.endsWith("$")) {
+    encodedLibraryName = libraryName.slice(1, libraryName.length - 1);
+  } else {
+    encodedLibraryName = solidityKeccak256(["string"], [libraryName]).slice(
+      2,
+      36
+    );
+  }
+  const pattern = new RegExp(`_+\\$${encodedLibraryName}\\$_+`, "g");
+  if (!pattern.exec(bytecode)) {
+    throw new Error(
+      `Can't link '${libraryName}' (${encodedLibraryName}) in \n----\n ${bytecode}\n----\n`
+    );
+  }
+  return bytecode.replace(pattern, address);
+};
+
+export const linkRawLibraries = (
+  bytecode: string,
+  libraries: Libraries
+): string => {
+  for (const libName of Object.keys(libraries)) {
+    const libAddress = libraries[libName];
+    bytecode = linkRawLibrary(bytecode, libName, libAddress);
+  }
+  return bytecode;
+};
+
+export const linkLibraries = (
+  artifact: {
+    bytecode: string;
+    linkReferences?: {
+      [libraryFileName: string]: {
+        [libraryName: string]: Array<{length: number; start: number}>;
+      };
+    };
+  },
+  libraries?: Libraries
+) => {
+  let bytecode = artifact.bytecode;
+
+  if (libraries) {
+    if (artifact.linkReferences) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      for (const [, fileReferences] of Object.entries(
+        artifact.linkReferences
+      )) {
+        for (const [libName, fixups] of Object.entries(fileReferences)) {
+          const addr = libraries[libName];
+          if (addr === undefined) {
+            continue;
+          }
+
+          for (const fixup of fixups) {
+            bytecode =
+              bytecode.substr(0, 2 + fixup.start * 2) +
+              addr.substr(2) +
+              bytecode.substr(2 + (fixup.start + fixup.length) * 2);
+          }
+        }
+      }
+    } else {
+      bytecode = linkRawLibraries(bytecode, libraries);
+    }
+  }
+
+  // TODO return libraries object with path name <filepath.sol>:<name> for names
+
+  return bytecode;
 };

@@ -1,7 +1,7 @@
 /**
  *Submitted for verification at Etherscan.io on 2021-04-22
  */
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 // File: @openzeppelin/contracts/utils/Context.sol
 

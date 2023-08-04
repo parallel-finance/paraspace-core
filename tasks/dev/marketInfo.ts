@@ -3,7 +3,7 @@ import minimatch from "minimatch";
 import {fromBn} from "evm-bn";
 import {log10} from "@prb/math";
 import {BigNumber} from "ethers";
-import {RAY, WAD} from "../../helpers/constants";
+import {RAY, SAPE_ADDRESS, WAD} from "../../helpers/constants";
 
 task("market-info", "Print markets info")
   .addPositionalParam("market", "Market name/symbol pattern", "*")
@@ -14,6 +14,7 @@ task("market-info", "Print markets info")
       getPoolAddressesProvider,
       getUiPoolDataProvider,
       getParaSpaceOracle,
+      getERC20,
     } = await import("../../helpers/contracts-getters");
     const {getProxyImplementation} = await import(
       "../../helpers/contracts-helpers"
@@ -47,6 +48,15 @@ task("market-info", "Print markets info")
       console.log(" reserveFactor:", x.reserveFactor.toString());
       console.log(" supplyCap:", x.supplyCap.toString());
       console.log(" borrowCap:", x.borrowCap.toString());
+      if (x.assetType == 0 && x.underlyingAsset != SAPE_ADDRESS) {
+        console.log(
+          " availableLiquidity:",
+          (
+            await (await getERC20(x.underlyingAsset)).balanceOf(x.xTokenAddress)
+          ).toString()
+        );
+      }
+
       console.log(" xTokenProxy:", x.xTokenAddress);
       console.log(
         " xTokenImpl:",

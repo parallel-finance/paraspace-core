@@ -20,14 +20,14 @@ import {
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 
 export const step_18 = async (verify = false) => {
+  const allERC20Tokens = await getAllERC20Tokens();
   try {
-    if (!isLocalTestnet() && !isPublicTestnet()) {
+    if ((!isLocalTestnet() && !isPublicTestnet()) || !allERC20Tokens.WETH) {
       return;
     }
 
     const addressesProvider = await getPoolAddressesProvider();
 
-    const allERC20Tokens = await getAllERC20Tokens();
     const blurExchangeImpl = await deployBlurExchangeImpl(verify);
 
     const executionDelegate = await deployExecutionDelegate(verify);

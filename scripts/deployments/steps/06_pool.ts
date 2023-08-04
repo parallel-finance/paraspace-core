@@ -159,10 +159,13 @@ export const step_06 = async (verify = false) => {
     );
 
     const poolProxy = await getPoolProxy(poolAddress);
-    const uniswapV3Router = await getUniswapV3SwapRouter();
     const allTokens = await getAllTokens();
 
-    if (allTokens[ERC20TokenContractId.APE]) {
+    if (
+      allTokens[ERC20TokenContractId.APE] &&
+      (await getContractAddressInDb(eContractid.UniswapV3SwapRouter))
+    ) {
+      const uniswapV3Router = await getUniswapV3SwapRouter();
       const cAPE = await getAutoCompoundApe();
       await waitForTx(
         await poolProxy.unlimitedApproveTo(

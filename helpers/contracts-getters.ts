@@ -104,8 +104,15 @@ import {
   ERC721TokenMap,
   impersonateAddress,
   getParaSpaceAdmins,
+  normalizeLibraryAddresses,
+  linkLibraries,
 } from "./contracts-helpers";
-import {DRE, getDb, getParaSpaceConfig} from "./misc-utils";
+import {
+  DRE,
+  getDb,
+  getParaSpaceConfig,
+  safeTransactionServiceUrl,
+} from "./misc-utils";
 import {
   eContractid,
   ERC721TokenContractId,
@@ -117,20 +124,117 @@ import {
   INonfungiblePositionManager__factory,
   ISwapRouter__factory,
 } from "../types";
-import {IMPERSONATE_ADDRESS, RPC_URL} from "./hardhat-constants";
+import {
+  GLOBAL_OVERRIDES,
+  IMPERSONATE_ADDRESS,
+  RPC_URL,
+} from "./hardhat-constants";
+import {accounts} from "../wallets";
+import * as zk from "zksync-web3";
+import {Deployer} from "@matterlabs/hardhat-zksync-deploy";
+import {HttpNetworkConfig} from "hardhat/types";
+import {ContractFactory, ethers} from "ethers";
+import {Libraries} from "hardhat-deploy/dist/types";
+import {ZERO_ADDRESS} from "./constants";
+import EthersAdapter from "@safe-global/safe-ethers-lib";
+import Safe from "@safe-global/safe-core-sdk";
+import SafeServiceClient from "@safe-global/safe-service-client";
 
 export const getFirstSigner = async () => {
-  if (!RPC_URL) {
-    return first(await getEthersSigners())!;
-  }
+  if (DRE.network.zksync) {
+    return new zk.Wallet(
+      last(accounts)!.privateKey,
+      new zk.Provider((DRE.network.config as HttpNetworkConfig).url),
+      new ethers.providers.JsonRpcProvider(
+        (DRE.network.config as HttpNetworkConfig).ethNetwork
+      )
+    );
+  } else {
+    if (!RPC_URL) {
+      return first(await getEthersSigners())!;
+    }
 
-  const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
-  return (
-    await impersonateAddress(IMPERSONATE_ADDRESS || paraSpaceAdminAddress)
-  ).signer;
+    const {paraSpaceAdminAddress} = await getParaSpaceAdmins();
+    return (
+      await impersonateAddress(IMPERSONATE_ADDRESS || paraSpaceAdminAddress)
+    ).signer;
+  }
 };
 
-export const getLastSigner = async () => last(await getEthersSigners())!;
+export const getContractFactory = async (
+  name: string,
+  libraries?: Libraries
+) => {
+  const signer = await getFirstSigner();
+  if (DRE.network.zksync) {
+    const deployer = new Deployer(DRE, signer as zk.Wallet);
+    const artifact = await deployer.loadArtifact(name);
+    const factoryDeps = await deployer.extractFactoryDeps(artifact);
+    return {
+      artifact,
+      factory: new zk.ContractFactory(
+        artifact.abi,
+        artifact.bytecode,
+        signer as zk.Signer
+      ),
+      customData: {
+        factoryDeps,
+        feeToken: zk.utils.ETH_ADDRESS,
+      },
+    };
+  } else {
+    const artifact = await DRE.artifacts.readArtifact(name);
+    if (libraries) {
+      artifact.bytecode = linkLibraries(
+        artifact,
+        normalizeLibraryAddresses(libraries)
+      );
+    }
+    return {
+      artifact,
+      factory: new ContractFactory(artifact.abi, artifact.bytecode, signer),
+      customData: undefined,
+    };
+  }
+};
+
+export const recordByteCodeOnL1 = async (name: string) => {
+  if (!DRE.network.zksync) {
+    return;
+  }
+
+  const signer = await getFirstSigner();
+  const deployer = new Deployer(DRE, signer as zk.Wallet);
+  const artifact = await deployer.loadArtifact(name);
+  await (signer as zk.Wallet).requestExecute({
+    contractAddress: ZERO_ADDRESS,
+    calldata: "0x",
+    l2GasLimit: GLOBAL_OVERRIDES.gasLimit,
+    l2Value: "0",
+    factoryDeps: [artifact.bytecode],
+  });
+};
+
+export const getSafeSdkAndService = async (safeAddress: string) => {
+  const signer = await getFirstSigner();
+  const ethAdapter = new EthersAdapter({
+    ethers,
+    signerOrProvider: signer,
+  });
+
+  const safeSdk: Safe = await Safe.create({
+    ethAdapter,
+    safeAddress,
+  });
+  const safeService = new SafeServiceClient({
+    txServiceUrl: safeTransactionServiceUrl(),
+    ethAdapter,
+  });
+  return {
+    safeSdk,
+    safeService,
+  };
+};
 
 export const getPoolAddressesProvider = async (address?: tEthereumAddress) => {
   return await PoolAddressesProvider__factory.connect(
