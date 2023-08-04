@@ -146,7 +146,7 @@ import fs from "fs";
 import * as zk from "zksync-web3";
 import {hexlify} from "ethers/lib/utils";
 import {Overrides} from "./hardhat-constants";
-import {mapLimit} from "lodash";
+import {mapLimit} from "async";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
