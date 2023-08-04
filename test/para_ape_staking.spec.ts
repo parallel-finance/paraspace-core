@@ -836,9 +836,9 @@ describe("Para Ape Staking Test", () => {
         .transferFrom(user1.address, user2.address, 2)
     );
 
-    // await expect(
-    //   paraApeStaking.connect(user1.signer).withdrawPairNFT(true, [0, 1], [1, 0])
-    // ).to.be.revertedWith(ProtocolErrors.NOT_PAIRED_APE_AND_BAKC);
+    await expect(
+      paraApeStaking.connect(user1.signer).withdrawPairNFT(true, [0, 1], [1, 0])
+    ).to.be.revertedWith(ProtocolErrors.NOT_PAIRED_APE_AND_BAKC);
 
     await expect(
       paraApeStaking

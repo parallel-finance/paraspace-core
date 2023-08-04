@@ -94,32 +94,39 @@ contract PoolApeStaking is
     function borrowAndStakingApeCoin(
         IParaApeStaking.ApeCoinDepositInfo[] calldata apeCoinDepositInfo,
         IParaApeStaking.ApeCoinPairDepositInfo[] calldata pairDepositInfo,
-        address borrowAsset,
+        address asset,
+        uint256 cashAmount,
         uint256 borrowAmount,
         bool openSApeCollateralFlag
     ) external nonReentrant {
         require(
-            borrowAsset == APE_COIN || borrowAsset == APE_COMPOUND,
+            asset == APE_COIN || asset == APE_COMPOUND,
             Errors.INVALID_ASSET_TYPE
         );
         DataTypes.PoolStorage storage ps = poolStorage();
         address msgSender = msg.sender;
 
-        // 1, prepare borrow asset.
+        uint256 balanceBefore = IERC20(asset).balanceOf(address(this));
+        // 1, prepare cash part.
+        if (cashAmount > 0) {
+            IERC20(asset).transferFrom(msg.sender, address(this), cashAmount);
+        }
+
+        // 2, prepare borrow part.
         if (borrowAmount > 0) {
             DataTypes.ReserveData storage borrowAssetReserve = ps._reserves[
-                borrowAsset
+                asset
             ];
             // no time lock needed here
             DataTypes.TimeLockParams memory timeLockParams;
             IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
-                msgSender,
+                address(this),
                 borrowAmount,
                 timeLockParams
             );
         }
 
-        // 2, stake
+        // 3, stake
         uint256 arrayLength = apeCoinDepositInfo.length;
         for (uint256 index = 0; index < arrayLength; index++) {
             IParaApeStaking.ApeCoinDepositInfo
@@ -143,7 +150,7 @@ contract PoolApeStaking is
             );
         }
 
-        // 3, check if need to collateralize sAPE
+        // 4, check if need to collateralize sAPE
         if (openSApeCollateralFlag) {
             DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
                 msgSender
@@ -156,14 +163,14 @@ contract PoolApeStaking is
             );
         }
 
-        // 4, execute borrow
+        // 5, execute borrow
         if (borrowAmount > 0) {
             BorrowLogic.executeBorrow(
                 ps._reserves,
                 ps._reservesList,
                 ps._usersConfig[msgSender],
                 DataTypes.ExecuteBorrowParams({
-                    asset: borrowAsset,
+                    asset: asset,
                     user: msgSender,
                     onBehalfOf: msgSender,
                     amount: borrowAmount,
@@ -176,5 +183,8 @@ contract PoolApeStaking is
                 })
             );
         }
+
+        uint256 balanceAfter = IERC20(asset).balanceOf(address(this));
+        require(balanceAfter == balanceBefore, Errors.INVALID_PARAMETER);
     }
 }

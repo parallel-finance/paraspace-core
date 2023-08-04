@@ -316,7 +316,7 @@ library ApeStakingP2PLogic {
         uint256 balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
         uint256 withdrawAmount = balanceAfter - balanceBefore;
 
-        vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(WAD);
+        vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(WadRayMath.RAY);
         if (withdrawAmount > apeCoinCap) {
             uint256 _compoundFeeShare = _distributeReward(
                 cApeShareBalance,
@@ -376,7 +376,7 @@ library ApeStakingP2PLogic {
         bytes32[] memory orderHashes
     ) public {
         //ignore getShareByPooledApe return 0 case.
-        uint256 cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(WAD);
+        uint256 cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(WadRayMath.RAY);
         uint256 totalReward;
         uint256 totalFeeShare;
         uint256 orderCounts = orderHashes.length;
@@ -477,7 +477,7 @@ library ApeStakingP2PLogic {
         uint256 cApeExchangeRate,
         uint256 rewardAmount
     ) internal returns (uint256) {
-        uint256 rewardShare = rewardAmount.wadDiv(cApeExchangeRate);
+        uint256 rewardShare = rewardAmount.rayDiv(cApeExchangeRate);
         //compound fee
         uint256 _compoundFeeShare = rewardShare.percentMul(vars.compoundFee);
         rewardShare -= _compoundFeeShare;
@@ -626,7 +626,7 @@ library ApeStakingP2PLogic {
         uint256 apeCoinAmount,
         uint256 cApeExchangeRate
     ) internal {
-        uint256 freeSApeBalanceAdded = apeCoinAmount.wadDiv(cApeExchangeRate);
+        uint256 freeSApeBalanceAdded = apeCoinAmount.rayDiv(cApeExchangeRate);
         IParaApeStaking.SApeBalance memory sApeBalanceCache = sApeBalance[user];
         sApeBalanceCache.freeShareBalance += freeSApeBalanceAdded.toUint128();
         sApeBalanceCache.stakedBalance -= apeCoinAmount.toUint128();

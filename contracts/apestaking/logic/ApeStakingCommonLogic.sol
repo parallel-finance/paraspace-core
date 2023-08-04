@@ -24,9 +24,8 @@ library ApeStakingCommonLogic {
 
     event PoolRewardClaimed(
         uint256 poolId,
-        address nft,
         uint256 tokenId,
-        uint256 rewardShare
+        uint256 rewardAmount
     );
 
     /**
@@ -77,6 +76,11 @@ library ApeStakingCommonLogic {
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         uint256 positionCap
     ) internal returns (uint256, uint256) {
+        if (vars.cApeExchangeRate == 0) {
+            vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
+                WadRayMath.RAY
+            );
+        }
         uint256 cApeDebtShare = poolState.cApeDebtShare;
         uint256 debtInterest = calculateCurrentPositionDebtInterest(
             cApeDebtShare,
@@ -170,14 +174,19 @@ library ApeStakingCommonLogic {
         IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
         uint256 poolId,
-        address nft,
         address nToken,
         bool needUpdateStatus,
         uint32[] memory tokenIds
     ) internal returns (address) {
+        if (vars.cApeExchangeRate == 0) {
+            vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
+                WadRayMath.RAY
+            );
+        }
+
         address claimFor;
         uint256 totalRewardShares;
-        uint128 accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
+        vars.accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
         for (uint256 index = 0; index < tokenIds.length; index++) {
             uint32 tokenId = tokenIds[index];
 
@@ -198,23 +207,27 @@ library ApeStakingCommonLogic {
             require(tokenStatus.isInPool, Errors.NFT_NOT_IN_POOL);
 
             //update reward, to save gas we don't claim pending reward in ApeCoinStaking.
-            uint256 rewardShare = accumulatedRewardsPerNft -
+            uint256 rewardShare = vars.accumulatedRewardsPerNft -
                 tokenStatus.rewardsDebt;
             totalRewardShares += rewardShare;
 
             if (needUpdateStatus) {
                 poolState
                     .tokenStatus[tokenId]
-                    .rewardsDebt = accumulatedRewardsPerNft;
+                    .rewardsDebt = vars.accumulatedRewardsPerNft;
             }
 
             //emit event
-            emit PoolRewardClaimed(poolId, nft, tokenId, rewardShare);
+            emit PoolRewardClaimed(
+                poolId,
+                tokenId,
+                rewardShare.rayMul(vars.cApeExchangeRate)
+            );
         }
 
         if (totalRewardShares > 0) {
-            uint256 pendingReward = ICApe(vars.cApe).getPooledApeByShares(
-                totalRewardShares
+            uint256 pendingReward = totalRewardShares.rayMul(
+                vars.cApeExchangeRate
             );
             IERC20(vars.cApe).safeTransfer(claimFor, pendingReward);
         }

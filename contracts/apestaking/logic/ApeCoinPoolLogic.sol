@@ -31,7 +31,6 @@ library ApeCoinPoolLogic {
 
     event ApeCoinPoolDeposited(bool isBAYC, uint256 tokenId);
     event ApeCoinPoolCompounded(bool isBAYC, uint256 tokenId);
-    event ApeCoinPoolClaimed(bool isBAYC, uint256 tokenId, uint256 rewardShare);
     event ApeCoinPoolWithdrew(bool isBAYC, uint256 tokenId);
     event ApeCoinPairPoolDeposited(
         bool isBAYC,
@@ -77,16 +76,15 @@ library ApeCoinPoolLogic {
         uint32[] calldata tokenIds
     ) external returns (address) {
         ApeStakingCommonLogic.validateTokenIdArray(tokenIds);
-        (address nft, address nToken) = ApeStakingCommonLogic.getNftFromPoolId(
+        (, address nToken) = ApeStakingCommonLogic.getNftFromPoolId(
             vars,
             poolId
         );
         return
             ApeStakingCommonLogic.claimPendingReward(
                 poolState,
-                vars,
+                    vars,
                 poolId,
-                nft,
                 nToken,
                 true,
                 tokenIds
@@ -291,9 +289,8 @@ library ApeCoinPoolLogic {
 
         address nApeOwner = ApeStakingCommonLogic.claimPendingReward(
             poolState,
-            vars,
+                vars,
             poolId,
-            vars.apeToken,
             vars.nApe,
             false,
             withdrawInfo.tokenIds
@@ -548,9 +545,8 @@ library ApeCoinPoolLogic {
 
         address nApeOwner = ApeStakingCommonLogic.claimPendingReward(
             poolState,
-            vars,
+                vars,
             poolId,
-            vars.apeToken,
             vars.nApe,
             false,
             withdrawInfo.apeTokenIds
@@ -771,7 +767,11 @@ library ApeCoinPoolLogic {
         require(cashAmount <= totalApeCoinNeeded, Errors.INVALID_CASH_AMOUNT);
 
         if (cashAmount != 0) {
-            IERC20(cashToken).safeTransferFrom(user, address(this), cashAmount);
+            IERC20(cashToken).safeTransferFrom(
+                msg.sender,
+                address(this),
+                cashAmount
+            );
         }
 
         uint256 cApeWithdrawAmount = (cashToken == vars.apeCoin)
@@ -818,9 +818,13 @@ library ApeCoinPoolLogic {
             : cashAmount;
         IParaApeStaking.SApeBalance memory sApeBalanceCache = sApeBalance[user];
         if (cashAmount < totalApeCoinWithdrew) {
+            if (vars.cApeExchangeRate == 0) {
+                vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
+                    WadRayMath.RAY
+                );
+            }
             uint256 freeSApeBalanceAdded = totalApeCoinWithdrew - cashAmount;
-            uint256 freeShareBalanceAdded = ICApe(vars.cApe)
-                .getShareByPooledApe(freeSApeBalanceAdded);
+            uint256 freeShareBalanceAdded = freeSApeBalanceAdded.rayDiv(vars.cApeExchangeRate);
             sApeBalanceCache.freeShareBalance += freeShareBalanceAdded
                 .toUint128();
             cApeDepositAmount += freeSApeBalanceAdded;
@@ -848,9 +852,14 @@ library ApeCoinPoolLogic {
         uint256 rewardAmount,
         uint24 totalPosition
     ) internal {
+        if (vars.cApeExchangeRate == 0) {
+            vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
+                WadRayMath.RAY
+            );
+        }
         IAutoCompoundApe(vars.cApe).deposit(address(this), rewardAmount);
 
-        uint256 cApeShare = ICApe(vars.cApe).getShareByPooledApe(rewardAmount);
+        uint256 cApeShare = rewardAmount.rayDiv(vars.cApeExchangeRate);
         uint256 compoundFee = cApeShare;
         if (totalPosition != 0) {
             compoundFee = cApeShare.percentMul(vars.compoundFee);

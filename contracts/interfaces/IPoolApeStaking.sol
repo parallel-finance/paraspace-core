@@ -26,14 +26,16 @@ interface IPoolApeStaking {
      * @notice Borrow ApeCoin/cApe from lending pool and stake ape in ParaApeStaking apecoin pool
      * @param apeCoinDepositInfo Detail deposit info of the apecoin pool
      * @param pairDepositInfo Detail deposit info of the apecoin pair pool
-     * @param borrowAsset address of borrowing asset, can be ApeCoin or cApe
+     * @param asset address of deposit asset, can be ApeCoin or cApe
+     * @param cashAmount deposit amount from user wallet
      * @param borrowAmount Borrow amount of ApeCoin/cApe from lending pool
      * @dev Need check User health factor > 1.
      */
     function borrowAndStakingApeCoin(
         IParaApeStaking.ApeCoinDepositInfo[] calldata apeCoinDepositInfo,
         IParaApeStaking.ApeCoinPairDepositInfo[] calldata pairDepositInfo,
-        address borrowAsset,
+        address asset,
+        uint256 cashAmount,
         uint256 borrowAmount,
         bool openSApeCollateralFlag
     ) external;

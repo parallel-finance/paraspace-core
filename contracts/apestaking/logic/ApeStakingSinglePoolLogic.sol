@@ -279,9 +279,6 @@ library ApeStakingSinglePoolLogic {
         );
 
         //repay and compound
-        vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
-            WadRayMath.RAY
-        );
         vars.latestBorrowIndex = IPool(vars.pool)
             .getReserveNormalizedVariableDebt(vars.cApe);
         (vars.totalRepay, vars.totalCompoundFee) = ApeStakingCommonLogic
@@ -363,9 +360,6 @@ library ApeStakingSinglePoolLogic {
         );
 
         //repay and compound
-        vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
-            WadRayMath.RAY
-        );
         vars.latestBorrowIndex = IPool(vars.pool)
             .getReserveNormalizedVariableDebt(vars.cApe);
         (
@@ -408,9 +402,8 @@ library ApeStakingSinglePoolLogic {
         IParaApeStaking.PoolState storage poolState = poolStates[poolId];
         address nApeOwner = ApeStakingCommonLogic.claimPendingReward(
             poolState,
-            vars,
+                vars,
             poolId,
-            nft,
             nToken,
             false,
             tokenIds
@@ -471,12 +464,11 @@ library ApeStakingSinglePoolLogic {
 
             ApeStakingCommonLogic.claimPendingReward(
                 poolState,
-                vars,
+                    vars,
                 poolId,
-                nft,
                 nToken,
                 true,
-                tokenIds
+                singlePoolTokenIds
             );
         }
     }
@@ -549,9 +541,6 @@ library ApeStakingSinglePoolLogic {
         }
 
         if (singleStakingCount > 0 || pairStakingCount > 0) {
-            vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
-                WadRayMath.RAY
-            );
             vars.latestBorrowIndex = IPool(vars.pool)
                 .getReserveNormalizedVariableDebt(vars.cApe);
         }
@@ -684,9 +673,6 @@ library ApeStakingSinglePoolLogic {
                 mstore(maycPair, maycPairCount)
             }
 
-            vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
-                WadRayMath.RAY
-            );
             vars.latestBorrowIndex = IPool(vars.pool)
                 .getReserveNormalizedVariableDebt(vars.cApe);
 
@@ -723,6 +709,12 @@ library ApeStakingSinglePoolLogic {
         mapping(uint256 => IParaApeStaking.PoolState) storage poolStates,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars
     ) internal returns (uint256, uint256) {
+        if (vars.cApeExchangeRate == 0) {
+            vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
+                WadRayMath.RAY
+            );
+        }
+
         IParaApeStaking.PoolState storage bakcPoolState = poolStates[
             ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID
         ];

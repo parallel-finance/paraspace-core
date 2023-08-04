@@ -136,7 +136,25 @@ describe("Para Ape staking ape coin pool test", () => {
       apeCoinStaking,
       pool,
       protocolDataProvider,
+      poolAdmin,
     } = await loadFixture(fixture);
+
+    await waitForTx(
+      await pool
+        .connect(poolAdmin.signer)
+        .unlimitedApproveTo(ape.address, paraApeStaking.address)
+    );
+    await waitForTx(
+      await pool
+        .connect(poolAdmin.signer)
+        .unlimitedApproveTo(cApe.address, paraApeStaking.address)
+    );
+    await waitForTx(
+      await ape.connect(user1.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await cApe.connect(user2.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
 
     //prepare user3 asset
     await mintAndValidate(ape, "20000000", user4);
@@ -217,11 +235,16 @@ describe("Para Ape staking ape coin pool test", () => {
           },
         ],
         ape.address,
+        parseEther("100000"),
         parseEther("150000"),
         true
       )
     ).to.be.revertedWith(ProtocolErrors.COLLATERAL_CANNOT_COVER_NEW_BORROW);
 
+    await mintAndValidate(ape, "20000000", user2);
+    await waitForTx(
+      await ape.connect(user2.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
     await expect(
       pool.connect(user2.signer).borrowAndStakingApeCoin(
         [
@@ -244,6 +267,7 @@ describe("Para Ape staking ape coin pool test", () => {
           },
         ],
         ape.address,
+        parseEther("100000"),
         parseEther("150000"),
         true
       )
@@ -276,6 +300,7 @@ describe("Para Ape staking ape coin pool test", () => {
           },
         ],
         ape.address,
+        parseEther("100000"),
         parseEther("150000"),
         true
       )
@@ -304,6 +329,7 @@ describe("Para Ape staking ape coin pool test", () => {
           },
         ],
         cApe.address,
+        parseEther("0"),
         parseEther("150000"),
         true
       )

@@ -224,11 +224,10 @@ library ApeStakingPairPoolLogic {
 
         vars.nApeOwner = ApeStakingCommonLogic.claimPendingReward(
             poolState,
-            vars,
+                vars,
             isBAYC
                 ? ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID
                 : ApeStakingCommonLogic.MAYC_BAKC_PAIR_POOL_ID,
-            vars.apeToken,
             vars.nApe,
             false,
             apeTokenIds
@@ -254,6 +253,12 @@ library ApeStakingPairPoolLogic {
                     require(msg.sender == nBakcOwner, Errors.NOT_THE_OWNER);
                 }
             }
+
+            // check pair status
+            require(
+                poolState.tokenStatus[apeTokenId].bakcTokenId == bakcTokenId,
+                Errors.NOT_PAIRED_APE_AND_BAKC
+            );
 
             // update pair status
             delete poolState.tokenStatus[apeTokenId];
@@ -313,9 +318,6 @@ library ApeStakingPairPoolLogic {
                 vars.totalClaimedApe
             );
 
-            vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
-                WadRayMath.RAY
-            );
             vars.latestBorrowIndex = IPool(vars.pool)
                 .getReserveNormalizedVariableDebt(vars.cApe);
             (vars.totalRepay, vars.totalCompoundFee) = ApeStakingCommonLogic
@@ -421,9 +423,6 @@ library ApeStakingPairPoolLogic {
 
         //repay and compound
         vars.positionCap = isBAYC ? vars.baycMatchedCap : vars.maycMatchedCap;
-        vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
-            WadRayMath.RAY
-        );
         vars.latestBorrowIndex = IPool(vars.pool)
             .getReserveNormalizedVariableDebt(vars.cApe);
         (vars.totalRepay, vars.totalCompoundFee) = ApeStakingCommonLogic
