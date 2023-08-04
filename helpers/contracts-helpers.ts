@@ -24,6 +24,8 @@ import {
   getParaSpaceConfig,
   isFork,
   sleep,
+  DbEntry,
+  shouldVerifyContract,
 } from "./misc-utils";
 import {
   iFunctionSignature,
@@ -123,6 +125,7 @@ import {
   ETHERSCAN_APIS,
   ETHERSCAN_VERIFICATION_PROVIDER,
   DEPLOY_RETRY_INTERVAL,
+  eContractidToContractName,
 } from "./hardhat-constants";
 import {chunk, first, pick} from "lodash";
 import InputDataDecoder from "ethereum-input-data-decoder";
@@ -143,6 +146,7 @@ import fs from "fs";
 import * as zk from "zksync-web3";
 import {hexlify} from "ethers/lib/utils";
 import {Overrides} from "./hardhat-constants";
+import {mapLimit} from "lodash";
 
 export type ERC20TokenMap = {[symbol: string]: ERC20};
 export type ERC721TokenMap = {[symbol: string]: ERC721};
@@ -294,6 +298,34 @@ export const getEthersSignersAddresses = async (): Promise<
   await Promise.all(
     (await getEthersSigners()).map((signer) => signer.getAddress())
   );
+
+export const verifyContracts = async (limit = 1) => {
+  const db = getDb();
+  const network = DRE.network.name;
+  const entries = Object.entries<DbEntry>(db.getState()).filter(
+    ([key, value]) => {
+      // constructorArgs must be Array to make the contract verifiable
+      return (
+        shouldVerifyContract(key) &&
+        !!value[network] &&
+        Array.isArray(value[network].constructorArgs)
+      );
+    }
+  );
+
+  await mapLimit(entries, limit, async ([key, value]) => {
+    const {address, constructorArgs = [], libraries} = value[network];
+    let artifact: Artifact | undefined = undefined;
+    try {
+      artifact = await DRE.artifacts.readArtifact(
+        eContractidToContractName[key] || key
+      );
+    } catch (e) {
+      //
+    }
+    await verifyContract(key, address, artifact, constructorArgs, libraries);
+  });
+};
 
 export const verifyContract = async (
   id: string,

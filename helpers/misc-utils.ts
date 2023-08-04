@@ -1,8 +1,7 @@
-import mapLimit from "async/mapLimit";
 import {isZeroAddress} from "ethereumjs-util";
 import {BigNumber, ContractTransaction, Wallet} from "ethers";
 import {isAddress} from "ethers/lib/utils";
-import {Artifact, HardhatRuntimeEnvironment} from "hardhat/types";
+import {HardhatRuntimeEnvironment} from "hardhat/types";
 import low from "lowdb";
 import {getAdapter} from "./db-adapter";
 import {eEthereumNetwork, IParaSpaceConfiguration} from "../helpers/types";
@@ -29,12 +28,10 @@ import {
   MOONBASE_CHAINID,
   LINEA_CHAINID,
   LINEA_GOERLI_CHAINID,
-  eContractidToContractName,
 } from "./hardhat-constants";
 import {ConstructorArgs, eContractid, tEthereumAddress} from "./types";
 import dotenv from "dotenv";
 import minimatch from "minimatch";
-import {verifyContract} from "./contracts-helpers";
 
 dotenv.config();
 
@@ -275,34 +272,6 @@ export const printContracts = () => {
 
   console.log("N# Contracts:", entries.length);
   console.log(contractsPrint.join("\n"));
-};
-
-export const verifyContracts = async (limit = 1) => {
-  const db = getDb();
-  const network = DRE.network.name;
-  const entries = Object.entries<DbEntry>(db.getState()).filter(
-    ([key, value]) => {
-      // constructorArgs must be Array to make the contract verifiable
-      return (
-        shouldVerifyContract(key) &&
-        !!value[network] &&
-        Array.isArray(value[network].constructorArgs)
-      );
-    }
-  );
-
-  await mapLimit(entries, limit, async ([key, value]) => {
-    const {address, constructorArgs = [], libraries} = value[network];
-    let artifact: Artifact | undefined = undefined;
-    try {
-      artifact = await DRE.artifacts.readArtifact(
-        eContractidToContractName[key] || key
-      );
-    } catch (e) {
-      //
-    }
-    await verifyContract(key, address, artifact, constructorArgs, libraries);
-  });
 };
 
 export const notFalsyOrZeroAddress = (
