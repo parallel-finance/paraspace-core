@@ -149,7 +149,7 @@ library Errors {
     string public constant ORDER_NOT_STARTED = "182"; //order not started
     string public constant ORDER_EXPIRED = "183"; //order expired
     string public constant INVALID_TOKEN = "184"; //invalid token
-    string public constant ORDER_ALREADY_MATCHED = "185"; //order matched
+    string public constant INVALID_ORDER_STATUS = "185"; //invalid order status
     string public constant INVALID_STAKING_TYPE = "186"; //invalid stake type
     string public constant ORDER_TYPE_MATCH_FAILED = "187"; //orders type match failed
     string public constant ORDER_SHARE_MATCH_FAILED = "188"; //orders share match failed

@@ -434,7 +434,7 @@ export enum ProtocolErrors {
   ORDER_NOT_STARTED = "182", //order not started
   ORDER_EXPIRED = "183", //order expired
   INVALID_TOKEN = "184", //invalid token
-  ORDER_ALREADY_MATCHED = "185", //order matched
+  INVALID_ORDER_STATUS = "185", //invalid order status
   INVALID_STAKING_TYPE = "186", //invalid stake type
   ORDER_TYPE_MATCH_FAILED = "187", //orders type match failed
   ORDER_SHARE_MATCH_FAILED = "188", //orders share match failed

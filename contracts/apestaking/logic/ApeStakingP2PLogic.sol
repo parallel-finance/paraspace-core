@@ -79,8 +79,12 @@ library ApeStakingP2PLogic {
 
         //2 check if orders can match
         require(
-            apeOrder.stakingType == IApeStakingP2P.StakingType.MAYCStaking ||
-                apeOrder.stakingType == IApeStakingP2P.StakingType.BAYCStaking,
+            (apeOrder.token == vars.mayc &&
+                apeOrder.stakingType ==
+                IApeStakingP2P.StakingType.MAYCStaking) ||
+                (apeOrder.token == vars.bayc &&
+                    apeOrder.stakingType ==
+                    IApeStakingP2P.StakingType.BAYCStaking),
             Errors.INVALID_STAKING_TYPE
         );
         require(
@@ -523,9 +527,9 @@ library ApeStakingP2PLogic {
 
         orderHash = getListingOrderHash(listingOrder);
         require(
-            listingOrderStatus[orderHash] !=
-                IApeStakingP2P.ListingOrderStatus.Cancelled,
-            Errors.ORDER_ALREADY_CANCELLED
+            listingOrderStatus[orderHash] ==
+                IApeStakingP2P.ListingOrderStatus.Pending,
+            Errors.INVALID_ORDER_STATUS
         );
 
         if (msg.sender != listingOrder.offerer) {
@@ -576,11 +580,6 @@ library ApeStakingP2PLogic {
         require(
             apeCoinOrder.token == DataTypes.SApeAddress,
             Errors.INVALID_TOKEN
-        );
-        require(
-            listingOrderStatus[orderHash] !=
-                IApeStakingP2P.ListingOrderStatus.Matched,
-            Errors.ORDER_ALREADY_MATCHED
         );
     }
 

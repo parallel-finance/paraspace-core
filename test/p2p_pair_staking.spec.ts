@@ -667,7 +667,7 @@ describe("P2P Pair Staking Test", () => {
       paraApeStaking
         .connect(user1.signer)
         .matchPairStakingList(user1SignedOrder, user2SignedOrder)
-    ).to.be.revertedWith(ProtocolErrors.ORDER_ALREADY_CANCELLED);
+    ).to.be.revertedWith(ProtocolErrors.INVALID_ORDER_STATUS);
   });
 
   it("match failed when order was canceled 1", async () => {
@@ -724,7 +724,7 @@ describe("P2P Pair Staking Test", () => {
           user2SignedOrder,
           user3SignedOrder
         )
-    ).to.be.revertedWith(ProtocolErrors.ORDER_ALREADY_CANCELLED);
+    ).to.be.revertedWith(ProtocolErrors.INVALID_ORDER_STATUS);
   });
 
   it("match failed when orders type match failed 0", async () => {
@@ -1145,7 +1145,7 @@ describe("P2P Pair Staking Test", () => {
       paraApeStaking
         .connect(user1.signer)
         .matchPairStakingList(user1SignedOrder1, user2SignedOrder)
-    ).to.be.revertedWith(ProtocolErrors.ORDER_ALREADY_MATCHED);
+    ).to.be.revertedWith(ProtocolErrors.INVALID_ORDER_STATUS);
 
     await waitForTx(
       await paraApeStaking.connect(user1.signer).breakUpMatchedOrder(orderHash0)
@@ -1361,5 +1361,47 @@ describe("P2P Pair Staking Test", () => {
     expect(
       await paraApeStaking.freeSApeBalance(liquidator.address)
     ).to.be.closeTo(apeAmount, parseEther("1"));
+  });
+
+  it("test invalid order", async () => {
+    const {
+      users: [user1, user2],
+      ape,
+      bayc,
+      mayc,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "1", user1, true);
+    await supplyAndValidate(mayc, "1", user1, true);
+
+    const apeAmount = await paraApeStaking.getApeCoinStakingCap(0);
+    await waitForTx(
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositFreeSApe(ape.address, apeAmount)
+    );
+
+    const user1SignedOrder = await getSignedListingOrder(
+      paraApeStaking,
+      0,
+      mayc.address,
+      0,
+      2000,
+      user1
+    );
+    const user2SignedOrder = await getSignedListingOrder(
+      paraApeStaking,
+      0,
+      ONE_ADDRESS,
+      0,
+      8000,
+      user2
+    );
+
+    await expect(
+      paraApeStaking
+        .connect(user1.signer)
+        .matchPairStakingList(user1SignedOrder, user2SignedOrder)
+    ).to.be.revertedWith(ProtocolErrors.INVALID_STAKING_TYPE);
   });
 });

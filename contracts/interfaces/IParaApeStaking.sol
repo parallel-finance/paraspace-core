@@ -90,7 +90,7 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P, IApeCoinPool {
     /**
      * @notice Query sApe reserve Id used by ParaApeStaking
      */
-    function sApeReserveId() external view returns(uint16);
+    function sApeReserveId() external view returns (uint16);
 
     /**
      * @notice Query token status for the specified pool and nft
