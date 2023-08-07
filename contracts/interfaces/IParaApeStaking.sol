@@ -88,6 +88,11 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P, IApeCoinPool {
     event CompoundFeeUpdated(uint64 oldValue, uint64 newValue);
 
     /**
+     * @notice Query sApe reserve Id used by ParaApeStaking
+     */
+    function sApeReserveId() external view returns(uint16);
+
+    /**
      * @notice Query token status for the specified pool and nft
      * @param poolId Identify pool
      * @param tokenId The tokenId of the nft

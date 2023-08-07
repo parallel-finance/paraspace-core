@@ -316,7 +316,9 @@ library ApeStakingP2PLogic {
         uint256 balanceAfter = IERC20(vars.apeCoin).balanceOf(address(this));
         uint256 withdrawAmount = balanceAfter - balanceBefore;
 
-        vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(WadRayMath.RAY);
+        vars.cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
+            WadRayMath.RAY
+        );
         if (withdrawAmount > apeCoinCap) {
             uint256 _compoundFeeShare = _distributeReward(
                 cApeShareBalance,
@@ -376,7 +378,9 @@ library ApeStakingP2PLogic {
         bytes32[] memory orderHashes
     ) public {
         //ignore getShareByPooledApe return 0 case.
-        uint256 cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(WadRayMath.RAY);
+        uint256 cApeExchangeRate = ICApe(vars.cApe).getPooledApeByShares(
+            WadRayMath.RAY
+        );
         uint256 totalReward;
         uint256 totalFeeShare;
         uint256 orderCounts = orderHashes.length;

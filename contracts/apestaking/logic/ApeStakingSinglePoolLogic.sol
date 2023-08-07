@@ -402,7 +402,7 @@ library ApeStakingSinglePoolLogic {
         IParaApeStaking.PoolState storage poolState = poolStates[poolId];
         address nApeOwner = ApeStakingCommonLogic.claimPendingReward(
             poolState,
-                vars,
+            vars,
             poolId,
             nToken,
             false,
@@ -464,7 +464,7 @@ library ApeStakingSinglePoolLogic {
 
             ApeStakingCommonLogic.claimPendingReward(
                 poolState,
-                    vars,
+                vars,
                 poolId,
                 nToken,
                 true,

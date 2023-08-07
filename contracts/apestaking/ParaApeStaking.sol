@@ -47,7 +47,7 @@ contract ParaApeStaking is
     uint256 private immutable maycMatchedCap;
     uint256 private immutable bakcMatchedCap;
     IACLManager private immutable aclManager;
-    uint16 private immutable sApeReserveId;
+    uint16 public immutable sApeReserveId;
     address private immutable psApe;
 
     //record all pool states

@@ -212,9 +212,8 @@ library ApeStakingCommonLogic {
             totalRewardShares += rewardShare;
 
             if (needUpdateStatus) {
-                poolState
-                    .tokenStatus[tokenId]
-                    .rewardsDebt = vars.accumulatedRewardsPerNft;
+                poolState.tokenStatus[tokenId].rewardsDebt = vars
+                    .accumulatedRewardsPerNft;
             }
 
             //emit event

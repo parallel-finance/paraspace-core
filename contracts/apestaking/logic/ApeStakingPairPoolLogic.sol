@@ -224,7 +224,7 @@ library ApeStakingPairPoolLogic {
 
         vars.nApeOwner = ApeStakingCommonLogic.claimPendingReward(
             poolState,
-                vars,
+            vars,
             isBAYC
                 ? ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID
                 : ApeStakingCommonLogic.MAYC_BAKC_PAIR_POOL_ID,

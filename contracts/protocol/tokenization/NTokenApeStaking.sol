@@ -6,8 +6,10 @@ import {IPool} from "../../interfaces/IPool.sol";
 import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {UserConfiguration} from "../libraries/configuration/UserConfiguration.sol";
 import "../../interfaces/IParaApeStaking.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import "../libraries/helpers/Errors.sol";
 
 /**
  * @title ApeCoinStaking NToken
@@ -16,6 +18,13 @@ import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
  */
 abstract contract NTokenApeStaking is NToken {
     using SafeCast for uint256;
+    using UserConfiguration for DataTypes.UserConfigurationMap;
+
+    /**
+     * @dev Minimum health factor to consider a user position healthy
+     * A value of 1e18 results in 1
+     */
+    uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
 
     IParaApeStaking immutable paraApeStaking;
 
@@ -75,5 +84,33 @@ abstract contract NTokenApeStaking is NToken {
             paraApeStaking.nApeOwnerChangeCallback(isBayc(), tokenIds);
         }
         super._transfer(from, to, tokenId, validate);
+    }
+
+    function unstakeApeStakingPosition(address user, uint32[] calldata tokenIds)
+        external
+        nonReentrant
+    {
+        uint256 arrayLength = tokenIds.length;
+        for (uint256 index = 0; index < arrayLength; index++) {
+            uint32 tokenId = tokenIds[index];
+            require(user == ownerOf(tokenId), Errors.NOT_THE_OWNER);
+        }
+
+        DataTypes.UserConfigurationMap memory userConfig = POOL
+            .getUserConfiguration(user);
+        uint16 sApeReserveId = paraApeStaking.sApeReserveId();
+        bool usageAsCollateralEnabled = userConfig.isUsingAsCollateral(
+            sApeReserveId
+        );
+        if (usageAsCollateralEnabled && userConfig.isBorrowingAny()) {
+            (, , , , , uint256 healthFactor, ) = POOL.getUserAccountData(user);
+            //need to check user health factor
+            require(
+                healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+                Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+            );
+        }
+
+        paraApeStaking.nApeOwnerChangeCallback(isBayc(), tokenIds);
     }
 }

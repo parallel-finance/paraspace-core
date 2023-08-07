@@ -83,7 +83,7 @@ library ApeCoinPoolLogic {
         return
             ApeStakingCommonLogic.claimPendingReward(
                 poolState,
-                    vars,
+                vars,
                 poolId,
                 nToken,
                 true,
@@ -289,7 +289,7 @@ library ApeCoinPoolLogic {
 
         address nApeOwner = ApeStakingCommonLogic.claimPendingReward(
             poolState,
-                vars,
+            vars,
             poolId,
             vars.nApe,
             false,
@@ -545,7 +545,7 @@ library ApeCoinPoolLogic {
 
         address nApeOwner = ApeStakingCommonLogic.claimPendingReward(
             poolState,
-                vars,
+            vars,
             poolId,
             vars.nApe,
             false,
@@ -824,7 +824,9 @@ library ApeCoinPoolLogic {
                 );
             }
             uint256 freeSApeBalanceAdded = totalApeCoinWithdrew - cashAmount;
-            uint256 freeShareBalanceAdded = freeSApeBalanceAdded.rayDiv(vars.cApeExchangeRate);
+            uint256 freeShareBalanceAdded = freeSApeBalanceAdded.rayDiv(
+                vars.cApeExchangeRate
+            );
             sApeBalanceCache.freeShareBalance += freeShareBalanceAdded
                 .toUint128();
             cApeDepositAmount += freeSApeBalanceAdded;
