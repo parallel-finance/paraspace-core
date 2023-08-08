@@ -62,6 +62,7 @@ library PositionMoverLogic {
 
     event PositionMovedFromParaSpaceV1(
         address indexed user,
+        address indexed to,
         address[] cTokens,
         DataTypes.AssetType[] cTypes,
         uint256[][] cAmountsOrTokenIds,
@@ -312,14 +313,14 @@ library PositionMoverLogic {
 
                 // 3.4 mint new pToken and do normal supply check etc
                 Helpers.setAssetUsedAsCollateral(
-                    ps._usersConfig[params.user],
+                    ps._usersConfig[params.to],
                     ps._reserves,
                     vars.cTokenV2,
-                    params.user
+                    params.to
                 );
                 IPToken(reserveV2Cache.xTokenAddress).mint(
                     params.user,
-                    params.user,
+                    params.to,
                     params.cAmountsOrTokenIds[i][0],
                     reserveV2Cache.nextLiquidityIndex
                 );
@@ -355,12 +356,12 @@ library PositionMoverLogic {
                 );
                 // 3.7 mint new nToken
                 Helpers.setAssetUsedAsCollateral(
-                    ps._usersConfig[params.user],
+                    ps._usersConfig[params.to],
                     ps._reserves,
                     vars.cTokenV2,
-                    params.user
+                    params.to
                 );
-                INToken(vars.xTokenAddressV2).mint(params.user, supplyParams);
+                INToken(vars.xTokenAddressV2).mint(params.to, supplyParams);
             }
         }
 
@@ -370,6 +371,7 @@ library PositionMoverLogic {
         // 5. emit event
         emit PositionMovedFromParaSpaceV1(
             params.user,
+            params.to,
             params.cTokens,
             params.cTypes,
             params.cAmountsOrTokenIds,
@@ -386,11 +388,11 @@ library PositionMoverLogic {
             BorrowLogic.executeBorrow(
                 ps._reserves,
                 ps._reservesList,
-                ps._usersConfig[params.user],
+                ps._usersConfig[params.to],
                 DataTypes.ExecuteBorrowParams({
                     asset: params.dTokens[index],
-                    user: params.user,
-                    onBehalfOf: params.user,
+                    user: params.to,
+                    onBehalfOf: params.to,
                     amount: params.dAmounts[index],
                     referralCode: 0,
                     releaseUnderlying: false,

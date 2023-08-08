@@ -106,6 +106,7 @@ contract PoolPositionMover is
                 cAmountsOrTokenIds: moveInfo.cAmountsOrTokenIds,
                 dTokens: moveInfo.dTokens,
                 dAmounts: moveInfo.dAmounts,
+                to: moveInfo.to,
                 reservesCount: ps._reservesCount,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
                 priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()

@@ -443,6 +443,7 @@ library DataTypes {
         uint256[][] cAmountsOrTokenIds;
         address[] dTokens;
         uint256[] dAmounts;
+        address to;
     }
 
     struct ParaSpacePositionMoveParams {
@@ -452,6 +453,7 @@ library DataTypes {
         uint256[][] cAmountsOrTokenIds;
         address[] dTokens;
         uint256[] dAmounts;
+        address to;
         address priceOracle;
         address priceOracleSentinel;
         uint256 reservesCount;
