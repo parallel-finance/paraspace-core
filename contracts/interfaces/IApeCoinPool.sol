@@ -54,6 +54,25 @@ interface IApeCoinPool {
         uint32[] bakcTokenIds;
     }
 
+    event ApeCoinPoolDeposited(bool isBAYC, uint256 tokenId);
+    event ApeCoinPoolCompounded(bool isBAYC, uint256 tokenId);
+    event ApeCoinPoolWithdrew(bool isBAYC, uint256 tokenId);
+    event ApeCoinPairPoolDeposited(
+        bool isBAYC,
+        uint256 apeTokenId,
+        uint256 bakcTokenId
+    );
+    event ApeCoinPairPoolCompounded(
+        bool isBAYC,
+        uint256 apeTokenId,
+        uint256 bakcTokenId
+    );
+    event ApeCoinPairPoolWithdrew(
+        bool isBAYC,
+        uint256 apeTokenId,
+        uint256 bakcTokenId
+    );
+
     /**
      * @notice deposit Ape and ape coin position to Ape coin Pool.
      * @param depositInfo Detail deposit info

@@ -88,6 +88,18 @@ interface IParaApeStaking is IApeStakingVault, IApeStakingP2P, IApeCoinPool {
     event CompoundFeeUpdated(uint64 oldValue, uint64 newValue);
 
     /**
+     * @dev Emitted during claimPendingReward()
+     * @param poolId identify which pool user claimed from
+     * @param tokenId identify position token id
+     * @param rewardAmount Reward amount claimed
+     **/
+    event PoolRewardClaimed(
+        uint256 poolId,
+        uint256 tokenId,
+        uint256 rewardAmount
+    );
+
+    /**
      * @notice Query sApe reserve Id used by ParaApeStaking
      */
     function sApeReserveId() external view returns (uint16);

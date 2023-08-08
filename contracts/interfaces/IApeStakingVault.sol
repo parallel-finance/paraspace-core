@@ -16,6 +16,25 @@ interface IApeStakingVault {
      **/
     event ApePairStakingRewardRatioUpdated(uint256 oldRatio, uint256 newRatio);
 
+    event PairNFTDeposited(
+        bool isBAYC,
+        uint256 apeTokenId,
+        uint256 bakcTokenId
+    );
+    event PairNFTStaked(bool isBAYC, uint256 apeTokenId, uint256 bakcTokenId);
+    event PairNFTWithdrew(bool isBAYC, uint256 apeTokenId, uint256 bakcTokenId);
+    event PairNFTCompounded(
+        bool isBAYC,
+        uint256 apeTokenId,
+        uint256 bakcTokenId
+    );
+    event NFTDeposited(address nft, uint256 tokenId);
+    event ApeStaked(bool isBAYC, uint256 tokenId);
+    event BakcStaked(bool isBAYC, uint256 apeTokenId, uint256 bakcTokenId);
+    event ApeCompounded(bool isBAYC, uint256 tokenId);
+    event BakcCompounded(bool isBAYC, uint256 apeTokenId, uint256 bakcTokenId);
+    event NFTWithdrawn(address nft, uint256 tokenId);
+
     /**
      * @notice deposit Ape and BAKC pair into the pool
      * @param isBAYC if Ape is BAYC
