@@ -1,402 +1,169 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.10;
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity 0.8.21;
 
-import "./interfaces/IERC6551Account.sol";
-import "./lib/ERC6551AccountLib.sol";
+/* solhint-disable avoid-low-level-calls */
+/* solhint-disable no-inline-assembly */
+/* solhint-disable reason-string */
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/utils/introspection/IERC165.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-import "@openzeppelin/contracts/interfaces/IERC1271.sol";
-import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 
-import {BaseAccount as BaseERC4337Account, IEntryPoint, UserOperation} from "./base-account-abstraction/core/BaseAccount.sol";
-
-import {ParaAccount} from "./ParaAccount.sol";
-
-error NotAuthorized();
-error InvalidInput();
-error AccountLocked();
-error ExceedsMaxLockTime();
-error UntrustedImplementation();
-error OwnershipCycle();
+import "./base-account-abstraction/core/BaseAccount.sol";
+import "./callback/TokenCallbackHandler.sol";
 
 /**
- * @title A smart contract account owned by a single ERC721 token
+ * Address Owned Account.
+ *  this is sample minimal account.
+ *  has execute, eth handling methods
+ *  has a single signer that can send requests through the entryPoint.
  */
 contract Account is
-    IERC165,
-    IERC1271,
-    IERC6551Account,
-    IERC721Receiver,
-    IERC1155Receiver,
+    BaseAccount,
+    TokenCallbackHandler,
     UUPSUpgradeable,
-    BaseERC4337Account
+    Initializable
 {
     using ECDSA for bytes32;
 
-    /// @dev ERC-4337 entry point address
-    address public immutable _entryPoint;
+    address public owner;
 
-    /// @dev timestamp at which this account will be unlocked
-    uint256 public lockedUntil;
+    IEntryPoint private immutable _entryPoint;
 
-    /// @dev mapping from owner => selector => implementation
-    mapping(address => mapping(bytes4 => address)) public overrides;
-
-    /// @dev mapping from owner => caller => has permissions
-    mapping(address => mapping(address => bool)) public permissions;
-
-    event OverrideUpdated(
-        address owner,
-        bytes4 selector,
-        address implementation
+    event AccountInitialized(
+        IEntryPoint indexed entryPoint,
+        address indexed owner
     );
 
-    event PermissionUpdated(address owner, address caller, bool hasPermission);
-
-    event LockUpdated(uint256 lockedUntil);
-
-    /// @dev reverts if caller is not the owner of the account
     modifier onlyOwner() {
-        if (msg.sender != owner()) revert NotAuthorized();
+        _onlyOwner();
         _;
     }
 
-    /// @dev reverts if caller is not authorized to execute on this account
-    modifier onlyAuthorized() {
-        if (!isAuthorized(msg.sender)) revert NotAuthorized();
-        _;
+    /// @inheritdoc BaseAccount
+    function entryPoint() public view virtual override returns (IEntryPoint) {
+        return _entryPoint;
     }
 
-    /// @dev reverts if this account is currently locked
-    modifier onlyUnlocked() {
-        if (isLocked()) revert AccountLocked();
-        _;
+    // solhint-disable-next-line no-empty-blocks
+    receive() external payable {}
+
+    constructor(IEntryPoint anEntryPoint) {
+        _entryPoint = anEntryPoint;
+        _disableInitializers();
     }
 
-    constructor(address entryPoint_) {
-        if (entryPoint_ == address(0)) revert InvalidInput();
-
-        _entryPoint = entryPoint_;
-    }
-
-    /// @dev allows eth transfers by default, but allows account owner to override
-    receive() external payable {
-        // _handleOverride();
-    }
-
-    /// @dev allows account owner to add additional functions to the account via an override
-    fallback() external payable {
-        // _handleOverride();
-    }
-
-    /// @dev executes a low-level call against an account if the caller is authorized to make calls
-    function executeCall(
-        address to,
-        uint256 value,
-        bytes calldata data
-    ) external payable onlyAuthorized returns (bytes memory) {
-        emit TransactionExecuted(to, value, data);
-
-        _incrementNonce();
-
-        return _call(to, value, data);
-    }
-
-    /// @dev sets the implementation address for a given function call
-    function setOverrides(
-        bytes4[] calldata selectors,
-        address[] calldata implementations
-    ) external onlyUnlocked {
-        address _owner = owner();
-        if (msg.sender != _owner) revert NotAuthorized();
-
-        uint256 length = selectors.length;
-
-        if (implementations.length != length) revert InvalidInput();
-
-        for (uint256 i = 0; i < length; i++) {
-            overrides[_owner][selectors[i]] = implementations[i];
-            emit OverrideUpdated(_owner, selectors[i], implementations[i]);
-        }
-
-        _incrementNonce();
-    }
-
-    /// @dev grants a given caller execution permissions
-    function setPermissions(
-        address[] calldata callers,
-        bool[] calldata _permissions
-    ) external onlyUnlocked {
-        address _owner = owner();
-        if (msg.sender != _owner) revert NotAuthorized();
-
-        uint256 length = callers.length;
-
-        if (_permissions.length != length) revert InvalidInput();
-
-        for (uint256 i = 0; i < length; i++) {
-            permissions[_owner][callers[i]] = _permissions[i];
-            emit PermissionUpdated(_owner, callers[i], _permissions[i]);
-        }
-
-        _incrementNonce();
-    }
-
-    /// @dev locks the account until a certain timestamp
-    function lock(uint256 _lockedUntil) external onlyOwner onlyUnlocked {
-        if (_lockedUntil > block.timestamp + 365 days)
-            revert ExceedsMaxLockTime();
-
-        lockedUntil = _lockedUntil;
-
-        emit LockUpdated(_lockedUntil);
-
-        _incrementNonce();
-    }
-
-    /// @dev returns the current lock status of the account as a boolean
-    function isLocked() public view returns (bool) {
-        return lockedUntil > block.timestamp;
-    }
-
-    /// @dev EIP-1271 signature validation. By default, only the owner of the account is permissioned to sign.
-    /// This function can be overriden.
-    function isValidSignature(bytes32 hash, bytes memory signature)
-        external
-        view
-        returns (bytes4 magicValue)
-    {
-        // _handleOverrideStatic();
-
-        bool isValid = SignatureChecker.isValidSignatureNow(
-            owner(),
-            hash,
-            signature
+    function _onlyOwner() internal view {
+        //directly from EOA owner, or through the account itself (which gets redirected through execute())
+        require(
+            msg.sender == owner || msg.sender == address(this),
+            "only owner"
         );
-
-        if (isValid) {
-            return IERC1271.isValidSignature.selector;
-        }
-
-        return "";
     }
 
-    /// @dev Returns the EIP-155 chain ID, token contract address, and token ID for the token that
-    /// owns this account.
-    function token()
+    /**
+     * execute a transaction (called directly from owner, or by entryPoint)
+     */
+    function execute(
+        address dest,
+        uint256 value,
+        bytes calldata func
+    ) external {
+        _requireFromEntryPointOrOwner();
+        _call(dest, value, func);
+    }
+
+    /**
+     * execute a sequence of transactions
+     */
+    function executeBatch(address[] calldata dest, bytes[] calldata func)
         external
-        view
-        returns (
-            uint256 chainId,
-            address tokenContract,
-            uint256 tokenId
-        )
     {
-        return ERC6551AccountLib.token();
+        _requireFromEntryPointOrOwner();
+        require(dest.length == func.length, "wrong array lengths");
+        for (uint256 i = 0; i < dest.length; i++) {
+            _call(dest[i], 0, func[i]);
+        }
     }
 
-    /// @dev Returns the current account nonce
-    function nonce() public view override returns (uint256) {
-        return IEntryPoint(_entryPoint).getNonce(address(this), 0);
+    /**
+     * @dev The _entryPoint member is immutable, to reduce gas consumption.  To upgrade EntryPoint,
+     * a new implementation of SimpleAccount must be deployed with the new EntryPoint address, then upgrading
+     * the implementation by calling `upgradeTo()`
+     */
+    function initialize(address anOwner) public virtual initializer {
+        _initialize(anOwner);
     }
 
-    /// @dev Increments the account nonce if the caller is not the ERC-4337 entry point
-    function _incrementNonce() internal {
-        if (msg.sender != _entryPoint)
-            IEntryPoint(_entryPoint).incrementNonce(0);
+    function _initialize(address anOwner) internal virtual {
+        owner = anOwner;
+        emit AccountInitialized(_entryPoint, owner);
     }
 
-    /// @dev Return the ERC-4337 entry point address
-    function entryPoint() public view override returns (IEntryPoint) {
-        return IEntryPoint(_entryPoint);
+    // Require the function call went through EntryPoint or owner
+    function _requireFromEntryPointOrOwner() internal view {
+        require(
+            msg.sender == address(entryPoint()) || msg.sender == owner,
+            "account: not Owner or EntryPoint"
+        );
     }
 
-    /// @dev Returns the owner of the ERC-721 token which owns this account. By default, the owner
-    /// of the token has full permissions on the account.
-    function owner() public view returns (address) {
-        (uint256 chainId, address tokenContract, ) = ERC6551AccountLib.token();
-
-        if (chainId != block.chainid) return address(0);
-
-        return ParaAccount(tokenContract).accountTokenOwner(address(this));
+    /// implement template method of BaseAccount
+    function _validateSignature(
+        UserOperation calldata userOp,
+        bytes32 userOpHash
+    ) internal virtual override returns (uint256 validationData) {
+        bytes32 hash = userOpHash.toEthSignedMessageHash();
+        if (owner != hash.recover(userOp.signature))
+            return SIG_VALIDATION_FAILED;
+        return 0;
     }
 
-    /// @dev Returns the authorization status for a given caller
-    function isAuthorized(address caller) public view returns (bool) {
-        // authorize entrypoint for 4337 transactions
-        if (caller == _entryPoint) return true;
-
-        address _owner = owner();
-
-        // authorize token owner
-        if (caller == _owner) return true;
-
-        // authorize caller if owner has granted permissions
-        if (permissions[_owner][caller]) return true;
-
-        return false;
+    function _call(
+        address target,
+        uint256 value,
+        bytes memory data
+    ) internal {
+        (bool success, bytes memory result) = target.call{value: value}(data);
+        if (!success) {
+            assembly {
+                revert(add(result, 32), mload(result))
+            }
+        }
     }
 
-    /// @dev Returns true if a given interfaceId is supported by this account. This method can be
-    /// extended by an override.
-    function supportsInterface(bytes4 interfaceId)
+    /**
+     * check current account deposit in the entryPoint
+     */
+    function getDeposit() public view returns (uint256) {
+        return entryPoint().balanceOf(address(this));
+    }
+
+    /**
+     * deposit more funds for this account in the entryPoint
+     */
+    function addDeposit() public payable {
+        entryPoint().depositTo{value: msg.value}(address(this));
+    }
+
+    /**
+     * withdraw value from the account's deposit
+     * @param withdrawAddress target to send to
+     * @param amount to withdraw
+     */
+    function withdrawDepositTo(address payable withdrawAddress, uint256 amount)
         public
-        view
-        override
-        returns (bool)
+        onlyOwner
     {
-        bool defaultSupport = interfaceId == type(IERC165).interfaceId ||
-            interfaceId == type(IERC1155Receiver).interfaceId ||
-            interfaceId == type(IERC6551Account).interfaceId;
-
-        if (defaultSupport) return true;
-
-        // if not supported by default, check override
-        _handleOverrideStatic();
-
-        return false;
+        entryPoint().withdrawTo(withdrawAddress, amount);
     }
 
-    /// @dev Allows ERC-721 tokens to be received so long as they do not cause an ownership cycle.
-    /// This function can be overriden.
-    function onERC721Received(
-        address,
-        address,
-        uint256 receivedTokenId,
-        bytes memory
-    ) public view override returns (bytes4) {
-        _handleOverrideStatic();
-
-        (
-            uint256 chainId,
-            address tokenContract,
-            uint256 tokenId
-        ) = ERC6551AccountLib.token();
-
-        if (
-            chainId == block.chainid &&
-            tokenContract == msg.sender &&
-            tokenId == receivedTokenId
-        ) revert OwnershipCycle();
-
-        return this.onERC721Received.selector;
-    }
-
-    /// @dev Allows ERC-1155 tokens to be received. This function can be overriden.
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes memory
-    ) public view override returns (bytes4) {
-        _handleOverrideStatic();
-
-        return this.onERC1155Received.selector;
-    }
-
-    /// @dev Allows ERC-1155 token batches to be received. This function can be overriden.
-    function onERC1155BatchReceived(
-        address,
-        address,
-        uint256[] memory,
-        uint256[] memory,
-        bytes memory
-    ) public view override returns (bytes4) {
-        _handleOverrideStatic();
-
-        return this.onERC1155BatchReceived.selector;
-    }
-
-    /// @dev Contract upgrades can only be performed by the owner and the new implementation must
-    /// be trusted
     function _authorizeUpgrade(address newImplementation)
         internal
         view
         override
-        onlyOwner
     {
-        // TODO do more verification on the implemenation trust
-        bool isTrusted = true;
-
-        if (!isTrusted) revert UntrustedImplementation();
-    }
-
-    /// @dev Validates a signature for a given ERC-4337 operation
-    function _validateSignature(
-        UserOperation calldata userOp,
-        bytes32 userOpHash
-    ) internal view override returns (uint256 validationData) {
-        bool isValid = this.isValidSignature(
-            userOpHash.toEthSignedMessageHash(),
-            userOp.signature
-        ) == IERC1271.isValidSignature.selector;
-
-        if (isValid) {
-            return 0;
-        }
-
-        return 1;
-    }
-
-    /// @dev Executes a low-level call
-    function _call(
-        address to,
-        uint256 value,
-        bytes calldata data
-    ) internal returns (bytes memory result) {
-        bool success;
-        (success, result) = to.call{value: value}(data);
-
-        if (!success) {
-            assembly {
-                revert(add(result, 32), mload(result))
-            }
-        }
-    }
-
-    /// @dev Executes a low-level call to the implementation if an override is set
-    function _handleOverride() internal {
-        address implementation = overrides[owner()][msg.sig];
-
-        if (implementation != address(0)) {
-            bytes memory result = _call(implementation, msg.value, msg.data);
-            assembly {
-                return(add(result, 32), mload(result))
-            }
-        }
-    }
-
-    /// @dev Executes a low-level static call
-    function _callStatic(address to, bytes calldata data)
-        internal
-        view
-        returns (bytes memory result)
-    {
-        bool success;
-        (success, result) = to.staticcall(data);
-
-        if (!success) {
-            assembly {
-                revert(add(result, 32), mload(result))
-            }
-        }
-    }
-
-    /// @dev Executes a low-level static call to the implementation if an override is set
-    function _handleOverrideStatic() internal view {
-        address implementation = overrides[owner()][msg.sig];
-
-        if (implementation != address(0)) {
-            bytes memory result = _callStatic(implementation, msg.data);
-            assembly {
-                return(add(result, 32), mload(result))
-            }
-        }
+        (newImplementation);
+        _onlyOwner();
     }
 }

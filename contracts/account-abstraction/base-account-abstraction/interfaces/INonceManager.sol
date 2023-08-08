@@ -2,7 +2,6 @@
 pragma solidity ^0.8.10;
 
 interface INonceManager {
-
     /**
      * Return the next nonce for this sender.
      * Within a given key, the nonce values are sequenced (starting with zero, and incremented by one on each userop)
@@ -13,7 +12,9 @@ interface INonceManager {
      * @return nonce a full nonce to pass for next UserOp with this sender.
      */
     function getNonce(address sender, uint192 key)
-    external view returns (uint256 nonce);
+        external
+        view
+        returns (uint256 nonce);
 
     /**
      * Manually increment the nonce of the sender.

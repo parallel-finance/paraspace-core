@@ -7,14 +7,17 @@ import "../interfaces/IEntryPoint.sol";
  * nonce management functionality
  */
 contract NonceManager is INonceManager {
-
     /**
      * The next valid sequence number for a given nonce key.
      */
     mapping(address => mapping(uint192 => uint256)) public nonceSequenceNumber;
 
     function getNonce(address sender, uint192 key)
-    public view override returns (uint256 nonce) {
+        public
+        view
+        override
+        returns (uint256 nonce)
+    {
         return nonceSequenceNumber[sender][key] | (uint256(key) << 64);
     }
 
@@ -30,11 +33,12 @@ contract NonceManager is INonceManager {
      * validate nonce uniqueness for this account.
      * called just after validateUserOp()
      */
-    function _validateAndUpdateNonce(address sender, uint256 nonce) internal returns (bool) {
-
+    function _validateAndUpdateNonce(address sender, uint256 nonce)
+        internal
+        returns (bool)
+    {
         uint192 key = uint192(nonce >> 64);
         uint64 seq = uint64(nonce);
         return nonceSequenceNumber[sender][key]++ == seq;
     }
-
 }
