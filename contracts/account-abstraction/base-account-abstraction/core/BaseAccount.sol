@@ -6,9 +6,6 @@ pragma solidity ^0.8.10;
 
 import "../interfaces/IAccount.sol";
 import "../interfaces/IEntryPoint.sol";
-import "../utils/UserOperation.sol";
-
-import "./Helpers.sol";
 
 /**
  * Basic account implementation.
@@ -16,8 +13,6 @@ import "./Helpers.sol";
  * specific account implementation should inherit it and provide the account-specific logic
  */
 abstract contract BaseAccount is IAccount {
-    using UserOperationLib for UserOperation;
-
     //return value in case of signature failure, with no time-range.
     // equivalent to _packValidationData(true,0,0);
     uint256 internal constant SIG_VALIDATION_FAILED = 1;
