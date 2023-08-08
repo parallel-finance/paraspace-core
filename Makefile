@@ -636,10 +636,6 @@ upgrade-auto-compound-ape:
 upgrade-timelock:
 	make TASK_NAME=upgrade:timelock run-task
 
-.PHONY: upgrade-p2p-pair-staking
-upgrade-p2p-pair-staking:
-	make TASK_NAME=upgrade:p2p-pair-staking run-task
-
 .PHONY: upgrade-para-ape-staking
 upgrade-para-ape-staking:
 	make TASK_NAME=upgrade:para-ape-staking run-task

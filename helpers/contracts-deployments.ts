@@ -224,8 +224,6 @@ import {
   MockedDelegateRegistry__factory,
   NTokenBAKC,
   NTokenBAKC__factory,
-  P2PPairStaking__factory,
-  P2PPairStaking,
   AirdropFlashClaimReceiver__factory,
   AirdropFlashClaimReceiver,
   CLwstETHSynchronicityPriceAdapter__factory,
@@ -314,7 +312,6 @@ import {
   getTimeLockProxy,
   getInitializableAdminUpgradeabilityProxy,
   getAutoCompoundApe,
-  getP2PPairStaking,
   getAutoYieldApe,
   getHelperContract,
   getParaApeStaking,
@@ -2614,71 +2611,6 @@ export const deployAutoCompoundApeImplAndAssignItToProxy = async (
       GLOBAL_OVERRIDES
     )
   );
-};
-
-export const deployP2PPairStakingImpl = async (
-  compoundFee: number,
-  verify?: boolean
-) => {
-  const allTokens = await getAllTokens();
-  const protocolDataProvider = await getProtocolDataProvider();
-  const nBAYC = (
-    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAYC.address)
-  ).xTokenAddress;
-  const nMAYC = (
-    await protocolDataProvider.getReserveTokensAddresses(allTokens.MAYC.address)
-  ).xTokenAddress;
-  const nBAKC = (
-    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAKC.address)
-  ).xTokenAddress;
-  const apeCoinStaking =
-    (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
-    (await deployApeCoinStaking(verify)).address;
-  const aclManager = await getACLManager();
-  const args = [
-    allTokens.BAYC.address,
-    allTokens.MAYC.address,
-    allTokens.BAKC.address,
-    nBAYC,
-    nMAYC,
-    nBAKC,
-    allTokens.APE.address,
-    allTokens.cAPE.address,
-    apeCoinStaking,
-    aclManager.address,
-    compoundFee,
-  ];
-
-  return withSaveAndVerify(
-    new P2PPairStaking__factory(await getFirstSigner()),
-    eContractid.P2PPairStakingImpl,
-    [...args],
-    verify
-  ) as Promise<P2PPairStaking>;
-};
-
-export const deployP2PPairStaking = async (verify?: boolean) => {
-  const p2pImplementation = await deployP2PPairStakingImpl(0, verify);
-
-  const deployer = await getFirstSigner();
-  const deployerAddress = await deployer.getAddress();
-
-  const initData = p2pImplementation.interface.encodeFunctionData("initialize");
-
-  const proxyInstance = await withSaveAndVerify(
-    new InitializableAdminUpgradeabilityProxy__factory(await getFirstSigner()),
-    eContractid.P2PPairStaking,
-    [],
-    verify
-  );
-
-  await waitForTx(
-    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
-      "initialize(address,address,bytes)"
-    ](p2pImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
-  );
-
-  return await getP2PPairStaking(proxyInstance.address);
 };
 
 export const deployApeStakingP2PLogic = async (verify?: boolean) =>

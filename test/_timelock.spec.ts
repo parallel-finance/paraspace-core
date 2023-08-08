@@ -634,7 +634,7 @@ describe("TimeLock functionality tests", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .withdrawFreeSApe(user1.address, parseEther("200000"))
+        .withdrawFreeSApe(cApe.address, parseEther("200000"))
     );
 
     expect(await cApe.balanceOf(user1.address)).to.be.equal("0");

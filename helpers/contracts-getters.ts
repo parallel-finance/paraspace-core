@@ -76,7 +76,6 @@ import {
   StETHDebtToken__factory,
   MintableERC721Logic__factory,
   NTokenBAKC__factory,
-  P2PPairStaking__factory,
   ExecutorWithTimelock__factory,
   MultiSendCallOnly__factory,
   WstETHMocked__factory,
@@ -1017,17 +1016,6 @@ export const getAutoYieldApe = async (address?: tEthereumAddress) =>
     address ||
       (
         await getDb().get(`${eContractid.yAPE}.${DRE.network.name}`).value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getP2PPairStaking = async (address?: tEthereumAddress) =>
-  await P2PPairStaking__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.P2PPairStaking}.${DRE.network.name}`)
-          .value()
       ).address,
     await getFirstSigner()
   );

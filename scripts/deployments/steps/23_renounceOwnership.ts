@@ -7,7 +7,6 @@ import {
   getHelperContract,
   getInitializableAdminUpgradeabilityProxy,
   getNFTFloorOracle,
-  getP2PPairStaking,
   getParaApeStaking,
   getPausableZoneController,
   getPoolAddressesProvider,
@@ -369,31 +368,6 @@ export const step_23 = async (
         );
       }
       console.timeEnd("transferring cAPE ownership...");
-      console.log();
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // P2PPairStaking
-    ////////////////////////////////////////////////////////////////////////////////
-    if (await getContractAddressInDb(eContractid.P2PPairStaking)) {
-      console.time("transferring P2PPairStaking ownership...");
-      const p2pPairStaking = await getP2PPairStaking();
-      const p2pPairStakingProxy =
-        await getInitializableAdminUpgradeabilityProxy(p2pPairStaking.address);
-      const signers = await getEthersSigners();
-      const adminAddress = signers[5].getAddress();
-      if (DRY_RUN) {
-        const encodedData1 = p2pPairStakingProxy.interface.encodeFunctionData(
-          "changeAdmin",
-          [adminAddress]
-        );
-        await dryRunEncodedData(p2pPairStakingProxy.address, encodedData1);
-      } else {
-        await waitForTx(
-          await p2pPairStakingProxy.changeAdmin(adminAddress, GLOBAL_OVERRIDES)
-        );
-      }
-      console.timeEnd("transferring P2PPairStaking ownership...");
       console.log();
     }
 

@@ -119,18 +119,6 @@ task("upgrade:timelock", "upgrade timelock").setAction(async (_, DRE) => {
   console.timeEnd("upgrade timelock");
 });
 
-task("upgrade:p2p-pair-staking", "upgrade p2p pair staking")
-  .addPositionalParam("compoundFee", "new compound fee")
-  .setAction(async (compoundFee, DRE) => {
-    const {upgradeP2PPairStaking} = await import(
-      "../../scripts/upgrade/P2PPairStaking"
-    );
-    await DRE.run("set-DRE");
-    console.time("upgrade p2p pair staking");
-    await upgradeP2PPairStaking(compoundFee, ETHERSCAN_VERIFICATION);
-    console.timeEnd("upgrade p2p pair staking");
-  });
-
 task("upgrade:para-ape-staking", "upgrade para ape staking").setAction(
   async (_, DRE) => {
     const {upgradeParaApeStaking} = await import(
