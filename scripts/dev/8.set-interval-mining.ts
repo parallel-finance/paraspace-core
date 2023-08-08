@@ -4,7 +4,7 @@ import {DRE} from "../../helpers/misc-utils";
 const setIntervalMining = async () => {
   console.time("interval-mining");
   await DRE.network.provider.send("evm_setAutomine", [false]);
-  await DRE.network.provider.send("evm_setIntervalMining", [3000]);
+  await DRE.network.provider.send("evm_setIntervalMining", [500]);
   console.timeEnd("interval-mining");
 };
 

@@ -814,6 +814,7 @@ export interface IChainlinkConfig {
   // ERC721
   DOODLE?: tEthereumAddress;
   BAYC?: tEthereumAddress;
+  BAKC?: tEthereumAddress;
   MAYC?: tEthereumAddress;
   WPUNKS?: tEthereumAddress;
   MOONBIRD?: tEthereumAddress;
@@ -847,6 +848,14 @@ export interface IUniswapConfig {
 export interface IBendDAOConfig {
   LendingPool?: tEthereumAddress;
   LendingPoolLoan?: tEthereumAddress;
+}
+
+export interface IParaSpaceV1Config {
+  PoolV1: tEthereumAddress;
+  ProtocolDataProviderV1: tEthereumAddress;
+  CApeV1: tEthereumAddress;
+  TimeLockV1: tEthereumAddress;
+  P2PPairStakingV1: tEthereumAddress;
 }
 
 export interface IStakefish {
@@ -903,6 +912,7 @@ export interface ICommonConfiguration {
   YogaLabs: IYogaLabs;
   Uniswap: IUniswapConfig;
   BendDAO: IBendDAOConfig;
+  ParaSpaceV1: IParaSpaceV1Config | undefined;
   Stakefish: IStakefish;
   Marketplace: IMarketplaceConfig;
   Chainlink: IChainlinkConfig;
