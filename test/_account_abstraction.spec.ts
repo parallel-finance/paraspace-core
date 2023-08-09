@@ -1,7 +1,10 @@
 import {Presets, UserOperationBuilder} from "userop";
 import {testEnvFixture} from "./helpers/setup-env";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
-import {deployAccountFactory} from "../helpers/contracts-deployments";
+import {
+  deployAccount,
+  deployAccountFactory,
+} from "../helpers/contracts-deployments";
 import {getAccount, getChainId} from "../helpers/contracts-getters";
 import {expect} from "chai";
 import {calcOpHash} from "../helpers/misc-utils";
@@ -59,7 +62,7 @@ describe("Account Abstraction", () => {
   it("AA execute call from non owner nor entry point should revert", async () => {
     const testEnv = await loadFixture(fixture);
     const {
-      users: [user1,,user2],
+      users: [user1, , user2],
       pool,
       accountFactory,
     } = testEnv;
@@ -117,7 +120,7 @@ describe("Account Abstraction", () => {
   it("AA execute batch from non owner nor entry point should revert", async () => {
     const testEnv = await loadFixture(fixture);
     const {
-      users: [user1,, user2],
+      users: [user1, , user2],
       pool,
       accountFactory,
     } = testEnv;
@@ -209,5 +212,27 @@ describe("Account Abstraction", () => {
         .connect(entryPoint.signer)
         .validateUserOp(userOp, userOpHash, 0)
     );
+  });
+
+  it("AA Account implementation should be upgraded by the owner", async () => {
+    const testEnv = await loadFixture(fixture);
+    const {
+      users: [user1, entryPoint, user2],
+      accountFactory,
+    } = testEnv;
+
+    await accountFactory.createAccount(user1.address, "1");
+
+    const account = await getAccount(
+      await accountFactory.getAddress(user1.address, "1")
+    );
+
+    const newAccount = await deployAccount(entryPoint.address);
+
+    await expect(
+      await account.connect(user1.signer).upgradeTo(newAccount.address)
+    );
+    await expect(account.connect(user2.signer).upgradeTo(newAccount.address)).to
+      .be.reverted;
   });
 });
