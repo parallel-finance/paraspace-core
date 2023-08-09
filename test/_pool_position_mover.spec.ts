@@ -23,21 +23,31 @@ describe("Pool: rescue tokens", () => {
     const {
       users: [user1, user2],
       bayc,
+      mayc,
       pool,
     } = testEnv;
 
     bendDaoLendPool = await getMockBendDaoLendPool();
 
     await mintAndValidate(bayc, "5", user1);
+    await mintAndValidate(mayc, "5", user1);
     await bayc
       .connect(user1.signer)
       .transferFrom(user1.address, user2.address, 2);
+
     await waitForTx(
       await bayc.connect(user1.signer).setApprovalForAll(pool.address, true)
     );
-
+    await waitForTx(
+      await mayc.connect(user1.signer).setApprovalForAll(pool.address, true)
+    );
     await waitForTx(
       await bayc
+        .connect(user1.signer)
+        .setApprovalForAll(bendDaoLendPool.address, true)
+    );
+    await waitForTx(
+      await mayc
         .connect(user1.signer)
         .setApprovalForAll(bendDaoLendPool.address, true)
     );
@@ -183,6 +193,7 @@ describe("Pool: rescue tokens", () => {
       users: [user1],
       pool,
       bayc,
+      mayc,
       variableDebtWeth,
       nBAYC,
     } = testEnv;
@@ -195,13 +206,16 @@ describe("Pool: rescue tokens", () => {
       2
     );
 
+    await bendDaoLendPool.setLoan(5, mayc.address, 1, user1.address, "20", 2);
+
     await expect(
-      await pool.connect(user1.signer).movePositionFromBendDAO([3, 4])
+      await pool.connect(user1.signer).movePositionFromBendDAO([3, 4, 5])
     );
 
     await expect(await variableDebtWeth.balanceOf(user1.address)).to.be.eq(
-      "600000"
+      "600020"
     );
+    
     await expect(await nBAYC.balanceOf(user1.address)).to.be.eq(3);
   });
 });

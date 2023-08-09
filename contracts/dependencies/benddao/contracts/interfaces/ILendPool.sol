@@ -18,4 +18,10 @@ interface ILendPool {
     uint256 amount
   ) external returns (uint256, bool);
 
+
+  function batchRepay(
+    address[] calldata nftAssets,
+    uint256[] calldata nftTokenIds,
+    uint256[] calldata amounts
+  ) external returns (uint256[] memory, bool[] memory);
 }

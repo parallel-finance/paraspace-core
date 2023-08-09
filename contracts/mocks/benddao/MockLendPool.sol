@@ -40,7 +40,7 @@ contract MockLendPool {
     address nftAsset,
     uint256 nftTokenId,
     uint256 amount
-  ) external returns (uint256, bool) {
+  ) public returns (uint256, bool) {
     BDaoDataTypes.LoanData storage loan = loans[loanMapping[nftAsset][nftTokenId]];
 
     if (amount == loan.scaledAmount) {
@@ -51,4 +51,15 @@ contract MockLendPool {
 
     IERC20(weth).transferFrom(msg.sender, address(this), amount);
   }
+
+  function batchRepay(
+    address[] calldata nftAssets,
+    uint256[] calldata nftTokenIds,
+    uint256[] calldata amounts
+  ) external returns (uint256[] memory, bool[] memory) {
+    for (uint256 index = 0; index < nftAssets.length; index++) {
+      repay(nftAssets[index], nftTokenIds[index], amounts[index]);
+    }
+  }
+
 }
