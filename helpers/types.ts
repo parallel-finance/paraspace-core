@@ -840,6 +840,7 @@ export interface IRate {
 
 export interface IAccountAbstraction {
   rpcUrl: string;
+  paymasterUrl: string;
 }
 
 export interface ICommonConfiguration {

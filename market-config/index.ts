@@ -121,7 +121,8 @@ export const CommonConfig: Pick<
     Multisig: MULTI_SIG || ZERO_ADDRESS,
   },
   AccountAbstraction: {
-    rpcUrl: "",
+    rpcUrl: `https://api.stackup.sh/v1/node/${process.env.STACKUP_KEY}`,
+    paymasterUrl: `https://api.stackup.sh/v1/paymaster/${process.env.STACKUP_KEY}`
   },
 };
 
