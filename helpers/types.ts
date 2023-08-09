@@ -838,6 +838,10 @@ export interface IRate {
   borrowRate: string;
 }
 
+export interface IAccountAbstraction {
+  rpcUrl: string;
+}
+
 export interface ICommonConfiguration {
   WrappedNativeTokenId: ERC20TokenContractId;
   MarketId: string;
@@ -873,6 +877,8 @@ export interface ICommonConfiguration {
   DelegationRegistry: tEthereumAddress;
 
   Governance: IGovernanceConfig;
+
+  AccountAbstraction: IAccountAbstraction;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {

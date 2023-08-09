@@ -89,6 +89,7 @@ export const CommonConfig: Pick<
   | "DelegationRegistry"
   | "IncentivesController"
   | "Governance"
+  | "AccountAbstraction"
 > = {
   WrappedNativeTokenId: ERC20TokenContractId.WETH,
   MarketId: "ParaSpaceMM",
@@ -118,6 +119,9 @@ export const CommonConfig: Pick<
   Governance: {
     Multisend: MULTI_SEND || ZERO_ADDRESS,
     Multisig: MULTI_SIG || ZERO_ADDRESS,
+  },
+  AccountAbstraction: {
+    rpcUrl: "",
   },
 };
 
