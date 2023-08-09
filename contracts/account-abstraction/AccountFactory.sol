@@ -15,7 +15,7 @@ import "./Account.sol";
 contract AccountFactory {
     Account public immutable accountImplementation;
 
-    event AccountCreated(address indexed owner, uint256 salt);
+    event AccountCreated(address indexed owner, uint256 salt, address accountAddress);
 
     constructor(IEntryPoint _entryPoint) {
         accountImplementation = new Account(_entryPoint);
@@ -45,7 +45,7 @@ contract AccountFactory {
             )
         );
 
-        emit AccountCreated(owner, salt);
+        emit AccountCreated(owner, salt, address(ret));
     }
 
     /**
