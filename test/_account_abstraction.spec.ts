@@ -92,7 +92,9 @@ describe("Account Abstraction", () => {
     );
 
     await expect(
-      await account.connect(user1.signer).executeBatch([pool.address], [[]])
+      await account
+        .connect(user1.signer)
+        .executeBatch([pool.address], ["0"], [[]])
     );
   });
 
@@ -113,7 +115,7 @@ describe("Account Abstraction", () => {
     await expect(
       await account
         .connect(entryPoint.signer)
-        .executeBatch([pool.address], [[]])
+        .executeBatch([pool.address], ["0"], [[]])
     );
   });
 
@@ -132,7 +134,7 @@ describe("Account Abstraction", () => {
     );
 
     await expect(
-      account.connect(user2.signer).executeBatch([pool.address], [[]])
+      account.connect(user2.signer).executeBatch([pool.address], ["0"], [[]])
     ).to.be.reverted;
   });
 
