@@ -200,6 +200,11 @@ library PositionMoverLogic {
                 params.dTokens.length == params.dAmounts.length,
             Errors.INCONSISTENT_PARAMS_LENGTH
         );
+        require(
+            params.to == params.user ||
+                IAccount(params.to).owner() == params.user,
+            Errors.NOT_THE_OWNER
+        );
 
         // 1. cache poolV1 apeCoin xTokenAddress
         ParaSpacePositionMoverVars memory vars;
@@ -386,12 +391,6 @@ library PositionMoverLogic {
         DataTypes.ParaSpacePositionMoveParams memory params
     ) internal {
         for (uint256 index = 0; index < params.dTokens.length; index++) {
-            if (params.to != params.user) {
-                require(
-                    IAccount(params.to).owner() == params.user,
-                    Errors.NOT_THE_OWNER
-                );
-            }
             BorrowLogic.executeBorrow(
                 ps._reserves,
                 ps._reservesList,
