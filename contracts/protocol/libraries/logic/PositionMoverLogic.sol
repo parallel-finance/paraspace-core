@@ -21,6 +21,7 @@ import {BDaoDataTypes} from "../../../dependencies/benddao/contracts/libraries/t
 import {Helpers} from "../../../protocol/libraries/helpers/Helpers.sol";
 import {IPool} from "../../../interfaces/IPool.sol";
 import {ICApe} from "../../../interfaces/ICApe.sol";
+import {IAccount} from "../../../interfaces/IAccount.sol";
 import {IAutoCompoundApe} from "../../../interfaces/IAutoCompoundApe.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
@@ -385,6 +386,12 @@ library PositionMoverLogic {
         DataTypes.ParaSpacePositionMoveParams memory params
     ) internal {
         for (uint256 index = 0; index < params.dTokens.length; index++) {
+            if (params.to != params.user) {
+                require(
+                    IAccount(params.to).owner() == params.user,
+                    Errors.NOT_THE_OWNER
+                );
+            }
             BorrowLogic.executeBorrow(
                 ps._reserves,
                 ps._reservesList,
