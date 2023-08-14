@@ -149,6 +149,16 @@ import {
   WstETHMocked,
   X2Y2Adapter,
   X2Y2R1,
+  NTokenIzumi,
+  IZUMIOracleWrapper,
+  SwapX2YModule,
+  SwapY2XModule,
+  LiquidityModule,
+  LimitOrderModule,
+  FlashModule,
+  IZiSwapFactory,
+  LiquidityManager,
+  Swap,
 } from "../types";
 import {
   getACLManager,
@@ -197,6 +207,7 @@ import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES, ZK_LIBRARIES_PATH} from "./hardhat-constants";
 import fs from "fs";
 import shell from "shelljs";
+import {zeroAddress} from "ethereumjs-util";
 
 export const deployAllLibraries = async (verify?: boolean) => {
   const supplyLogic = await deploySupplyLogic(verify);
@@ -1060,6 +1071,29 @@ export const deployUniswapV3NTokenImpl = async (
   ) as Promise<NTokenUniswapV3>;
 };
 
+export const deployIZUMILpNTokenImpl = async (
+  poolAddress: tEthereumAddress,
+  delegationRegistry: tEthereumAddress,
+  verify?: boolean
+) => {
+  const mintableERC721Logic =
+    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
+    (await deployMintableERC721Logic(verify)).address;
+
+  const libraries = {
+    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
+      mintableERC721Logic,
+  };
+  return withSaveAndVerify(
+    await getContractFactory("NTokenIzumi", libraries),
+    eContractid.NTokenIZUMILpImpl,
+    [poolAddress, delegationRegistry],
+    verify,
+    false,
+    libraries
+  ) as Promise<NTokenIzumi>;
+};
+
 export const deployGenericMoonbirdNTokenImpl = async (
   poolAddress: tEthereumAddress,
   delegationRegistry: tEthereumAddress,
@@ -1437,6 +1471,18 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
             verify
           );
         tokens[tokenSymbol] = nonfungiblePositionManager;
+        continue;
+      }
+
+      if (tokenSymbol === ERC721TokenContractId.IZUMILp) {
+        const weth = await getWETH();
+        const factory = await deployIZUMIFactory(verify);
+        await deployIZUMISwapRouter([factory.address, weth.address], verify);
+        const positionManager = await deployIZUMIPositionManager(
+          [factory.address, weth.address],
+          verify
+        );
+        tokens[tokenSymbol] = positionManager;
         continue;
       }
 
@@ -2035,6 +2081,103 @@ export const deployUniswapSwapRouter = async (
     [...args],
     verify
   );
+
+export const deployIZUMISwapX2YModule = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("SwapX2YModule"),
+    eContractid.IZUMISwapX2Y,
+    [],
+    verify
+  ) as Promise<SwapX2YModule>;
+
+export const deployIZUMISwapY2XModule = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("SwapY2XModule"),
+    eContractid.IZUMISwapY2X,
+    [],
+    verify
+  ) as Promise<SwapY2XModule>;
+
+export const deployIZUMILiquidity = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("LiquidityModule"),
+    eContractid.IZUMILiquidity,
+    [],
+    verify
+  ) as Promise<LiquidityModule>;
+
+export const deployIZUMILimitOrder = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("LimitOrderModule"),
+    eContractid.IZUMILimitOrder,
+    [],
+    verify
+  ) as Promise<LimitOrderModule>;
+
+export const deployIZUMIFlashModule = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("FlashModule"),
+    eContractid.IZUMIFlashModule,
+    [],
+    verify
+  ) as Promise<FlashModule>;
+
+export const deployIZUMIFactory = async (verify?: boolean) => {
+  const X2YModule = await deployIZUMISwapX2YModule();
+  const Y2XModule = await deployIZUMISwapY2XModule();
+  const LiquidityModule = await deployIZUMILiquidity();
+  const LimitOrderModule = await deployIZUMILimitOrder();
+  const FlashModule = await deployIZUMIFlashModule();
+  return withSaveAndVerify(
+    await getContractFactory("iZiSwapFactory"),
+    eContractid.IZUMIPoolFactory,
+    [
+      zeroAddress(),
+      X2YModule.address,
+      Y2XModule.address,
+      LiquidityModule.address,
+      LimitOrderModule.address,
+      FlashModule.address,
+      0,
+    ],
+    verify
+  ) as Promise<IZiSwapFactory>;
+};
+
+export const deployIZUMIOracleWrapper = async (
+  factory: string,
+  manager: string,
+  addressProvider: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("IZUMIOracleWrapper"),
+    eContractid.Aggregator.concat(upperFirst(eContractid.IZUMILp)),
+    [factory, manager, addressProvider],
+    verify
+  ) as Promise<IZUMIOracleWrapper>;
+
+export const deployIZUMIPositionManager = async (
+  args: [string, string],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("LiquidityManager"),
+    eContractid.IZUMILp,
+    [...args],
+    verify
+  ) as Promise<LiquidityManager>;
+
+export const deployIZUMISwapRouter = async (
+  args: [string, string],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("Swap"),
+    eContractid.IZUMISwapRouter,
+    [...args],
+    verify
+  ) as Promise<Swap>;
 
 export const deployStETH = async (verify?: boolean): Promise<StETHMocked> =>
   withSaveAndVerify(

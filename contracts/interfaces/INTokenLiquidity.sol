@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0
 pragma solidity ^0.8.0;
 
-interface INTokenUniswapV3 {
+interface INTokenLiquidity {
     /**
-     * @notice Decreases liquidity for underlying Uniswap V3 NFT LP and validates
+     * @notice Decreases liquidity for underlying NFT LP and validates
      * that the user respects liquidation checks.
      * @param user The user address decreasing liquidity for
      * @param tokenId The id of the erc721 token
@@ -12,7 +12,7 @@ interface INTokenUniswapV3 {
      * @param amount1Min The minimum amount to remove of token1
      * @param receiveEthAsWeth If convert weth to ETH
      */
-    function decreaseUniswapV3Liquidity(
+    function decreaseLiquidity(
         address user,
         uint256 tokenId,
         uint128 liquidityDecrease,

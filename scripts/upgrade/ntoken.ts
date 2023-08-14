@@ -3,6 +3,7 @@ import {
   deployChromieSquiggleNTokenImpl,
   deployGenericMoonbirdNTokenImpl,
   deployGenericNTokenImpl,
+  deployIZUMILpNTokenImpl,
   deployNTokenBAKCImpl,
   deployNTokenBAYCImpl,
   deployNTokenMAYCImpl,
@@ -42,6 +43,7 @@ export const upgradeNToken = async (verify = false) => {
   let nTokenBAKCImplementationAddress = "";
   let nTokenMoonBirdImplementationAddress = "";
   let nTokenUniSwapV3ImplementationAddress = "";
+  let nTokenIZUMILpImplementationAddress = "";
   let nTokenOTHRImplementationAddress = "";
   let nTokenStakefishImplementationAddress = "";
   let nTokenBlocksImplementationAddress = "";
@@ -139,6 +141,14 @@ export const upgradeNToken = async (verify = false) => {
         ).address;
       }
       newImpl = nTokenUniSwapV3ImplementationAddress;
+    } else if (xTokenType == XTokenType.NTokenIZUMILp) {
+      if (!nTokenIZUMILpImplementationAddress) {
+        console.log("deploy NTokenIZUMILp implementation");
+        nTokenIZUMILpImplementationAddress = (
+          await deployIZUMILpNTokenImpl(poolAddress, delegationRegistry, verify)
+        ).address;
+      }
+      newImpl = nTokenIZUMILpImplementationAddress;
     } else if (xTokenType == XTokenType.NTokenMoonBirds) {
       if (!nTokenMoonBirdImplementationAddress) {
         console.log("deploy NTokenMoonBirds implementation");

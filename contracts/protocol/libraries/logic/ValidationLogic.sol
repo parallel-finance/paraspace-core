@@ -27,6 +27,7 @@ import {IToken} from "../../../interfaces/IToken.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../helpers/Helpers.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
+import {ILiquidityManager} from "../../../dependencies/izumi/izumi-swap-periphery/interfaces/ILiquidityManager.sol";
 import "../../../interfaces/INTokenApeStaking.sol";
 
 /**
@@ -208,12 +209,17 @@ library ValidationLogic {
         require(!isPaused, Errors.RESERVE_PAUSED);
 
         INToken nToken = INToken(reserveCache.xTokenAddress);
-        if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
+        XTokenType tokenType = nToken.getXTokenType();
+        if (
+            tokenType == XTokenType.NTokenUniswapV3 ||
+            tokenType == XTokenType.NTokenIZUMILp
+        ) {
             for (uint256 index = 0; index < tokenIds.length; index++) {
-                ValidationLogic.validateForUniswapV3(
+                ValidationLogic.validateForLiquidityNFT(
                     reservesData,
                     asset,
                     tokenIds[index],
+                    tokenType,
                     true,
                     true,
                     false
@@ -461,12 +467,17 @@ library ValidationLogic {
         require(!isPaused, Errors.RESERVE_PAUSED);
 
         INToken nToken = INToken(reserveCache.xTokenAddress);
-        if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
+        XTokenType tokenType = nToken.getXTokenType();
+        if (
+            tokenType == XTokenType.NTokenUniswapV3 ||
+            tokenType == XTokenType.NTokenIZUMILp
+        ) {
             for (uint256 index = 0; index < tokenIds.length; index++) {
-                ValidationLogic.validateForUniswapV3(
+                ValidationLogic.validateForLiquidityNFT(
                     reservesData,
                     asset,
                     tokenIds[index],
+                    tokenType,
                     true,
                     true,
                     false
@@ -614,11 +625,16 @@ library ValidationLogic {
         );
 
         INToken nToken = INToken(collateralReserve.xTokenAddress);
-        if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
-            ValidationLogic.validateForUniswapV3(
+        XTokenType tokenType = nToken.getXTokenType();
+        if (
+            tokenType == XTokenType.NTokenUniswapV3 ||
+            tokenType == XTokenType.NTokenIZUMILp
+        ) {
+            ValidationLogic.validateForLiquidityNFT(
                 reservesData,
                 params.collateralAsset,
                 params.tokenId,
+                tokenType,
                 true,
                 true,
                 false
@@ -912,15 +928,21 @@ library ValidationLogic {
 
         if (hasZeroLtvCollateral) {
             INToken nToken = INToken(reserve.xTokenAddress);
-            if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
+            XTokenType tokenType = nToken.getXTokenType();
+            if (
+                tokenType == XTokenType.NTokenUniswapV3 ||
+                tokenType == XTokenType.NTokenIZUMILp
+            ) {
                 for (uint256 index = 0; index < tokenIds.length; index++) {
-                    (uint256 assetLTV, ) = GenericLogic.getLtvAndLTForUniswapV3(
-                        reservesData,
-                        asset,
-                        tokenIds[index],
-                        reserve.configuration.getLtv(),
-                        0
-                    );
+                    (uint256 assetLTV, ) = GenericLogic
+                        .getLtvAndLTForLiquidityNFT(
+                            reservesData,
+                            asset,
+                            tokenIds[index],
+                            tokenType,
+                            reserve.configuration.getLtv(),
+                            0
+                        );
                     require(assetLTV == 0, Errors.LTV_VALIDATION_FAILED);
                 }
             } else {
@@ -955,11 +977,16 @@ library ValidationLogic {
     ) internal view {
         require(!reserve.configuration.getPaused(), Errors.RESERVE_PAUSED);
         INToken nToken = INToken(reserve.xTokenAddress);
-        if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
-            ValidationLogic.validateForUniswapV3(
+        XTokenType tokenType = nToken.getXTokenType();
+        if (
+            tokenType == XTokenType.NTokenUniswapV3 ||
+            tokenType == XTokenType.NTokenIZUMILp
+        ) {
+            ValidationLogic.validateForLiquidityNFT(
                 reservesData,
                 asset,
                 tokenId,
+                tokenType,
                 false,
                 true,
                 false
@@ -1012,6 +1039,7 @@ library ValidationLogic {
         XTokenType tokenType = nToken.getXTokenType();
         require(
             tokenType != XTokenType.NTokenUniswapV3 &&
+                tokenType != XTokenType.NTokenIZUMILp &&
                 tokenType != XTokenType.NTokenStakefish,
             Errors.FLASHCLAIM_NOT_ALLOWED
         );
@@ -1146,7 +1174,7 @@ library ValidationLogic {
             );
     }
 
-    struct ValidateForUniswapV3LocalVars {
+    struct ValidateForLiquidityNFTLocalVars {
         bool token0IsActive;
         bool token0IsFrozen;
         bool token0IsPaused;
@@ -1155,30 +1183,32 @@ library ValidationLogic {
         bool token1IsPaused;
     }
 
-    function validateForUniswapV3(
+    function validateForLiquidityNFT(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         address asset,
         uint256 tokenId,
+        XTokenType tokenType,
         bool checkActive,
         bool checkNotPaused,
         bool checkNotFrozen
     ) internal view {
-        (
-            ,
-            ,
-            address token0,
-            address token1,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
+        address token0;
+        address token1;
+        if (tokenType == XTokenType.NTokenUniswapV3) {
+            (, , token0, token1, , , , , , , , ) = INonfungiblePositionManager(
+                asset
+            ).positions(tokenId);
+        } else if (tokenType == XTokenType.NTokenIZUMILp) {
+            ILiquidityManager liquidityManager = ILiquidityManager(asset);
+            (, , , , , , , uint128 poolId) = liquidityManager.liquidities(
+                tokenId
+            );
+            (token0, token1, ) = liquidityManager.poolMetas(poolId);
+        } else {
+            revert(Errors.INVALID_ASSET_TYPE);
+        }
 
-        ) = INonfungiblePositionManager(asset).positions(tokenId);
-
-        ValidateForUniswapV3LocalVars memory vars;
+        ValidateForLiquidityNFTLocalVars memory vars;
         (
             vars.token0IsActive,
             vars.token0IsFrozen,

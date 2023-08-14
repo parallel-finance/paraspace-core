@@ -17,8 +17,10 @@ import {WadRayMath} from "../math/WadRayMath.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
+import {ILiquidityManager} from "../../../dependencies/izumi/izumi-swap-periphery/interfaces/ILiquidityManager.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../../libraries/helpers/Helpers.sol";
+import {Errors} from "../helpers/Errors.sol";
 
 /**
  * @title GenericLogic library
@@ -203,12 +205,15 @@ library GenericLogic {
                 ) {
                     vars.xTokenType = INToken(vars.xTokenAddress)
                         .getXTokenType();
-                    if (vars.xTokenType == XTokenType.NTokenUniswapV3) {
+                    if (
+                        vars.xTokenType == XTokenType.NTokenUniswapV3 ||
+                        vars.xTokenType == XTokenType.NTokenIZUMILp
+                    ) {
                         (
                             vars.userBalanceInBaseCurrency,
                             vars.ltv,
                             vars.liquidationThreshold
-                        ) = _getUserBalanceForUniswapV3(
+                        ) = _getUserBalanceForLiquidityNFT(
                             reservesData,
                             params,
                             vars
@@ -380,27 +385,29 @@ library GenericLogic {
         totalValue = (collateralizedBalance * avgMultiplier).wadMul(assetPrice);
     }
 
-    function getLtvAndLTForUniswapV3(
+    function getLtvAndLTForLiquidityNFT(
         mapping(address => DataTypes.ReserveData) storage reservesData,
-        address uniswapV3Manager,
+        address asset,
         uint256 tokenId,
+        XTokenType tokenType,
         uint256 collectionLTV,
         uint256 collectionLiquidationThreshold
     ) internal view returns (uint256 ltv, uint256 liquidationThreshold) {
-        (
-            ,
-            ,
-            address token0,
-            address token1,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-
-        ) = INonfungiblePositionManager(uniswapV3Manager).positions(tokenId);
+        address token0;
+        address token1;
+        if (tokenType == XTokenType.NTokenUniswapV3) {
+            (, , token0, token1, , , , , , , , ) = INonfungiblePositionManager(
+                asset
+            ).positions(tokenId);
+        } else if (tokenType == XTokenType.NTokenIZUMILp) {
+            ILiquidityManager liquidityManager = ILiquidityManager(asset);
+            (, , , , , , , uint128 poolId) = liquidityManager.liquidities(
+                tokenId
+            );
+            (token0, token1, ) = liquidityManager.poolMetas(poolId);
+        } else {
+            revert(Errors.INVALID_ASSET_TYPE);
+        }
 
         DataTypes.ReserveConfigurationMap memory token0Configs = reservesData[
             token0
@@ -431,7 +438,7 @@ library GenericLogic {
         );
     }
 
-    function _getUserBalanceForUniswapV3(
+    function _getUserBalanceForLiquidityNFT(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.CalculateUserAccountDataParams memory params,
         CalculateUserAccountDataVars memory vars
@@ -465,10 +472,11 @@ library GenericLogic {
                 (
                     uint256 tmpLTV,
                     uint256 tmpLiquidationThreshold
-                ) = getLtvAndLTForUniswapV3(
+                ) = getLtvAndLTForLiquidityNFT(
                         reservesData,
                         vars.currentReserveAddress,
                         tokenId,
+                        vars.xTokenType,
                         vars.ltv,
                         vars.liquidationThreshold
                     );

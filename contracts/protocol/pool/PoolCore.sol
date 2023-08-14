@@ -237,7 +237,7 @@ contract PoolCore is
             );
     }
 
-    function decreaseUniswapV3Liquidity(
+    function decreaseLiquidity(
         address asset,
         uint256 tokenId,
         uint128 liquidityDecrease,
@@ -248,11 +248,11 @@ contract PoolCore is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return
-            SupplyLogic.executeDecreaseUniswapV3Liquidity(
+            SupplyLogic.executeDecreaseLiquidity(
                 ps._reserves,
                 ps._reservesList,
                 ps._usersConfig[msg.sender],
-                DataTypes.ExecuteDecreaseUniswapV3LiquidityParams({
+                DataTypes.ExecuteDecreaseLiquidityParams({
                     user: msg.sender,
                     asset: asset,
                     tokenId: tokenId,

@@ -24,6 +24,7 @@ import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
 import {IMarketplace} from "../../../interfaces/IMarketplace.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
+import {IXTokenType, XTokenType} from "../../../interfaces/IXTokenType.sol";
 
 /**
  * @title Marketplace library
@@ -539,9 +540,10 @@ library MarketplaceLogic {
                 token = underlyingAsset;
             }
 
+            XTokenType xTokenType = INToken(vars.xTokenAddress).getXTokenType();
             require(
-                INToken(vars.xTokenAddress).getXTokenType() !=
-                    XTokenType.NTokenUniswapV3,
+                xTokenType != XTokenType.NTokenUniswapV3 &&
+                    xTokenType != XTokenType.NTokenIZUMILp,
                 Errors.XTOKEN_TYPE_NOT_ALLOWED
             );
 

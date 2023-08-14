@@ -12,6 +12,7 @@ import {
   CLFixedPriceSynchronicityPriceAdapter,
   CLwstETHSynchronicityPriceAdapter,
   ERC721OracleWrapper,
+  IZUMIOracleWrapper,
   MockAggregator,
   PriceOracle,
   UniswapV3OracleWrapper,
@@ -24,11 +25,13 @@ import {
   deployFixedPriceSynchronicityPriceAdapter,
   deployExchangeRateSynchronicityPriceAdapter,
   deployCTokenSynchronicityPriceAdapter,
+  deployIZUMIOracleWrapper,
 } from "./contracts-deployments";
 import {getParaSpaceConfig, waitForTx} from "./misc-utils";
 import {
   getAggregator,
   getAllTokens,
+  getIZUMIFactory,
   getPoolAddressesProvider,
   getUniswapV3Factory,
 } from "./contracts-getters";
@@ -66,6 +69,7 @@ export const deployAllAggregators = async (
     [tokenSymbol: string]:
       | MockAggregator
       | UniswapV3OracleWrapper
+      | IZUMIOracleWrapper
       | CLwstETHSynchronicityPriceAdapter
       | ERC721OracleWrapper
       | CLExchangeRateSynchronicityPriceAdapter
@@ -140,6 +144,15 @@ export const deployAllAggregators = async (
       aggregators[tokenSymbol] = await deployUniswapV3OracleWrapper(
         univ3Factory.address,
         univ3Token.address,
+        addressesProvider.address,
+        verify
+      );
+    } else if (tokenSymbol === ERC721TokenContractId.IZUMILp) {
+      const factory = await getIZUMIFactory();
+      const iZumiToken = tokens[ERC721TokenContractId.IZUMILp];
+      aggregators[tokenSymbol] = await deployIZUMIOracleWrapper(
+        factory.address,
+        iZumiToken.address,
         addressesProvider.address,
         verify
       );

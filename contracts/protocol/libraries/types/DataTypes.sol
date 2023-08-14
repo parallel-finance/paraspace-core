@@ -193,7 +193,7 @@ library DataTypes {
         address oracle;
     }
 
-    struct ExecuteDecreaseUniswapV3LiquidityParams {
+    struct ExecuteDecreaseLiquidityParams {
         address user;
         address asset;
         uint256 tokenId;

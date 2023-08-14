@@ -325,16 +325,16 @@ interface IPoolCore {
     ) external returns (uint256);
 
     /**
-     * @notice Decreases liquidity for underlying Uniswap V3 NFT LP and validates
+     * @notice Decreases liquidity for underlying NFT LP and validates
      * that the user respects liquidation checks.
-     * @param asset The asset address of uniswapV3
+     * @param asset The asset address of NFT LP
      * @param tokenId The id of the erc721 token
      * @param liquidityDecrease The amount of liquidity to remove of LP
      * @param amount0Min The minimum amount to remove of token0
      * @param amount1Min The minimum amount to remove of token1
      * @param receiveEthAsWeth If convert weth to ETH
      */
-    function decreaseUniswapV3Liquidity(
+    function decreaseLiquidity(
         address asset,
         uint256 tokenId,
         uint128 liquidityDecrease,

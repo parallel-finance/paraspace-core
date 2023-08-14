@@ -211,7 +211,7 @@ describe("Uniswap V3 NFT position control", () => {
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .decreaseUniswapV3Liquidity(
+        .decreaseLiquidity(
           nftPositionManager.address,
           1,
           beforeLiquidity.div(3),
@@ -252,7 +252,7 @@ describe("Uniswap V3 NFT position control", () => {
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .decreaseUniswapV3Liquidity(
+        .decreaseLiquidity(
           nftPositionManager.address,
           1,
           beforeLiquidity.div(2),
@@ -307,17 +307,9 @@ describe("Uniswap V3 NFT position control", () => {
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .decreaseUniswapV3Liquidity(
-          nftPositionManager.address,
-          1,
-          0,
-          0,
-          0,
-          false,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
+        .decreaseLiquidity(nftPositionManager.address, 1, 0, 0, 0, false, {
+          gasLimit: 12_450_000,
+        })
     );
 
     const afterDaiBalance = await dai.balanceOf(user1.address);

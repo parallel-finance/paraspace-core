@@ -605,6 +605,18 @@ export const timeLockStrategyUniswapV3: ITimeLockStrategyParams = {
   period: "86400",
 };
 
+export const timeLockStrategyIZUMI: ITimeLockStrategyParams = {
+  name: "timeLockStrategyIZUMI",
+  minThreshold: "5",
+  midThreshold: "10",
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "21600",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: "50",
+  period: "86400",
+};
+
 export const timeLockStrategySEWER: ITimeLockStrategyParams = {
   name: "timeLockStrategySEWER",
   minThreshold: "5",

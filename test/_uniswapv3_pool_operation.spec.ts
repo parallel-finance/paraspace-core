@@ -446,7 +446,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     await expect(
       pool
         .connect(user1.signer)
-        .decreaseUniswapV3Liquidity(
+        .decreaseLiquidity(
           nftPositionManager.address,
           1,
           beforeLiquidity.div(2),
@@ -478,7 +478,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .decreaseUniswapV3Liquidity(
+        .decreaseLiquidity(
           nftPositionManager.address,
           1,
           beforeLiquidity.div(2),
@@ -510,7 +510,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     await expect(
       pool
         .connect(user1.signer)
-        .decreaseUniswapV3Liquidity(
+        .decreaseLiquidity(
           nftPositionManager.address,
           1,
           beforeLiquidity.div(2),
@@ -542,7 +542,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .decreaseUniswapV3Liquidity(
+        .decreaseLiquidity(
           nftPositionManager.address,
           1,
           beforeLiquidity.div(2),
@@ -566,7 +566,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     await expect(
       pool
         .connect(users[1].signer)
-        .decreaseUniswapV3Liquidity(
+        .decreaseLiquidity(
           nftPositionManager.address,
           1,
           beforeLiquidity.div(2),
@@ -687,7 +687,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     await expect(
       pool
         .connect(user1.signer)
-        .decreaseUniswapV3Liquidity(
+        .decreaseLiquidity(
           nftPositionManager.address,
           1,
           beforeLiquidity.mul(3).div(4),

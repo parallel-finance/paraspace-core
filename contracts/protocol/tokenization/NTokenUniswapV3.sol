@@ -15,16 +15,16 @@ import {NToken} from "./NToken.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {INonfungiblePositionManager} from "../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
 import {IWETH} from "../../misc/interfaces/IWETH.sol";
-import {XTokenType} from "../../interfaces/IXTokenType.sol";
-import {INTokenUniswapV3} from "../../interfaces/INTokenUniswapV3.sol";
 import {Helpers} from "../../protocol/libraries/helpers/Helpers.sol";
+import {NTokenLiquidity} from "./NTokenLiquidity.sol";
+import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
  * @title UniswapV3 NToken
  *
  * @notice Implementation of the interest bearing token for the ParaSpace protocol
  */
-contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
+contract NTokenUniswapV3 is NTokenLiquidity {
     using SafeERC20 for IERC20;
 
     /**
@@ -32,10 +32,8 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
      * @param pool The address of the Pool contract
      */
     constructor(IPool pool, address delegateRegistry)
-        NToken(pool, true, delegateRegistry)
-    {
-        _ERC721Data.balanceLimit = 30;
-    }
+        NTokenLiquidity(pool, delegateRegistry)
+    {}
 
     function getXTokenType() external pure override returns (XTokenType) {
         return XTokenType.NTokenUniswapV3;
@@ -48,8 +46,6 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
      * @param amount0Min The minimum amount to remove of token0
      * @param amount1Min The minimum amount to remove of token1
      * @param receiveEthAsWeth If convert weth to ETH
-     * @return amount0 The amount received back in token0
-     * @return amount1 The amount returned back in token1
      */
     function _decreaseLiquidity(
         address user,
@@ -58,7 +54,10 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
         uint256 amount0Min,
         uint256 amount1Min,
         bool receiveEthAsWeth
-    ) internal returns (uint256 amount0, uint256 amount1) {
+    ) internal override {
+        INonfungiblePositionManager positionManager = INonfungiblePositionManager(
+                _ERC721Data.underlyingAsset
+            );
         if (liquidityDecrease > 0) {
             // amount0Min and amount1Min are price slippage checks
             // if the amount received after burning is not greater than these minimums, transaction will fail
@@ -72,26 +71,11 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
                         deadline: block.timestamp
                     });
 
-            INonfungiblePositionManager(_ERC721Data.underlyingAsset)
-                .decreaseLiquidity(params);
+            positionManager.decreaseLiquidity(params);
         }
 
-        (
-            ,
-            ,
-            address token0,
-            address token1,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-
-        ) = INonfungiblePositionManager(_ERC721Data.underlyingAsset).positions(
-                tokenId
-            );
+        (, , address token0, address token1, , , , , , , , ) = positionManager
+            .positions(tokenId);
 
         address weth = _addressesProvider.getWETH();
         receiveEthAsWeth = (receiveEthAsWeth &&
@@ -105,55 +89,17 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
                 amount1Max: type(uint128).max
             });
 
-        (amount0, amount1) = INonfungiblePositionManager(
-            _ERC721Data.underlyingAsset
-        ).collect(collectParams);
+        (uint256 amount0, uint256 amount1) = positionManager.collect(
+            collectParams
+        );
 
         if (receiveEthAsWeth) {
-            uint256 balanceWeth = IERC20(weth).balanceOf(address(this));
-            if (balanceWeth > 0) {
-                IWETH(weth).withdraw(balanceWeth);
-                Helpers.safeTransferETH(user, balanceWeth);
+            if (amount0 > 0) {
+                transferTokenOut(user, token0, amount0, weth);
             }
-
-            address pairToken = (token0 == weth) ? token1 : token0;
-            uint256 balanceToken = IERC20(pairToken).balanceOf(address(this));
-            if (balanceToken > 0) {
-                IERC20(pairToken).safeTransfer(user, balanceToken);
+            if (amount1 > 0) {
+                transferTokenOut(user, token1, amount1, weth);
             }
         }
     }
-
-    /// @inheritdoc INTokenUniswapV3
-    function decreaseUniswapV3Liquidity(
-        address user,
-        uint256 tokenId,
-        uint128 liquidityDecrease,
-        uint256 amount0Min,
-        uint256 amount1Min,
-        bool receiveEthAsWeth
-    ) external onlyPool nonReentrant {
-        require(user == ownerOf(tokenId), Errors.NOT_THE_OWNER);
-
-        // interact with Uniswap V3
-        _decreaseLiquidity(
-            user,
-            tokenId,
-            liquidityDecrease,
-            amount0Min,
-            amount1Min,
-            receiveEthAsWeth
-        );
-    }
-
-    function setTraitsMultipliers(uint256[] calldata, uint256[] calldata)
-        external
-        override
-        onlyPoolAdmin
-        nonReentrant
-    {
-        revert();
-    }
-
-    receive() external payable {}
 }

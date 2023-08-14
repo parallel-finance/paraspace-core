@@ -19,7 +19,7 @@ import {PercentageMath} from "../math/PercentageMath.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {XTokenType} from "../../../interfaces/IXTokenType.sol";
-import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
+import {INTokenLiquidity} from "../../../interfaces/INTokenLiquidity.sol";
 import {INTokenStakefish} from "../../../interfaces/INTokenStakefish.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {IStakefishNFTManager} from "../../../interfaces/IStakefishNFTManager.sol";
@@ -193,12 +193,16 @@ library SupplyLogic {
 
         XTokenType tokenType = INToken(reserveCache.xTokenAddress)
             .getXTokenType();
-        if (tokenType == XTokenType.NTokenUniswapV3) {
+        if (
+            tokenType == XTokenType.NTokenUniswapV3 ||
+            tokenType == XTokenType.NTokenIZUMILp
+        ) {
             for (uint256 index = 0; index < params.tokenData.length; index++) {
-                ValidationLogic.validateForUniswapV3(
+                ValidationLogic.validateForLiquidityNFT(
                     reservesData,
                     params.asset,
                     params.tokenData[index].tokenId,
+                    tokenType,
                     true,
                     true,
                     true
@@ -465,11 +469,11 @@ library SupplyLogic {
             );
     }
 
-    function executeDecreaseUniswapV3Liquidity(
+    function executeDecreaseLiquidity(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
-        DataTypes.ExecuteDecreaseUniswapV3LiquidityParams memory params
+        DataTypes.ExecuteDecreaseLiquidityParams memory params
     ) external {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
@@ -477,8 +481,10 @@ library SupplyLogic {
         //currently don't need to update state for erc721
         //reserve.updateState(reserveCache);
         INToken nToken = INToken(reserveCache.xTokenAddress);
+        XTokenType tokenType = nToken.getXTokenType();
         require(
-            nToken.getXTokenType() == XTokenType.NTokenUniswapV3,
+            tokenType == XTokenType.NTokenUniswapV3 ||
+                tokenType == XTokenType.NTokenIZUMILp,
             Errors.XTOKEN_TYPE_NOT_ALLOWED
         );
 
@@ -491,14 +497,14 @@ library SupplyLogic {
             tokenIds
         );
 
-        INTokenUniswapV3(reserveCache.xTokenAddress).decreaseUniswapV3Liquidity(
-                params.user,
-                params.tokenId,
-                params.liquidityDecrease,
-                params.amount0Min,
-                params.amount1Min,
-                params.receiveEthAsWeth
-            );
+        INTokenLiquidity(reserveCache.xTokenAddress).decreaseLiquidity(
+            params.user,
+            params.tokenId,
+            params.liquidityDecrease,
+            params.amount0Min,
+            params.amount1Min,
+            params.receiveEthAsWeth
+        );
 
         bool isUsedAsCollateral = ICollateralizableERC721(
             reserveCache.xTokenAddress

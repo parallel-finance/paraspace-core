@@ -53,6 +53,7 @@ import {
   deployAutoCompoundApeImplAndAssignItToProxy,
   deployPTokenStKSM,
   deployStKSMDebtToken,
+  deployIZUMILpNTokenImpl,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -324,6 +325,7 @@ export const initReservesByHelper = async (
         eContractid.NTokenImpl,
         eContractid.NTokenMoonBirdsImpl,
         eContractid.NTokenUniswapV3Impl,
+        eContractid.NTokenIZUMILpImpl,
         eContractid.NTokenBAYCImpl,
         eContractid.NTokenMAYCImpl,
         eContractid.NTokenBAKCImpl,
@@ -521,6 +523,14 @@ export const initReservesByHelper = async (
             ).address;
           }
           xTokenToUse = nTokenUniSwapV3ImplementationAddress;
+        } else if (reserveSymbol === ERC721TokenContractId.IZUMILp) {
+          xTokenToUse = (
+            await deployIZUMILpNTokenImpl(
+              pool.address,
+              delegationRegistryAddress,
+              verify
+            )
+          ).address;
         } else if (reserveSymbol === ERC721TokenContractId.BAYC) {
           const apeCoinStaking =
             (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||

@@ -97,6 +97,11 @@ import {
   NTokenStakefish__factory,
   MockLendPool__factory,
   NTokenChromieSquiggle__factory,
+  NTokenIzumi__factory,
+  IZiSwapFactory__factory,
+  LiquidityManager__factory,
+  Swap__factory,
+  IZUMIOracleWrapper__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -767,6 +772,63 @@ export const getNTokenUniswapV3 = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.NTokenUniswapV3Impl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getIZUMIFactory = async (address?: tEthereumAddress) =>
+  await IZiSwapFactory__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.IZUMIPoolFactory}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getIZUMIPositionManager = async (address?: tEthereumAddress) =>
+  await LiquidityManager__factory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.IZUMILp}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getIZUMISwapRouter = async (address?: tEthereumAddress) =>
+  await Swap__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.IZUMISwapRouter}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getIZUMIOracleWrapper = async (address?: tEthereumAddress) =>
+  await IZUMIOracleWrapper__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(
+            `${eContractid.Aggregator.concat(
+              upperFirst(eContractid.IZUMILp)
+            )}.${DRE.network.name}`
+          )
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getNTokenIZUMI = async (address?: tEthereumAddress) =>
+  await NTokenIzumi__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.NTokenIZUMILpImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
