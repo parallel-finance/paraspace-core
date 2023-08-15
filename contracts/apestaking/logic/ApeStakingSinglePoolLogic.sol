@@ -752,22 +752,22 @@ library ApeStakingSinglePoolLogic {
             IParaApeStaking.PoolState storage maycPoolState = poolStates[
                 ApeStakingCommonLogic.MAYC_SINGLE_POOL_ID
             ];
-            uint24 baycPositon = baycPoolState.totalPosition;
-            uint24 maycPositon = maycPoolState.totalPosition;
-            uint24 apeTotalPosition = baycPositon + maycPositon;
+            uint24 baycPosition = baycPoolState.totalPosition;
+            uint24 maycPosition = maycPoolState.totalPosition;
+            uint24 apeTotalPosition = baycPosition + maycPosition;
             if (apeTotalPosition != 0) {
-                uint256 baycShareAmount = (apeShareAmount * baycPositon) /
+                uint256 baycShareAmount = (apeShareAmount * baycPosition) /
                     apeTotalPosition;
                 uint256 maycShareAmount = apeShareAmount - baycShareAmount;
-                if (baycPositon != 0) {
+                if (baycPosition != 0) {
                     baycPoolState.accumulatedRewardsPerNft +=
                         baycShareAmount.toUint104() /
-                        baycPositon;
+                        baycPosition;
                 }
-                if (maycPositon != 0) {
+                if (maycPosition != 0) {
                     maycPoolState.accumulatedRewardsPerNft +=
                         maycShareAmount.toUint104() /
-                        maycPositon;
+                        maycPosition;
                 }
             } else {
                 compoundFee += apeShareAmount;
