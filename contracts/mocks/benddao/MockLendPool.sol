@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {BDaoDataTypes} from "../../dependencies/benddao/contracts/libraries/types/BDaoDataTypes.sol";
 import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";

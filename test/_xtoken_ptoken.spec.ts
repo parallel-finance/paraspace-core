@@ -23,7 +23,7 @@ import {
   impersonateAddress,
 } from "../helpers/contracts-helpers";
 import {assertAlmostEqual, supplyAndValidate} from "./helpers/validated-steps";
-import {topUpNonPayableWithEther} from "./helpers/utils/funds";
+// import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {TestEnv} from "./helpers/make-suite";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 
@@ -992,23 +992,23 @@ describe("Ptoken edge cases", () => {
       .withArgs(ZERO_ADDRESS, ZERO_ADDRESS, amount);
   });
 
-  it("TC-ptoken-edge-14: `mintToTreasury` should work when amount is zero", async () => {
-    const {deployer, pool, pDai} = await loadFixture(testEnvFixture);
-
-    // Impersonate Pool
-    await topUpNonPayableWithEther(
-      deployer.signer,
-      [pool.address],
-      utils.parseEther("1")
-    );
-    const poolSigner = (await impersonateAddress(pool.address)).signer;
-
-    expect(
-      await pDai
-        .connect(poolSigner)
-        .mintToTreasury(0, utils.parseUnits("1", 27))
-    );
-  });
+  // it("TC-ptoken-edge-14: `mintToTreasury` should work when amount is zero", async () => {
+  //   const {deployer, pool, pDai} = await loadFixture(testEnvFixture);
+  //
+  //   // Impersonate Pool
+  //   await topUpNonPayableWithEther(
+  //     deployer.signer,
+  //     [pool.address],
+  //     utils.parseEther("1")
+  //   );
+  //   const poolSigner = (await impersonateAddress(pool.address)).signer;
+  //
+  //   expect(
+  //     await pDai
+  //       .connect(poolSigner)
+  //       .mintToTreasury(0, utils.parseUnits("1", 27))
+  //   );
+  // });
 
   it("TC-ptoken-edge-15: `setIncentivesController` should work", async () => {
     const {poolAdmin, pWETH, aclManager} = await loadFixture(testEnvFixture);

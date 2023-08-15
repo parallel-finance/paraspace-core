@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
@@ -13,7 +13,7 @@ import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {IPool} from "../../interfaces/IPool.sol";
 import {NToken} from "./NToken.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
-import {INonfungiblePositionManager} from "../../dependencies/uniswap/INonfungiblePositionManager.sol";
+import {INonfungiblePositionManager} from "../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
 import {IWETH} from "../../misc/interfaces/IWETH.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {INTokenUniswapV3} from "../../interfaces/INTokenUniswapV3.sol";

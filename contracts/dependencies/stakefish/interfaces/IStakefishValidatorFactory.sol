@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 /// @dev We can pas salt in to create deterministic address in solidity
 // https://docs.soliditylang.org/en/develop/control-structures.html#salted-contract-creations-create2

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {Ownable} from "../../../../contracts/dependencies/openzeppelin/contracts/Ownable.sol";
 import {ERC721} from "../../../../contracts/dependencies/openzeppelin/contracts/ERC721.sol";

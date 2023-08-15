@@ -178,7 +178,7 @@ describe("TimeLock functionality tests", () => {
         })
     );
 
-    await expect(await usdc.balanceOf(pool.TIME_LOCK())).to.be.eq(amount);
+    await expect(await usdc.balanceOf(await pool.TIME_LOCK())).to.be.eq(amount);
 
     const balanceBefore = await usdc.balanceOf(user1.address);
 
@@ -209,7 +209,7 @@ describe("TimeLock functionality tests", () => {
         })
     );
 
-    await expect(await usdc.balanceOf(pool.TIME_LOCK())).to.be.eq(amount);
+    await expect(await usdc.balanceOf(await pool.TIME_LOCK())).to.be.eq(amount);
 
     const balanceBefore = await usdc.balanceOf(user1.address);
 
@@ -244,7 +244,7 @@ describe("TimeLock functionality tests", () => {
         })
     );
 
-    await expect(await usdc.balanceOf(pool.TIME_LOCK())).to.be.eq(amount);
+    await expect(await usdc.balanceOf(await pool.TIME_LOCK())).to.be.eq(amount);
 
     const balanceBefore = await usdc.balanceOf(user1.address);
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {Context} from "../../../dependencies/openzeppelin/contracts/Context.sol";
 import {Strings} from "../../../dependencies/openzeppelin/contracts/Strings.sol";

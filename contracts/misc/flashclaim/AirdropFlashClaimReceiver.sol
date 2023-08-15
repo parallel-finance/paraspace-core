@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import "../interfaces/IFlashClaimReceiver.sol";
 import "../../dependencies/openzeppelin/contracts/Address.sol";
@@ -86,10 +86,6 @@ contract AirdropFlashClaimReceiver is
             (uint256[], address[], uint256[], address, bytes)
         );
 
-        require(
-            vars.airdropTokenTypes.length > 0,
-            "invalid airdrop token type"
-        );
         require(
             vars.airdropTokenAddresses.length == vars.airdropTokenTypes.length,
             "invalid airdrop token address length"
@@ -216,6 +212,25 @@ contract AirdropFlashClaimReceiver is
         uint256 id
     ) external nonReentrant onlyOwner {
         IERC721(token).safeTransferFrom(address(this), to, id);
+    }
+
+    /**
+     * @notice batch transfer ERC721 Tokens.
+     * @param token The address of the token
+     * @param to The address of the recipient
+     * @param ids The tokenId being transfer
+     **/
+    function batchTransferERC721(
+        address token,
+        address to,
+        uint256[] calldata ids
+    ) external nonReentrant onlyOwner {
+        for (uint256 index = 0; index < ids.length; ) {
+            IERC721(token).safeTransferFrom(address(this), to, ids[index]);
+            unchecked {
+                index++;
+            }
+        }
     }
 
     /**

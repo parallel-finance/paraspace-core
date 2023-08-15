@@ -1,10 +1,9 @@
-import {DRE, getDb, sleep} from "./misc-utils";
+import {DRE, getDb, shouldVerifyContract, sleep} from "./misc-utils";
 import {ConstructorArgs, LibraryAddresses, tEthereumAddress} from "./types";
 import axios from "axios";
-import minimatch from "minimatch";
 import {
+  ETHERSCAN_APIS,
   ETHERSCAN_KEY,
-  ETHERSCAN_VERIFICATION_CONTRACTS,
   ETHERSCAN_VERIFICATION_MAX_RETRIES,
 } from "./hardhat-constants";
 
@@ -24,30 +23,10 @@ const unableVerifyError = "Fail - Unable to verify";
 
 type VerificationArgs = {
   address: string;
+  contract?: string;
   constructorArguments: ConstructorArgs;
   relatedSources?: true;
   libraries?: LibraryAddresses;
-};
-
-export const ETHERSCAN_NETWORKS = [
-  "mainnet",
-  "ropsten",
-  "kovan",
-  "matic",
-  "mumbai",
-  "rinkeby",
-  "goerli",
-  "localhost",
-  "arbitrum",
-];
-
-export const ETHERSCAN_APIS = {
-  mainnet: "api.etherscan.io",
-  ropsten: "api-ropsten.etherscan.io",
-  kovan: "api-kovan.etherscan.io",
-  rinkeby: "api-rinkeby.etherscan.io",
-  goerli: "api-goerli.etherscan.io",
-  arbitrum: "api.arbiscan.io",
 };
 
 const getIsVerified = async (contractId: string, address: string) => {
@@ -82,31 +61,22 @@ const setIsVerified = async (contractId: string, address: string) => {
 };
 
 export const verifyEtherscanContract = async (
-  contractId: string,
+  id: string,
   address: string,
-  constructorArguments: ConstructorArgs = [],
+  contractFQN: string | undefined = undefined,
+  constructorArgs: ConstructorArgs = [],
   libraries?: LibraryAddresses
 ) => {
-  if (!ETHERSCAN_NETWORKS.includes(DRE.network.name)) {
+  if (!shouldVerifyContract(id)) {
     return;
   }
 
-  if (
-    ETHERSCAN_VERIFICATION_CONTRACTS?.every((p) => !minimatch(contractId, p))
-  ) {
-    return;
-  }
-
-  if (!ETHERSCAN_KEY) {
-    throw Error("Missing ETHERSCAN_KEY.");
-  }
-
-  let isVerified = await getIsVerified(contractId, address);
+  let isVerified = await getIsVerified(id, address);
   if (isVerified) {
     return;
   }
 
-  console.log(`- Verifying ${contractId}`);
+  console.log(`- Verifying ${id}`);
   console.log(`  - address: ${address}`);
 
   try {
@@ -116,7 +86,8 @@ export const verifyEtherscanContract = async (
 
     const params: VerificationArgs = {
       address,
-      constructorArguments,
+      contract: contractFQN,
+      constructorArguments: constructorArgs,
       relatedSources: true,
       libraries,
     };
@@ -129,7 +100,7 @@ export const verifyEtherscanContract = async (
     isVerified = errMsg.includes(ALREADY_VERIFIED);
   }
 
-  if (isVerified) await setIsVerified(contractId, address);
+  if (isVerified) await setIsVerified(id, address);
 };
 
 export const runTaskWithRetry = async (
@@ -191,9 +162,9 @@ const hasVerifiedSourceCode = async (
 ): Promise<boolean> => {
   try {
     const {data} = await axios.get(
-      `https://${
+      `${
         ETHERSCAN_APIS[DRE.network.name]
-      }/api?module=contract&action=getsourcecode&address=${address}&apikey=${ETHERSCAN_KEY}`
+      }?module=contract&action=getsourcecode&address=${address}&apikey=${ETHERSCAN_KEY}`
     );
     return (
       data.status === "1" &&
@@ -214,9 +185,9 @@ const verifyProxyContract = async (
       "Content-Type": "application/x-www-form-urlencoded",
     };
     const {data} = await axios.post(
-      `https://${
+      `${
         ETHERSCAN_APIS[DRE.network.name]
-      }/api?module=contract&action=verifyproxycontract&apikey=${ETHERSCAN_KEY}`,
+      }?module=contract&action=verifyproxycontract&apikey=${ETHERSCAN_KEY}`,
       `address=${address}`,
       {
         headers,

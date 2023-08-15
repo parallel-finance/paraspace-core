@@ -6,6 +6,7 @@ import {
   isFork,
   isEthereum,
   sleep,
+  waitForTx,
 } from "../../helpers/misc-utils";
 import {ERC20TokenContractId, ERC721TokenContractId} from "../../helpers/types";
 import {
@@ -143,13 +144,16 @@ const transferTokens = async () => {
       const whale = await impersonateAddress(whaleAddress);
       // send some gas fee to whale
       try {
-        await signer.sendTransaction({
-          to: whaleAddress,
-          value: utils.parseEther("5"),
-          gasLimit: 50000,
-        });
+        await waitForTx(
+          await signer.sendTransaction({
+            to: whaleAddress,
+            value: utils.parseEther("1"),
+            gasLimit: 50000,
+          })
+        );
       } catch (e) {
         console.error(e);
+        process.exit(1);
       }
 
       if (type === AssetType.ERC20) {
@@ -163,7 +167,9 @@ const transferTokens = async () => {
           console.log(
             `transfer ${amount} ${name} from ${whaleAddress} to ${receiver}`
           );
-          await token.transfer(receiver, amountWithUnits.toString());
+          await waitForTx(
+            await token.transfer(receiver, amountWithUnits.toString())
+          );
         } else {
           console.log(`insufficient ${name} balance on ${whaleAddress}`);
         }
@@ -179,7 +185,9 @@ const transferTokens = async () => {
           console.log(
             `transfer ${name}#${tokenId} from ${whaleAddress} to ${receiver}`
           );
-          await token.transferFrom(whaleAddress, receiver, tokenId);
+          await waitForTx(
+            await token.transferFrom(whaleAddress, receiver, tokenId)
+          );
         }
       } else if (type === AssetType.ERC721_MOONBIRD) {
         const moonbirds = await Moonbirds__factory.connect(
@@ -200,10 +208,12 @@ const transferTokens = async () => {
           console.log(
             `transfer ${name}#${tokenId} from ${whaleAddress} to ${receiver}`
           );
-          await moonbirds.safeTransferWhileNesting(
-            whaleAddress,
-            receiver,
-            tokenId
+          await waitForTx(
+            await moonbirds.safeTransferWhileNesting(
+              whaleAddress,
+              receiver,
+              tokenId
+            )
           );
           transferred += 1;
         }

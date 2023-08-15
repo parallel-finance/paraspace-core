@@ -14,6 +14,7 @@
     "node/no-missing-import": "off",
     "no-unpublished-import": "off",
     "no-case-declarations": "off",
-    "@typescript-eslint/no-non-null-assertion": "off"
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/no-non-null-asserted-optional-chain": "off"
   }
 }

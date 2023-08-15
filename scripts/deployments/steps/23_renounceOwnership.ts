@@ -380,7 +380,7 @@ export const step_23 = async (
       const paraApeStakingProxy =
         await getInitializableAdminUpgradeabilityProxy(paraApeStaking.address);
       const signers = await getEthersSigners();
-      const adminAddress = signers[5].getAddress();
+      const adminAddress = await signers[5].getAddress();
       if (DRY_RUN) {
         const encodedData1 = paraApeStakingProxy.interface.encodeFunctionData(
           "changeAdmin",

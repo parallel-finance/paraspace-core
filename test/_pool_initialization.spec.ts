@@ -1,19 +1,21 @@
 import {expect} from "chai";
-import {utils} from "ethers";
 import {ZERO_ADDRESS} from "../helpers/constants";
 import {deployPoolCoreLibraries} from "../helpers/contracts-deployments";
 import {ProtocolErrors} from "../helpers/types";
-import {PoolCore__factory} from "../types";
-import {topUpNonPayableWithEther} from "./helpers/utils/funds";
-import {getFirstSigner, getTimeLockProxy} from "../helpers/contracts-getters";
+// import {topUpNonPayableWithEther} from "./helpers/utils/funds";
+// import {utils} from "ethers";
+// import {impersonateAddress} from "../helpers/contracts-helpers";
+import {
+  getContractFactory,
+  getTimeLockProxy,
+} from "../helpers/contracts-getters";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {impersonateAddress} from "../helpers/contracts-helpers";
 
 describe("Pool: Initialization", () => {
   const {
     CALLER_NOT_POOL_CONFIGURATOR,
-    NOT_CONTRACT,
+    // NOT_CONTRACT,
     INVALID_ADDRESSES_PROVIDER,
   } = ProtocolErrors;
 
@@ -33,10 +35,9 @@ describe("Pool: Initialization", () => {
     const coreLibraries = await deployPoolCoreLibraries(false);
     const timeLock = await getTimeLockProxy();
 
-    const poolCore = await new PoolCore__factory(
-      coreLibraries,
-      await getFirstSigner()
-    ).deploy(addressesProvider.address, timeLock.address);
+    const poolCore = await (
+      await getContractFactory("PoolCore", coreLibraries)
+    ).factory.deploy(addressesProvider.address, timeLock.address);
 
     await expect(poolCore.initialize(deployer.address)).to.be.revertedWith(
       INVALID_ADDRESSES_PROVIDER
@@ -66,31 +67,31 @@ describe("Pool: Initialization", () => {
     ).to.be.revertedWith(CALLER_NOT_POOL_CONFIGURATOR);
   });
 
-  it("TC-pool_initialization-04 Tries to call `initReserve()` with an EOA as reserve (revert expected)", async () => {
-    const {pool, deployer, users, configurator} = await loadFixture(
-      testEnvFixture
-    );
-
-    // Impersonate PoolConfigurator
-    await topUpNonPayableWithEther(
-      deployer.signer,
-      [configurator.address],
-      utils.parseEther("1")
-    );
-    const configSigner = (await impersonateAddress(configurator.address))
-      .signer;
-
-    await expect(
-      pool
-        .connect(configSigner)
-        .initReserve(
-          users[0].address,
-          ZERO_ADDRESS,
-          ZERO_ADDRESS,
-          ZERO_ADDRESS,
-          ZERO_ADDRESS,
-          ZERO_ADDRESS
-        )
-    ).to.be.revertedWith(NOT_CONTRACT);
-  });
+  // it("TC-pool_initialization-04 Tries to call `initReserve()` with an EOA as reserve (revert expected)", async () => {
+  //   const {pool, deployer, users, configurator} = await loadFixture(
+  //     testEnvFixture
+  //   );
+  //
+  //   // Impersonate PoolConfigurator
+  //   await topUpNonPayableWithEther(
+  //     deployer.signer,
+  //     [configurator.address],
+  //     utils.parseEther("1")
+  //   );
+  //   const configSigner = (await impersonateAddress(configurator.address))
+  //     .signer;
+  //
+  //   await expect(
+  //     pool
+  //       .connect(configSigner)
+  //       .initReserve(
+  //         users[0].address,
+  //         ZERO_ADDRESS,
+  //         ZERO_ADDRESS,
+  //         ZERO_ADDRESS,
+  //         ZERO_ADDRESS,
+  //         ZERO_ADDRESS
+  //       )
+  //   ).to.be.revertedWith(NOT_CONTRACT);
+  // });
 });

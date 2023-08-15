@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 /// @title The interface for StakefishValidator
 /// @notice Defines implementation of the wallet (deposit, withdraw, collect fees)

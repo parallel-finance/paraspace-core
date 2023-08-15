@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: CC0-1.0
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 /**
  * @title An immutable registry contract to be deployed as a standalone primitive
