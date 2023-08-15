@@ -292,7 +292,7 @@ describe("UI Contracts Tests", () => {
       const uniV3Oracle = await getUniswapV3OracleWrapper();
       const positionData = await uniV3Oracle.getOnchainPositionData(tokenId);
 
-      const data = await poolDataProvider.getUniswapV3LpTokenData(
+      const data = await poolDataProvider.getLiquidityTokenData(
         addressesProvider.address,
         nftPositionManager.address,
         tokenId
