@@ -39,6 +39,18 @@ contract NTokenIzumi is NTokenLiquidity {
         return XTokenType.NTokenIZUMILp;
     }
 
+    function underlyingAsset(uint256 tokenId)
+        external
+        view
+        returns (address token0, address token1)
+    {
+        ILiquidityManager POSITION_MANAGER = ILiquidityManager(
+            _ERC721Data.underlyingAsset
+        );
+        (, , , , , , , uint128 poolId) = POSITION_MANAGER.liquidities(tokenId);
+        (token0, token1, ) = POSITION_MANAGER.poolMetas(poolId);
+    }
+
     /**
      * @notice A function that decreases the current liquidity.
      * @param tokenId The id of the erc721 token
@@ -72,8 +84,7 @@ contract NTokenIzumi is NTokenLiquidity {
         (address token0, address token1, ) = POSITION_MANAGER.poolMetas(poolId);
 
         address weth = _addressesProvider.getWETH();
-        receiveEth = (receiveEth &&
-            (token0 == weth || token1 == weth));
+        receiveEth = (receiveEth && (token0 == weth || token1 == weth));
 
         (uint256 amount0, uint256 amount1) = POSITION_MANAGER.collect(
             receiveEth ? address(this) : user,

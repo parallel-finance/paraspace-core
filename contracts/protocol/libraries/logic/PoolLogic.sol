@@ -231,9 +231,8 @@ library PoolLogic {
             return
                 GenericLogic.getLtvAndLTForLiquidityNFT(
                     ps._reserves,
-                    asset,
+                    assetReserve.xTokenAddress,
                     tokenId,
-                    tokenType,
                     collectionLtv,
                     collectionLT
                 );

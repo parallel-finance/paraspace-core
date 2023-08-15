@@ -16,9 +16,8 @@ import {PercentageMath} from "../math/PercentageMath.sol";
 import {WadRayMath} from "../math/WadRayMath.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
-import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
-import {ILiquidityManager} from "../../../dependencies/izumi/izumi-swap-periphery/interfaces/ILiquidityManager.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
+import {INTokenLiquidity} from "../../../interfaces/INTokenLiquidity.sol";
 import {Helpers} from "../../libraries/helpers/Helpers.sol";
 import {Errors} from "../helpers/Errors.sol";
 
@@ -387,27 +386,13 @@ library GenericLogic {
 
     function getLtvAndLTForLiquidityNFT(
         mapping(address => DataTypes.ReserveData) storage reservesData,
-        address asset,
+        address nToken,
         uint256 tokenId,
-        XTokenType tokenType,
         uint256 collectionLTV,
         uint256 collectionLiquidationThreshold
     ) internal view returns (uint256 ltv, uint256 liquidationThreshold) {
-        address token0;
-        address token1;
-        if (tokenType == XTokenType.NTokenUniswapV3) {
-            (, , token0, token1, , , , , , , , ) = INonfungiblePositionManager(
-                asset
-            ).positions(tokenId);
-        } else if (tokenType == XTokenType.NTokenIZUMILp) {
-            ILiquidityManager liquidityManager = ILiquidityManager(asset);
-            (, , , , , , , uint128 poolId) = liquidityManager.liquidities(
-                tokenId
-            );
-            (token0, token1, ) = liquidityManager.poolMetas(poolId);
-        } else {
-            revert(Errors.INVALID_ASSET_TYPE);
-        }
+        (address token0, address token1) = INTokenLiquidity(nToken)
+            .underlyingAsset(tokenId);
 
         DataTypes.ReserveConfigurationMap memory token0Configs = reservesData[
             token0
@@ -474,9 +459,8 @@ library GenericLogic {
                     uint256 tmpLiquidationThreshold
                 ) = getLtvAndLTForLiquidityNFT(
                         reservesData,
-                        vars.currentReserveAddress,
+                        vars.xTokenAddress,
                         tokenId,
-                        vars.xTokenType,
                         vars.ltv,
                         vars.liquidationThreshold
                     );

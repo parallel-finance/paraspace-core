@@ -39,6 +39,16 @@ contract NTokenUniswapV3 is NTokenLiquidity {
         return XTokenType.NTokenUniswapV3;
     }
 
+    function underlyingAsset(uint256 tokenId)
+        external
+        view
+        returns (address token0, address token1)
+    {
+        (, , token0, token1, , , , , , , , ) = INonfungiblePositionManager(
+            _ERC721Data.underlyingAsset
+        ).positions(tokenId);
+    }
+
     /**
      * @notice A function that decreases the current liquidity.
      * @param tokenId The id of the erc721 token
@@ -78,8 +88,7 @@ contract NTokenUniswapV3 is NTokenLiquidity {
             .positions(tokenId);
 
         address weth = _addressesProvider.getWETH();
-        receiveEth = (receiveEth &&
-            (token0 == weth || token1 == weth));
+        receiveEth = (receiveEth && (token0 == weth || token1 == weth));
 
         INonfungiblePositionManager.CollectParams
             memory collectParams = INonfungiblePositionManager.CollectParams({

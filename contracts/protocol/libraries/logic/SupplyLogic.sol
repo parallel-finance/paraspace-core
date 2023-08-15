@@ -5,7 +5,6 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
-import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {INTokenApeStaking} from "../../../interfaces/INTokenApeStaking.sol";
 import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
@@ -200,9 +199,8 @@ library SupplyLogic {
             for (uint256 index = 0; index < params.tokenData.length; index++) {
                 ValidationLogic.validateForLiquidityNFT(
                     reservesData,
-                    params.asset,
+                    reserveCache.xTokenAddress,
                     params.tokenData[index].tokenId,
-                    tokenType,
                     true,
                     true,
                     true
@@ -402,7 +400,6 @@ library SupplyLogic {
         ValidationLogic.validateWithdrawERC721(
             reservesData,
             reserveCache,
-            params.asset,
             params.tokenIds
         );
         uint256 amountToWithdraw = params.tokenIds.length;
@@ -493,7 +490,6 @@ library SupplyLogic {
         ValidationLogic.validateWithdrawERC721(
             reservesData,
             reserveCache,
-            params.asset,
             tokenIds
         );
 
@@ -608,7 +604,6 @@ library SupplyLogic {
         ValidationLogic.validateTransferERC721(
             reservesData,
             reserve,
-            params.asset,
             params.tokenId
         );
 
@@ -728,7 +723,6 @@ library SupplyLogic {
         ValidationLogic.validateSetUseERC721AsCollateral(
             reservesData,
             reserveCache,
-            asset,
             tokenIds
         );
 
@@ -774,7 +768,6 @@ library SupplyLogic {
         ValidationLogic.validateSetUseERC721AsCollateral(
             reservesData,
             reserveCache,
-            asset,
             tokenIds
         );
 

@@ -26,9 +26,8 @@ import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.so
 import {IToken} from "../../../interfaces/IToken.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../helpers/Helpers.sol";
-import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
-import {ILiquidityManager} from "../../../dependencies/izumi/izumi-swap-periphery/interfaces/ILiquidityManager.sol";
 import "../../../interfaces/INTokenApeStaking.sol";
+import "../../../interfaces/INTokenLiquidity.sol";
 
 /**
  * @title ReserveLogic library
@@ -190,7 +189,6 @@ library ValidationLogic {
     function validateWithdrawERC721(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.ReserveCache memory reserveCache,
-        address asset,
         uint256[] memory tokenIds
     ) internal view {
         (
@@ -217,9 +215,8 @@ library ValidationLogic {
             for (uint256 index = 0; index < tokenIds.length; index++) {
                 ValidationLogic.validateForLiquidityNFT(
                     reservesData,
-                    asset,
+                    reserveCache.xTokenAddress,
                     tokenIds[index],
-                    tokenType,
                     true,
                     true,
                     false
@@ -448,7 +445,6 @@ library ValidationLogic {
     function validateSetUseERC721AsCollateral(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.ReserveCache memory reserveCache,
-        address asset,
         uint256[] calldata tokenIds
     ) internal view {
         (
@@ -475,9 +471,8 @@ library ValidationLogic {
             for (uint256 index = 0; index < tokenIds.length; index++) {
                 ValidationLogic.validateForLiquidityNFT(
                     reservesData,
-                    asset,
+                    reserveCache.xTokenAddress,
                     tokenIds[index],
-                    tokenType,
                     true,
                     true,
                     false
@@ -632,9 +627,8 @@ library ValidationLogic {
         ) {
             ValidationLogic.validateForLiquidityNFT(
                 reservesData,
-                params.collateralAsset,
+                address(nToken),
                 params.tokenId,
-                tokenType,
                 true,
                 true,
                 false
@@ -937,9 +931,8 @@ library ValidationLogic {
                     (uint256 assetLTV, ) = GenericLogic
                         .getLtvAndLTForLiquidityNFT(
                             reservesData,
-                            asset,
+                            address(nToken),
                             tokenIds[index],
-                            tokenType,
                             reserve.configuration.getLtv(),
                             0
                         );
@@ -972,7 +965,6 @@ library ValidationLogic {
     function validateTransferERC721(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.ReserveData storage reserve,
-        address asset,
         uint256 tokenId
     ) internal view {
         require(!reserve.configuration.getPaused(), Errors.RESERVE_PAUSED);
@@ -984,9 +976,8 @@ library ValidationLogic {
         ) {
             ValidationLogic.validateForLiquidityNFT(
                 reservesData,
-                asset,
+                address(nToken),
                 tokenId,
-                tokenType,
                 false,
                 true,
                 false
@@ -1185,28 +1176,14 @@ library ValidationLogic {
 
     function validateForLiquidityNFT(
         mapping(address => DataTypes.ReserveData) storage reservesData,
-        address asset,
+        address nToken,
         uint256 tokenId,
-        XTokenType tokenType,
         bool checkActive,
         bool checkNotPaused,
         bool checkNotFrozen
     ) internal view {
-        address token0;
-        address token1;
-        if (tokenType == XTokenType.NTokenUniswapV3) {
-            (, , token0, token1, , , , , , , , ) = INonfungiblePositionManager(
-                asset
-            ).positions(tokenId);
-        } else if (tokenType == XTokenType.NTokenIZUMILp) {
-            ILiquidityManager liquidityManager = ILiquidityManager(asset);
-            (, , , , , , , uint128 poolId) = liquidityManager.liquidities(
-                tokenId
-            );
-            (token0, token1, ) = liquidityManager.poolMetas(poolId);
-        } else {
-            revert(Errors.INVALID_ASSET_TYPE);
-        }
+        (address token0, address token1) = INTokenLiquidity(nToken)
+            .underlyingAsset(tokenId);
 
         ValidateForLiquidityNFTLocalVars memory vars;
         (
