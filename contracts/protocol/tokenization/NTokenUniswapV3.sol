@@ -45,7 +45,7 @@ contract NTokenUniswapV3 is NTokenLiquidity {
      * @param liquidityDecrease The amount of liquidity to remove of LP
      * @param amount0Min The minimum amount to remove of token0
      * @param amount1Min The minimum amount to remove of token1
-     * @param receiveEthAsWeth If convert weth to ETH
+     * @param receiveEth If convert weth to ETH
      */
     function _decreaseLiquidity(
         address user,
@@ -53,7 +53,7 @@ contract NTokenUniswapV3 is NTokenLiquidity {
         uint128 liquidityDecrease,
         uint256 amount0Min,
         uint256 amount1Min,
-        bool receiveEthAsWeth
+        bool receiveEth
     ) internal override {
         INonfungiblePositionManager positionManager = INonfungiblePositionManager(
                 _ERC721Data.underlyingAsset
@@ -78,13 +78,13 @@ contract NTokenUniswapV3 is NTokenLiquidity {
             .positions(tokenId);
 
         address weth = _addressesProvider.getWETH();
-        receiveEthAsWeth = (receiveEthAsWeth &&
+        receiveEth = (receiveEth &&
             (token0 == weth || token1 == weth));
 
         INonfungiblePositionManager.CollectParams
             memory collectParams = INonfungiblePositionManager.CollectParams({
                 tokenId: tokenId,
-                recipient: receiveEthAsWeth ? address(this) : user,
+                recipient: receiveEth ? address(this) : user,
                 amount0Max: type(uint128).max,
                 amount1Max: type(uint128).max
             });
@@ -93,7 +93,7 @@ contract NTokenUniswapV3 is NTokenLiquidity {
             collectParams
         );
 
-        if (receiveEthAsWeth) {
+        if (receiveEth) {
             if (amount0 > 0) {
                 transferTokenOut(user, token0, amount0, weth);
             }

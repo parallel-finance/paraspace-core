@@ -503,7 +503,7 @@ library SupplyLogic {
             params.liquidityDecrease,
             params.amount0Min,
             params.amount1Min,
-            params.receiveEthAsWeth
+            params.receiveEth
         );
 
         bool isUsedAsCollateral = ICollateralizableERC721(

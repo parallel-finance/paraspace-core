@@ -45,7 +45,7 @@ contract NTokenIzumi is NTokenLiquidity {
      * @param liquidityDecrease The amount of liquidity to remove of LP
      * @param amount0Min The minimum amount to remove of token0
      * @param amount1Min The minimum amount to remove of token1
-     * @param receiveEthAsWeth If convert weth to ETH
+     * @param receiveEth If convert weth to ETH
      */
     function _decreaseLiquidity(
         address user,
@@ -53,7 +53,7 @@ contract NTokenIzumi is NTokenLiquidity {
         uint128 liquidityDecrease,
         uint256 amount0Min,
         uint256 amount1Min,
-        bool receiveEthAsWeth
+        bool receiveEth
     ) internal override {
         ILiquidityManager POSITION_MANAGER = ILiquidityManager(
             _ERC721Data.underlyingAsset
@@ -72,17 +72,17 @@ contract NTokenIzumi is NTokenLiquidity {
         (address token0, address token1, ) = POSITION_MANAGER.poolMetas(poolId);
 
         address weth = _addressesProvider.getWETH();
-        receiveEthAsWeth = (receiveEthAsWeth &&
+        receiveEth = (receiveEth &&
             (token0 == weth || token1 == weth));
 
         (uint256 amount0, uint256 amount1) = POSITION_MANAGER.collect(
-            receiveEthAsWeth ? address(this) : user,
+            receiveEth ? address(this) : user,
             tokenId,
             type(uint128).max,
             type(uint128).max
         );
 
-        if (receiveEthAsWeth) {
+        if (receiveEth) {
             if (amount0 > 0) {
                 transferTokenOut(user, token0, amount0, weth);
             }

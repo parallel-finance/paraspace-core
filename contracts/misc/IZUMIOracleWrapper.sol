@@ -7,27 +7,18 @@ import {IPriceOracleGetter} from "../interfaces/IPriceOracleGetter.sol";
 import {IiZiSwapFactory} from "../dependencies/izumi/izumi-swap-core/interfaces/IiZiSwapFactory.sol";
 import {IiZiSwapPool} from "../dependencies/izumi/izumi-swap-core/interfaces/IiZiSwapPool.sol";
 import {ILiquidityManager} from "../dependencies/izumi/izumi-swap-periphery/interfaces/ILiquidityManager.sol";
-import {LiquidityAmounts} from "../dependencies/uniswapv3-periphery/libraries/LiquidityAmounts.sol";
 import {TickMath} from "../dependencies/uniswapv3-core/libraries/TickMath.sol";
-import {SqrtLib} from "../dependencies/math/SqrtLib.sol";
-import {FullMath} from "../dependencies/uniswapv3-core/libraries/FullMath.sol";
-import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
-import {LiquidityNFTPositionData} from "../interfaces/ILiquidityNFTPositionInfoProvider.sol";
-import {SafeCast} from "../dependencies/uniswapv3-core/libraries/SafeCast.sol";
-import {FixedPoint96} from "../dependencies/uniswapv3-core/libraries/FixedPoint96.sol";
+import {LiquidityNFTPositionData, OnChainFeeParams, PairOracleData} from "../interfaces/ILiquidityNFTPositionInfoProvider.sol";
 import {LogPowMath} from "../dependencies/izumi/izumi-swap-core/libraries/LogPowMath.sol";
 import {AmountMath} from "../dependencies/izumi/izumi-swap-core/libraries/AmountMath.sol";
 import {MulDivMath} from "../dependencies/izumi/izumi-swap-core/libraries/MulDivMath.sol";
 import {TwoPower} from "../dependencies/izumi/izumi-swap-core/libraries/TwoPower.sol";
-import "hardhat/console.sol";
+import {LiquidityOracleLogic} from "./LiquidityOracleLogic.sol";
 
 contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
-    using SafeCast for uint256;
-
     IiZiSwapFactory immutable IZUMI_FACTORY;
     ILiquidityManager immutable POSITION_MANAGER;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
-    uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
     constructor(
         address _factory,
@@ -37,21 +28,6 @@ contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
         IZUMI_FACTORY = IiZiSwapFactory(_factory);
         POSITION_MANAGER = ILiquidityManager(_manager);
         ADDRESSES_PROVIDER = IPoolAddressesProvider(_addressProvider);
-    }
-
-    struct FeeParams {
-        uint256 feeGrowthOutside0X128Lower;
-        uint256 feeGrowthOutside1X128Lower;
-        uint256 feeGrowthOutside0X128Upper;
-        uint256 feeGrowthOutside1X128Upper;
-    }
-
-    struct PairOracleData {
-        uint256 token0Price;
-        uint256 token1Price;
-        uint8 token0Decimal;
-        uint8 token1Decimal;
-        uint160 sqrtPriceX96;
     }
 
     /**
@@ -166,7 +142,10 @@ contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
             tokenId
         );
 
-        PairOracleData memory oracleData = _getOracleData(positionData);
+        PairOracleData memory oracleData = LiquidityOracleLogic.getOracleData(
+            IPriceOracleGetter(ADDRESSES_PROVIDER.getPriceOracle()),
+            positionData
+        );
 
         (
             uint256 liquidityAmount0,
@@ -192,34 +171,6 @@ contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
                 10**oracleData.token1Decimal);
     }
 
-    function _getOracleData(LiquidityNFTPositionData memory positionData)
-        internal
-        view
-        returns (PairOracleData memory)
-    {
-        PairOracleData memory oracleData;
-        IPriceOracleGetter oracle = IPriceOracleGetter(
-            ADDRESSES_PROVIDER.getPriceOracle()
-        );
-        oracleData.token0Price = oracle.getAssetPrice(positionData.token0);
-        oracleData.token1Price = oracle.getAssetPrice(positionData.token1);
-
-        oracleData.token0Decimal = IERC20Detailed(positionData.token0)
-            .decimals();
-        oracleData.token1Decimal = IERC20Detailed(positionData.token1)
-            .decimals();
-
-        oracleData.sqrtPriceX96 = ((SqrtLib.sqrt(
-            ((oracleData.token0Price *
-                10 **
-                    (36 +
-                        oracleData.token1Decimal -
-                        oracleData.token0Decimal)) / (oracleData.token1Price))
-        ) << FixedPoint96.RESOLUTION) / 1E18).toUint160();
-
-        return oracleData;
-    }
-
     function _getPendingFeeAmounts(LiquidityNFTPositionData memory positionData)
         internal
         view
@@ -232,7 +183,7 @@ contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
                 positionData.fee
             )
         );
-        FeeParams memory feeParams;
+        OnChainFeeParams memory feeParams;
 
         (
             ,
@@ -249,69 +200,13 @@ contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
 
         ) = pool.points(positionData.tickUpper);
 
-        uint256 feeGrowthGlobal0X128 = pool.feeScaleX_128();
-        uint256 feeGrowthGlobal1X128 = pool.feeScaleY_128();
+        feeParams.feeGrowthGlobal0X128 = pool.feeScaleX_128();
+        feeParams.feeGrowthGlobal1X128 = pool.feeScaleY_128();
 
-        unchecked {
-            // calculate fee growth below
-            uint256 feeGrowthBelow0X128;
-            uint256 feeGrowthBelow1X128;
-            if (positionData.currentTick >= positionData.tickLower) {
-                feeGrowthBelow0X128 = feeParams.feeGrowthOutside0X128Lower;
-                feeGrowthBelow1X128 = feeParams.feeGrowthOutside1X128Lower;
-            } else {
-                feeGrowthBelow0X128 =
-                    feeGrowthGlobal0X128 -
-                    feeParams.feeGrowthOutside0X128Lower;
-                feeGrowthBelow1X128 =
-                    feeGrowthGlobal1X128 -
-                    feeParams.feeGrowthOutside1X128Lower;
-            }
-
-            // calculate fee growth above
-            uint256 feeGrowthAbove0X128;
-            uint256 feeGrowthAbove1X128;
-            if (positionData.currentTick < positionData.tickUpper) {
-                feeGrowthAbove0X128 = feeParams.feeGrowthOutside0X128Upper;
-                feeGrowthAbove1X128 = feeParams.feeGrowthOutside1X128Upper;
-            } else {
-                feeGrowthAbove0X128 =
-                    feeGrowthGlobal0X128 -
-                    feeParams.feeGrowthOutside0X128Upper;
-                feeGrowthAbove1X128 =
-                    feeGrowthGlobal1X128 -
-                    feeParams.feeGrowthOutside1X128Upper;
-            }
-            uint256 feeGrowthInside0X128;
-            uint256 feeGrowthInside1X128;
-
-            feeGrowthInside0X128 =
-                feeGrowthGlobal0X128 -
-                feeGrowthBelow0X128 -
-                feeGrowthAbove0X128;
-            feeGrowthInside1X128 =
-                feeGrowthGlobal1X128 -
-                feeGrowthBelow1X128 -
-                feeGrowthAbove1X128;
-
-            token0Amount = uint128(
-                FullMath.mulDiv(
-                    feeGrowthInside0X128 -
-                        positionData.feeGrowthInside0LastX128,
-                    positionData.liquidity,
-                    Q128
-                )
-            );
-
-            token1Amount = uint128(
-                FullMath.mulDiv(
-                    feeGrowthInside1X128 -
-                        positionData.feeGrowthInside1LastX128,
-                    positionData.liquidity,
-                    Q128
-                )
-            );
-        }
+        (token0Amount, token1Amount) = LiquidityOracleLogic.calculateTokenFee(
+            positionData,
+            feeParams
+        );
     }
 
     function _computeDepositXY(

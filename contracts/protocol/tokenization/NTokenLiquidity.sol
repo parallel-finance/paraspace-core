@@ -50,7 +50,7 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
         uint128 liquidityDecrease,
         uint256 amount0Min,
         uint256 amount1Min,
-        bool receiveEthAsWeth
+        bool receiveEth
     ) external onlyPool nonReentrant {
         require(user == ownerOf(tokenId), Errors.NOT_THE_OWNER);
 
@@ -60,7 +60,7 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
             liquidityDecrease,
             amount0Min,
             amount1Min,
-            receiveEthAsWeth
+            receiveEth
         );
     }
 

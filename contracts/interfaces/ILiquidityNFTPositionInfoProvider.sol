@@ -16,6 +16,23 @@ struct LiquidityNFTPositionData {
     uint256 tokensOwed1;
 }
 
+struct OnChainFeeParams {
+    uint256 feeGrowthOutside0X128Lower;
+    uint256 feeGrowthOutside1X128Lower;
+    uint256 feeGrowthOutside0X128Upper;
+    uint256 feeGrowthOutside1X128Upper;
+    uint256 feeGrowthGlobal0X128;
+    uint256 feeGrowthGlobal1X128;
+}
+
+struct PairOracleData {
+    uint256 token0Price;
+    uint256 token1Price;
+    uint8 token0Decimal;
+    uint8 token1Decimal;
+    uint160 sqrtPriceX96;
+}
+
 /************
 @title IUniswapV3PositionInfoProvider interface
 @notice Interface for UniswapV3 Lp token position info.*/
