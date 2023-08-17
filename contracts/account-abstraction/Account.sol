@@ -4,6 +4,8 @@ pragma solidity 0.8.21;
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
+import "@openzeppelin/contracts/interfaces/IERC1271.sol";
+import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
 
 import "./base-account-abstraction/core/BaseAccount.sol";
 import "./callback/TokenCallbackHandler.sol";
@@ -18,6 +20,7 @@ contract Account is
     BaseAccount,
     TokenCallbackHandler,
     UUPSUpgradeable,
+    IERC1271,
     Initializable
 {
     using ECDSA for bytes32;
@@ -124,9 +127,36 @@ contract Account is
         bytes32 userOpHash
     ) internal virtual override returns (uint256 validationData) {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
-        if (owner != hash.recover(userOp.signature))
-            return SIG_VALIDATION_FAILED;
-        return 0;
+
+        bool isValid = SignatureChecker.isValidSignatureNow(
+            owner,
+            hash,
+            userOp.signature
+        );
+
+        if (isValid) {
+            return 0;
+        }
+
+        return SIG_VALIDATION_FAILED;
+    }
+
+    function isValidSignature(bytes32 hash, bytes memory signature)
+        external
+        view
+        returns (bytes4)
+    {
+        bool isValid = SignatureChecker.isValidSignatureNow(
+            owner,
+            hash,
+            signature
+        );
+
+        if (isValid) {
+            return IERC1271.isValidSignature.selector;
+        }
+
+        return "";
     }
 
     function _call(
