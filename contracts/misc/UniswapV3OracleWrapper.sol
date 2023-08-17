@@ -32,9 +32,17 @@ contract UniswapV3OracleWrapper is ILiquidityNFTOracleWrapper {
      * @notice get onchain position data from uniswap for the specified tokenId.
      */
     function getOnchainPositionData(uint256 tokenId)
-        public
+        external
         view
-        returns (LiquidityNFTPositionData memory)
+        returns (LiquidityNFTPositionData memory positionData)
+    {
+        (, positionData) = _getOnchainPositionData(tokenId);
+    }
+
+    function _getOnchainPositionData(uint256 tokenId)
+        internal
+        view
+        returns (IUniswapV3PoolState, LiquidityNFTPositionData memory)
     {
         (
             ,
@@ -55,22 +63,20 @@ contract UniswapV3OracleWrapper is ILiquidityNFTOracleWrapper {
             UNISWAP_V3_FACTORY.getPool(token0, token1, fee)
         );
         (uint160 currentPrice, int24 currentTick, , , , , ) = pool.slot0();
-
-        return
-            LiquidityNFTPositionData({
-                token0: token0,
-                token1: token1,
-                fee: fee,
-                tickLower: tickLower,
-                tickUpper: tickUpper,
-                currentTick: currentTick,
-                currentPrice: currentPrice,
-                liquidity: liquidity,
-                feeGrowthInside0LastX128: feeGrowthInside0LastX128,
-                feeGrowthInside1LastX128: feeGrowthInside1LastX128,
-                tokensOwed0: tokensOwed0,
-                tokensOwed1: tokensOwed1
-            });
+        LiquidityNFTPositionData memory positionData;
+        positionData.token0 = token0;
+        positionData.token1 = token1;
+        positionData.fee = fee;
+        positionData.tickLower = tickLower;
+        positionData.tickUpper = tickUpper;
+        positionData.liquidity = liquidity;
+        positionData.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
+        positionData.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+        positionData.tokensOwed0 = tokensOwed0;
+        positionData.tokensOwed1 = tokensOwed1;
+        positionData.currentPrice = currentPrice;
+        positionData.currentTick = currentTick;
+        return (pool, positionData);
     }
 
     /**
@@ -81,9 +87,10 @@ contract UniswapV3OracleWrapper is ILiquidityNFTOracleWrapper {
         view
         returns (uint256 token0Amount, uint256 token1Amount)
     {
-        LiquidityNFTPositionData memory positionData = getOnchainPositionData(
-            tokenId
-        );
+        (
+            ,
+            LiquidityNFTPositionData memory positionData
+        ) = _getOnchainPositionData(tokenId);
         (token0Amount, token1Amount) = getLiquidityAmountFromPositionData(
             positionData
         );
@@ -112,10 +119,12 @@ contract UniswapV3OracleWrapper is ILiquidityNFTOracleWrapper {
         view
         returns (uint256 token0Amount, uint256 token1Amount)
     {
-        LiquidityNFTPositionData memory positionData = getOnchainPositionData(
-            tokenId
-        );
-        (token0Amount, token1Amount) = getLpFeeAmountFromPositionData(
+        (
+            IUniswapV3PoolState pool,
+            LiquidityNFTPositionData memory positionData
+        ) = _getOnchainPositionData(tokenId);
+        (token0Amount, token1Amount) = _getLpFeeAmountFromPositionData(
+            pool,
             positionData
         );
     }
@@ -126,8 +135,25 @@ contract UniswapV3OracleWrapper is ILiquidityNFTOracleWrapper {
      */
     function getLpFeeAmountFromPositionData(
         LiquidityNFTPositionData memory positionData
-    ) public view returns (uint256 token0Amount, uint256 token1Amount) {
-        (token0Amount, token1Amount) = _getPendingFeeAmounts(positionData);
+    ) external view returns (uint256 token0Amount, uint256 token1Amount) {
+        IUniswapV3PoolState pool = IUniswapV3PoolState(
+            UNISWAP_V3_FACTORY.getPool(
+                positionData.token0,
+                positionData.token1,
+                positionData.fee
+            )
+        );
+        return _getLpFeeAmountFromPositionData(pool, positionData);
+    }
+
+    function _getLpFeeAmountFromPositionData(
+        IUniswapV3PoolState pool,
+        LiquidityNFTPositionData memory positionData
+    ) internal view returns (uint256 token0Amount, uint256 token1Amount) {
+        (token0Amount, token1Amount) = _getPendingFeeAmounts(
+            pool,
+            positionData
+        );
 
         token0Amount += positionData.tokensOwed0;
         token1Amount += positionData.tokensOwed1;
@@ -137,9 +163,10 @@ contract UniswapV3OracleWrapper is ILiquidityNFTOracleWrapper {
      * @notice Returns the price for the specified tokenId.
      */
     function getTokenPrice(uint256 tokenId) public view returns (uint256) {
-        LiquidityNFTPositionData memory positionData = getOnchainPositionData(
-            tokenId
-        );
+        (
+            IUniswapV3PoolState pool,
+            LiquidityNFTPositionData memory positionData
+        ) = _getOnchainPositionData(tokenId);
 
         PairOracleData memory oracleData = LiquidityOracleLogic.getOracleData(
             IPriceOracleGetter(ADDRESSES_PROVIDER.getPriceOracle()),
@@ -157,7 +184,7 @@ contract UniswapV3OracleWrapper is ILiquidityNFTOracleWrapper {
         (
             uint256 feeAmount0,
             uint256 feeAmount1
-        ) = getLpFeeAmountFromPositionData(positionData);
+        ) = _getLpFeeAmountFromPositionData(pool, positionData);
 
         return
             (((liquidityAmount0 + feeAmount0) * oracleData.token0Price) /
@@ -166,18 +193,10 @@ contract UniswapV3OracleWrapper is ILiquidityNFTOracleWrapper {
                 10**oracleData.token1Decimal);
     }
 
-    function _getPendingFeeAmounts(LiquidityNFTPositionData memory positionData)
-        internal
-        view
-        returns (uint256 token0Amount, uint256 token1Amount)
-    {
-        IUniswapV3PoolState pool = IUniswapV3PoolState(
-            UNISWAP_V3_FACTORY.getPool(
-                positionData.token0,
-                positionData.token1,
-                positionData.fee
-            )
-        );
+    function _getPendingFeeAmounts(
+        IUniswapV3PoolState pool,
+        LiquidityNFTPositionData memory positionData
+    ) internal view returns (uint256 token0Amount, uint256 token1Amount) {
         OnChainFeeParams memory feeParams;
 
         (

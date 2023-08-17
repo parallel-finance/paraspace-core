@@ -34,43 +34,47 @@ contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
      * @notice get onchain position data from uniswap for the specified tokenId.
      */
     function getOnchainPositionData(uint256 tokenId)
-        public
+        external
         view
-        returns (LiquidityNFTPositionData memory)
+        returns (LiquidityNFTPositionData memory positionData)
     {
+        (, positionData) = _getOnchainPositionData(tokenId);
+    }
+
+    function _getOnchainPositionData(uint256 tokenId)
+        internal
+        view
+        returns (
+            IiZiSwapPool pool,
+            LiquidityNFTPositionData memory positionData
+        )
+    {
+        uint128 poolId;
         (
-            int24 leftPt,
-            int24 rightPt,
-            uint128 liquidity,
-            uint256 lastFeeScaleX_128,
-            uint256 lastFeeScaleY_128,
-            uint256 remainTokenX,
-            uint256 remainTokenY,
-            uint128 poolId
+            positionData.tickLower,
+            positionData.tickUpper,
+            positionData.liquidity,
+            positionData.feeGrowthInside0LastX128,
+            positionData.feeGrowthInside1LastX128,
+            positionData.tokensOwed0,
+            positionData.tokensOwed1,
+            poolId
         ) = POSITION_MANAGER.liquidities(tokenId);
-        (address token0, address token1, uint24 fee) = POSITION_MANAGER
-            .poolMetas(poolId);
+        (
+            positionData.token0,
+            positionData.token1,
+            positionData.fee
+        ) = POSITION_MANAGER.poolMetas(poolId);
 
-        IiZiSwapPool pool = IiZiSwapPool(
-            IZUMI_FACTORY.pool(token0, token1, fee)
+        pool = IiZiSwapPool(
+            IZUMI_FACTORY.pool(
+                positionData.token0,
+                positionData.token1,
+                positionData.fee
+            )
         );
-        (uint160 currentPrice, int24 currentTick, , , , , , ) = pool.state();
-
-        return
-            LiquidityNFTPositionData({
-                token0: token0,
-                token1: token1,
-                fee: fee,
-                tickLower: leftPt,
-                tickUpper: rightPt,
-                currentTick: currentTick,
-                currentPrice: currentPrice,
-                liquidity: liquidity,
-                feeGrowthInside0LastX128: lastFeeScaleX_128,
-                feeGrowthInside1LastX128: lastFeeScaleY_128,
-                tokensOwed0: remainTokenX,
-                tokensOwed1: remainTokenY
-            });
+        (positionData.currentPrice, positionData.currentTick, , , , , , ) = pool
+            .state();
     }
 
     /**
@@ -81,9 +85,10 @@ contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
         view
         returns (uint256 token0Amount, uint256 token1Amount)
     {
-        LiquidityNFTPositionData memory positionData = getOnchainPositionData(
-            tokenId
-        );
+        (
+            ,
+            LiquidityNFTPositionData memory positionData
+        ) = _getOnchainPositionData(tokenId);
         (token0Amount, token1Amount) = getLiquidityAmountFromPositionData(
             positionData
         );
@@ -113,10 +118,12 @@ contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
         view
         returns (uint256 token0Amount, uint256 token1Amount)
     {
-        LiquidityNFTPositionData memory positionData = getOnchainPositionData(
-            tokenId
-        );
-        (token0Amount, token1Amount) = getLpFeeAmountFromPositionData(
+        (
+            IiZiSwapPool pool,
+            LiquidityNFTPositionData memory positionData
+        ) = _getOnchainPositionData(tokenId);
+        (token0Amount, token1Amount) = _getLpFeeAmountFromPositionData(
+            pool,
             positionData
         );
     }
@@ -127,8 +134,25 @@ contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
      */
     function getLpFeeAmountFromPositionData(
         LiquidityNFTPositionData memory positionData
-    ) public view returns (uint256 token0Amount, uint256 token1Amount) {
-        (token0Amount, token1Amount) = _getPendingFeeAmounts(positionData);
+    ) external view returns (uint256 token0Amount, uint256 token1Amount) {
+        IiZiSwapPool pool = IiZiSwapPool(
+            IZUMI_FACTORY.pool(
+                positionData.token0,
+                positionData.token1,
+                positionData.fee
+            )
+        );
+        return _getLpFeeAmountFromPositionData(pool, positionData);
+    }
+
+    function _getLpFeeAmountFromPositionData(
+        IiZiSwapPool pool,
+        LiquidityNFTPositionData memory positionData
+    ) internal view returns (uint256 token0Amount, uint256 token1Amount) {
+        (token0Amount, token1Amount) = _getPendingFeeAmounts(
+            pool,
+            positionData
+        );
 
         token0Amount += positionData.tokensOwed0;
         token1Amount += positionData.tokensOwed1;
@@ -137,10 +161,11 @@ contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
     /**
      * @notice Returns the price for the specified tokenId.
      */
-    function getTokenPrice(uint256 tokenId) public view returns (uint256) {
-        LiquidityNFTPositionData memory positionData = getOnchainPositionData(
-            tokenId
-        );
+    function getTokenPrice(uint256 tokenId) external view returns (uint256) {
+        (
+            IiZiSwapPool pool,
+            LiquidityNFTPositionData memory positionData
+        ) = _getOnchainPositionData(tokenId);
 
         PairOracleData memory oracleData = LiquidityOracleLogic.getOracleData(
             IPriceOracleGetter(ADDRESSES_PROVIDER.getPriceOracle()),
@@ -162,7 +187,7 @@ contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
         (
             uint256 feeAmount0,
             uint256 feeAmount1
-        ) = getLpFeeAmountFromPositionData(positionData);
+        ) = _getLpFeeAmountFromPositionData(pool, positionData);
 
         return
             (((liquidityAmount0 + feeAmount0) * oracleData.token0Price) /
@@ -171,18 +196,10 @@ contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
                 10**oracleData.token1Decimal);
     }
 
-    function _getPendingFeeAmounts(LiquidityNFTPositionData memory positionData)
-        internal
-        view
-        returns (uint256 token0Amount, uint256 token1Amount)
-    {
-        IiZiSwapPool pool = IiZiSwapPool(
-            IZUMI_FACTORY.pool(
-                positionData.token0,
-                positionData.token1,
-                positionData.fee
-            )
-        );
+    function _getPendingFeeAmounts(
+        IiZiSwapPool pool,
+        LiquidityNFTPositionData memory positionData
+    ) internal view returns (uint256 token0Amount, uint256 token1Amount) {
         OnChainFeeParams memory feeParams;
 
         (

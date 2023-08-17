@@ -12,7 +12,6 @@ import {
   approveTo,
 } from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
-import {DRE} from "../helpers/misc-utils";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
 

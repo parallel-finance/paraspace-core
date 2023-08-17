@@ -108,8 +108,11 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
             tokenId
         );
 
-        address weth = _addressesProvider.getWETH();
-        receiveEth = (receiveEth && (token0 == weth || token1 == weth));
+        address weth;
+        if (receiveEth) {
+            weth = _addressesProvider.getWETH();
+            receiveEth = (token0 == weth || token1 == weth);
+        }
 
         (uint256 amount0, uint256 amount1) = _collect(
             positionManager,
@@ -145,9 +148,13 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
         );
 
         // move underlying into this contract
-        address weth = _addressesProvider.getWETH();
-        bool token0IsETH = (token0 == weth && msg.value > 0);
-        bool token1IsETH = (token1 == weth && msg.value > 0);
+        bool token0IsETH;
+        bool token1IsETH;
+        if (msg.value > 0) {
+            address weth = _addressesProvider.getWETH();
+            token0IsETH = (token0 == weth);
+            token1IsETH = (token1 == weth);
+        }
         if (token0IsETH) {
             require(msg.value == amountAdd0, Errors.INVALID_AMOUNT);
         } else {
