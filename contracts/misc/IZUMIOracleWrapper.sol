@@ -13,41 +13,28 @@ import {LogPowMath} from "../dependencies/izumi/izumi-swap-core/libraries/LogPow
 import {AmountMath} from "../dependencies/izumi/izumi-swap-core/libraries/AmountMath.sol";
 import {MulDivMath} from "../dependencies/izumi/izumi-swap-core/libraries/MulDivMath.sol";
 import {TwoPower} from "../dependencies/izumi/izumi-swap-core/libraries/TwoPower.sol";
-import {LiquidityOracleLogic} from "./LiquidityOracleLogic.sol";
+import {LiquidityNFTOracleWrapper} from "./LiquidityNFTOracleWrapper.sol";
 
-contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
-    IiZiSwapFactory immutable IZUMI_FACTORY;
-    ILiquidityManager immutable POSITION_MANAGER;
-    IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
-
+contract IZUMIOracleWrapper is LiquidityNFTOracleWrapper {
     constructor(
         address _factory,
         address _manager,
         address _addressProvider
-    ) {
-        IZUMI_FACTORY = IiZiSwapFactory(_factory);
-        POSITION_MANAGER = ILiquidityManager(_manager);
-        ADDRESSES_PROVIDER = IPoolAddressesProvider(_addressProvider);
-    }
+    ) LiquidityNFTOracleWrapper(_factory, _manager, _addressProvider) {}
 
-    /**
-     * @notice get onchain position data from uniswap for the specified tokenId.
-     */
-    function getOnchainPositionData(uint256 tokenId)
-        external
-        view
-        returns (LiquidityNFTPositionData memory positionData)
-    {
-        (, positionData) = _getOnchainPositionData(tokenId);
+    function _getPoolAddress(
+        address token0,
+        address token1,
+        uint24 fee
+    ) internal view override returns (address) {
+        return IiZiSwapFactory(DEX_FACTORY).pool(token0, token1, fee);
     }
 
     function _getOnchainPositionData(uint256 tokenId)
         internal
         view
-        returns (
-            IiZiSwapPool pool,
-            LiquidityNFTPositionData memory positionData
-        )
+        override
+        returns (address pool, LiquidityNFTPositionData memory positionData)
     {
         uint128 poolId;
         (
@@ -59,147 +46,60 @@ contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
             positionData.tokensOwed0,
             positionData.tokensOwed1,
             poolId
-        ) = POSITION_MANAGER.liquidities(tokenId);
+        ) = ILiquidityManager(POSITION_MANAGER).liquidities(tokenId);
         (
             positionData.token0,
             positionData.token1,
             positionData.fee
-        ) = POSITION_MANAGER.poolMetas(poolId);
+        ) = ILiquidityManager(POSITION_MANAGER).poolMetas(poolId);
 
-        pool = IiZiSwapPool(
-            IZUMI_FACTORY.pool(
-                positionData.token0,
-                positionData.token1,
-                positionData.fee
-            )
+        pool = IiZiSwapFactory(DEX_FACTORY).pool(
+            positionData.token0,
+            positionData.token1,
+            positionData.fee
         );
-        (positionData.currentPrice, positionData.currentTick, , , , , , ) = pool
-            .state();
-    }
-
-    /**
-     * @notice get onchain liquidity amount for the specified tokenId.
-     */
-    function getLiquidityAmount(uint256 tokenId)
-        external
-        view
-        returns (uint256 token0Amount, uint256 token1Amount)
-    {
         (
-            ,
-            LiquidityNFTPositionData memory positionData
-        ) = _getOnchainPositionData(tokenId);
-        (token0Amount, token1Amount) = getLiquidityAmountFromPositionData(
-            positionData
-        );
-    }
-
-    /**
-     * @notice calculate liquidity amount for the position data.
-     * @param positionData The specified position data
-     */
-    function getLiquidityAmountFromPositionData(
-        LiquidityNFTPositionData memory positionData
-    ) public pure returns (uint256 token0Amount, uint256 token1Amount) {
-        (token0Amount, token1Amount, ) = _computeDepositXY(
-            positionData.liquidity,
-            positionData.tickLower,
-            positionData.tickUpper,
+            positionData.currentPrice,
             positionData.currentTick,
-            positionData.currentPrice
-        );
+            ,
+            ,
+            ,
+            ,
+            ,
+
+        ) = IiZiSwapPool(pool).state();
     }
 
-    /**
-     * @notice get liquidity provider fee amount for the specified tokenId.
-     */
-    function getLpFeeAmount(uint256 tokenId)
-        external
-        view
+    function _calculateLiquidityAmount(
+        int24 tickLower,
+        int24 tickUpper,
+        uint160 currentPrice,
+        uint128 liquidity
+    )
+        internal
+        pure
+        override
         returns (uint256 token0Amount, uint256 token1Amount)
     {
-        (
-            IiZiSwapPool pool,
-            LiquidityNFTPositionData memory positionData
-        ) = _getOnchainPositionData(tokenId);
-        (token0Amount, token1Amount) = _getLpFeeAmountFromPositionData(
-            pool,
-            positionData
+        (token0Amount, token1Amount, ) = _computeDepositXY(
+            liquidity,
+            tickLower,
+            tickUpper,
+            TickMath.getTickAtSqrtRatio(currentPrice),
+            currentPrice
         );
-    }
-
-    /**
-     * @notice calculate liquidity provider fee amount for the position data.
-     * @param positionData The specified position data
-     */
-    function getLpFeeAmountFromPositionData(
-        LiquidityNFTPositionData memory positionData
-    ) external view returns (uint256 token0Amount, uint256 token1Amount) {
-        IiZiSwapPool pool = IiZiSwapPool(
-            IZUMI_FACTORY.pool(
-                positionData.token0,
-                positionData.token1,
-                positionData.fee
-            )
-        );
-        return _getLpFeeAmountFromPositionData(pool, positionData);
-    }
-
-    function _getLpFeeAmountFromPositionData(
-        IiZiSwapPool pool,
-        LiquidityNFTPositionData memory positionData
-    ) internal view returns (uint256 token0Amount, uint256 token1Amount) {
-        (token0Amount, token1Amount) = _getPendingFeeAmounts(
-            pool,
-            positionData
-        );
-
-        token0Amount += positionData.tokensOwed0;
-        token1Amount += positionData.tokensOwed1;
-    }
-
-    /**
-     * @notice Returns the price for the specified tokenId.
-     */
-    function getTokenPrice(uint256 tokenId) external view returns (uint256) {
-        (
-            IiZiSwapPool pool,
-            LiquidityNFTPositionData memory positionData
-        ) = _getOnchainPositionData(tokenId);
-
-        PairOracleData memory oracleData = LiquidityOracleLogic.getOracleData(
-            IPriceOracleGetter(ADDRESSES_PROVIDER.getPriceOracle()),
-            positionData
-        );
-
-        (
-            uint256 liquidityAmount0,
-            uint256 liquidityAmount1,
-
-        ) = _computeDepositXY(
-                positionData.liquidity,
-                positionData.tickLower,
-                positionData.tickUpper,
-                TickMath.getTickAtSqrtRatio(oracleData.sqrtPriceX96),
-                oracleData.sqrtPriceX96
-            );
-
-        (
-            uint256 feeAmount0,
-            uint256 feeAmount1
-        ) = _getLpFeeAmountFromPositionData(pool, positionData);
-
-        return
-            (((liquidityAmount0 + feeAmount0) * oracleData.token0Price) /
-                10**oracleData.token0Decimal) +
-            (((liquidityAmount1 + feeAmount1) * oracleData.token1Price) /
-                10**oracleData.token1Decimal);
     }
 
     function _getPendingFeeAmounts(
-        IiZiSwapPool pool,
+        address pool,
         LiquidityNFTPositionData memory positionData
-    ) internal view returns (uint256 token0Amount, uint256 token1Amount) {
+    )
+        internal
+        view
+        override
+        returns (uint256 token0Amount, uint256 token1Amount)
+    {
+        IiZiSwapPool poolState = IiZiSwapPool(pool);
         OnChainFeeParams memory feeParams;
 
         (
@@ -208,19 +108,19 @@ contract IZUMIOracleWrapper is ILiquidityNFTOracleWrapper {
             feeParams.feeGrowthOutside0X128Lower,
             feeParams.feeGrowthOutside1X128Lower,
 
-        ) = pool.points(positionData.tickLower);
+        ) = poolState.points(positionData.tickLower);
         (
             ,
             ,
             feeParams.feeGrowthOutside0X128Upper,
             feeParams.feeGrowthOutside1X128Upper,
 
-        ) = pool.points(positionData.tickUpper);
+        ) = poolState.points(positionData.tickUpper);
 
-        feeParams.feeGrowthGlobal0X128 = pool.feeScaleX_128();
-        feeParams.feeGrowthGlobal1X128 = pool.feeScaleY_128();
+        feeParams.feeGrowthGlobal0X128 = poolState.feeScaleX_128();
+        feeParams.feeGrowthGlobal1X128 = poolState.feeScaleY_128();
 
-        (token0Amount, token1Amount) = LiquidityOracleLogic.calculateTokenFee(
+        (token0Amount, token1Amount) = _calculateTokenFee(
             positionData,
             feeParams
         );
