@@ -39,57 +39,23 @@ contract NTokenUniswapV3 is NTokenLiquidity {
         return XTokenType.NTokenUniswapV3;
     }
 
-    function underlyingAsset(uint256 tokenId)
-        external
+    function _underlyingAsset(address positionManager, uint256 tokenId)
+        internal
         view
+        override
         returns (address token0, address token1)
     {
         (, , token0, token1, , , , , , , , ) = INonfungiblePositionManager(
-            _ERC721Data.underlyingAsset
+            positionManager
         ).positions(tokenId);
     }
 
-    /**
-     * @notice A function that decreases the current liquidity.
-     * @param tokenId The id of the erc721 token
-     * @param liquidityDecrease The amount of liquidity to remove of LP
-     * @param amount0Min The minimum amount to remove of token0
-     * @param amount1Min The minimum amount to remove of token1
-     * @param receiveEth If convert weth to ETH
-     */
-    function _decreaseLiquidity(
-        address user,
+    function _collect(
+        address positionManager,
         uint256 tokenId,
-        uint128 liquidityDecrease,
-        uint256 amount0Min,
-        uint256 amount1Min,
+        address user,
         bool receiveEth
-    ) internal override {
-        INonfungiblePositionManager positionManager = INonfungiblePositionManager(
-                _ERC721Data.underlyingAsset
-            );
-        if (liquidityDecrease > 0) {
-            // amount0Min and amount1Min are price slippage checks
-            // if the amount received after burning is not greater than these minimums, transaction will fail
-            INonfungiblePositionManager.DecreaseLiquidityParams
-                memory params = INonfungiblePositionManager
-                    .DecreaseLiquidityParams({
-                        tokenId: tokenId,
-                        liquidity: liquidityDecrease,
-                        amount0Min: amount0Min,
-                        amount1Min: amount1Min,
-                        deadline: block.timestamp
-                    });
-
-            positionManager.decreaseLiquidity(params);
-        }
-
-        (, , address token0, address token1, , , , , , , , ) = positionManager
-            .positions(tokenId);
-
-        address weth = _addressesProvider.getWETH();
-        receiveEth = (receiveEth && (token0 == weth || token1 == weth));
-
+    ) internal override returns (uint256 amount0, uint256 amount1) {
         INonfungiblePositionManager.CollectParams
             memory collectParams = INonfungiblePositionManager.CollectParams({
                 tokenId: tokenId,
@@ -98,17 +64,54 @@ contract NTokenUniswapV3 is NTokenLiquidity {
                 amount1Max: type(uint128).max
             });
 
-        (uint256 amount0, uint256 amount1) = positionManager.collect(
-            collectParams
-        );
+        (amount0, amount1) = INonfungiblePositionManager(positionManager)
+            .collect(collectParams);
+    }
 
-        if (receiveEth) {
-            if (amount0 > 0) {
-                transferTokenOut(user, token0, amount0, weth);
-            }
-            if (amount1 > 0) {
-                transferTokenOut(user, token1, amount1, weth);
-            }
-        }
+    function _increaseLiquidity(
+        address positionManager,
+        uint256 tokenId,
+        uint256 amountAdd0,
+        uint256 amountAdd1,
+        uint256 amount0Min,
+        uint256 amount1Min
+    ) internal override returns (uint256 amount0, uint256 amount1) {
+        INonfungiblePositionManager.IncreaseLiquidityParams
+            memory params = INonfungiblePositionManager
+                .IncreaseLiquidityParams({
+                    tokenId: tokenId,
+                    amount0Desired: amountAdd0,
+                    amount1Desired: amountAdd1,
+                    amount0Min: amount0Min,
+                    amount1Min: amount1Min,
+                    deadline: block.timestamp
+                });
+
+        (, amount0, amount1) = INonfungiblePositionManager(positionManager)
+            .increaseLiquidity{value: msg.value}(params);
+    }
+
+    function _decreaseLiquidity(
+        address positionManager,
+        uint256 tokenId,
+        uint128 liquidityDecrease,
+        uint256 amount0Min,
+        uint256 amount1Min
+    ) internal override {
+        INonfungiblePositionManager.DecreaseLiquidityParams
+            memory params = INonfungiblePositionManager
+                .DecreaseLiquidityParams({
+                    tokenId: tokenId,
+                    liquidity: liquidityDecrease,
+                    amount0Min: amount0Min,
+                    amount1Min: amount1Min,
+                    deadline: block.timestamp
+                });
+
+        INonfungiblePositionManager(positionManager).decreaseLiquidity(params);
+    }
+
+    function _refundETH(address positionManager) internal override {
+        INonfungiblePositionManager(positionManager).refundETH();
     }
 }

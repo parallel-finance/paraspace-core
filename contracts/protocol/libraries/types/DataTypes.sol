@@ -205,6 +205,15 @@ library DataTypes {
         address oracle;
     }
 
+    struct ExecuteIncreaseLiquidityParams {
+        address asset;
+        uint256 tokenId;
+        uint256 amountAdd0;
+        uint256 amountAdd1;
+        uint256 amount0Min;
+        uint256 amount1Min;
+    }
+
     struct FinalizeTransferParams {
         address asset;
         address from;

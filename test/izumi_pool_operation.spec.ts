@@ -424,6 +424,158 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
     expect(await nTokenIzumi.collateralizedBalanceOf(user1.address)).to.eq(1);
   });
 
+  it("increaseLiquidity failed if underlying erc20 was not active [ @skip-on-coverage ]", async () => {
+    const {
+      users: [user1],
+      configurator,
+      dai,
+      weth,
+      pool,
+    } = testEnv;
+
+    await waitForTx(await configurator.setReserveActive(weth.address, false));
+
+    const userDaiAmount = await convertToCurrencyDecimals(dai.address, "20000");
+    const userWethAmount = await convertToCurrencyDecimals(weth.address, "10");
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .increaseLiquidity(
+          nftPositionManager.address,
+          0,
+          userDaiAmount,
+          userWethAmount,
+          0,
+          0,
+          {
+            gasLimit: 12_450_000,
+          }
+        )
+    ).to.be.revertedWith(ProtocolErrors.RESERVE_INACTIVE);
+  });
+
+  it("increaseLiquidity success if underlying erc20 was active [ @skip-on-coverage ]", async () => {
+    const {
+      users: [user1],
+      weth,
+      pool,
+      configurator,
+      dai,
+    } = testEnv;
+
+    await waitForTx(await configurator.setReserveActive(weth.address, true));
+
+    const preLiquidationSnapshot = await snapshot.take();
+
+    const beforeLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
+
+    const userDaiAmount = await convertToCurrencyDecimals(dai.address, "20000");
+    const userWethAmount = await convertToCurrencyDecimals(weth.address, "10");
+    await fund({token: dai, user: user1, amount: userDaiAmount});
+    await fund({token: weth, user: user1, amount: userWethAmount});
+    await approveTo({target: nTokenIzumi.address, token: dai, user: user1});
+    await approveTo({target: nTokenIzumi.address, token: weth, user: user1});
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .increaseLiquidity(
+          nftPositionManager.address,
+          0,
+          userDaiAmount,
+          userWethAmount,
+          0,
+          0,
+          {
+            gasLimit: 12_450_000,
+          }
+        )
+    );
+
+    const afterLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
+
+    almostEqual(afterLiquidity, beforeLiquidity.mul(2));
+
+    await snapshot.revert(preLiquidationSnapshot);
+  });
+
+  it("increaseLiquidity failed if underlying erc20 was paused [ @skip-on-coverage ]", async () => {
+    const {
+      users: [user1],
+      configurator,
+      weth,
+      dai,
+      pool,
+    } = testEnv;
+
+    await waitForTx(await configurator.pauseReserve(weth.address));
+
+    const userDaiAmount = await convertToCurrencyDecimals(dai.address, "20000");
+    const userWethAmount = await convertToCurrencyDecimals(weth.address, "10");
+
+    await expect(
+      pool
+        .connect(user1.signer)
+        .increaseLiquidity(
+          nftPositionManager.address,
+          0,
+          userDaiAmount,
+          userWethAmount,
+          0,
+          0,
+          {
+            gasLimit: 12_450_000,
+          }
+        )
+    ).to.be.revertedWith(ProtocolErrors.RESERVE_PAUSED);
+  });
+
+  it("increaseLiquidity success if underlying erc20 was not paused [ @skip-on-coverage ]", async () => {
+    const {
+      users: [user1],
+      weth,
+      dai,
+      pool,
+      configurator,
+    } = testEnv;
+
+    await waitForTx(await configurator.unpauseReserve(weth.address));
+
+    const preLiquidationSnapshot = await snapshot.take();
+
+    const beforeLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
+
+    const userDaiAmount = await convertToCurrencyDecimals(dai.address, "20000");
+    const userWethAmount = await convertToCurrencyDecimals(weth.address, "10");
+    await fund({token: dai, user: user1, amount: userDaiAmount});
+    await fund({token: weth, user: user1, amount: userWethAmount});
+    await approveTo({target: nTokenIzumi.address, token: dai, user: user1});
+    await approveTo({target: nTokenIzumi.address, token: weth, user: user1});
+
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .increaseLiquidity(
+          nftPositionManager.address,
+          0,
+          userDaiAmount,
+          userWethAmount,
+          0,
+          0,
+          {
+            gasLimit: 12_450_000,
+          }
+        )
+    );
+
+    const afterLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
+
+    almostEqual(afterLiquidity, beforeLiquidity.mul(2));
+
+    await snapshot.revert(preLiquidationSnapshot);
+  });
+
   it("decreaseLiquidity failed if underlying erc20 was not active [ @skip-on-coverage ]", async () => {
     const {
       users: [user1],

@@ -466,6 +466,31 @@ library SupplyLogic {
             );
     }
 
+    function executeIncreaseLiquidity(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        DataTypes.ExecuteIncreaseLiquidityParams memory params
+    ) external {
+        DataTypes.ReserveData storage reserve = reservesData[params.asset];
+        DataTypes.ReserveCache memory reserveCache = reserve.cache();
+
+        ValidationLogic.validateAddLiquidity(
+            reservesData,
+            reserveCache,
+            params
+        );
+
+        INTokenLiquidity(reserveCache.xTokenAddress).increaseLiquidity{
+            value: msg.value
+        }(
+            msg.sender,
+            params.tokenId,
+            params.amountAdd0,
+            params.amountAdd1,
+            params.amount0Min,
+            params.amount1Min
+        );
+    }
+
     function executeDecreaseLiquidity(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         mapping(uint256 => address) storage reservesList,

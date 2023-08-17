@@ -10,14 +10,21 @@ import {
   swapToken,
   fund,
   approveTo,
-} from "./helpers/uniswapv3-helper";
+} from "./helpers/izumi-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
-import {DRE} from "../helpers/misc-utils";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
+import {LiquidityManager, NTokenIzumi} from "../types";
+import {
+  getIZUMIPositionManager,
+  getNTokenIZUMI,
+} from "../helpers/contracts-getters";
+import {parseEther} from "ethers/lib/utils";
 
-describe("Uniswap V3 NFT position control", () => {
+describe("IZUMI LP NFT position control", () => {
   let testEnv: TestEnv;
+  let nftPositionManager: LiquidityManager;
+  let nTokenIzumi: NTokenIzumi;
 
   before(async () => {
     testEnv = await loadFixture(testEnvFixture);
@@ -26,10 +33,14 @@ describe("Uniswap V3 NFT position control", () => {
       users: [user1],
       dai,
       weth,
-      nftPositionManager,
-      nUniswapV3,
       pool,
     } = testEnv;
+
+    nftPositionManager = await getIZUMIPositionManager();
+    const nIzumiAddress = await pool.getReserveXToken(
+      nftPositionManager.address
+    );
+    nTokenIzumi = await getNTokenIZUMI(nIzumiAddress);
 
     const userDaiAmount = await convertToCurrencyDecimals(dai.address, "10000");
     const userWethAmount = await convertToCurrencyDecimals(weth.address, "10");
@@ -46,7 +57,7 @@ describe("Uniswap V3 NFT position control", () => {
       token: weth,
       user: user1,
     });
-    const fee = 3000;
+    const fee = 2000;
     const tickSpacing = fee / 50;
     const initialPrice = encodeSqrtRatioX96(1, 1000);
     const lowerPrice = encodeSqrtRatioX96(1, 10000);
@@ -56,7 +67,7 @@ describe("Uniswap V3 NFT position control", () => {
       token0: dai,
       token1: weth,
       fee: fee,
-      initialSqrtPrice: initialPrice.toString(),
+      initialSqrtPrice: initialPrice,
     });
     await mintNewPosition({
       nft: nft,
@@ -79,7 +90,7 @@ describe("Uniswap V3 NFT position control", () => {
         .connect(user1.signer)
         .supplyERC721(
           nftPositionManager.address,
-          [{tokenId: 1, useAsCollateral: true}],
+          [{tokenId: 0, useAsCollateral: true}],
           user1.address,
           0,
           {
@@ -88,16 +99,20 @@ describe("Uniswap V3 NFT position control", () => {
         )
     );
 
-    expect(await nUniswapV3.balanceOf(user1.address)).to.eq(1);
+    expect(await nTokenIzumi.balanceOf(user1.address)).to.eq(1);
+
+    await waitForTx(
+      await weth.connect(user1.signer).deposit({
+        value: parseEther("100"),
+      })
+    );
   });
 
-  it("increaseLiquidity by nUniswapV3 [ @skip-on-coverage ]", async () => {
+  it("increaseLiquidity by NTokenIZUMI [ @skip-on-coverage ]", async () => {
     const {
       users: [user1],
       dai,
       weth,
-      nftPositionManager,
-      nUniswapV3,
       pool,
     } = testEnv;
 
@@ -105,17 +120,17 @@ describe("Uniswap V3 NFT position control", () => {
     const userWethAmount = await convertToCurrencyDecimals(weth.address, "10");
     await fund({token: dai, user: user1, amount: userDaiAmount});
     await fund({token: weth, user: user1, amount: userWethAmount});
-    await approveTo({target: nUniswapV3.address, token: dai, user: user1});
-    await approveTo({target: nUniswapV3.address, token: weth, user: user1});
+    await approveTo({target: nTokenIzumi.address, token: dai, user: user1});
+    await approveTo({target: nTokenIzumi.address, token: weth, user: user1});
 
-    const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
+    const beforeLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
 
     await waitForTx(
       await pool
         .connect(user1.signer)
         .increaseLiquidity(
           nftPositionManager.address,
-          1,
+          0,
           userDaiAmount,
           userWethAmount,
           0,
@@ -123,29 +138,27 @@ describe("Uniswap V3 NFT position control", () => {
         )
     );
 
-    const afterLiquidity = (await nftPositionManager.positions(1)).liquidity;
+    const afterLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
 
     almostEqual(afterLiquidity, beforeLiquidity.mul(2));
     //test refund. fund userDaiAmount , should left userDaiAmount.
     almostEqual(await dai.balanceOf(user1.address), userDaiAmount.div(2));
   });
 
-  it("increaseLiquidity with ETH by nUniswapV3 [ @skip-on-coverage ]", async () => {
+  it("increaseLiquidity with ETH by NTokenIZUMI [ @skip-on-coverage ]", async () => {
     const {
       users: [user1],
-      pool,
       dai,
       weth,
-      nftPositionManager,
-      nUniswapV3,
+      pool,
     } = testEnv;
 
     const userDaiAmount = await convertToCurrencyDecimals(dai.address, "10000");
     const userWethAmount = await convertToCurrencyDecimals(weth.address, "20");
     await fund({token: dai, user: user1, amount: userDaiAmount});
-    await approveTo({target: nUniswapV3.address, token: dai, user: user1});
+    await approveTo({target: nTokenIzumi.address, token: dai, user: user1});
 
-    const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
+    const beforeLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
     const beforeBalance = await user1.signer.getBalance();
 
     await waitForTx(
@@ -153,7 +166,7 @@ describe("Uniswap V3 NFT position control", () => {
         .connect(user1.signer)
         .increaseLiquidity(
           nftPositionManager.address,
-          1,
+          0,
           userDaiAmount,
           userWethAmount,
           0,
@@ -165,7 +178,7 @@ describe("Uniswap V3 NFT position control", () => {
         )
     );
 
-    const afterLiquidity = (await nftPositionManager.positions(1)).liquidity;
+    const afterLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
     const afterBalance = await user1.signer.getBalance();
 
     almostEqual(afterLiquidity, beforeLiquidity.div(2).mul(3));
@@ -173,12 +186,11 @@ describe("Uniswap V3 NFT position control", () => {
     almostEqual(beforeBalance.sub(afterBalance), userWethAmount.div(2));
   });
 
-  it("decreaseLiquidity by NTokenUniswapV3 [ @skip-on-coverage ]", async () => {
+  it("decreaseLiquidity by NTokenIZUMI [ @skip-on-coverage ]", async () => {
     const {
       users: [user1],
       dai,
       weth,
-      nftPositionManager,
       pool,
     } = testEnv;
 
@@ -187,14 +199,14 @@ describe("Uniswap V3 NFT position control", () => {
 
     const beforeDaiBalance = await dai.balanceOf(user1.address);
     const beforeEthBalance = await weth.balanceOf(user1.address);
-    const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
+    const beforeLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
 
     await waitForTx(
       await pool
         .connect(user1.signer)
         .decreaseLiquidity(
           nftPositionManager.address,
-          1,
+          0,
           beforeLiquidity.div(3),
           0,
           0,
@@ -207,19 +219,18 @@ describe("Uniswap V3 NFT position control", () => {
 
     const afterDaiBalance = await dai.balanceOf(user1.address);
     const afterEthBalance = await weth.balanceOf(user1.address);
-    const afterLiquidity = (await nftPositionManager.positions(1)).liquidity;
+    const afterLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
 
     almostEqual(afterDaiBalance.sub(beforeDaiBalance), userDaiAmount);
     almostEqual(afterEthBalance.sub(beforeEthBalance), userWethAmount);
     almostEqual(afterLiquidity, beforeLiquidity.div(3).mul(2));
   });
 
-  it("decreaseLiquidity with ETH by NTokenUniswapV3 [ @skip-on-coverage ]", async () => {
+  it("decreaseLiquidity with ETH by NTokenIZUMI [ @skip-on-coverage ]", async () => {
     const {
       users: [user1],
       dai,
       weth,
-      nftPositionManager,
       pool,
     } = testEnv;
 
@@ -228,14 +239,14 @@ describe("Uniswap V3 NFT position control", () => {
 
     const beforeDaiBalance = await dai.balanceOf(user1.address);
     const beforeBalance = await user1.signer.getBalance();
-    const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
+    const beforeLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
 
     await waitForTx(
       await pool
         .connect(user1.signer)
         .decreaseLiquidity(
           nftPositionManager.address,
-          1,
+          0,
           beforeLiquidity.div(2),
           0,
           0,
@@ -248,19 +259,18 @@ describe("Uniswap V3 NFT position control", () => {
 
     const afterDaiBalance = await dai.balanceOf(user1.address);
     const afterBalance = await user1.signer.getBalance();
-    const afterLiquidity = (await nftPositionManager.positions(1)).liquidity;
+    const afterLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
 
     almostEqual(afterDaiBalance.sub(beforeDaiBalance), userDaiAmount);
     almostEqual(afterBalance.sub(beforeBalance), userWethAmount);
     almostEqual(afterLiquidity, beforeLiquidity.div(2));
   });
 
-  it("collect fee by decreaseLiquidity by NTokenUniswapV3 [ @skip-on-coverage ]", async () => {
+  it("collect fee by decreaseLiquidity by NTokenIZUMI [ @skip-on-coverage ]", async () => {
     const {
       users: [user1, trader],
       dai,
       weth,
-      nftPositionManager,
       pool,
     } = testEnv;
 
@@ -271,7 +281,7 @@ describe("Uniswap V3 NFT position control", () => {
     await fund({token: dai, user: trader, amount: traderDaiAmount});
     await approveSwapRouter({token: dai, user: trader});
 
-    const fee = 3000;
+    const fee = 2000;
     await swapToken({
       tokenIn: dai,
       tokenOut: weth,
@@ -283,25 +293,25 @@ describe("Uniswap V3 NFT position control", () => {
 
     const beforeDaiBalance = await dai.balanceOf(user1.address);
     const beforeEthBalance = await weth.balanceOf(user1.address);
-    const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
+    const beforeLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
 
     await waitForTx(
       await pool
         .connect(user1.signer)
-        .decreaseLiquidity(nftPositionManager.address, 1, 0, 0, 0, false, {
+        .decreaseLiquidity(nftPositionManager.address, 0, 0, 0, 0, false, {
           gasLimit: 12_450_000,
         })
     );
 
     const afterDaiBalance = await dai.balanceOf(user1.address);
     const afterEthBalance = await weth.balanceOf(user1.address);
-    const afterLiquidity = (await nftPositionManager.positions(1)).liquidity;
+    const afterLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
 
     expect(afterEthBalance).to.eq(beforeEthBalance);
     expect(afterLiquidity).to.eq(beforeLiquidity);
     almostEqual(
       afterDaiBalance.sub(beforeDaiBalance),
-      await convertToCurrencyDecimals(dai.address, "3")
+      await convertToCurrencyDecimals(dai.address, "2")
     );
   });
 });

@@ -1221,4 +1221,35 @@ library ValidationLogic {
             );
         }
     }
+
+    function validateAddLiquidity(
+        mapping(address => DataTypes.ReserveData) storage reservesData,
+        DataTypes.ReserveCache memory reserveCache,
+        DataTypes.ExecuteIncreaseLiquidityParams memory params
+    ) internal view {
+        INToken nToken = INToken(reserveCache.xTokenAddress);
+        XTokenType tokenType = nToken.getXTokenType();
+        require(
+            tokenType == XTokenType.NTokenUniswapV3 ||
+                tokenType == XTokenType.NTokenIZUMILp,
+            Errors.XTOKEN_TYPE_NOT_ALLOWED
+        );
+
+        (bool isActive, bool isFrozen, , bool isPaused, ) = reserveCache
+            .reserveConfiguration
+            .getFlags();
+
+        require(isActive, Errors.RESERVE_INACTIVE);
+        require(!isPaused, Errors.RESERVE_PAUSED);
+        require(!isFrozen, Errors.RESERVE_FROZEN);
+
+        ValidationLogic.validateForLiquidityNFT(
+            reservesData,
+            reserveCache.xTokenAddress,
+            params.tokenId,
+            true,
+            true,
+            true
+        );
+    }
 }

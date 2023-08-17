@@ -237,6 +237,32 @@ contract PoolCore is
             );
     }
 
+    /// @inheritdoc IPoolCore
+    function increaseLiquidity(
+        address asset,
+        uint256 tokenId,
+        uint256 amountAdd0,
+        uint256 amountAdd1,
+        uint256 amount0Min,
+        uint256 amount1Min
+    ) external payable virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        return
+            SupplyLogic.executeIncreaseLiquidity(
+                ps._reserves,
+                DataTypes.ExecuteIncreaseLiquidityParams({
+                    asset: asset,
+                    tokenId: tokenId,
+                    amountAdd0: amountAdd0,
+                    amountAdd1: amountAdd1,
+                    amount0Min: amount0Min,
+                    amount1Min: amount1Min
+                })
+            );
+    }
+
+    /// @inheritdoc IPoolCore
     function decreaseLiquidity(
         address asset,
         uint256 tokenId,

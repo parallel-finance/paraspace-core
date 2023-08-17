@@ -14,6 +14,7 @@ import {IPool} from "../../interfaces/IPool.sol";
 import {NToken} from "./NToken.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {ILiquidityManager} from "../../dependencies/izumi/izumi-swap-periphery/interfaces/ILiquidityManager.sol";
+import {IBase} from "../../dependencies/izumi/izumi-swap-periphery/interfaces/IBase.sol";
 import {IWETH} from "../../misc/interfaces/IWETH.sol";
 import {Helpers} from "../../protocol/libraries/helpers/Helpers.sol";
 import {NTokenLiquidity} from "./NTokenLiquidity.sol";
@@ -26,6 +27,7 @@ import {XTokenType} from "../../interfaces/IXTokenType.sol";
  */
 contract NTokenIzumi is NTokenLiquidity {
     using SafeERC20 for IERC20;
+    using SafeCast for uint256;
 
     /**
      * @dev Constructor.
@@ -39,67 +41,76 @@ contract NTokenIzumi is NTokenLiquidity {
         return XTokenType.NTokenIZUMILp;
     }
 
-    function underlyingAsset(uint256 tokenId)
-        external
+    function _underlyingAsset(address positionManager, uint256 tokenId)
+        internal
         view
+        override
         returns (address token0, address token1)
     {
-        ILiquidityManager POSITION_MANAGER = ILiquidityManager(
-            _ERC721Data.underlyingAsset
-        );
+        ILiquidityManager POSITION_MANAGER = ILiquidityManager(positionManager);
         (, , , , , , , uint128 poolId) = POSITION_MANAGER.liquidities(tokenId);
         (token0, token1, ) = POSITION_MANAGER.poolMetas(poolId);
     }
 
-    /**
-     * @notice A function that decreases the current liquidity.
-     * @param tokenId The id of the erc721 token
-     * @param liquidityDecrease The amount of liquidity to remove of LP
-     * @param amount0Min The minimum amount to remove of token0
-     * @param amount1Min The minimum amount to remove of token1
-     * @param receiveEth If convert weth to ETH
-     */
-    function _decreaseLiquidity(
-        address user,
+    function _collect(
+        address positionManager,
         uint256 tokenId,
-        uint128 liquidityDecrease,
-        uint256 amount0Min,
-        uint256 amount1Min,
+        address user,
         bool receiveEth
-    ) internal override {
-        ILiquidityManager POSITION_MANAGER = ILiquidityManager(
-            _ERC721Data.underlyingAsset
-        );
-        if (liquidityDecrease > 0) {
-            POSITION_MANAGER.decLiquidity(
-                tokenId,
-                liquidityDecrease,
-                amount0Min,
-                amount1Min,
-                block.timestamp
-            );
-        }
+    ) internal override returns (uint256 amount0, uint256 amount1) {
+        ILiquidityManager POSITION_MANAGER = ILiquidityManager(positionManager);
 
-        (, , , , , , , uint128 poolId) = POSITION_MANAGER.liquidities(tokenId);
-        (address token0, address token1, ) = POSITION_MANAGER.poolMetas(poolId);
-
-        address weth = _addressesProvider.getWETH();
-        receiveEth = (receiveEth && (token0 == weth || token1 == weth));
-
-        (uint256 amount0, uint256 amount1) = POSITION_MANAGER.collect(
+        (amount0, amount1) = POSITION_MANAGER.collect(
             receiveEth ? address(this) : user,
             tokenId,
             type(uint128).max,
             type(uint128).max
         );
+    }
 
-        if (receiveEth) {
-            if (amount0 > 0) {
-                transferTokenOut(user, token0, amount0, weth);
-            }
-            if (amount1 > 0) {
-                transferTokenOut(user, token1, amount1, weth);
-            }
-        }
+    function _increaseLiquidity(
+        address positionManager,
+        uint256 tokenId,
+        uint256 amountAdd0,
+        uint256 amountAdd1,
+        uint256 amount0Min,
+        uint256 amount1Min
+    ) internal override returns (uint256 amount0, uint256 amount1) {
+        ILiquidityManager POSITION_MANAGER = ILiquidityManager(positionManager);
+
+        ILiquidityManager.AddLiquidityParam memory params = ILiquidityManager
+            .AddLiquidityParam({
+                lid: tokenId,
+                xLim: amountAdd0.toUint128(),
+                yLim: amountAdd1.toUint128(),
+                amountXMin: amount0Min.toUint128(),
+                amountYMin: amount1Min.toUint128(),
+                deadline: block.timestamp
+            });
+
+        (, amount0, amount1) = POSITION_MANAGER.addLiquidity{value: msg.value}(
+            params
+        );
+    }
+
+    function _decreaseLiquidity(
+        address positionManager,
+        uint256 tokenId,
+        uint128 liquidityDecrease,
+        uint256 amount0Min,
+        uint256 amount1Min
+    ) internal override {
+        ILiquidityManager POSITION_MANAGER = ILiquidityManager(positionManager);
+        POSITION_MANAGER.decLiquidity(
+            tokenId,
+            liquidityDecrease,
+            amount0Min,
+            amount1Min,
+            block.timestamp
+        );
+    }
+
+    function _refundETH(address positionManager) internal override {
+        IBase(positionManager).refundETH();
     }
 }
