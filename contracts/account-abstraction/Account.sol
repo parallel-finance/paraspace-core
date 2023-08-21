@@ -126,7 +126,11 @@ contract Account is
         UserOperation calldata userOp,
         bytes32 userOpHash
     ) internal virtual override returns (uint256 validationData) {
-        bytes32 hash = userOpHash.toEthSignedMessageHash();
+        bytes32 hash = userOpHash;
+
+        if (address.code.length == 0) {
+            hash = userOpHash.toEthSignedMessageHash();
+        }
 
         bool isValid = SignatureChecker.isValidSignatureNow(
             owner,
