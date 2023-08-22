@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity 0.8.21;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
@@ -127,9 +127,9 @@ contract Account is
     ) internal virtual override returns (uint256 validationData) {
         bytes32 hash = userOpHash;
 
-//        if (address.code.length == 0) {
-//            hash = userOpHash.toEthSignedMessageHash();
-//        }
+        if (owner.code.length == 0) {
+            hash = userOpHash.toEthSignedMessageHash();
+        }
 
         bool isValid = SignatureChecker.isValidSignatureNow(
             owner,
