@@ -152,6 +152,7 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
         bool token1IsETH;
         if (msg.value > 0) {
             address weth = _addressesProvider.getWETH();
+            require(token0 == weth || token1 == weth, Errors.INVALID_AMOUNT);
             token0IsETH = (token0 == weth);
             token1IsETH = (token1 == weth);
         }
