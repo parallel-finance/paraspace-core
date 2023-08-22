@@ -390,7 +390,7 @@ contract PToken is
         address cApeV2,
         address apeCoin,
         uint256[] calldata agreementIds
-    ) external onlyPool returns (uint256) {
+    ) external virtual onlyPool returns (uint256) {
         address underlyingAsset = _underlyingAsset;
         bool isCApeV2 = underlyingAsset == address(cApeV2);
         uint256 beforeBalance = isCApeV2
