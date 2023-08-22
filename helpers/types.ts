@@ -811,6 +811,7 @@ export interface IChainlinkConfig {
   WMATIC?: tEthereumAddress;
   stMATIC?: tEthereumAddress;
   CRV?: tEthereumAddress;
+  BLUR?: tEthereumAddress;
   // ERC721
   DOODLE?: tEthereumAddress;
   BAYC?: tEthereumAddress;
@@ -830,6 +831,7 @@ export interface IChainlinkConfig {
   KODA?: tEthereumAddress;
   BLOCKS?: tEthereumAddress;
   EXRP?: tEthereumAddress;
+  UniswapV3?: tEthereumAddress;
 }
 
 export interface IYogaLabs {
