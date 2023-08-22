@@ -5,8 +5,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/interfaces/IERC1271.sol";
-import "@openzeppelin/contracts/utils/cryptography/SignatureChecker.sol";
-
+import {SignatureChecker} from "../dependencies/openzeppelin/contracts/SignatureChecker.sol";
 import "./base-account-abstraction/core/BaseAccount.sol";
 import "./callback/TokenCallbackHandler.sol";
 
@@ -128,9 +127,9 @@ contract Account is
     ) internal virtual override returns (uint256 validationData) {
         bytes32 hash = userOpHash;
 
-        if (address.code.length == 0) {
-            hash = userOpHash.toEthSignedMessageHash();
-        }
+//        if (address.code.length == 0) {
+//            hash = userOpHash.toEthSignedMessageHash();
+//        }
 
         bool isValid = SignatureChecker.isValidSignatureNow(
             owner,

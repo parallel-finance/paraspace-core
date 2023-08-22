@@ -73,6 +73,16 @@ const hardhatConfig: HardhatUserConfig = {
     // Docs for the compiler https://docs.soliditylang.org/en/v0.8.7/using-the-compiler.html
     compilers: [
       {
+        version: "0.8.21",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: COMPILER_OPTIMIZER_RUNS,
+          },
+          evmVersion: "london",
+        },
+      },
+      {
         version: COMPILER_VERSION,
         settings: {
           optimizer: {
