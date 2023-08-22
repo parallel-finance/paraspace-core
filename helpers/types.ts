@@ -832,6 +832,8 @@ export interface IChainlinkConfig {
   BLOCKS?: tEthereumAddress;
   EXRP?: tEthereumAddress;
   UniswapV3?: tEthereumAddress;
+  SFVLDR?: tEthereumAddress;
+  SEWER?: tEthereumAddress;
 }
 
 export interface IYogaLabs {
