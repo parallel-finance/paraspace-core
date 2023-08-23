@@ -40,6 +40,9 @@ library DataTypes {
         uint128 accruedToTreasury;
         // timelock strategy
         address timeLockStrategyAddress;
+        // use uint128 to be used for crosschain in the future
+        // after position move
+        uint128 unbacked;
     }
 
     struct ReserveConfigurationMap {
@@ -432,5 +435,27 @@ library DataTypes {
     enum TimeLockActionType {
         BORROW,
         WITHDRAW
+    }
+
+    struct ParaSpacePositionMoveInfo {
+        address[] cTokens;
+        DataTypes.AssetType[] cTypes;
+        uint256[][] cAmountsOrTokenIds;
+        address[] dTokens;
+        uint256[] dAmounts;
+        address to;
+    }
+
+    struct ParaSpacePositionMoveParams {
+        address user;
+        address[] cTokens;
+        DataTypes.AssetType[] cTypes;
+        uint256[][] cAmountsOrTokenIds;
+        address[] dTokens;
+        uint256[] dAmounts;
+        address to;
+        address priceOracle;
+        address priceOracleSentinel;
+        uint256 reservesCount;
     }
 }

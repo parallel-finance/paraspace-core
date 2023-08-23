@@ -28,6 +28,7 @@
     "@commitlint/cli": "^17.0.3",
     "@commitlint/config-conventional": "^17.0.3",
     "@flashbots/ethers-provider-bundle": "^0.6.1",
+    "@json2csv/plainjs": "^7.0.1",
     "@looksrare/sdk": "^0.7.4",
     "@matterlabs/hardhat-zksync-deploy": "^0.6.3",
     "@matterlabs/hardhat-zksync-solc": "^0.4.0",
@@ -96,7 +97,7 @@
     "ts-node": "^10.9.1",
     "typechain": "^8.1.0",
     "typescript": "4.7.4",
-    "userop": "^0.3.1"
+    "userop": "^0.3.1",
     "walkdir": "^0.4.1",
     "zksync-web3": "^0.14.3"
   },

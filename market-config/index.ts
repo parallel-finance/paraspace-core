@@ -101,6 +101,7 @@ export const CommonConfig: Pick<
   | "DelegationRegistry"
   | "IncentivesController"
   | "Governance"
+  | "ParaSpaceV1"
   | "AccountAbstraction"
 > = {
   WrappedNativeTokenId: ERC20TokenContractId.WETH,
@@ -132,9 +133,11 @@ export const CommonConfig: Pick<
     Multisend: MULTI_SEND || ZERO_ADDRESS,
     Multisig: MULTI_SIG || ZERO_ADDRESS,
   },
+  // ParaSpaceV1
+  ParaSpaceV1: undefined,
   AccountAbstraction: {
     rpcUrl: `https://api.stackup.sh/v1/node/${process.env.STACKUP_KEY}`,
-    paymasterUrl: `https://api.stackup.sh/v1/paymaster/${process.env.STACKUP_KEY}`
+    paymasterUrl: `https://api.stackup.sh/v1/paymaster/${process.env.STACKUP_KEY}`,
   },
 };
 
@@ -294,6 +297,7 @@ export const GoerliConfig: IParaSpaceConfiguration = {
     APE: "0x328507DC29C95c170B56a1b3A758eB7a9E73455c",
     BAYC: "0xF40299b626ef6E197F5d9DE9315076CAB788B6Ef",
     MAYC: "0x3f228cBceC3aD130c45D21664f2C7f5b23130d23",
+    BAKC: "0xd60d682764Ee04e54707Bee7B564DC65b31884D0",
     sAPE: "0x0000000000000000000000000000000000000001",
     WETH: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
     aWETH: "0x7649e0d153752c556b8b23DB1f1D3d42993E83a5",
@@ -835,19 +839,18 @@ export const LineaConfig: IParaSpaceConfiguration = {
 export const MainnetConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
-  ParaSpaceAdmin: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+  ParaSpaceAdmin: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
   EmergencyAdmins: [
     "0x17816E9A858b161c3E37016D139cf618056CaCD4",
     "0x69FAD68De47D5666Ad668C7D682dDb8FD6322949",
     "0x2f2d07d60ea7330DD2314f4413CCbB2dC25276EF",
     "0x001e2bcC5c1BfC3131d33Ba074B12c2F1237FB04",
-    "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
     "0x4AC3fD073786a971e1B8dE5a526959c9B3B2B407",
   ],
-  RiskAdmin: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
-  GatewayAdmin: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
-  ParaSpaceTeam: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
-  Treasury: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+  RiskAdmin: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
+  GatewayAdmin: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
+  ParaSpaceTeam: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
+  Treasury: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
   Tokens: {
     WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
     stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
@@ -867,6 +870,7 @@ export const MainnetConfig: IParaSpaceConfiguration = {
     BLUR: "0x5283D291DBCF85356A21bA090E6db59121208b44",
     BAYC: "0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D",
     MAYC: "0x60E4d786628Fea6478F785A6d7e704777c86a7c6",
+    BAKC: "0xba30E5F9Bb24caa003E9f2f0497Ad287FDF95623",
     PUNKS: "0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB",
     WPUNKS: "0xb7F7F6C52F2e2fdb1963Eab30438024864c313F6",
     DOODLE: "0x8a90CAb2b38dba80c64b7734e58Ee1dB38B8992e",
@@ -911,6 +915,8 @@ export const MainnetConfig: IParaSpaceConfiguration = {
   },
   Chainlink: {
     WETH: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    rETH: "0xFCbf6B66dED63D6a8231dB091c16a3481d2E8890",
+    aWETH: "0x549945De284a8cc102D49cE28683ee9E87edE3E3",
     stETH: "0x86392dC19c0b719886221c78AB11eb8Cf5c52812",
     astETH: "0x86392dC19c0b719886221c78AB11eb8Cf5c52812",
     wstETH: "0x1d05d899c3AC6CfA35D50c063325ccA39727c7c8",
@@ -925,12 +931,18 @@ export const MainnetConfig: IParaSpaceConfiguration = {
     sAPE: "0xc7de7f4d4C9c991fF62a07D18b3E31e349833A18",
     cAPE: "0xc7de7f4d4C9c991fF62a07D18b3E31e349833A18",
     yAPE: "0xc7de7f4d4C9c991fF62a07D18b3E31e349833A18",
+    BLUR: "0x32A880E831814CfD55dC556645Ef06816fE9bE02",
     AZUKI: "0xA8B9A447C73191744D5B79BcE864F343455E1150",
     BAYC: "0x352f2Bc3039429fC2fe62004a1575aE74001CfcE",
+    BAKC: "0x393aecF5EAABB009989D629CB33933A3aE201903",
     CLONEX: "0x021264d59DAbD26E7506Ee7278407891Bb8CDCCc",
     WPUNKS: "0x01B6710B01cF3dd8Ae64243097d91aFb03728Fdd",
     DOODLE: "0x027828052840a43Cc2D0187BcfA6e3D6AcE60336",
     MAYC: "0x1823C89715Fe3fB96A24d11c917aCA918894A090",
+    MOONBIRD: "0x9cd36E0E8D3C27d630D00406ACFC3463154951Af",
+    UniswapV3: "0xAf7508f0ccFffFd0BE5D3EC6304CF6258a852de5",
+    SFVLDR: "0x2d21Da8e041E82253e3cbE2012D4d59d46F3c1f2",
+    SEWER: "0x6D09f55aae5489D664203Fb8aD72A8d520A87470",
   },
   ReservesConfig: {
     DAI: strategyDAI,
@@ -939,14 +951,14 @@ export const MainnetConfig: IParaSpaceConfiguration = {
     FRAX: strategyFRAX,
     WETH: strategyWETH,
     aWETH: strategyAWETH,
-    bendETH: strategyBENDETH,
+    // bendETH: strategyBENDETH,
     stETH: strategySTETH,
     wstETH: strategyWSTETH,
     cbETH: strategyCBETH,
     rETH: strategyRETH,
-    cETH: strategyCETH,
-    astETH: strategyASTETH,
-    awstETH: strategyAWSTETH,
+    // cETH: strategyCETH,
+    // astETH: strategyASTETH,
+    // awstETH: strategyAWSTETH,
     APE: strategyAPE,
     WBTC: strategyWBTC,
     BLUR: strategyBLUR,
@@ -961,7 +973,6 @@ export const MainnetConfig: IParaSpaceConfiguration = {
     CLONEX: strategyClonex,
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
-    yAPE: strategyYAPE,
     UniswapV3: strategyUniswapV3,
     BAKC: strategyBAKC,
     SEWER: strategySEWER,
@@ -981,7 +992,14 @@ export const MainnetConfig: IParaSpaceConfiguration = {
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
   Governance: {
     Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
-    Multisig: MULTI_SIG || "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+    Multisig: MULTI_SIG || "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
+  },
+  ParaSpaceV1: {
+    PoolV1: "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee",
+    ProtocolDataProviderV1: "0x58A77FcC64eC07798318F62Cb68BC58455f6748A",
+    CApeV1: "0xC5c9fB6223A989208Df27dCEE33fC59ff5c26fFF",
+    TimeLockV1: "0x59B72FdB45B3182c8502cC297167FE4f821f332d",
+    P2PPairStakingV1: "0xf090Eb4c2B63e7B26E8Bb09e6Fc0cC3A7586263B",
   },
 };
 
