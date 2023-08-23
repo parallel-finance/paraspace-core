@@ -290,6 +290,10 @@ export enum eContractid {
   MockBendDaoLendPool = "MockBendDaoLendPool",
   PositionMoverLogic = "PositionMoverLogic",
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
+  Account = "Account",
+  AccountProxy = "AccountProxy",
+  ERC6551Registry = "ERC6551Registry",
+  ParaAccount = "ParaAccount",
 }
 
 /*
@@ -880,6 +884,11 @@ export interface IRate {
   borrowRate: string;
 }
 
+export interface IAccountAbstraction {
+  rpcUrl: string;
+  paymasterUrl: string;
+}
+
 export interface ICommonConfiguration {
   WrappedNativeTokenId: ERC20TokenContractId;
   MarketId: string;
@@ -915,6 +924,8 @@ export interface ICommonConfiguration {
   DelegationRegistry: tEthereumAddress;
 
   Governance: IGovernanceConfig;
+
+  AccountAbstraction: IAccountAbstraction;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {
