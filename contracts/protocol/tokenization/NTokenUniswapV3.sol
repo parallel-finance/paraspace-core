@@ -50,16 +50,15 @@ contract NTokenUniswapV3 is NTokenLiquidity {
         ).positions(tokenId);
     }
 
-    function _collect(
-        address positionManager,
-        uint256 tokenId,
-        address user,
-        bool receiveEth
-    ) internal override returns (uint256 amount0, uint256 amount1) {
+    function _collect(address positionManager, uint256 tokenId)
+        internal
+        override
+        returns (uint256 amount0, uint256 amount1)
+    {
         INonfungiblePositionManager.CollectParams
             memory collectParams = INonfungiblePositionManager.CollectParams({
                 tokenId: tokenId,
-                recipient: receiveEth ? address(this) : user,
+                recipient: address(POOL),
                 amount0Max: type(uint128).max,
                 amount1Max: type(uint128).max
             });

@@ -24,6 +24,7 @@ import {GenericLogic} from "./GenericLogic.sol";
 import {IStakefishNFTManager} from "../../../interfaces/IStakefishNFTManager.sol";
 import {IStakefishValidator} from "../../../interfaces/IStakefishValidator.sol";
 import {Helpers} from "../helpers/Helpers.sol";
+import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
 
 /**
  * @title SupplyLogic library
@@ -87,7 +88,7 @@ library SupplyLogic {
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteSupplyParams memory params
-    ) external {
+    ) public {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
@@ -446,13 +447,26 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve,
         DataTypes.ExecuteWithdrawERC721Params memory params
     ) internal returns (uint64, uint64) {
+        uint256 amount = 0;
+        INToken nToken = INToken(xTokenAddress);
+        if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
+            uint256 tokenIdLength = params.tokenIds.length;
+            for (uint256 index = 0; index < tokenIdLength; index++) {
+                amount += IPriceOracleGetter(params.oracle).getTokenPrice(
+                    params.asset,
+                    params.tokenIds[index]
+                );
+            }
+        } else {
+            amount = params.tokenIds.length;
+        }
         DataTypes.TimeLockParams memory timeLockParams = GenericLogic
             .calculateTimeLockParams(
                 reserve,
                 DataTypes.TimeLockFactorParams({
                     assetType: DataTypes.AssetType.ERC721,
                     asset: params.asset,
-                    amount: params.tokenIds.length
+                    amount: amount
                 })
             );
         timeLockParams.actionType = DataTypes.TimeLockActionType.WITHDRAW;
@@ -493,7 +507,6 @@ library SupplyLogic {
 
     function executeDecreaseLiquidity(
         mapping(address => DataTypes.ReserveData) storage reservesData,
-        mapping(uint256 => address) storage reservesList,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteDecreaseLiquidityParams memory params
     ) external {
@@ -518,29 +531,61 @@ library SupplyLogic {
             tokenIds
         );
 
-        INTokenLiquidity(reserveCache.xTokenAddress).decreaseLiquidity(
-            params.user,
-            params.tokenId,
-            params.liquidityDecrease,
-            params.amount0Min,
-            params.amount1Min,
-            params.receiveEth
-        );
+        (
+            address token0,
+            address token1,
+            uint256 amount0,
+            uint256 amount1
+        ) = INTokenLiquidity(reserveCache.xTokenAddress).decreaseLiquidity(
+                params.user,
+                params.tokenId,
+                params.liquidityDecrease,
+                params.amount0Min,
+                params.amount1Min
+            );
 
         bool isUsedAsCollateral = ICollateralizableERC721(
             reserveCache.xTokenAddress
         ).isUsedAsCollateral(params.tokenId);
-        if (isUsedAsCollateral) {
-            if (userConfig.isBorrowingAny()) {
-                ValidationLogic.validateHFAndLtvERC721(
-                    reservesData,
-                    reservesList,
+        if (amount0 > 0) {
+            executeSupply(
+                reservesData,
+                userConfig,
+                DataTypes.ExecuteSupplyParams({
+                    asset: token0,
+                    amount: amount0,
+                    onBehalfOf: params.user,
+                    payer: address(this),
+                    referralCode: 0
+                })
+            );
+            if (isUsedAsCollateral) {
+                Helpers.setAssetUsedAsCollateral(
                     userConfig,
-                    params.asset,
-                    tokenIds,
-                    params.user,
-                    params.reservesCount,
-                    params.oracle
+                    reservesData,
+                    token0,
+                    params.user
+                );
+            }
+        }
+        if (amount1 > 0) {
+            executeSupply(
+                reservesData,
+                userConfig,
+                DataTypes.ExecuteSupplyParams({
+                    asset: token1,
+                    amount: amount1,
+                    onBehalfOf: params.user,
+                    payer: address(this),
+                    referralCode: 0
+                })
+            );
+            if (isUsedAsCollateral) {
+                Helpers.setAssetUsedAsCollateral(
+                    userConfig,
+                    reservesData,
+                    token1,
+                    params.user
                 );
             }
         }

@@ -52,16 +52,15 @@ contract NTokenIzumi is NTokenLiquidity {
         (token0, token1, ) = POSITION_MANAGER.poolMetas(poolId);
     }
 
-    function _collect(
-        address positionManager,
-        uint256 tokenId,
-        address user,
-        bool receiveEth
-    ) internal override returns (uint256 amount0, uint256 amount1) {
+    function _collect(address positionManager, uint256 tokenId)
+        internal
+        override
+        returns (uint256 amount0, uint256 amount1)
+    {
         ILiquidityManager POSITION_MANAGER = ILiquidityManager(positionManager);
 
         (amount0, amount1) = POSITION_MANAGER.collect(
-            receiveEth ? address(this) : user,
+            address(POOL),
             tokenId,
             type(uint128).max,
             type(uint128).max

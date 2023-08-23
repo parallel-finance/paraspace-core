@@ -18,16 +18,21 @@ interface INTokenLiquidity {
      * @param liquidityDecrease The amount of liquidity to remove of LP
      * @param amount0Min The minimum amount to remove of token0
      * @param amount1Min The minimum amount to remove of token1
-     * @param receiveEth If convert weth to ETH
      */
     function decreaseLiquidity(
         address user,
         uint256 tokenId,
         uint128 liquidityDecrease,
         uint256 amount0Min,
-        uint256 amount1Min,
-        bool receiveEth
-    ) external;
+        uint256 amount1Min
+    )
+        external
+        returns (
+            address token0,
+            address token1,
+            uint256 amount0,
+            uint256 amount1
+        );
 
     /**
      * @notice Increases liquidity for underlying NFT LP.

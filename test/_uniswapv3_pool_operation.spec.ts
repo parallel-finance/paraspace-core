@@ -452,7 +452,6 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           beforeLiquidity.div(2),
           0,
           0,
-          false,
           {
             gasLimit: 12_450_000,
           }
@@ -484,7 +483,6 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           beforeLiquidity.div(2),
           0,
           0,
-          false,
           {
             gasLimit: 12_450_000,
           }
@@ -516,7 +514,6 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           beforeLiquidity.div(2),
           0,
           0,
-          false,
           {
             gasLimit: 12_450_000,
           }
@@ -548,7 +545,6 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           beforeLiquidity.div(2),
           0,
           0,
-          false,
           {
             gasLimit: 12_450_000,
           }
@@ -572,7 +568,6 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           beforeLiquidity.div(2),
           0,
           0,
-          false,
           {
             gasLimit: 12_450_000,
           }
@@ -672,34 +667,6 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           "0",
           user1.address
         )
-    );
-  });
-
-  it("decreaseUniswapV3Liquidity failed if hf < 1 [ @skip-on-coverage ]", async () => {
-    const {
-      users: [user1],
-      pool,
-      nftPositionManager,
-    } = testEnv;
-    // get current liquidity
-    const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
-
-    await expect(
-      pool
-        .connect(user1.signer)
-        .decreaseLiquidity(
-          nftPositionManager.address,
-          1,
-          beforeLiquidity.mul(3).div(4),
-          0,
-          0,
-          false,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
-    ).to.be.revertedWith(
-      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
     );
   });
 

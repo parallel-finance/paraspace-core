@@ -201,8 +201,6 @@ library DataTypes {
         uint128 liquidityDecrease;
         uint256 amount0Min;
         uint256 amount1Min;
-        bool receiveEth;
-        address oracle;
     }
 
     struct ExecuteIncreaseLiquidityParams {

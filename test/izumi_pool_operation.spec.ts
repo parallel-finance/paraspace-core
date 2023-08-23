@@ -597,7 +597,6 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           beforeLiquidity.div(2),
           0,
           0,
-          false,
           {
             gasLimit: 12_450_000,
           }
@@ -628,7 +627,6 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           beforeLiquidity.div(2),
           0,
           0,
-          false,
           {
             gasLimit: 12_450_000,
           }
@@ -659,7 +657,6 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           beforeLiquidity.div(2),
           0,
           0,
-          false,
           {
             gasLimit: 12_450_000,
           }
@@ -690,7 +687,6 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           beforeLiquidity.div(2),
           0,
           0,
-          false,
           {
             gasLimit: 12_450_000,
           }
@@ -714,7 +710,6 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           beforeLiquidity.div(2),
           0,
           0,
-          false,
           {
             gasLimit: 12_450_000,
           }
@@ -812,33 +807,6 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           "0",
           user1.address
         )
-    );
-  });
-
-  it("decreaseLiquidity failed if hf < 1 [ @skip-on-coverage ]", async () => {
-    const {
-      users: [user1],
-      pool,
-    } = testEnv;
-    // get current liquidity
-    const beforeLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
-
-    await expect(
-      pool
-        .connect(user1.signer)
-        .decreaseLiquidity(
-          nftPositionManager.address,
-          0,
-          beforeLiquidity.mul(3).div(4),
-          0,
-          0,
-          false,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
-    ).to.be.revertedWith(
-      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
     );
   });
 

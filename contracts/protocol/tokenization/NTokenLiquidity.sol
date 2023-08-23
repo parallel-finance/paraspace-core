@@ -62,12 +62,11 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
         return (0, 0);
     }
 
-    function _collect(
-        address,
-        uint256,
-        address,
-        bool
-    ) internal virtual returns (uint256, uint256) {
+    function _collect(address, uint256)
+        internal
+        virtual
+        returns (uint256, uint256)
+    {
         return (0, 0);
     }
 
@@ -87,9 +86,18 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
         uint256 tokenId,
         uint128 liquidityDecrease,
         uint256 amount0Min,
-        uint256 amount1Min,
-        bool receiveEth
-    ) external onlyPool nonReentrant {
+        uint256 amount1Min
+    )
+        external
+        onlyPool
+        nonReentrant
+        returns (
+            address token0,
+            address token1,
+            uint256 amount0,
+            uint256 amount1
+        )
+    {
         require(user == ownerOf(tokenId), Errors.NOT_THE_OWNER);
 
         address positionManager = _ERC721Data.underlyingAsset;
@@ -103,32 +111,9 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
             );
         }
 
-        (address token0, address token1) = _underlyingAsset(
-            positionManager,
-            tokenId
-        );
+        (token0, token1) = _underlyingAsset(positionManager, tokenId);
 
-        address weth;
-        if (receiveEth) {
-            weth = _addressesProvider.getWETH();
-            receiveEth = (token0 == weth || token1 == weth);
-        }
-
-        (uint256 amount0, uint256 amount1) = _collect(
-            positionManager,
-            tokenId,
-            user,
-            receiveEth
-        );
-
-        if (receiveEth) {
-            if (amount0 > 0) {
-                transferTokenOut(user, token0, amount0, weth);
-            }
-            if (amount1 > 0) {
-                transferTokenOut(user, token1, amount1, weth);
-            }
-        }
+        (amount0, amount1) = _collect(positionManager, tokenId);
     }
 
     /// @inheritdoc INTokenLiquidity
@@ -196,20 +181,6 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
             } else {
                 IERC20(token1).safeTransfer(payer, refund1);
             }
-        }
-    }
-
-    function transferTokenOut(
-        address user,
-        address token,
-        uint256 amount,
-        address weth
-    ) internal {
-        if (token == weth) {
-            IWETH(weth).withdraw(amount);
-            Helpers.safeTransferETH(user, amount);
-        } else {
-            IERC20(token).safeTransfer(user, amount);
         }
     }
 
