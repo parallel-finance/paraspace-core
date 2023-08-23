@@ -102,6 +102,7 @@ export const CommonConfig: Pick<
   | "IncentivesController"
   | "Governance"
   | "ParaSpaceV1"
+  | "AccountAbstraction"
 > = {
   WrappedNativeTokenId: ERC20TokenContractId.WETH,
   MarketId: "ParaSpaceMM",
@@ -134,6 +135,10 @@ export const CommonConfig: Pick<
   },
   // ParaSpaceV1
   ParaSpaceV1: undefined,
+  AccountAbstraction: {
+    rpcUrl: `https://api.stackup.sh/v1/node/${process.env.STACKUP_KEY}`,
+    paymasterUrl: `https://api.stackup.sh/v1/paymaster/${process.env.STACKUP_KEY}`
+  },
 };
 
 export const HardhatConfig: IParaSpaceConfiguration = {

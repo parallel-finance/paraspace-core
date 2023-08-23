@@ -97,6 +97,7 @@ import {
   NTokenStakefish__factory,
   MockLendPool__factory,
   NTokenChromieSquiggle__factory,
+  Account__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1299,6 +1300,15 @@ export const getNTokenStakefish = async (address?: tEthereumAddress) =>
         await getDb()
           .get(`${eContractid.NTokenStakefishImpl}.${DRE.network.name}`)
           .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getAccount = async (address?: tEthereumAddress) =>
+  await Account__factory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.Account}.${DRE.network.name}`).value()
       ).address,
     await getFirstSigner()
   );
