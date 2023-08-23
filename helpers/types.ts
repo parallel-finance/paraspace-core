@@ -290,6 +290,7 @@ export enum eContractid {
   PositionMoverLogic = "PositionMoverLogic",
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
   Account = "Account",
+  AccountFactory = "AccountFactory",
   AccountProxy = "AccountProxy",
   ERC6551Registry = "ERC6551Registry",
   ParaAccount = "ParaAccount",

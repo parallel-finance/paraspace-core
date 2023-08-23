@@ -3178,7 +3178,7 @@ export const deployAccount = async (
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    new Account__factory(await getFirstSigner()),
+    await getContractFactory("Account"),
     eContractid.Account,
     [entryPoint],
     verify
@@ -3189,8 +3189,8 @@ export const deployAccountFactory = async (
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    new AccountFactory__factory(await getFirstSigner()),
-    eContractid.Account,
+    await getContractFactory("AccountFactory"),
+    eContractid.AccountFactory,
     [entryPoint],
     verify
   ) as Promise<AccountFactory>;
