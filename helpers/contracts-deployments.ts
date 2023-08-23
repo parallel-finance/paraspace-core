@@ -149,6 +149,85 @@ import {
   WstETHMocked,
   X2Y2Adapter,
   X2Y2R1,
+  X2Y2R1__factory,
+  AutoCompoundApe,
+  InitializableAdminUpgradeabilityProxy__factory,
+  InitializableAdminUpgradeabilityProxy,
+  ParaProxyInterfaces__factory,
+  ParaProxyInterfaces,
+  MockedDelegateRegistry,
+  MockedDelegateRegistry__factory,
+  NTokenBAKC,
+  NTokenBAKC__factory,
+  P2PPairStaking__factory,
+  P2PPairStaking,
+  AirdropFlashClaimReceiver__factory,
+  AirdropFlashClaimReceiver,
+  CLwstETHSynchronicityPriceAdapter__factory,
+  CLExchangeRateSynchronicityPriceAdapter__factory,
+  CLwstETHSynchronicityPriceAdapter,
+  WstETHMocked__factory,
+  WstETHMocked,
+  BAYCSewerPass__factory,
+  BAYCSewerPass,
+  BAYCSewerPassClaim__factory,
+  AutoYieldApe__factory,
+  AutoYieldApe,
+  PYieldToken__factory,
+  PYieldToken,
+  UniswapV3TwapOracleWrapper,
+  UniswapV3TwapOracleWrapper__factory,
+  HelperContract,
+  HelperContract__factory,
+  ParaSpaceAirdrop__factory,
+  ParaSpaceAirdrop,
+  CLExchangeRateSynchronicityPriceAdapter,
+  PTokenAStETH__factory,
+  PTokenAStETH,
+  AStETHDebtToken__factory,
+  AStETHDebtToken,
+  MockAStETH,
+  MockAStETH__factory,
+  MockRETH,
+  MockRETH__factory,
+  CLCETHSynchronicityPriceAdapter__factory,
+  CLCETHSynchronicityPriceAdapter,
+  MockCToken,
+  MockCToken__factory,
+  TimeLock__factory,
+  DefaultTimeLockStrategy__factory,
+  DefaultTimeLockStrategy,
+  NTokenOtherdeed__factory,
+  NTokenOtherdeed,
+  HotWalletProxy__factory,
+  HotWalletProxy,
+  NTokenStakefish__factory,
+  NTokenStakefish,
+  DelegationRegistry,
+  DelegationRegistry__factory,
+  StakefishNFTManager__factory,
+  StakefishNFTManager,
+  StakefishValidatorV1__factory,
+  StakefishValidatorV1,
+  DepositContract__factory,
+  DepositContract,
+  StakefishValidatorFactory__factory,
+  StakefishValidatorFactory,
+  MockFeePool,
+  MockFeePool__factory,
+  MockLendPool__factory,
+  PoolPositionMover__factory,
+  PoolPositionMover,
+  PositionMoverLogic,
+  PositionMoverLogic__factory,
+  TimeLock,
+  NTokenChromieSquiggle__factory,
+  CLFixedPriceSynchronicityPriceAdapter,
+  CLFixedPriceSynchronicityPriceAdapter__factory,
+  Account,
+  Account__factory,
+  AccountFactory,
+  AccountFactory__factory,
 } from "../types";
 import {
   getACLManager,
@@ -3071,6 +3150,28 @@ export const deployStakefishValidator = async (
     [depositContract],
     verify
   ) as Promise<StakefishValidatorV1>;
+
+export const deployAccount = async (
+  entryPoint: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new Account__factory(await getFirstSigner()),
+    eContractid.Account,
+    [entryPoint],
+    verify
+  ) as Promise<Account>;
+
+export const deployAccountFactory = async (
+  entryPoint: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    new AccountFactory__factory(await getFirstSigner()),
+    eContractid.Account,
+    [entryPoint],
+    verify
+  ) as Promise<AccountFactory>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK

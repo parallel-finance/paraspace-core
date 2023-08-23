@@ -1,4 +1,3 @@
-import rawBRE from "hardhat";
 
 const adHoc = async () => {
   console.time("ad-hoc");
@@ -6,7 +5,6 @@ const adHoc = async () => {
 };
 
 async function main() {
-  await rawBRE.run("set-DRE");
   await adHoc();
 }
 
