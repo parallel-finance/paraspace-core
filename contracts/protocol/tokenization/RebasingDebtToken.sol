@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IPool} from "../../interfaces/IPool.sol";
 import {VariableDebtToken} from "./VariableDebtToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import {IScaledBalanceToken} from "../../interfaces/IScaledBalanceToken.sol";
+import {ScaledBalanceTokenBaseERC20} from "contracts/protocol/tokenization/base/ScaledBalanceTokenBaseERC20.sol";
 
 /**
  * @title Rebasing Debt Token
@@ -47,7 +49,7 @@ contract RebasingDebtToken is VariableDebtToken {
     function scaledBalanceOf(address user)
         public
         view
-        override
+        override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
         returns (uint256)
     {
         return _scaledBalanceOf(user, lastRebasingIndex());
@@ -62,7 +64,7 @@ contract RebasingDebtToken is VariableDebtToken {
     function getScaledUserBalanceAndSupply(address user)
         external
         view
-        override
+        override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
         returns (uint256, uint256)
     {
         uint256 rebasingIndex = lastRebasingIndex();
@@ -99,7 +101,7 @@ contract RebasingDebtToken is VariableDebtToken {
         public
         view
         virtual
-        override
+        override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
         returns (uint256)
     {
         return _scaledTotalSupply(lastRebasingIndex());

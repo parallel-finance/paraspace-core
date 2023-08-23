@@ -9,6 +9,7 @@ import {
 import {
   getAllERC721Tokens,
   getAllTokens,
+  getFirstSigner,
   getPoolAddressesProvider,
   getPriceOracle,
 } from "../../../helpers/contracts-getters";
@@ -31,8 +32,8 @@ export const deployNftOracle = async (verify = false) => {
   const chainlinkConfig = paraSpaceConfig.Chainlink;
   // UniswapV3 should use price from `UniswapV3OracleWrapper` instead of NFTFloorOracle
   delete erc721Tokens[ERC721TokenContractId.UniswapV3];
-  const [deployer, oracle1, oracle2, oracle3] =
-    await getEthersSignersAddresses();
+  const deployer = await getFirstSigner();
+  const [, oracle1, oracle2, oracle3] = await getEthersSignersAddresses();
   //at launch phase we will only use 3 feeders for nft oracle in mainnet
   const feeders =
     oracleConfig.Nodes.length > 0
@@ -43,20 +44,24 @@ export const deployNftOracle = async (verify = false) => {
     .map(([, nft]) => nft.address)
     .filter((x) => x);
   const nftFloorOracle = await deployNFTFloorPriceOracle(verify);
-  await waitForTx(
-    await nftFloorOracle.initialize(
-      deployer,
-      feeders,
-      projects,
-      GLOBAL_OVERRIDES
-    )
-  );
-  await waitForTx(
-    await nftFloorOracle.setConfig(
-      oracleConfig.ExpirationPeriod,
-      oracleConfig.DeviationRate
-    )
-  );
+  try {
+    await waitForTx(
+      await nftFloorOracle.initialize(
+        await deployer.getAddress(),
+        feeders,
+        projects,
+        GLOBAL_OVERRIDES
+      )
+    );
+    await waitForTx(
+      await nftFloorOracle.setConfig(
+        oracleConfig.ExpirationPeriod,
+        oracleConfig.DeviationRate
+      )
+    );
+  } catch (e) {
+    //
+  }
   return nftFloorOracle;
 };
 
@@ -112,13 +117,14 @@ export const step_10 = async (verify = false) => {
       GLOBAL_OVERRIDES
     );
 
+    const networkPriceInUsdAggregator = (chainlinkConfig[
+      oracleConfig.BaseCurrency
+    ] ||
+      allAggregatorsAddresses[ERC20TokenContractId.USDC] ||
+      allAggregatorsAddresses[ERC20TokenContractId.USDT])!;
     await deployUiPoolDataProvider(
-      (chainlinkConfig[oracleConfig.BaseCurrency] ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDC] ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDT])!,
-      (chainlinkConfig[oracleConfig.BaseCurrency] ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDC] ||
-        allAggregatorsAddresses[ERC20TokenContractId.USDT])!,
+      networkPriceInUsdAggregator,
+      networkPriceInUsdAggregator,
       verify
     );
     await deployWalletBalanceProvider(verify);

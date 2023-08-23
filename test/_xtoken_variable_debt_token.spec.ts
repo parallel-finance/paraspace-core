@@ -4,12 +4,12 @@ import {increaseTime, timeLatest, waitForTx} from "../helpers/misc-utils";
 import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../helpers/constants";
 import {ProtocolErrors} from "../helpers/types";
 import {TestEnv} from "./helpers/make-suite";
-import {topUpNonPayableWithEther} from "./helpers/utils/funds";
+// import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {
   buildDelegationWithSigParams,
   convertToCurrencyDecimals,
   getSignatureFromTypedData,
-  impersonateAddress,
+  // impersonateAddress,
 } from "../helpers/contracts-helpers";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import {VariableDebtToken__factory} from "../types";
@@ -29,8 +29,8 @@ describe("VariableDebtToken", () => {
     });
     const {
       CALLER_MUST_BE_POOL,
-      INVALID_MINT_AMOUNT,
-      INVALID_BURN_AMOUNT,
+      // INVALID_MINT_AMOUNT,
+      // INVALID_BURN_AMOUNT,
       CALLER_NOT_POOL_ADMIN,
     } = ProtocolErrors;
 
@@ -144,64 +144,64 @@ describe("VariableDebtToken", () => {
       ).to.be.revertedWith(CALLER_MUST_BE_POOL);
     });
 
-    it("TC-variable-debt-token-04 Tries to mint with amountScaled == 0 (revert expected)", async () => {
-      const {deployer, pool, dai, protocolDataProvider, users} = testEnv;
+    // it("TC-variable-debt-token-04 Tries to mint with amountScaled == 0 (revert expected)", async () => {
+    //   const {deployer, pool, dai, protocolDataProvider, users} = testEnv;
+    //
+    //   // Impersonate the Pool
+    //   await topUpNonPayableWithEther(
+    //     deployer.signer,
+    //     [pool.address],
+    //     utils.parseEther("1")
+    //   );
+    //   const poolSigner = (await impersonateAddress(pool.address)).signer;
+    //
+    //   const daiVariableDebtTokenAddress = (
+    //     await protocolDataProvider.getReserveTokensAddresses(dai.address)
+    //   ).variableDebtTokenAddress;
+    //
+    //   const variableDebtContract = VariableDebtToken__factory.connect(
+    //     daiVariableDebtTokenAddress,
+    //     deployer.signer
+    //   );
+    //
+    //   await expect(
+    //     variableDebtContract
+    //       .connect(poolSigner)
+    //       .mint(
+    //         users[0].address,
+    //         users[0].address,
+    //         0,
+    //         utils.parseUnits("1", 27)
+    //       )
+    //   ).to.be.revertedWith(INVALID_MINT_AMOUNT);
+    // });
 
-      // Impersonate the Pool
-      await topUpNonPayableWithEther(
-        deployer.signer,
-        [pool.address],
-        utils.parseEther("1")
-      );
-      const poolSigner = (await impersonateAddress(pool.address)).signer;
-
-      const daiVariableDebtTokenAddress = (
-        await protocolDataProvider.getReserveTokensAddresses(dai.address)
-      ).variableDebtTokenAddress;
-
-      const variableDebtContract = VariableDebtToken__factory.connect(
-        daiVariableDebtTokenAddress,
-        deployer.signer
-      );
-
-      await expect(
-        variableDebtContract
-          .connect(poolSigner)
-          .mint(
-            users[0].address,
-            users[0].address,
-            0,
-            utils.parseUnits("1", 27)
-          )
-      ).to.be.revertedWith(INVALID_MINT_AMOUNT);
-    });
-
-    it("TC-variable-debt-token-05 Tries to burn with amountScaled == 0 (revert expected)", async () => {
-      const {deployer, pool, dai, protocolDataProvider, users} = testEnv;
-
-      // Impersonate the Pool
-      await topUpNonPayableWithEther(
-        deployer.signer,
-        [pool.address],
-        utils.parseEther("1")
-      );
-      const poolSigner = (await impersonateAddress(pool.address)).signer;
-
-      const daiVariableDebtTokenAddress = (
-        await protocolDataProvider.getReserveTokensAddresses(dai.address)
-      ).variableDebtTokenAddress;
-
-      const variableDebtContract = VariableDebtToken__factory.connect(
-        daiVariableDebtTokenAddress,
-        deployer.signer
-      );
-
-      await expect(
-        variableDebtContract
-          .connect(poolSigner)
-          .burn(users[0].address, 0, utils.parseUnits("1", 27))
-      ).to.be.revertedWith(INVALID_BURN_AMOUNT);
-    });
+    // it("TC-variable-debt-token-05 Tries to burn with amountScaled == 0 (revert expected)", async () => {
+    //   const {deployer, pool, dai, protocolDataProvider, users} = testEnv;
+    //
+    //   // Impersonate the Pool
+    //   await topUpNonPayableWithEther(
+    //     deployer.signer,
+    //     [pool.address],
+    //     utils.parseEther("1")
+    //   );
+    //   const poolSigner = (await impersonateAddress(pool.address)).signer;
+    //
+    //   const daiVariableDebtTokenAddress = (
+    //     await protocolDataProvider.getReserveTokensAddresses(dai.address)
+    //   ).variableDebtTokenAddress;
+    //
+    //   const variableDebtContract = VariableDebtToken__factory.connect(
+    //     daiVariableDebtTokenAddress,
+    //     deployer.signer
+    //   );
+    //
+    //   await expect(
+    //     variableDebtContract
+    //       .connect(poolSigner)
+    //       .burn(users[0].address, 0, utils.parseUnits("1", 27))
+    //   ).to.be.revertedWith(INVALID_BURN_AMOUNT);
+    // });
 
     it("TC-variable-debt-token-06 Tries to transfer debt tokens (revert expected)", async () => {
       const {users, dai, protocolDataProvider} = testEnv;

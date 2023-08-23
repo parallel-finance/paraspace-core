@@ -14,7 +14,7 @@ import {
   OPENSEA_SEAPORT_ID,
   PARASPACE_SEAPORT_ID,
 } from "../../../helpers/constants";
-import {getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
+import {DRE, getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
 import {
   createZone,
   insertContractAddressInDb,
@@ -36,10 +36,12 @@ export const step_15 = async (verify = false) => {
       verify
     );
     const conduitKey = `${deployerAddress}000000000000000000000000`;
+    GLOBAL_OVERRIDES.gasLimit = 35_000_000;
     const conduit = await createConduit(
       conduitController,
       deployer,
-      conduitKey
+      conduitKey,
+      GLOBAL_OVERRIDES
     );
     const conduitInstance = await getConduit(conduit);
     await waitForTx(
@@ -54,14 +56,18 @@ export const step_15 = async (verify = false) => {
       addressesProvider.address,
       verify
     );
-    await waitForTx(
-      await conduitController.updateChannel(
-        conduit,
-        seaport.address,
-        true,
-        GLOBAL_OVERRIDES
-      )
-    );
+    if (!DRE.network.config.zksync) {
+      // TODO: fix updateChannel method for zksync
+      await waitForTx(
+        await conduitController.updateChannel(
+          conduit,
+          seaport.address,
+          true,
+          GLOBAL_OVERRIDES
+        )
+      );
+    }
+    delete GLOBAL_OVERRIDES.gasLimit;
     await waitForTx(
       await addressesProvider.setMarketplace(
         PARASPACE_SEAPORT_ID,

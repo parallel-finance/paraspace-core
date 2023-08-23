@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import "../libraries/paraspace-upgradeability/ParaReentrancyGuard.sol";
 import "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
@@ -23,7 +23,7 @@ import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
 import {PercentageMath} from "../libraries/math/PercentageMath.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
-import {ISwapRouter} from "../../dependencies/univ3/interfaces/ISwapRouter.sol";
+import {ISwapRouter} from "../../dependencies/uniswapv3-periphery/interfaces/ISwapRouter.sol";
 import {IPriceOracleGetter} from "../../interfaces/IPriceOracleGetter.sol";
 import {Helpers} from "../libraries/helpers/Helpers.sol";
 

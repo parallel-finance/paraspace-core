@@ -6,6 +6,7 @@ import {
   deployPTokenCApe,
   deployPTokenSApe,
   deployPTokenStETH,
+  deployPTokenStKSM,
 } from "../../helpers/contracts-deployments";
 import {
   getPoolAddressesProvider,
@@ -37,6 +38,7 @@ export const upgradePToken = async (verify = false) => {
   let pTokenImplementationAddress = "";
   let pTokenDelegationAwareImplementationAddress = "";
   let pTokenStETHImplementationAddress = "";
+  let pTokenStKSMImplementationAddress = "";
   let pTokenSApeImplementationAddress = "";
   let pTokenCApeImplementationAddress = "";
   let pTokenATokenImplementationAddress = "";
@@ -117,6 +119,14 @@ export const upgradePToken = async (verify = false) => {
         ).address;
       }
       newImpl = pTokenStETHImplementationAddress;
+    } else if (xTokenType == XTokenType.PTokenStKSM) {
+      if (!pTokenStKSMImplementationAddress) {
+        console.log("deploy PTokenStKSM implementation");
+        pTokenStKSMImplementationAddress = (
+          await deployPTokenStKSM(poolAddress, verify)
+        ).address;
+      }
+      newImpl = pTokenStKSMImplementationAddress;
     } else if (xTokenType == XTokenType.DelegationAwarePToken) {
       if (!pTokenDelegationAwareImplementationAddress) {
         console.log("deploy PTokenDelegationAware implementation");

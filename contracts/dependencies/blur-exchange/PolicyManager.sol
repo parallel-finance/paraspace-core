@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {Ownable} from "../openzeppelin/contracts/Ownable.sol";
 import {EnumerableSet} from "../openzeppelin/contracts/EnumerableSet.sol";

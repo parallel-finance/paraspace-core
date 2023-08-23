@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IPool} from "../../interfaces/IPool.sol";
 import {PToken} from "./PToken.sol";
@@ -13,6 +13,7 @@ import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IScaledBalanceToken} from "../../interfaces/IScaledBalanceToken.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {ScaledBalanceTokenBaseERC20} from "contracts/protocol/tokenization/base/ScaledBalanceTokenBaseERC20.sol";
 
 /**
  * @title sApe PToken
@@ -63,7 +64,7 @@ contract PTokenSApe is PToken {
     function scaledBalanceOf(address user)
         public
         view
-        override
+        override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
         returns (uint256)
     {
         return balanceOf(user);
@@ -73,7 +74,7 @@ contract PTokenSApe is PToken {
         address,
         uint256,
         DataTypes.TimeLockParams calldata
-    ) external virtual override onlyPool {
+    ) public virtual override onlyPool {
         revert("not allowed");
     }
 

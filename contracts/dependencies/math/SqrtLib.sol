@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 library SqrtLib {
     function sqrt(uint256 x) internal pure returns (uint256 z) {

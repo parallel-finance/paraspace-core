@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
-import {IUniswapV3PoolDerivedState} from "../dependencies/uniswap/IUniswapV3PoolDerivedState.sol";
-import {IUniswapV3PoolState} from "../dependencies/uniswap/IUniswapV3PoolState.sol";
-import {SafeCast} from "../dependencies/univ3/libraries/SafeCast.sol";
+import {IUniswapV3PoolDerivedState} from "../dependencies/uniswapv3-core/interfaces/pool/IUniswapV3PoolDerivedState.sol";
+import {IUniswapV3PoolImmutables} from "../dependencies/uniswapv3-core/interfaces/pool/IUniswapV3PoolImmutables.sol";
+import {SafeCast} from "../dependencies/uniswapv3-core/libraries/SafeCast.sol";
 import {ICLSynchronicityPriceAdapter} from "../dependencies/chainlink/ICLSynchronicityPriceAdapter.sol";
-import {TickMath} from "../dependencies/uniswap/libraries/TickMath.sol";
-import {FullMath} from "../dependencies/uniswap/libraries/FullMath.sol";
-import {FixedPoint96} from "../dependencies/univ3/libraries/FixedPoint96.sol";
+import {TickMath} from "../dependencies/uniswapv3-core/libraries/TickMath.sol";
+import {FullMath} from "../dependencies/uniswapv3-core/libraries/FullMath.sol";
+import {FixedPoint96} from "../dependencies/uniswapv3-core/libraries/FixedPoint96.sol";
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 
 contract UniswapV3TwapOracleWrapper is ICLSynchronicityPriceAdapter {
@@ -27,8 +27,8 @@ contract UniswapV3TwapOracleWrapper is ICLSynchronicityPriceAdapter {
         UNISWAP_V3_POOL = _pool;
         TWAP_WINDOW = twapWindow;
 
-        address token0 = IUniswapV3PoolState(_pool).token0();
-        address token1 = IUniswapV3PoolState(_pool).token1();
+        address token0 = IUniswapV3PoolImmutables(_pool).token0();
+        address token1 = IUniswapV3PoolImmutables(_pool).token1();
         IS_ASSET_RESERVE_ZERO = token0 != _baseCurrency;
         ASSET = IS_ASSET_RESERVE_ZERO ? token0 : token1;
 

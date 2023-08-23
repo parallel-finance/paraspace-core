@@ -1,32 +1,27 @@
 import {task} from "hardhat/config";
-import {FORK, TIME_LOCK_SIGS} from "../../helpers/hardhat-constants";
-import {ethers} from "ethers";
+import {TIME_LOCK_SIGS} from "../../helpers/hardhat-constants";
 import {decodeMulti, MetaTransaction} from "ethers-multisend";
-import EthersAdapter from "@safe-global/safe-ethers-lib";
-import SafeServiceClient from "@safe-global/safe-service-client";
 import {findLastIndex} from "lodash";
+import {eContractid} from "../../helpers/types";
 
 task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
   await DRE.run("set-DRE");
-  const {getFirstSigner, getTimeLockExecutor} = await import(
+  const {getTimeLockExecutor, getSafeSdkAndService} = await import(
     "../../helpers/contracts-getters"
+  );
+  const {getContractAddressInDb} = await import(
+    "../../helpers/contracts-helpers"
   );
   const {getParaSpaceConfig} = await import("../../helpers/misc-utils");
   const {decodeInputData} = await import("../../helpers/contracts-helpers");
-  const timeLock = await getTimeLockExecutor();
-  const signer = await getFirstSigner();
-  const ethAdapter = new EthersAdapter({
-    ethers,
-    signerOrProvider: signer,
-  });
+  const timeLock = (await getContractAddressInDb(eContractid.TimeLockExecutor))
+    ? await getTimeLockExecutor()
+    : undefined;
   const paraSpaceConfig = getParaSpaceConfig();
 
-  const safeService = new SafeServiceClient({
-    txServiceUrl: `https://safe-transaction-${
-      FORK || DRE.network.name
-    }.safe.global`,
-    ethAdapter,
-  });
+  const {safeService} = await getSafeSdkAndService(
+    paraSpaceConfig.Governance.Multisig
+  );
   const res = (
     await safeService.getPendingTransactions(
       paraSpaceConfig.Governance.Multisig
@@ -53,7 +48,7 @@ task("decode-safe-txs", "Decode safe txs").setAction(async (_, DRE) => {
           ? decodeMulti(cur.data).map((x) => ({to: x.to, data: x.data}))
           : [{to: cur.to, data: cur.data}]
       ).map(({to, data}) => {
-        if (to != timeLock.address) {
+        if (to != timeLock?.address) {
           return {to, data};
         }
 
