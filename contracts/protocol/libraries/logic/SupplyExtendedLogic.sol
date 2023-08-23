@@ -2,29 +2,15 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
-import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
-import {IPToken} from "../../../interfaces/IPToken.sol";
-import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
-import {INTokenApeStaking} from "../../../interfaces/INTokenApeStaking.sol";
 import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
-import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
-import {ITimeLockStrategy} from "../../../interfaces/ITimeLockStrategy.sol";
-import {Errors} from "../helpers/Errors.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {WadRayMath} from "../math/WadRayMath.sol";
 import {PercentageMath} from "../math/PercentageMath.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
-import {XTokenType} from "../../../interfaces/IXTokenType.sol";
-import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
-import {INTokenStakefish} from "../../../interfaces/INTokenStakefish.sol";
-import {GenericLogic} from "./GenericLogic.sol";
-import {IStakefishNFTManager} from "../../../interfaces/IStakefishNFTManager.sol";
-import {IStakefishValidator} from "../../../interfaces/IStakefishValidator.sol";
-import {Helpers} from "../helpers/Helpers.sol";
 
 /**
  * @title SupplyLogic library
@@ -33,7 +19,6 @@ import {Helpers} from "../helpers/Helpers.sol";
  */
 library SupplyExtendedLogic {
     using ReserveLogic for DataTypes.ReserveData;
-    using GPv2SafeERC20 for IERC20;
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using WadRayMath for uint256;
 
