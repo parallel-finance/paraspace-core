@@ -9,6 +9,7 @@ import {IPToken} from "../../../interfaces/IPToken.sol";
 import {Errors} from "../helpers/Errors.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {SupplyLogic} from "./SupplyLogic.sol";
+import {SupplyExtendedLogic} from "./SupplyExtendedLogic.sol";
 import {BorrowLogic} from "./BorrowLogic.sol";
 import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
@@ -675,7 +676,7 @@ library MarketplaceLogic {
             buyer,
             tokenId
         );
-        SupplyLogic.executeCollateralizeERC721(
+        SupplyExtendedLogic.executeCollateralizeERC721(
             ps._reserves,
             ps._usersConfig[buyer],
             token,
