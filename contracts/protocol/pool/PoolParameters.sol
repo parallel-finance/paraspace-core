@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.10;
 
 import {ParaVersionedInitializable} from "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
@@ -19,6 +19,7 @@ import {IACLManager} from "../../interfaces/IACLManager.sol";
 import {PoolStorage} from "./PoolStorage.sol";
 import {FlashClaimLogic} from "../libraries/logic/FlashClaimLogic.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
+import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC721Receiver} from "../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
@@ -51,6 +52,7 @@ contract PoolParameters is
     uint256 internal constant POOL_REVISION = 149;
     uint256 internal constant MAX_AUCTION_HEALTH_FACTOR = 3e18;
     uint256 internal constant MIN_AUCTION_HEALTH_FACTOR = 1e18;
+    using SafeERC20 for IERC20;
 
     /**
      * @dev Only pool configurator can call functions marked by this modifier.
@@ -228,8 +230,9 @@ contract PoolParameters is
         override
         onlyPoolAdmin
     {
-        IERC20(token).approve(to, 0);
-        IERC20(token).approve(to, type(uint256).max);
+        if (IERC20(token).allowance(address(this), to) == 0) {
+            IERC20(token).safeApprove(to, type(uint256).max);
+        }
     }
 
     /// @inheritdoc IPoolParameters

@@ -36,7 +36,9 @@ export const step_15 = async (verify = false) => {
       verify
     );
     const conduitKey = `${deployerAddress}000000000000000000000000`;
-    GLOBAL_OVERRIDES.gasLimit = 35_000_000;
+    if (DRE.network.config.zksync) {
+      GLOBAL_OVERRIDES.gasLimit = 35_000_000;
+    }
     const conduit = await createConduit(
       conduitController,
       deployer,
@@ -67,7 +69,9 @@ export const step_15 = async (verify = false) => {
         )
       );
     }
-    delete GLOBAL_OVERRIDES.gasLimit;
+    if (DRE.network.config.zksync) {
+      delete GLOBAL_OVERRIDES.gasLimit;
+    }
     await waitForTx(
       await addressesProvider.setMarketplace(
         PARASPACE_SEAPORT_ID,

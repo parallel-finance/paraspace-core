@@ -94,6 +94,11 @@ interface ITimeLock {
      */
     function claim(uint256[] calldata agreementIds) external;
 
+    /** @dev Function to claim MoonBird from time-lock agreements
+     * @param agreementIds Array of agreement IDs to be claimed
+     */
+    function claimMoonBirds(uint256[] calldata agreementIds) external;
+
     /** @dev Function to freeze a specific time-lock agreement
      * @param agreementId ID of the agreement to be frozen
      */

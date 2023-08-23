@@ -290,6 +290,7 @@ export enum eContractid {
   PositionMoverLogic = "PositionMoverLogic",
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
   Account = "Account",
+  AccountFactory = "AccountFactory",
   AccountProxy = "AccountProxy",
   ERC6551Registry = "ERC6551Registry",
   ParaAccount = "ParaAccount",
@@ -815,9 +816,11 @@ export interface IChainlinkConfig {
   WMATIC?: tEthereumAddress;
   stMATIC?: tEthereumAddress;
   CRV?: tEthereumAddress;
+  BLUR?: tEthereumAddress;
   // ERC721
   DOODLE?: tEthereumAddress;
   BAYC?: tEthereumAddress;
+  BAKC?: tEthereumAddress;
   MAYC?: tEthereumAddress;
   WPUNKS?: tEthereumAddress;
   MOONBIRD?: tEthereumAddress;
@@ -833,6 +836,9 @@ export interface IChainlinkConfig {
   KODA?: tEthereumAddress;
   BLOCKS?: tEthereumAddress;
   EXRP?: tEthereumAddress;
+  UniswapV3?: tEthereumAddress;
+  SFVLDR?: tEthereumAddress;
+  SEWER?: tEthereumAddress;
 }
 
 export interface IYogaLabs {
@@ -851,6 +857,14 @@ export interface IUniswapConfig {
 export interface IBendDAOConfig {
   LendingPool?: tEthereumAddress;
   LendingPoolLoan?: tEthereumAddress;
+}
+
+export interface IParaSpaceV1Config {
+  PoolV1: tEthereumAddress;
+  ProtocolDataProviderV1: tEthereumAddress;
+  CApeV1: tEthereumAddress;
+  TimeLockV1: tEthereumAddress;
+  P2PPairStakingV1: tEthereumAddress;
 }
 
 export interface IStakefish {
@@ -912,6 +926,7 @@ export interface ICommonConfiguration {
   YogaLabs: IYogaLabs;
   Uniswap: IUniswapConfig;
   BendDAO: IBendDAOConfig;
+  ParaSpaceV1: IParaSpaceV1Config | undefined;
   Stakefish: IStakefish;
   Marketplace: IMarketplaceConfig;
   Chainlink: IChainlinkConfig;

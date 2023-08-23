@@ -152,7 +152,7 @@ const hardhatConfig: HardhatUserConfig = {
       gasPrice: "auto",
       gas: "auto",
       allowUnlimitedContractSize: true,
-      timeout: 300000,
+      timeout: 9000000,
     },
     parallel: {
       url: NETWORKS_RPC_URL[eEthereumNetwork.parallel],

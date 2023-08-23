@@ -687,6 +687,13 @@ export const deployPoolPositionMover = async (
   provider: tEthereumAddress,
   bendDaoLendPoolLoan: tEthereumAddress,
   bendDaoLendPool: tEthereumAddress,
+  poolV1: tEthereumAddress,
+  protocolDataProviderV1: tEthereumAddress,
+  capeV1: tEthereumAddress,
+  capeV2: tEthereumAddress,
+  apeCoin: tEthereumAddress,
+  timeLockV1: tEthereumAddress,
+  p2pPairStakingV1: tEthereumAddress,
   verify?: boolean
 ) => {
   const supplyLogic = await deploySupplyLogic(verify);
@@ -707,13 +714,28 @@ export const deployPoolPositionMover = async (
       positionMoverLogic.address,
   };
   const {poolPositionMoverSelectors} = await getPoolSignatures();
+  const libraries = {
+    ["contracts/protocol/libraries/logic/PositionMoverLogic.sol:PositionMoverLogic"]:
+      positionMoverLogic.address,
+  };
   const poolPositionMover = (await withSaveAndVerify(
     await getContractFactory("PoolPositionMover", positionMoverLibraries),
     eContractid.PoolPositionMoverImpl,
-    [provider, bendDaoLendPoolLoan, bendDaoLendPool],
+    [
+      provider,
+      bendDaoLendPoolLoan,
+      bendDaoLendPool,
+      poolV1,
+      protocolDataProviderV1,
+      capeV1,
+      capeV2,
+      apeCoin,
+      timeLockV1,
+      p2pPairStakingV1,
+    ],
     verify,
     false,
-    positionMoverLibraries,
+    libraries,
     poolPositionMoverSelectors
   )) as PoolPositionMover;
 
@@ -3156,7 +3178,7 @@ export const deployAccount = async (
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    new Account__factory(await getFirstSigner()),
+    await getContractFactory("Account"),
     eContractid.Account,
     [entryPoint],
     verify
@@ -3167,8 +3189,8 @@ export const deployAccountFactory = async (
   verify?: boolean
 ) =>
   withSaveAndVerify(
-    new AccountFactory__factory(await getFirstSigner()),
-    eContractid.Account,
+    await getContractFactory("AccountFactory"),
+    eContractid.AccountFactory,
     [entryPoint],
     verify
   ) as Promise<AccountFactory>;

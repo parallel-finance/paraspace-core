@@ -654,18 +654,22 @@ export const initReservesByHelper = async (
       `  - Reserve ready for: ${chunkedSymbols[chunkIndex].join(", ")}`
     );
 
-    if (DRY_RUN) {
-      const encodedData = configurator.interface.encodeFunctionData(
-        "initReserves",
-        [inputs]
-      );
-      await dryRunEncodedData(configurator.address, encodedData);
-    } else {
-      const tx = await waitForTx(
-        await configurator.initReserves(inputs, GLOBAL_OVERRIDES)
-      );
+    try {
+      if (DRY_RUN) {
+        const encodedData = configurator.interface.encodeFunctionData(
+          "initReserves",
+          [inputs]
+        );
+        await dryRunEncodedData(configurator.address, encodedData);
+      } else {
+        const tx = await waitForTx(
+          await configurator.initReserves(inputs, GLOBAL_OVERRIDES)
+        );
 
-      console.log("    * gasUsed", tx.gasUsed.toString());
+        console.log("    * gasUsed", tx.gasUsed.toString());
+      }
+    } catch (e) {
+      console.error(e);
     }
   }
 
@@ -778,22 +782,26 @@ export const configureReservesByHelper = async (
       chunkIndex < chunkedInputParams.length;
       chunkIndex++
     ) {
-      if (DRY_RUN) {
-        const encodedData = reservesSetupHelper.interface.encodeFunctionData(
-          "configureReserves",
-          [poolConfiguratorAddress, chunkedInputParams[chunkIndex]]
-        );
-        await dryRunEncodedData(reservesSetupHelper.address, encodedData);
-      } else {
-        await waitForTx(
-          await reservesSetupHelper.configureReserves(
-            poolConfiguratorAddress,
-            chunkedInputParams[chunkIndex],
-            GLOBAL_OVERRIDES
-          )
-        );
+      try {
+        if (DRY_RUN) {
+          const encodedData = reservesSetupHelper.interface.encodeFunctionData(
+            "configureReserves",
+            [poolConfiguratorAddress, chunkedInputParams[chunkIndex]]
+          );
+          await dryRunEncodedData(reservesSetupHelper.address, encodedData);
+        } else {
+          await waitForTx(
+            await reservesSetupHelper.configureReserves(
+              poolConfiguratorAddress,
+              chunkedInputParams[chunkIndex],
+              GLOBAL_OVERRIDES
+            )
+          );
+        }
+        console.log(`  - Init for: ${chunkedSymbols[chunkIndex].join(", ")}`);
+      } catch (e) {
+        console.error(e);
       }
-      console.log(`  - Init for: ${chunkedSymbols[chunkIndex].join(", ")}`);
     }
     // Remove reservesSetupHelper as admin
     if (DRY_RUN) {

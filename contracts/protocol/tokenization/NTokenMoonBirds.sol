@@ -156,4 +156,11 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
     function nestingOpen() external view returns (bool) {
         return IMoonBird(_ERC721Data.underlyingAsset).nestingOpen();
     }
+
+    function claimUnderlying(
+        address timeLockV1,
+        uint256[] calldata agreementIds
+    ) external virtual override onlyPool {
+        ITimeLock(timeLockV1).claimMoonBirds(agreementIds);
+    }
 }

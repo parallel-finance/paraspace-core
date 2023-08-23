@@ -279,4 +279,11 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     {
         return XTokenType.NToken;
     }
+
+    function claimUnderlying(
+        address timeLockV1,
+        uint256[] calldata agreementIds
+    ) external virtual onlyPool {
+        ITimeLock(timeLockV1).claim(agreementIds);
+    }
 }

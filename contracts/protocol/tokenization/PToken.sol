@@ -17,6 +17,8 @@ import {EIP712Base} from "./base/EIP712Base.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {ICApe} from "../../interfaces/ICApe.sol";
+import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
 
 /**
  * @title ParaSpace ERC20 PToken
@@ -380,5 +382,39 @@ contract PToken is
         returns (XTokenType)
     {
         return XTokenType.PToken;
+    }
+
+    function claimUnderlying(
+        address timeLockV1,
+        address cApeV1,
+        address cApeV2,
+        address apeCoin,
+        uint256[] calldata agreementIds
+    ) external virtual onlyPool returns (uint256) {
+        address underlyingAsset = _underlyingAsset;
+        bool isCApeV2 = underlyingAsset == address(cApeV2);
+        uint256 beforeBalance = isCApeV2
+            ? IERC20(cApeV1).balanceOf(address(this))
+            : IERC20(underlyingAsset).balanceOf(address(this));
+
+        ITimeLock(timeLockV1).claim(agreementIds);
+
+        if (!isCApeV2) {
+            return
+                IERC20(underlyingAsset).balanceOf(address(this)) -
+                beforeBalance;
+        }
+
+        uint256 diff = IERC20(cApeV1).balanceOf(address(this)) - beforeBalance;
+        if (diff == 0) {
+            return 0;
+        }
+
+        IAutoCompoundApe(cApeV1).withdraw(diff);
+        if (IERC20(apeCoin).allowance(address(this), address(cApeV2)) == 0) {
+            IERC20(apeCoin).approve(cApeV2, type(uint256).max);
+        }
+        IAutoCompoundApe(cApeV2).deposit(address(this), diff);
+        return diff;
     }
 }
