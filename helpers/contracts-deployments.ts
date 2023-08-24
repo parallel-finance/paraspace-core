@@ -228,6 +228,7 @@ import {
   Account__factory,
   AccountFactory,
   AccountFactory__factory,
+  ParaX,
 } from "../types";
 import {
   getACLManager,
@@ -240,6 +241,7 @@ import {
   getHelperContract,
   getInitializableAdminUpgradeabilityProxy,
   getP2PPairStaking,
+  getParaX,
   getPoolProxy,
   getProtocolDataProvider,
   getPunks,
@@ -3274,6 +3276,37 @@ export const deployDelegationAwarePToken = async (
   );
 
   return instance;
+};
+
+export const deployPapaX = async (verify?: boolean) => {
+  const implementation = await deployParaXImpl(verify);
+
+  const initData = implementation.interface.encodeFunctionData("initialize");
+
+  const proxyInstance = await withSaveAndVerify(
+    await getContractFactory("InitializableAdminUpgradeabilityProxy"),
+    eContractid.ParaX,
+    [],
+    verify
+  );
+
+  const proxyAdmin = "0x17816E9A858b161c3E37016D139cf618056CaCD4"; //yubo.eth
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](implementation.address, proxyAdmin, initData, GLOBAL_OVERRIDES)
+  );
+
+  return await getParaX(proxyInstance.address);
+};
+
+export const deployParaXImpl = async (verify?: boolean) => {
+  return withSaveAndVerify(
+    await getContractFactory("ParaX"),
+    eContractid.ParaXImpl,
+    [],
+    verify
+  ) as Promise<ParaX>;
 };
 
 export const deployMockVariableDebtToken = async (

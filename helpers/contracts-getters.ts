@@ -98,6 +98,7 @@ import {
   MockLendPool__factory,
   NTokenChromieSquiggle__factory,
   Account__factory,
+  ParaX__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1096,6 +1097,15 @@ export const getP2PPairStaking = async (address?: tEthereumAddress) =>
         await getDb()
           .get(`${eContractid.P2PPairStaking}.${DRE.network.name}`)
           .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getParaX = async (address?: tEthereumAddress) =>
+  await ParaX__factory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.ParaX}.${DRE.network.name}`).value()
       ).address,
     await getFirstSigner()
   );

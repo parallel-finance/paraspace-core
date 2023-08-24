@@ -258,6 +258,8 @@ export enum eContractid {
   HelperContractImpl = "HelperContractImpl",
   HelperContract = "HelperContract",
   P2PPairStakingImpl = "P2PPairStakingImpl",
+  ParaX = "ParaX",
+  ParaXImpl = "ParaXImpl",
   yAPE = "yAPE",
   yAPEImpl = "yAPEImpl",
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
