@@ -401,7 +401,8 @@ library SupplyLogic {
         ValidationLogic.validateWithdrawERC721(
             reservesData,
             reserveCache,
-            params.tokenIds
+            params.tokenIds,
+            true
         );
         uint256 amountToWithdraw = params.tokenIds.length;
 
@@ -449,7 +450,11 @@ library SupplyLogic {
     ) internal returns (uint64, uint64) {
         uint256 amount = 0;
         INToken nToken = INToken(xTokenAddress);
-        if (nToken.getXTokenType() == XTokenType.NTokenUniswapV3) {
+        XTokenType tokenType = nToken.getXTokenType();
+        if (
+            tokenType == XTokenType.NTokenUniswapV3 ||
+            tokenType == XTokenType.NTokenIZUMILp
+        ) {
             uint256 tokenIdLength = params.tokenIds.length;
             for (uint256 index = 0; index < tokenIdLength; index++) {
                 amount += IPriceOracleGetter(params.oracle).getTokenPrice(
@@ -528,7 +533,8 @@ library SupplyLogic {
         ValidationLogic.validateWithdrawERC721(
             reservesData,
             reserveCache,
-            tokenIds
+            tokenIds,
+            false //will validate underlying when executeSupply
         );
 
         (

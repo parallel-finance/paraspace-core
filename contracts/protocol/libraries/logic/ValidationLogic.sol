@@ -189,7 +189,8 @@ library ValidationLogic {
     function validateWithdrawERC721(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.ReserveCache memory reserveCache,
-        uint256[] memory tokenIds
+        uint256[] memory tokenIds,
+        bool validateUnderlyingForLiquidityToken
     ) internal view {
         (
             bool isActive,
@@ -206,21 +207,23 @@ library ValidationLogic {
         require(isActive, Errors.RESERVE_INACTIVE);
         require(!isPaused, Errors.RESERVE_PAUSED);
 
-        INToken nToken = INToken(reserveCache.xTokenAddress);
-        XTokenType tokenType = nToken.getXTokenType();
-        if (
-            tokenType == XTokenType.NTokenUniswapV3 ||
-            tokenType == XTokenType.NTokenIZUMILp
-        ) {
-            for (uint256 index = 0; index < tokenIds.length; index++) {
-                ValidationLogic.validateForLiquidityNFT(
-                    reservesData,
-                    reserveCache.xTokenAddress,
-                    tokenIds[index],
-                    true,
-                    true,
-                    false
-                );
+        if (validateUnderlyingForLiquidityToken) {
+            INToken nToken = INToken(reserveCache.xTokenAddress);
+            XTokenType tokenType = nToken.getXTokenType();
+            if (
+                tokenType == XTokenType.NTokenUniswapV3 ||
+                tokenType == XTokenType.NTokenIZUMILp
+            ) {
+                for (uint256 index = 0; index < tokenIds.length; index++) {
+                    ValidationLogic.validateForLiquidityNFT(
+                        reservesData,
+                        reserveCache.xTokenAddress,
+                        tokenIds[index],
+                        true,
+                        true,
+                        false
+                    );
+                }
             }
         }
     }
