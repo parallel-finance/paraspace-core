@@ -3,6 +3,7 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {deployPapaX} from "../helpers/contracts-deployments";
 import {expect} from "chai";
 import {waitForTx} from "../helpers/misc-utils";
+import {getProxyAdmin} from "../helpers/contracts-helpers";
 
 describe("ParaX Test", () => {
   it("ParaX operation test", async () => {
@@ -30,5 +31,9 @@ describe("ParaX Test", () => {
     expect(await ParaX.ownerOf(2)).to.be.eq(user1.address);
     expect(await ParaX.ownerOf(3)).to.be.eq(user2.address);
     expect(await ParaX.totalSupply()).to.be.eq(4);
+
+    expect(await getProxyAdmin(ParaX.address)).to.be.eq(
+      "0x17816E9A858b161c3E37016D139cf618056CaCD4"
+    );
   });
 });
