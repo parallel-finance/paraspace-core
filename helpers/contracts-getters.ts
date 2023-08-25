@@ -284,6 +284,17 @@ export const getSupplyLogic = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getSupplyExtendedLogic = async (address?: tEthereumAddress) =>
+  await SupplyLogic__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.SupplyExtendedLogic}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getBorrowLogic = async (address?: tEthereumAddress) =>
   await BorrowLogic__factory.connect(
     address ||

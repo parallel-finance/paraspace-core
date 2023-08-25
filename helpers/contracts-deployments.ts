@@ -228,6 +228,7 @@ import {
   Account__factory,
   AccountFactory,
   AccountFactory__factory,
+  SupplyExtendedLogic,
 } from "../types";
 import {
   getACLManager,
@@ -279,6 +280,7 @@ import shell from "shelljs";
 
 export const deployAllLibraries = async (verify?: boolean) => {
   const supplyLogic = await deploySupplyLogic(verify);
+  const supplyExtendedLogic = await deploySupplyExtendedLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
   const auctionLogic = await deployAuctionLogic(verify);
   const flashClaimLogic = await deployFlashClaimLogic(verify);
@@ -294,6 +296,9 @@ export const deployAllLibraries = async (verify?: boolean) => {
     },
     ["contracts/protocol/libraries/logic/SupplyLogic.sol"]: {
       SupplyLogic: supplyLogic.address,
+    },
+    ["contracts/protocol/libraries/logic/SupplyExtendedLogic.sol"]: {
+      SupplyLogic: supplyExtendedLogic.address,
     },
     ["contracts/protocol/libraries/logic/BorrowLogic.sol"]: {
       BorrowLogic: borrowLogic.address,
@@ -350,6 +355,8 @@ export const deployAllLibraries = async (verify?: boolean) => {
     {
       "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
         supplyLogic.address,
+      "contracts/protocol/libraries/logic/SupplyExtendedLogic.sol:SupplyExtendedLogic":
+        supplyExtendedLogic.address,
       "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
         borrowLogic.address,
     },
@@ -435,6 +442,14 @@ export const deploySupplyLogic = async (verify?: boolean) =>
     verify
   ) as Promise<SupplyLogic>;
 
+export const deploySupplyExtendedLogic = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("SupplyExtendedLogic"),
+    eContractid.SupplyExtendedLogic,
+    [],
+    verify
+  ) as Promise<SupplyExtendedLogic>;
+
 export const deployFlashClaimLogic = async (verify?: boolean) =>
   withSaveAndVerify(
     await getContractFactory("FlashClaimLogic"),
@@ -497,6 +512,7 @@ export const deployPoolCoreLibraries = async (
   verify?: boolean
 ): Promise<Libraries> => {
   const supplyLogic = await deploySupplyLogic(verify);
+  const supplyExtendedLogic = await deploySupplyExtendedLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
   const auctionLogic = await deployAuctionLogic(verify);
   const liquidationLogic = await deployLiquidationLogic(
@@ -515,6 +531,8 @@ export const deployPoolCoreLibraries = async (
       liquidationLogic.address,
     ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
       supplyLogic.address,
+    ["contracts/protocol/libraries/logic/SupplyExtendedLogic.sol:SupplyExtendedLogic"]:
+      supplyExtendedLogic.address,
     ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
       borrowLogic.address,
     ["contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"]:
@@ -553,11 +571,14 @@ export const deployPoolMarketplace = async (
   verify?: boolean
 ) => {
   const supplyLogic = await deploySupplyLogic(verify);
+  const supplyExtendedLogic = await deploySupplyExtendedLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
   const marketplaceLogic = await deployMarketplaceLogic(
     {
       "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
         supplyLogic.address,
+      "contracts/protocol/libraries/logic/SupplyExtendedLogic.sol:SupplyExtendedLogic":
+        supplyExtendedLogic.address,
       "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
         borrowLogic.address,
     },
@@ -754,6 +775,7 @@ export const deployPoolMarketplaceLibraries = async (
   const marketplaceLogic = await deployMarketplaceLogic(
     pick(coreLibraries, [
       "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
+      "contracts/protocol/libraries/logic/SupplyExtendedLogic.sol:SupplyExtendedLogic",
       "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
     ]),
     verify
