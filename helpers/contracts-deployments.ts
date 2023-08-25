@@ -694,6 +694,8 @@ export const deployPoolPositionMover = async (
   apeCoin: tEthereumAddress,
   timeLockV1: tEthereumAddress,
   p2pPairStakingV1: tEthereumAddress,
+  accountFactory: tEthereumAddress,
+  aaMover: tEthereumAddress,
   verify?: boolean
 ) => {
   const supplyLogic = await deploySupplyLogic(verify);
@@ -732,6 +734,8 @@ export const deployPoolPositionMover = async (
       apeCoin,
       timeLockV1,
       p2pPairStakingV1,
+      accountFactory,
+      aaMover,
     ],
     verify,
     false,

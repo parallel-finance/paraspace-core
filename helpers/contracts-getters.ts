@@ -98,6 +98,7 @@ import {
   MockLendPool__factory,
   NTokenChromieSquiggle__factory,
   Account__factory,
+  AccountFactory__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1309,6 +1310,17 @@ export const getAccount = async (address?: tEthereumAddress) =>
     address ||
       (
         await getDb().get(`${eContractid.Account}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getAccountFactory = async (address?: tEthereumAddress) =>
+  await AccountFactory__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.AccountFactory}.${DRE.network.name}`)
+          .value()
       ).address,
     await getFirstSigner()
   );

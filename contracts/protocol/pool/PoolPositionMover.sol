@@ -22,6 +22,8 @@ import {Errors} from "../libraries/helpers/Errors.sol";
 import {ReserveConfiguration} from "../../protocol/libraries/configuration/ReserveConfiguration.sol";
 import {ReserveLogic} from "../libraries/logic/ReserveLogic.sol";
 import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import {IAccountFactory} from "../../interfaces/IAccountFactory.sol";
+import {Errors} from "../libraries/helpers/Errors.sol";
 
 /**
  * @title Pool PositionMover contract
@@ -43,6 +45,8 @@ contract PoolPositionMover is
     IERC20 internal immutable APE_COIN;
     ITimeLock internal immutable TIME_LOCK_V1;
     IP2PPairStaking internal immutable P2P_PAIR_STAKING_V1;
+    IAccountFactory internal immutable ACCOUNT_FACTORY;
+    address internal immutable AA_MOVER;
     uint256 internal constant POOL_REVISION = 149;
 
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
@@ -59,7 +63,9 @@ contract PoolPositionMover is
         ICApe capeV2,
         IERC20 apeCoin,
         ITimeLock timeLockV1,
-        IP2PPairStaking p2pPairStakingV1
+        IP2PPairStaking p2pPairStakingV1,
+        IAccountFactory accountFactory,
+        address aaMover
     ) {
         ADDRESSES_PROVIDER = addressProvider;
         BENDDAO_LEND_POOL_LOAN = benddaoLendPoolLoan;
@@ -71,6 +77,24 @@ contract PoolPositionMover is
         APE_COIN = apeCoin;
         TIME_LOCK_V1 = timeLockV1;
         P2P_PAIR_STAKING_V1 = p2pPairStakingV1;
+        ACCOUNT_FACTORY = accountFactory;
+        AA_MOVER = aaMover;
+    }
+
+    function positionMoveToAA(
+        address[] calldata users,
+        uint256[] calldata salts
+    ) external nonReentrant returns (address[] memory) {
+        require(msg.sender == AA_MOVER, Errors.INVALID_CALLER);
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        return
+            PositionMoverLogic.executePositionMoveToAA(
+                ps,
+                ACCOUNT_FACTORY,
+                users,
+                salts
+            );
     }
 
     function movePositionFromBendDAO(uint256[] calldata loanIds)

@@ -1,5 +1,6 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
+  deployAccountFactory,
   deployMockBendDaoLendPool,
   deployPoolComponents,
   deployPoolParaProxyInterfaces,
@@ -24,6 +25,7 @@ import {
   waitForTx,
 } from "../../../helpers/misc-utils";
 import {eContractid, ERC20TokenContractId} from "../../../helpers/types";
+import {zeroAddress} from "ethereumjs-util";
 
 export const step_06 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
@@ -88,6 +90,9 @@ export const step_06 = async (verify = false) => {
         paraSpaceConfig.BendDAO.LendingPool ||
         (await getContractAddressInDb(eContractid.MockBendDaoLendPool)) ||
         (await deployMockBendDaoLendPool((await getWETH()).address)).address;
+      const accountFactory =
+        (await getContractAddressInDb(eContractid.AccountFactory)) ||
+        (await deployAccountFactory(zeroAddress()));
       const {poolPositionMover, poolPositionMoverSelectors} =
         await deployPoolPositionMover(
           addressesProvider.address,
@@ -100,6 +105,8 @@ export const step_06 = async (verify = false) => {
           allTokens[ERC20TokenContractId.APE].address,
           paraSpaceConfig.ParaSpaceV1?.TimeLockV1 || ZERO_ADDRESS,
           paraSpaceConfig.ParaSpaceV1?.P2PPairStakingV1 || ZERO_ADDRESS,
+          accountFactory.address,
+          process.env.AA_MOVER || "0xE5904695748fe4A84b40b3fc79De2277660BD1D3", //user2 address for test env
           verify
         );
 

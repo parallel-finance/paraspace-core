@@ -25,6 +25,9 @@ import {IAccount} from "../../../interfaces/IAccount.sol";
 import {IAutoCompoundApe} from "../../../interfaces/IAutoCompoundApe.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import {UserConfiguration} from "../configuration/UserConfiguration.sol";
+import {IAccountFactory} from "../../../interfaces/IAccountFactory.sol";
+import {IVariableDebtToken} from "../../../interfaces/IVariableDebtToken.sol";
 
 /**
  * @title PositionMoverLogic library
@@ -37,6 +40,7 @@ library PositionMoverLogic {
     using WadRayMath for uint256;
     using SafeERC20 for IERC20;
     using SafeCast for uint256;
+    using UserConfiguration for DataTypes.UserConfigurationMap;
 
     struct BendDAOPositionMoverVars {
         address weth;
@@ -70,6 +74,150 @@ library PositionMoverLogic {
         address[] dTokens,
         uint256[] dAmounts
     );
+
+    event PositionMovedToAA(address indexed user, address aaAccount);
+
+    struct PositionMoveToAAVars {
+        uint256 reservesCount;
+        address[] xTokenAddresses;
+        address[] debtTokenAddresses;
+        DataTypes.ReserveConfigurationMap[] reserveConfigurations;
+        uint256[] liquidityIndex;
+        uint256[] debtIndex;
+        address[] aaAccounts;
+    }
+
+    function executePositionMoveToAA(
+        DataTypes.PoolStorage storage ps,
+        IAccountFactory accountFactory,
+        address[] calldata users,
+        uint256[] calldata salts
+    ) external returns (address[] memory) {
+        require(users.length == salts.length, Errors.INVALID_PARAMETER);
+
+        //construct vars
+        PositionMoveToAAVars memory vars;
+        vars.reservesCount = ps._reservesCount;
+        vars.xTokenAddresses = new address[](vars.reservesCount);
+        vars.debtTokenAddresses = new address[](vars.reservesCount);
+        vars.reserveConfigurations = new DataTypes.ReserveConfigurationMap[](
+            vars.reservesCount
+        );
+        vars.liquidityIndex = new uint256[](vars.reservesCount);
+        vars.debtIndex = new uint256[](vars.reservesCount);
+        vars.aaAccounts = new address[](users.length);
+
+        for (uint256 index = 0; index < users.length; index++) {
+            address user = users[index];
+
+            //create AA account
+            DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+                user
+            ];
+            address aaAccount = accountFactory.createAccount(
+                user,
+                salts[index]
+            );
+            DataTypes.UserConfigurationMap storage aaConfig = ps._usersConfig[
+                aaAccount
+            ];
+
+            for (uint256 j = 0; j < vars.reservesCount; j++) {
+                address currentReserveAddress = ps._reservesList[j];
+                if (currentReserveAddress == address(0)) {
+                    continue;
+                }
+
+                if (vars.xTokenAddresses[j] == address(0)) {
+                    DataTypes.ReserveData storage currentReserve = ps._reserves[
+                        currentReserveAddress
+                    ];
+
+                    vars.xTokenAddresses[j] = currentReserve.xTokenAddress;
+                    vars.debtTokenAddresses[j] = currentReserve
+                        .variableDebtTokenAddress;
+                    vars.reserveConfigurations[j] = currentReserve
+                        .configuration;
+
+                    DataTypes.ReserveCache memory reserveCache = currentReserve
+                        .cache();
+                    currentReserve.updateState(reserveCache);
+                    vars.liquidityIndex[j] = reserveCache.nextLiquidityIndex;
+                    vars.debtIndex[j] = reserveCache.nextVariableBorrowIndex;
+                }
+
+                if (
+                    vars.reserveConfigurations[j].getAssetType() ==
+                    DataTypes.AssetType.ERC20
+                ) {
+                    //handle ptoken
+                    {
+                        IPToken pToken = IPToken(vars.xTokenAddresses[j]);
+                        uint256 balance = pToken.balanceOf(user);
+                        if (balance > 0) {
+                            DataTypes.TimeLockParams memory timeLockParams;
+                            pToken.burn(
+                                user,
+                                vars.xTokenAddresses[j],
+                                balance,
+                                vars.liquidityIndex[j],
+                                timeLockParams
+                            );
+                            pToken.mint(
+                                aaAccount,
+                                aaAccount,
+                                balance,
+                                vars.liquidityIndex[j]
+                            );
+                            if (userConfig.isUsingAsCollateral(j)) {
+                                aaConfig.setUsingAsCollateral(j, true);
+                                userConfig.setUsingAsCollateral(j, false);
+                            }
+                        }
+                    }
+
+                    //handle debt token
+                    {
+                        IVariableDebtToken debtToken = IVariableDebtToken(
+                            vars.debtTokenAddresses[j]
+                        );
+                        uint256 balance = debtToken.balanceOf(user);
+                        if (balance > 0) {
+                            debtToken.burn(user, balance, vars.debtIndex[j]);
+                            debtToken.mint(
+                                aaAccount,
+                                aaAccount,
+                                balance,
+                                vars.debtIndex[j]
+                            );
+                            aaConfig.setBorrowing(j, true);
+                            userConfig.setBorrowing(j, false);
+                        }
+                    }
+                } else {
+                    INToken nToken = INToken(vars.xTokenAddresses[j]);
+                    uint256 balance = nToken.balanceOf(user);
+                    for (uint256 k = 0; k < balance; k++) {
+                        uint256 tokenId = nToken.tokenOfOwnerByIndex(user, k);
+                        bool isCollateral = nToken.isUsedAsCollateral(tokenId);
+                        nToken.transferOnLiquidation(user, aaAccount, tokenId);
+                        if (isCollateral) {
+                            nToken.setIsUsedAsCollateral(
+                                tokenId,
+                                isCollateral,
+                                aaAccount
+                            );
+                        }
+                    }
+                }
+            }
+
+            vars.aaAccounts[index] = aaAccount;
+            emit PositionMovedToAA(user, aaAccount);
+        }
+
+        return vars.aaAccounts;
+    }
 
     function executeMovePositionFromBendDAO(
         DataTypes.PoolStorage storage ps,

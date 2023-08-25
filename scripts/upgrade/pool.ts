@@ -1,5 +1,6 @@
 import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
+  deployAccountFactory,
   deployPoolApeStaking,
   deployPoolComponents,
   deployPoolCore,
@@ -24,6 +25,7 @@ import {
   tEthereumAddress,
 } from "../../helpers/types";
 import {IParaProxy} from "../../types";
+import {zeroAddress} from "ethereumjs-util";
 
 export const upgradeProxyImplementations = async (
   implementations: [string, string[], string[]][]
@@ -326,6 +328,9 @@ export const upgradePoolPositionMover = async (
   const bendDaoLendPool =
     paraSpaceConfig.BendDAO.LendingPool ||
     (await getContractAddressInDb(eContractid.MockBendDaoLendPool));
+  const accountFactory =
+    (await getContractAddressInDb(eContractid.AccountFactory)) ||
+    (await deployAccountFactory(zeroAddress()));
 
   const {
     poolPositionMover,
@@ -341,6 +346,8 @@ export const upgradePoolPositionMover = async (
     allTokens[ERC20TokenContractId.APE].address,
     paraSpaceConfig.ParaSpaceV1?.TimeLockV1 || ZERO_ADDRESS,
     paraSpaceConfig.ParaSpaceV1?.P2PPairStakingV1 || ZERO_ADDRESS,
+    accountFactory.address,
+    process.env.AA_MOVER || "0xE5904695748fe4A84b40b3fc79De2277660BD1D3", //user2 address for test env
     verify
   );
 
