@@ -2,7 +2,11 @@ import {testEnvFixture} from "./helpers/setup-env";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {getVariableDebtToken} from "../helpers/contracts-getters";
 import {expect} from "chai";
-import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
+import {
+  convertToCurrencyDecimals,
+  isBorrowing,
+  isUsingAsCollateral,
+} from "../helpers/contracts-helpers";
 import {
   approveTo,
   createNewPool,
@@ -13,9 +17,13 @@ import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {waitForTx} from "../helpers/misc-utils";
 import {supplyAndValidate} from "./helpers/validated-steps";
 import {parseEther} from "ethers/lib/utils";
+import {BigNumber} from "ethers";
 
 describe("Account Abstraction Migration", () => {
   let variableDebt;
+  let daiData;
+  let wethData;
+  let uniswapData;
 
   const fixture = async () => {
     const testEnv = await loadFixture(testEnvFixture);
@@ -31,6 +39,10 @@ describe("Account Abstraction Migration", () => {
       nUniswapV3,
       protocolDataProvider,
     } = testEnv;
+
+    daiData = await pool.getReserveData(dai.address);
+    wethData = await pool.getReserveData(weth.address);
+    uniswapData = await pool.getReserveData(nftPositionManager.address);
 
     const userDaiAmount = await convertToCurrencyDecimals(dai.address, "10000");
     const userWethAmount = await convertToCurrencyDecimals(weth.address, "10");
@@ -214,6 +226,11 @@ describe("Account Abstraction Migration", () => {
       parseEther("0.01")
     );
     expect(await nftPositionManager.balanceOf(nUniswapV3.address)).to.be.eq(1);
+
+    const userConfig = BigNumber.from(
+      (await pool.getUserConfiguration(aaAccount)).data
+    );
+    expect(isUsingAsCollateral(userConfig, daiData.id)).to.be.true;
   });
 
   it("position batch migration1", async () => {
@@ -259,5 +276,12 @@ describe("Account Abstraction Migration", () => {
       parseEther("0.01")
     );
     expect(await nftPositionManager.balanceOf(nUniswapV3.address)).to.be.eq(1);
+
+    const userConfig = BigNumber.from(
+      (await pool.getUserConfiguration(aaAccount)).data
+    );
+    expect(isUsingAsCollateral(userConfig, wethData.id)).to.be.true;
+    expect(isUsingAsCollateral(userConfig, uniswapData.id)).to.be.true;
+    expect(isBorrowing(userConfig, daiData.id)).to.be.true;
   });
 });

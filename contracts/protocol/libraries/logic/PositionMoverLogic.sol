@@ -209,6 +209,10 @@ library PositionMoverLogic {
                             );
                         }
                     }
+                    if (balance > 0 && userConfig.isUsingAsCollateral(j)) {
+                        aaConfig.setUsingAsCollateral(j, true);
+                        userConfig.setUsingAsCollateral(j, false);
+                    }
                 }
             }
 
