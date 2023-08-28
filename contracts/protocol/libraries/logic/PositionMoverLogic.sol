@@ -132,16 +132,15 @@ library PositionMoverLogic {
                     DataTypes.ReserveData storage currentReserve = ps._reserves[
                         currentReserveAddress
                     ];
-
-                    vars.xTokenAddresses[j] = currentReserve.xTokenAddress;
                     vars.debtTokenAddresses[j] = currentReserve
                         .variableDebtTokenAddress;
-                    vars.reserveConfigurations[j] = currentReserve
-                        .configuration;
 
                     DataTypes.ReserveCache memory reserveCache = currentReserve
                         .cache();
                     currentReserve.updateState(reserveCache);
+                    vars.xTokenAddresses[j] = reserveCache.xTokenAddress;
+                    vars.reserveConfigurations[j] = reserveCache
+                        .reserveConfiguration;
                     vars.liquidityIndex[j] = reserveCache.nextLiquidityIndex;
                     vars.debtIndex[j] = reserveCache.nextVariableBorrowIndex;
                 }
@@ -267,11 +266,7 @@ library PositionMoverLogic {
         uint256 loanId
     )
         internal
-        returns (
-            address nftAsset,
-            uint256 tokenId,
-            uint256 borrowAmount
-        )
+        returns (address nftAsset, uint256 tokenId, uint256 borrowAmount)
     {
         BDaoDataTypes.LoanData memory loanData = lendPoolLoan.getLoan(loanId);
 
@@ -333,7 +328,8 @@ library PositionMoverLogic {
                 releaseUnderlying: false,
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
-                priceOracleSentinel: poolAddressProvider.getPriceOracleSentinel()
+                priceOracleSentinel: poolAddressProvider
+                    .getPriceOracleSentinel()
             })
         );
     }
