@@ -2840,7 +2840,7 @@ export const deployAutoYieldApeImplAndAssignItToProxy = async (
   );
 };
 
-export const deployHelperContractImpl = async (verify?: boolean) => {
+export const deployHelperContractImpl = async (cApeV1: tEthereumAddress, verify?: boolean) => {
   const allTokens = await getAllTokens();
   const protocolDataProvider = await getProtocolDataProvider();
   const pCApe = (
@@ -2849,6 +2849,7 @@ export const deployHelperContractImpl = async (verify?: boolean) => {
   const pool = await getPoolProxy();
   const args = [
     allTokens.APE.address,
+    cApeV1,
     allTokens.cAPE.address,
     pCApe,
     pool.address,
@@ -2862,8 +2863,8 @@ export const deployHelperContractImpl = async (verify?: boolean) => {
   ) as Promise<HelperContract>;
 };
 
-export const deployHelperContract = async (verify?: boolean) => {
-  const helperImplementation = await deployHelperContractImpl(verify);
+export const deployHelperContract = async (cApeV1: tEthereumAddress, verify?: boolean) => {
+  const helperImplementation = await deployHelperContractImpl(cApeV1, verify);
 
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
