@@ -23,10 +23,10 @@ import {IVariableDebtToken} from "../../interfaces/IVariableDebtToken.sol";
  *
  **/
 contract PoolAAPositionMover is
-ParaVersionedInitializable,
-ParaReentrancyGuard,
-PoolStorage,
-IPoolAAPositionMover
+    ParaVersionedInitializable,
+    ParaReentrancyGuard,
+    PoolStorage,
+    IPoolAAPositionMover
 {
     IAccountFactory internal immutable ACCOUNT_FACTORY;
     address internal immutable AA_MOVER;
@@ -39,10 +39,7 @@ IPoolAAPositionMover
 
     event PositionMovedToAA(address indexed user, address aaAccount);
 
-    constructor(
-        IAccountFactory accountFactory,
-        address aaMover
-    ) {
+    constructor(IAccountFactory accountFactory, address aaMover) {
         ACCOUNT_FACTORY = accountFactory;
         AA_MOVER = aaMover;
     }
@@ -54,13 +51,7 @@ IPoolAAPositionMover
         require(msg.sender == AA_MOVER, Errors.INVALID_CALLER);
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        return
-        _executePositionMoveToAA(
-            ps,
-            ACCOUNT_FACTORY,
-            users,
-            salts
-        );
+        return _executePositionMoveToAA(ps, ACCOUNT_FACTORY, users, salts);
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -102,14 +93,14 @@ IPoolAAPositionMover
 
             //create AA account
             DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
-            user
+                user
             ];
             address aaAccount = accountFactory.createAccount(
                 user,
                 salts[index]
             );
             DataTypes.UserConfigurationMap storage aaConfig = ps._usersConfig[
-            aaAccount
+                aaAccount
             ];
 
             for (uint256 j = 0; j < vars.reservesCount; j++) {
@@ -120,17 +111,17 @@ IPoolAAPositionMover
 
                 if (vars.xTokenAddresses[j] == address(0)) {
                     DataTypes.ReserveData storage currentReserve = ps._reserves[
-                    currentReserveAddress
+                        currentReserveAddress
                     ];
                     vars.debtTokenAddresses[j] = currentReserve
-                    .variableDebtTokenAddress;
+                        .variableDebtTokenAddress;
 
                     DataTypes.ReserveCache memory reserveCache = currentReserve
-                    .cache();
+                        .cache();
                     currentReserve.updateState(reserveCache);
                     vars.xTokenAddresses[j] = reserveCache.xTokenAddress;
                     vars.reserveConfigurations[j] = reserveCache
-                    .reserveConfiguration;
+                        .reserveConfiguration;
                     vars.liquidityIndex[j] = reserveCache.nextLiquidityIndex;
                     vars.debtIndex[j] = reserveCache.nextVariableBorrowIndex;
                 }

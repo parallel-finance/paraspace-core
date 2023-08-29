@@ -123,28 +123,28 @@ export const step_06 = async (verify = false) => {
     }
 
     const accountFactory =
-        (await getContractAddressInDb(eContractid.AccountFactory)) ||
-        (await deployAccountFactory(zeroAddress()));
+      (await getContractAddressInDb(eContractid.AccountFactory)) ||
+      (await deployAccountFactory(zeroAddress()));
     const {poolAAPositionMover, poolAAPositionMoverSelectors} =
-        await deployAAPoolPositionMover(
-            accountFactory.address,
-            process.env.AA_MOVER || "0xE5904695748fe4A84b40b3fc79De2277660BD1D3", //user2 address for test env
-            verify
-        );
+      await deployAAPoolPositionMover(
+        accountFactory.address,
+        process.env.AA_MOVER || "0xE5904695748fe4A84b40b3fc79De2277660BD1D3", //user2 address for test env
+        verify
+      );
 
     await waitForTx(
-        await addressesProvider.updatePoolImpl(
-            [
-              {
-                implAddress: poolAAPositionMover.address,
-                action: 0,
-                functionSelectors: poolAAPositionMoverSelectors,
-              },
-            ],
-            ZERO_ADDRESS,
-            "0x",
-            GLOBAL_OVERRIDES
-        )
+      await addressesProvider.updatePoolImpl(
+        [
+          {
+            implAddress: poolAAPositionMover.address,
+            action: 0,
+            functionSelectors: poolAAPositionMoverSelectors,
+          },
+        ],
+        ZERO_ADDRESS,
+        "0x",
+        GLOBAL_OVERRIDES
+      )
     );
 
     if (poolApeStaking) {

@@ -227,7 +227,9 @@ import {
   Account,
   Account__factory,
   AccountFactory,
-  AccountFactory__factory, PoolAAPositionMover__factory, PoolAAPositionMover,
+  AccountFactory__factory,
+  PoolAAPositionMover__factory,
+  PoolAAPositionMover,
 } from "../types";
 import {
   getACLManager,
@@ -684,29 +686,26 @@ export const deployPoolParaProxyInterfaces = async (verify?: boolean) => {
 };
 
 export const deployAAPoolPositionMover = async (
-    accountFactory: tEthereumAddress,
-    aaMover: tEthereumAddress,
-    verify?: boolean
+  accountFactory: tEthereumAddress,
+  aaMover: tEthereumAddress,
+  verify?: boolean
 ) => {
   const {poolAAPositionMoverSelectors} = await getPoolSignatures();
 
   const poolAAPositionMover = (await withSaveAndVerify(
-      await getContractFactory("PoolAAPositionMover"),
-      eContractid.PoolAAPositionMoverImpl,
-      [
-        accountFactory,
-        aaMover,
-      ],
-      verify,
-      false,
-      undefined,
-      poolAAPositionMoverSelectors
+    await getContractFactory("PoolAAPositionMover"),
+    eContractid.PoolAAPositionMoverImpl,
+    [accountFactory, aaMover],
+    verify,
+    false,
+    undefined,
+    poolAAPositionMoverSelectors
   )) as PoolPositionMover;
 
   return {
     poolAAPositionMover,
     poolAAPositionMoverSelectors: poolAAPositionMoverSelectors.map(
-        (s) => s.signature
+      (s) => s.signature
     ),
   };
 };
@@ -759,7 +758,7 @@ export const deployPoolPositionMover = async (
       capeV2,
       apeCoin,
       timeLockV1,
-      p2pPairStakingV1
+      p2pPairStakingV1,
     ],
     verify,
     false,
@@ -822,7 +821,7 @@ export const getPoolSignatures = () => {
   );
 
   const poolAAPositionMoverSelectors = getFunctionSignatures(
-      PoolAAPositionMover__factory.abi
+    PoolAAPositionMover__factory.abi
   );
 
   const poolProxySelectors = getFunctionSignatures(ParaProxy__factory.abi);
@@ -840,7 +839,7 @@ export const getPoolSignatures = () => {
     ...poolProxySelectors,
     ...poolParaProxyInterfacesSelectors,
     ...poolPositionMoverSelectors,
-      ...poolAAPositionMoverSelectors,
+    ...poolAAPositionMoverSelectors,
   ];
   for (const selector of poolSelectors) {
     if (!allSelectors[selector.signature]) {

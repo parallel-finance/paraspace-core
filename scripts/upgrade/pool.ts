@@ -6,7 +6,8 @@ import {
   deployPoolMarketplace,
   deployPoolParameters,
   deployPoolPositionMover,
-  deployAAPoolPositionMover, deployAccountFactory,
+  deployAAPoolPositionMover,
+  deployAccountFactory,
 } from "../../helpers/contracts-deployments";
 import {
   getAllTokens,
@@ -357,23 +358,23 @@ export const upgradePoolPositionMover = async (
 };
 
 export const upgradePoolAAPositionMover = async (
-    oldAAPoolPositionMover: tEthereumAddress,
-    verify = false
+  oldAAPoolPositionMover: tEthereumAddress,
+  verify = false
 ) => {
   const pool = await getPoolProxy();
   const oldPoolPositionMoverSelectors = await pool.facetFunctionSelectors(
-      oldAAPoolPositionMover
+    oldAAPoolPositionMover
   );
   const accountFactory =
-      (await getContractAddressInDb(eContractid.AccountFactory)) ||
-      (await deployAccountFactory(ZERO_ADDRESS)).address;
+    (await getContractAddressInDb(eContractid.AccountFactory)) ||
+    (await deployAccountFactory(ZERO_ADDRESS)).address;
   const {
     poolAAPositionMover,
     poolAAPositionMoverSelectors: newPoolPositionMoverSelectors,
   } = await deployAAPoolPositionMover(
-      accountFactory,
-      process.env.AA_MOVER || "0xE5904695748fe4A84b40b3fc79De2277660BD1D3", //user2 address for test env
-      verify
+    accountFactory,
+    process.env.AA_MOVER || "0xE5904695748fe4A84b40b3fc79De2277660BD1D3", //user2 address for test env
+    verify
   );
 
   const implementations = [
