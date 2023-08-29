@@ -21,15 +21,19 @@ const migrate_zksync_user = async () => {
     let usersCount = 0;
     for (let i = startIndex; i < users.length; i++) {
       migrationUsers.push(users[i]);
-      userSalts.push(String(i));
+      userSalts.push(String(i+2));
       usersCount++;
-      if (usersCount == batchAmount) {
+      if (usersCount == batchAmount || i == users.length - 1) {
         await waitForTx(await pool.positionMoveToAA(migrationUsers, userSalts));
 
         migrationUsers = [];
         userSalts = [];
         usersCount = 0;
-        console.log("next migration index:", i);
+        if (i == users.length - 1) {
+          console.log("migration success.");
+        } else {
+          console.log("next migration index:", i + 1);
+        }
       }
     }
   } else {
