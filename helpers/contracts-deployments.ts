@@ -227,7 +227,7 @@ import {
   Account,
   Account__factory,
   AccountFactory,
-  AccountFactory__factory,
+  AccountFactory__factory, PoolAAPositionMover__factory, PoolAAPositionMover,
 } from "../types";
 import {
   getACLManager,
@@ -683,6 +683,34 @@ export const deployPoolParaProxyInterfaces = async (verify?: boolean) => {
   };
 };
 
+export const deployAAPoolPositionMover = async (
+    accountFactory: tEthereumAddress,
+    aaMover: tEthereumAddress,
+    verify?: boolean
+) => {
+  const {poolAAPositionMoverSelectors} = await getPoolSignatures();
+
+  const poolAAPositionMover = (await withSaveAndVerify(
+      await getContractFactory("PoolAAPositionMover"),
+      eContractid.PoolAAPositionMoverImpl,
+      [
+        accountFactory,
+        aaMover,
+      ],
+      verify,
+      false,
+      undefined,
+      poolAAPositionMoverSelectors
+  )) as PoolPositionMover;
+
+  return {
+    poolAAPositionMover,
+    poolAAPositionMoverSelectors: poolAAPositionMoverSelectors.map(
+        (s) => s.signature
+    ),
+  };
+};
+
 export const deployPoolPositionMover = async (
   provider: tEthereumAddress,
   bendDaoLendPoolLoan: tEthereumAddress,
@@ -694,8 +722,6 @@ export const deployPoolPositionMover = async (
   apeCoin: tEthereumAddress,
   timeLockV1: tEthereumAddress,
   p2pPairStakingV1: tEthereumAddress,
-  accountFactory: tEthereumAddress,
-  aaMover: tEthereumAddress,
   verify?: boolean
 ) => {
   const supplyLogic = await deploySupplyLogic(verify);
@@ -733,9 +759,7 @@ export const deployPoolPositionMover = async (
       capeV2,
       apeCoin,
       timeLockV1,
-      p2pPairStakingV1,
-      accountFactory,
-      aaMover,
+      p2pPairStakingV1
     ],
     verify,
     false,
@@ -797,6 +821,10 @@ export const getPoolSignatures = () => {
     PoolPositionMover__factory.abi
   );
 
+  const poolAAPositionMoverSelectors = getFunctionSignatures(
+      PoolAAPositionMover__factory.abi
+  );
+
   const poolProxySelectors = getFunctionSignatures(ParaProxy__factory.abi);
 
   const poolParaProxyInterfacesSelectors = getFunctionSignatures(
@@ -812,6 +840,7 @@ export const getPoolSignatures = () => {
     ...poolProxySelectors,
     ...poolParaProxyInterfacesSelectors,
     ...poolPositionMoverSelectors,
+      ...poolAAPositionMoverSelectors,
   ];
   for (const selector of poolSelectors) {
     if (!allSelectors[selector.signature]) {
@@ -832,6 +861,7 @@ export const getPoolSignatures = () => {
     poolApeStakingSelectors,
     poolParaProxyInterfacesSelectors,
     poolPositionMoverSelectors,
+    poolAAPositionMoverSelectors,
   };
 };
 

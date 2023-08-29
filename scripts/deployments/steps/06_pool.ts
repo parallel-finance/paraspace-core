@@ -1,5 +1,6 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
+  deployAAPoolPositionMover,
   deployAccountFactory,
   deployMockBendDaoLendPool,
   deployPoolComponents,
@@ -90,9 +91,6 @@ export const step_06 = async (verify = false) => {
         paraSpaceConfig.BendDAO.LendingPool ||
         (await getContractAddressInDb(eContractid.MockBendDaoLendPool)) ||
         (await deployMockBendDaoLendPool((await getWETH()).address)).address;
-      const accountFactory =
-        (await getContractAddressInDb(eContractid.AccountFactory)) ||
-        (await deployAccountFactory(zeroAddress()));
       const {poolPositionMover, poolPositionMoverSelectors} =
         await deployPoolPositionMover(
           addressesProvider.address,
@@ -105,8 +103,6 @@ export const step_06 = async (verify = false) => {
           allTokens[ERC20TokenContractId.APE].address,
           paraSpaceConfig.ParaSpaceV1?.TimeLockV1 || ZERO_ADDRESS,
           paraSpaceConfig.ParaSpaceV1?.P2PPairStakingV1 || ZERO_ADDRESS,
-          accountFactory.address,
-          process.env.AA_MOVER || "0xE5904695748fe4A84b40b3fc79De2277660BD1D3", //user2 address for test env
           verify
         );
 
@@ -125,6 +121,31 @@ export const step_06 = async (verify = false) => {
         )
       );
     }
+
+    const accountFactory =
+        (await getContractAddressInDb(eContractid.AccountFactory)) ||
+        (await deployAccountFactory(zeroAddress()));
+    const {poolAAPositionMover, poolAAPositionMoverSelectors} =
+        await deployAAPoolPositionMover(
+            accountFactory.address,
+            process.env.AA_MOVER || "0xE5904695748fe4A84b40b3fc79De2277660BD1D3", //user2 address for test env
+            verify
+        );
+
+    await waitForTx(
+        await addressesProvider.updatePoolImpl(
+            [
+              {
+                implAddress: poolAAPositionMover.address,
+                action: 0,
+                functionSelectors: poolAAPositionMoverSelectors,
+              },
+            ],
+            ZERO_ADDRESS,
+            "0x",
+            GLOBAL_OVERRIDES
+        )
+    );
 
     if (poolApeStaking) {
       await waitForTx(

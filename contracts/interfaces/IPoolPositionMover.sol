@@ -12,11 +12,6 @@ import {ApeCoinStaking} from "../dependencies/yoga-labs/ApeCoinStaking.sol";
 interface IPoolPositionMover {
     function movePositionFromBendDAO(uint256[] calldata loanIds) external;
 
-    function positionMoveToAA(
-        address[] calldata users,
-        uint256[] calldata salts
-    ) external returns (address[] memory);
-
     //# Migration step
     //
     //0. User needs to breakup P2P orders on their own
