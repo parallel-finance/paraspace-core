@@ -11,10 +11,14 @@ contract ParaX is
     ERC721EnumerableUpgradeable
 {
     uint256 private tokenId;
+    string public tokenURI;
 
     function initialize() public initializer {
         __Ownable_init();
         __ERC721_init("ParaX Medal", "XMEDAL");
+        _setTokenURI(
+            "https://ipfs.io/ipfs/QmTq3Xu5VjHvozVMPvUjATq9x9G4TaAfB4KXPQsY5s13fW"
+        );
     }
 
     function mint(address[] calldata users) external onlyOwner {
@@ -25,5 +29,13 @@ contract ParaX is
             curTokenId++;
         }
         tokenId = curTokenId;
+    }
+
+    function setTokenURI(string memory _tokenURI) public onlyOwner {
+        _setTokenURI(_tokenURI);
+    }
+
+    function _setTokenURI(string memory _tokenURI) internal {
+        tokenURI = _tokenURI;
     }
 }
