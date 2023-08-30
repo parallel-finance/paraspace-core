@@ -996,7 +996,7 @@ export const MainnetConfig: IParaSpaceConfiguration = {
   },
   ParaSpaceV1: {
     PoolV1: "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee",
-    ProtocolDataProviderV1: "0x58A77FcC64eC07798318F62Cb68BC58455f6748A",
+    ProtocolDataProviderV1: "0xbc88150EbEFDa53fb61F4C59E98d0dE5EBbB8CD3",
     CApeV1: "0xC5c9fB6223A989208Df27dCEE33fC59ff5c26fFF",
     TimeLockV1: "0x59B72FdB45B3182c8502cC297167FE4f821f332d",
     P2PPairStakingV1: "0xf090Eb4c2B63e7B26E8Bb09e6Fc0cC3A7586263B",
