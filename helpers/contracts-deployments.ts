@@ -3207,6 +3207,19 @@ export const deployAccountRegistry = async (
     verify
   ) as Promise<AccountRegistry>;
 
+export const deployAccountRegistryProxy = async (
+  admin: string,
+  impl: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("InitializableImmutableAdminUpgradeabilityProxy"),
+    eContractid.AccountRegistryProxy,
+    [admin, impl],
+    verify,
+    true
+  ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
+
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK
 ////////////////////////////////////////////////////////////////////////////////

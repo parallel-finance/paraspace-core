@@ -293,6 +293,7 @@ export enum eContractid {
   AccountFactory = "AccountFactory",
   AccountProxy = "AccountProxy",
   AccountRegistry = "AccountRegistry",
+  AccountRegistryProxy = "AccountRegistryProxy",
   ParaAccount = "ParaAccount",
 }
 

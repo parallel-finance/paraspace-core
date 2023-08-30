@@ -2,7 +2,10 @@ import {
   deployAccount,
   deployAccountFactory,
   deployAccountRegistry,
+  deployAccountRegistryProxy,
+  deployInitializableImmutableAdminUpgradeabilityProxy,
 } from "../../../helpers/contracts-deployments";
+import {getFirstSigner} from "../../../helpers/contracts-getters";
 import {getParaSpaceConfig, isLocalTestnet} from "../../../helpers/misc-utils";
 import {Client} from "userop";
 
@@ -18,12 +21,21 @@ export const step_24 = async (verify = false) => {
         ).entryPoint.address,
         verify
       );
+
       const accountRegistry = await deployAccountRegistry(
         account.address,
         verify
       );
 
-      await deployAccountFactory(accountRegistry.address, verify);
+      const accountRegistryProxy = await deployAccountRegistryProxy(
+        paraSpaceConfig.ParaSpaceAdmin
+          ? paraSpaceConfig.ParaSpaceAdmin
+          : await (await getFirstSigner()).getAddress(),
+        accountRegistry.address,
+        verify
+      );
+
+      await deployAccountFactory(accountRegistryProxy.address, verify);
     }
   } catch (error) {
     console.error(error);
