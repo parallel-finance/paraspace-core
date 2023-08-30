@@ -5,6 +5,8 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import "./Account.sol";
+import "./AccountProxy.sol";
+import "./AccountRegistry.sol";
 
 /**
  * A factory contract for SimpleAccount
@@ -13,12 +15,16 @@ import "./Account.sol";
  * This way, the entryPoint.getSenderAddress() can be called either before or after the account is created.
  */
 contract AccountFactory {
-    Account public immutable accountImplementation;
+    AccountRegistry public immutable accountRegistry;
 
-    event AccountCreated(address indexed owner, uint256 salt, address accountAddress);
+    event AccountCreated(
+        address indexed owner,
+        uint256 salt,
+        address accountAddress
+    );
 
-    constructor(IEntryPoint _entryPoint) {
-        accountImplementation = new Account(_entryPoint);
+    constructor(AccountRegistry _accountRegistry) {
+        accountRegistry = _accountRegistry;
     }
 
     /**
@@ -31,6 +37,11 @@ contract AccountFactory {
         public
         returns (Account ret)
     {
+        require(
+            accountRegistry.getLatestImplementation() != address(0),
+            "Implementation Not Set"
+        );
+
         address addr = getAddress(owner, salt);
         uint256 codeSize = addr.code.length;
         if (codeSize > 0) {
@@ -38,8 +49,8 @@ contract AccountFactory {
         }
         ret = Account(
             payable(
-                new ERC1967Proxy{salt: bytes32(salt)}(
-                    address(accountImplementation),
+                new AccountProxy{salt: bytes32(salt)}(
+                    accountRegistry,
                     abi.encodeCall(Account.initialize, (owner))
                 )
             )
@@ -61,9 +72,9 @@ contract AccountFactory {
                 bytes32(salt),
                 keccak256(
                     abi.encodePacked(
-                        type(ERC1967Proxy).creationCode,
+                        type(AccountProxy).creationCode,
                         abi.encode(
-                            address(accountImplementation),
+                            address(accountRegistry),
                             abi.encodeCall(Account.initialize, (owner))
                         )
                     )

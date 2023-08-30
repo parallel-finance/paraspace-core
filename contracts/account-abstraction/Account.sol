@@ -8,6 +8,7 @@ import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import {SignatureChecker} from "../dependencies/openzeppelin/contracts/SignatureChecker.sol";
 import "./base-account-abstraction/core/BaseAccount.sol";
 import "./callback/TokenCallbackHandler.sol";
+import "./AccountStorage.sol";
 
 /**
  * Address Owned Account.
@@ -17,14 +18,13 @@ import "./callback/TokenCallbackHandler.sol";
  */
 contract Account is
     BaseAccount,
+    AccountStorage,
     TokenCallbackHandler,
     UUPSUpgradeable,
     IERC1271,
     Initializable
 {
     using ECDSA for bytes32;
-
-    address public owner;
 
     IEntryPoint private immutable _entryPoint;
 
@@ -36,6 +36,12 @@ contract Account is
     modifier onlyOwner() {
         _onlyOwner();
         _;
+    }
+
+    function owner() external view returns (address) {
+        AccountConfiguration storage s = getStorage();
+
+        return s.owner;
     }
 
     /// @inheritdoc BaseAccount
@@ -52,9 +58,10 @@ contract Account is
     }
 
     function _onlyOwner() internal view {
+        AccountConfiguration storage s = getStorage();
         //directly from EOA owner, or through the account itself (which gets redirected through execute())
         require(
-            msg.sender == owner || msg.sender == address(this),
+            msg.sender == s.owner || msg.sender == address(this),
             "only owner"
         );
     }
@@ -108,14 +115,18 @@ contract Account is
     }
 
     function _initialize(address anOwner) internal virtual {
-        owner = anOwner;
-        emit AccountInitialized(_entryPoint, owner);
+        AccountConfiguration storage s = getStorage();
+        s.owner = anOwner;
+        s.isDelegated = true;
+        emit AccountInitialized(_entryPoint, anOwner);
     }
 
     // Require the function call went through EntryPoint or owner
     function _requireFromEntryPointOrOwner() internal view {
+        AccountConfiguration storage s = getStorage();
+
         require(
-            msg.sender == address(entryPoint()) || msg.sender == owner,
+            msg.sender == address(entryPoint()) || msg.sender == s.owner,
             "account: not Owner or EntryPoint"
         );
     }
@@ -125,14 +136,16 @@ contract Account is
         UserOperation calldata userOp,
         bytes32 userOpHash
     ) internal virtual override returns (uint256 validationData) {
+        AccountConfiguration storage s = getStorage();
+        address curOwner = s.owner;
         bytes32 hash = userOpHash;
 
-        if (owner.code.length == 0) {
+        if (curOwner.code.length == 0) {
             hash = userOpHash.toEthSignedMessageHash();
         }
 
         bool isValid = SignatureChecker.isValidSignatureNow(
-            owner,
+            curOwner,
             hash,
             userOp.signature
         );
@@ -149,8 +162,9 @@ contract Account is
         view
         returns (bytes4)
     {
+        AccountConfiguration storage s = getStorage();
         bool isValid = SignatureChecker.isValidSignatureNow(
-            owner,
+            s.owner,
             hash,
             signature
         );
@@ -208,5 +222,15 @@ contract Account is
     {
         (newImplementation);
         _onlyOwner();
+    }
+
+    function setAccountDelegation(bool value) external onlyOwner {
+        AccountConfiguration storage s = getStorage();
+        s.isDelegated = value;
+    }
+
+    function getAccountDelegation() external view returns (bool value) {
+        AccountConfiguration storage s = getStorage();
+        value = s.isDelegated;
     }
 }

@@ -4,20 +4,24 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {
   deployAccount,
   deployAccountFactory,
+  deployAccountRegistry,
 } from "../helpers/contracts-deployments";
 import {getAccount, getChainId} from "../helpers/contracts-getters";
 import {expect} from "chai";
 import {calcOpHash} from "../helpers/misc-utils";
+import {AccountProxy__factory} from "../types";
 
 const fixture = async () => {
   const testEnv = await loadFixture(testEnvFixture);
   const {
     users: [, entryPoint],
   } = testEnv;
+  const accountImpl = await deployAccount(entryPoint.address);
+  const accountRegistry = await deployAccountRegistry(accountImpl.address);
+  console.log("latest impl", await accountRegistry.getLatestImplementation());
+  const accountFactory = await deployAccountFactory(accountRegistry.address);
 
-  const accountFactory = await deployAccountFactory(entryPoint.address);
-
-  return {...testEnv, accountFactory};
+  return {...testEnv, accountFactory, accountRegistry};
 };
 
 describe("Account Abstraction", () => {
@@ -236,5 +240,75 @@ describe("Account Abstraction", () => {
     );
     await expect(account.connect(user2.signer).upgradeTo(newAccount.address)).to
       .be.reverted;
+  });
+
+  it("AA Account Delegation is true by default", async () => {
+    const testEnv = await loadFixture(fixture);
+    const {
+      users: [user1, entryPoint, user2],
+      accountFactory,
+    } = testEnv;
+
+    await accountFactory.createAccount(user1.address, "1");
+
+    const account = await getAccount(
+      await accountFactory.getAddress(user1.address, "1")
+    );
+
+    await expect(await account.getAccountDelegation()).to.be.eq(true);
+  });
+
+  it("AA Account Delegation is true by default", async () => {
+    const testEnv = await loadFixture(fixture);
+    const {
+      users: [user1, entryPoint, user2],
+      accountFactory,
+      accountRegistry,
+    } = testEnv;
+
+    await accountFactory.createAccount(user1.address, "1");
+
+    const account = AccountProxy__factory.connect(
+      await accountFactory.getAddress(user1.address, "1"),
+      user1.signer
+    );
+
+    await expect(await account.getImplementation()).to.be.eq(
+      await accountRegistry.getLatestImplementation()
+    );
+  });
+
+  it("AA Account Delegation can be set by owner", async () => {
+    const testEnv = await loadFixture(fixture);
+    const {
+      users: [user1, entryPoint, user2],
+      accountFactory,
+      accountRegistry,
+    } = testEnv;
+
+    await accountFactory.createAccount(user1.address, "1");
+
+    const accountAddress = await accountFactory.getAddress(user1.address, "1");
+
+    const account = await getAccount(accountAddress);
+    const newImpl = await deployAccount(entryPoint.address);
+
+    await expect(account.connect(user2.signer).setAccountDelegation(false)).to
+      .be.reverted;
+
+    await account.connect(user1.signer).setAccountDelegation(false);
+
+    await expect(await account.getAccountDelegation()).to.be.eq(false);
+
+    await account.connect(user1.signer).upgradeTo(newImpl.address);
+
+    const accountProxy = AccountProxy__factory.connect(
+      accountAddress,
+      user1.signer
+    );
+
+    await expect(await accountProxy.getImplementation()).to.be.eq(
+      newImpl.address
+    );
   });
 });

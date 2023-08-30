@@ -228,6 +228,7 @@ import {
   Account__factory,
   AccountFactory,
   AccountFactory__factory,
+  AccountRegistry,
 } from "../types";
 import {
   getACLManager,
@@ -3185,15 +3186,26 @@ export const deployAccount = async (
   ) as Promise<Account>;
 
 export const deployAccountFactory = async (
-  entryPoint: tEthereumAddress,
+  accountRegistry: tEthereumAddress,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await getContractFactory("AccountFactory"),
     eContractid.AccountFactory,
-    [entryPoint],
+    [accountRegistry],
     verify
   ) as Promise<AccountFactory>;
+
+export const deployAccountRegistry = async (
+  impl: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("AccountRegistry"),
+    eContractid.AccountRegistry,
+    [impl],
+    verify
+  ) as Promise<AccountRegistry>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK
