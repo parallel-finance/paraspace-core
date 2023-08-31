@@ -30,6 +30,7 @@ export const step_24 = async (verify = false) => {
         paraSpaceConfig.ParaSpaceAdmin ||
           (await (await getFirstSigner()).getAddress()),
         accountRegistry.address,
+        "0x",
         verify
       );
 

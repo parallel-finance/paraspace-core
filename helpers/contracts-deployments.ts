@@ -1601,14 +1601,14 @@ export const deployWETHGateway = async (
 
 export const deployWETHGatewayProxy = async (
   admin: string,
-  wethGateway: string,
+  impl: string,
   initData: string,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await getContractFactory("InitializableImmutableAdminUpgradeabilityProxy"),
     eContractid.WETHGatewayProxy,
-    [admin, wethGateway, initData],
+    [admin, impl, initData],
     verify,
     true
   ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
@@ -3161,14 +3161,14 @@ export const deployAccountRegistry = async (
 
 export const deployAccountRegistryProxy = async (
   admin: string,
-  accountRegistry: string,
   impl: string,
+  initData: string,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await getContractFactory("InitializableImmutableAdminUpgradeabilityProxy"),
     eContractid.AccountRegistryProxy,
-    [admin, accountRegistry, impl],
+    [admin, impl, initData],
     verify,
     true
   ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
