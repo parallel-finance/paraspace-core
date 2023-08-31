@@ -3,7 +3,6 @@ import {
   deployAccountFactory,
   deployAccountRegistry,
   deployAccountRegistryProxy,
-  deployInitializableImmutableAdminUpgradeabilityProxy,
 } from "../../../helpers/contracts-deployments";
 import {getFirstSigner} from "../../../helpers/contracts-getters";
 import {getParaSpaceConfig, isLocalTestnet} from "../../../helpers/misc-utils";
@@ -28,9 +27,8 @@ export const step_24 = async (verify = false) => {
       );
 
       const accountRegistryProxy = await deployAccountRegistryProxy(
-        paraSpaceConfig.ParaSpaceAdmin
-          ? paraSpaceConfig.ParaSpaceAdmin
-          : await (await getFirstSigner()).getAddress(),
+        paraSpaceConfig.ParaSpaceAdmin ||
+          (await (await getFirstSigner()).getAddress()),
         accountRegistry.address,
         verify
       );
