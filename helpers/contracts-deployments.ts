@@ -2,6 +2,7 @@ import {MockContract} from "ethereum-waffle";
 import {
   Account,
   AccountFactory,
+  AccountRegistry,
   ACLManager,
   AirdropFlashClaimReceiver,
   ApeStakingLogic,
@@ -2763,7 +2764,10 @@ export const deployAutoYieldApeImplAndAssignItToProxy = async (
   );
 };
 
-export const deployHelperContractImpl = async (cApeV1: tEthereumAddress, verify?: boolean) => {
+export const deployHelperContractImpl = async (
+  cApeV1: tEthereumAddress,
+  verify?: boolean
+) => {
   const allTokens = await getAllTokens();
   const protocolDataProvider = await getProtocolDataProvider();
   const pCApe = (
@@ -2786,7 +2790,10 @@ export const deployHelperContractImpl = async (cApeV1: tEthereumAddress, verify?
   ) as Promise<HelperContract>;
 };
 
-export const deployHelperContract = async (cApeV1: tEthereumAddress, verify?: boolean) => {
+export const deployHelperContract = async (
+  cApeV1: tEthereumAddress,
+  verify?: boolean
+) => {
   const helperImplementation = await deployHelperContractImpl(cApeV1, verify);
 
   const deployer = await getFirstSigner();
