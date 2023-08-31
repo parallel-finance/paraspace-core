@@ -3290,7 +3290,7 @@ export const deployPapaX = async (verify?: boolean) => {
     verify
   );
 
-  const proxyAdmin = "0x17816E9A858b161c3E37016D139cf618056CaCD4"; //yubo.eth
+  const proxyAdmin = "0x19293FBec52F94165f903708a74513Dd6dFedd0a"; //ParaX
   await waitForTx(
     await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
       "initialize(address,address,bytes)"

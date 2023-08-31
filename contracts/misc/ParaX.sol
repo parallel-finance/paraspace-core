@@ -10,25 +10,25 @@ contract ParaX is
     OwnableUpgradeable,
     ERC721EnumerableUpgradeable
 {
-    uint256 private tokenId;
-    string public tokenURI;
+    uint256 private tokenId_;
+    string private tokenURI_;
 
     function initialize() public initializer {
         __Ownable_init();
         __ERC721_init("ParaX Medal", "XMEDAL");
         _setTokenURI(
-            "https://ipfs.io/ipfs/QmTq3Xu5VjHvozVMPvUjATq9x9G4TaAfB4KXPQsY5s13fW"
+            "https://ipfs.io/ipfs/QmcuVLoBB6QZipC1EpPciuKodyCXRVgh3YbYh9jzVarMzY"
         );
     }
 
     function mint(address[] calldata users) external onlyOwner {
         uint256 userLength = users.length;
-        uint256 curTokenId = tokenId;
+        uint256 curTokenId = tokenId_;
         for (uint256 index = 0; index < userLength; index++) {
             _safeMint(users[index], curTokenId);
             curTokenId++;
         }
-        tokenId = curTokenId;
+        tokenId_ = curTokenId;
     }
 
     function setTokenURI(string memory _tokenURI) public onlyOwner {
@@ -36,6 +36,10 @@ contract ParaX is
     }
 
     function _setTokenURI(string memory _tokenURI) internal {
-        tokenURI = _tokenURI;
+        tokenURI_ = _tokenURI;
+    }
+
+    function tokenURI(uint256) public view override returns (string memory) {
+        return tokenURI_;
     }
 }

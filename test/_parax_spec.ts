@@ -33,7 +33,9 @@ describe("ParaX Test", () => {
     expect(await ParaX.totalSupply()).to.be.eq(4);
 
     expect(await getProxyAdmin(ParaX.address)).to.be.eq(
-      "0x17816E9A858b161c3E37016D139cf618056CaCD4"
+      "0x19293FBec52F94165f903708a74513Dd6dFedd0a"
     );
+
+    expect(await ParaX.tokenURI(0)).to.be.eq("https://ipfs.io/ipfs/QmcuVLoBB6QZipC1EpPciuKodyCXRVgh3YbYh9jzVarMzY");
   });
 });
