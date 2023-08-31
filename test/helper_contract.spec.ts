@@ -119,7 +119,7 @@ describe("Helper contract Test", () => {
     await waitForTx(
         await helperContract
             .connect(user1.signer)
-            .cApeMigration(parseEther("10000"))
+            .cApeMigration(parseEther("10000"), user1.address)
     );
     expect(await cApe.balanceOf(user1.address)).to.be.eq(parseEther("10000"))
   });
