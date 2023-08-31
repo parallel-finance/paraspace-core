@@ -8,7 +8,6 @@ import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import {SignatureChecker} from "../dependencies/openzeppelin/contracts/SignatureChecker.sol";
 import "./base-account-abstraction/core/BaseAccount.sol";
 import "./callback/TokenCallbackHandler.sol";
-import "./AccountStorage.sol";
 
 /**
  * Address Owned Account.
@@ -18,13 +17,14 @@ import "./AccountStorage.sol";
  */
 contract Account is
     BaseAccount,
-    AccountStorage,
     TokenCallbackHandler,
     UUPSUpgradeable,
     IERC1271,
     Initializable
 {
     using ECDSA for bytes32;
+
+    address public owner;
 
     IEntryPoint private immutable _entryPoint;
 
@@ -36,12 +36,6 @@ contract Account is
     modifier onlyOwner() {
         _onlyOwner();
         _;
-    }
-
-    function owner() external view returns (address) {
-        AccountConfiguration storage s = getStorage();
-
-        return s.owner;
     }
 
     /// @inheritdoc BaseAccount
@@ -58,10 +52,9 @@ contract Account is
     }
 
     function _onlyOwner() internal view {
-        AccountConfiguration storage s = getStorage();
         //directly from EOA owner, or through the account itself (which gets redirected through execute())
         require(
-            msg.sender == s.owner || msg.sender == address(this),
+            msg.sender == owner || msg.sender == address(this),
             "only owner"
         );
     }
@@ -115,18 +108,14 @@ contract Account is
     }
 
     function _initialize(address anOwner) internal virtual {
-        AccountConfiguration storage s = getStorage();
-        s.owner = anOwner;
-        s.isDelegated = true;
-        emit AccountInitialized(_entryPoint, anOwner);
+        owner = anOwner;
+        emit AccountInitialized(_entryPoint, owner);
     }
 
     // Require the function call went through EntryPoint or owner
     function _requireFromEntryPointOrOwner() internal view {
-        AccountConfiguration storage s = getStorage();
-
         require(
-            msg.sender == address(entryPoint()) || msg.sender == s.owner,
+            msg.sender == address(entryPoint()) || msg.sender == owner,
             "account: not Owner or EntryPoint"
         );
     }
@@ -136,10 +125,9 @@ contract Account is
         UserOperation calldata userOp,
         bytes32 userOpHash
     ) internal virtual override returns (uint256 validationData) {
-        AccountConfiguration storage s = getStorage();
-        address curOwner = s.owner;
         bytes32 hash = userOpHash;
 
+        address curOwner = owner;
         if (curOwner.code.length == 0) {
             hash = userOpHash.toEthSignedMessageHash();
         }
@@ -157,14 +145,12 @@ contract Account is
         return SIG_VALIDATION_FAILED;
     }
 
-    function isValidSignature(bytes32 hash, bytes memory signature)
-        external
-        view
-        returns (bytes4)
-    {
-        AccountConfiguration storage s = getStorage();
+    function isValidSignature(
+        bytes32 hash,
+        bytes memory signature
+    ) external view returns (bytes4) {
         bool isValid = SignatureChecker.isValidSignatureNow(
-            s.owner,
+            owner,
             hash,
             signature
         );
@@ -176,11 +162,7 @@ contract Account is
         return "";
     }
 
-    function _call(
-        address target,
-        uint256 value,
-        bytes memory data
-    ) internal {
+    function _call(address target, uint256 value, bytes memory data) internal {
         (bool success, bytes memory result) = target.call{value: value}(data);
         if (!success) {
             assembly {
@@ -208,29 +190,17 @@ contract Account is
      * @param withdrawAddress target to send to
      * @param amount to withdraw
      */
-    function withdrawDepositTo(address payable withdrawAddress, uint256 amount)
-        public
-        onlyOwner
-    {
+    function withdrawDepositTo(
+        address payable withdrawAddress,
+        uint256 amount
+    ) public onlyOwner {
         entryPoint().withdrawTo(withdrawAddress, amount);
     }
 
-    function _authorizeUpgrade(address newImplementation)
-        internal
-        view
-        override
-    {
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal view override {
         (newImplementation);
         _onlyOwner();
-    }
-
-    function setAccountDelegation(bool value) external onlyOwner {
-        AccountConfiguration storage s = getStorage();
-        s.isDelegated = value;
-    }
-
-    function getAccountDelegation() external view returns (bool value) {
-        AccountConfiguration storage s = getStorage();
-        value = s.isDelegated;
     }
 }

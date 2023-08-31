@@ -3,9 +3,8 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import "./AccountRegistry.sol";
-import "./AccountStorage.sol";
 
-contract AccountProxy is ERC1967Proxy, AccountStorage {
+contract AccountProxy is ERC1967Proxy {
     AccountRegistry immutable accountRegistry;
 
     /**
@@ -14,9 +13,10 @@ contract AccountProxy is ERC1967Proxy, AccountStorage {
      * If `_data` is nonempty, it's used as data in a delegate call to `_logic`. This will typically be an encoded
      * function call, and allows initializing the storage of the proxy like a Solidity constructor.
      */
-    constructor(AccountRegistry _accountRegistry, bytes memory _data)
-        ERC1967Proxy(_accountRegistry.getLatestImplementation(), _data)
-    {
+    constructor(
+        AccountRegistry _accountRegistry,
+        bytes memory _data
+    ) ERC1967Proxy(_accountRegistry.getLatestImplementation(), _data) {
         accountRegistry = _accountRegistry;
     }
 
@@ -30,12 +30,7 @@ contract AccountProxy is ERC1967Proxy, AccountStorage {
         override
         returns (address impl)
     {
-        AccountConfiguration storage s = getStorage();
-        if (s.isDelegated) {
-            impl = accountRegistry.getLatestImplementation();
-        } else {
-            impl = ERC1967Upgrade._getImplementation();
-        }
+        impl = accountRegistry.getLatestImplementation();
     }
 
     function getImplementation() external view returns (address impl) {

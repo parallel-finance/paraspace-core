@@ -33,10 +33,10 @@ contract AccountFactory {
      * Note that during UserOperation execution, this method is called only if the account is not deployed.
      * This method returns an existing account address so that entryPoint.getSenderAddress() would work even after account creation
      */
-    function createAccount(address owner, uint256 salt)
-        public
-        returns (Account ret)
-    {
+    function createAccount(
+        address owner,
+        uint256 salt
+    ) public returns (Account ret) {
         require(
             accountRegistry.getLatestImplementation() != address(0),
             "Implementation Not Set"
@@ -62,11 +62,10 @@ contract AccountFactory {
     /**
      * calculate the counterfactual address of this account as it would be returned by createAccount()
      */
-    function getAddress(address owner, uint256 salt)
-        public
-        view
-        returns (address)
-    {
+    function getAddress(
+        address owner,
+        uint256 salt
+    ) public view returns (address) {
         return
             Create2.computeAddress(
                 bytes32(salt),

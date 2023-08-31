@@ -8,7 +8,7 @@ import {
 } from "../helpers/contracts-deployments";
 import {getAccount, getChainId} from "../helpers/contracts-getters";
 import {expect} from "chai";
-import {calcOpHash} from "../helpers/misc-utils";
+import {calcOpHash, waitForTx} from "../helpers/misc-utils";
 import {AccountProxy__factory} from "../types";
 
 const fixture = async () => {
@@ -245,23 +245,7 @@ describe("Account Abstraction", () => {
   it("AA Account Delegation is true by default", async () => {
     const testEnv = await loadFixture(fixture);
     const {
-      users: [user1, entryPoint, user2],
-      accountFactory,
-    } = testEnv;
-
-    await accountFactory.createAccount(user1.address, "1");
-
-    const account = await getAccount(
-      await accountFactory.getAddress(user1.address, "1")
-    );
-
-    await expect(await account.getAccountDelegation()).to.be.eq(true);
-  });
-
-  it("AA Account Delegation is true by default", async () => {
-    const testEnv = await loadFixture(fixture);
-    const {
-      users: [user1, entryPoint, user2],
+      users: [user1, entryPoint],
       accountFactory,
       accountRegistry,
     } = testEnv;
@@ -276,39 +260,14 @@ describe("Account Abstraction", () => {
     await expect(await account.getImplementation()).to.be.eq(
       await accountRegistry.getLatestImplementation()
     );
-  });
 
-  it("AA Account Delegation can be set by owner", async () => {
-    const testEnv = await loadFixture(fixture);
-    const {
-      users: [user1, entryPoint, user2],
-      accountFactory,
-      accountRegistry,
-    } = testEnv;
-
-    await accountFactory.createAccount(user1.address, "1");
-
-    const accountAddress = await accountFactory.getAddress(user1.address, "1");
-
-    const account = await getAccount(accountAddress);
-    const newImpl = await deployAccount(entryPoint.address);
-
-    await expect(account.connect(user2.signer).setAccountDelegation(false)).to
-      .be.reverted;
-
-    await account.connect(user1.signer).setAccountDelegation(false);
-
-    await expect(await account.getAccountDelegation()).to.be.eq(false);
-
-    await account.connect(user1.signer).upgradeTo(newImpl.address);
-
-    const accountProxy = AccountProxy__factory.connect(
-      accountAddress,
-      user1.signer
+    const newAccountImpl = await deployAccount(entryPoint.address);
+    await waitForTx(
+      await accountRegistry.setLatestImplementation(newAccountImpl.address)
     );
 
-    await expect(await accountProxy.getImplementation()).to.be.eq(
-      newImpl.address
+    await expect(await account.getImplementation()).to.be.eq(
+      newAccountImpl.address
     );
   });
 });
