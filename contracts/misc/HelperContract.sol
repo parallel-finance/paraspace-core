@@ -61,9 +61,9 @@ contract HelperContract is Initializable, OwnableUpgradeable {
         IERC20(apeCoin).safeTransfer(msg.sender, amount);
     }
 
-    function cApeMigration(uint256 amount) external {
+    function cApeMigration(uint256 amount, address to) external {
         IERC20(cApeV1).safeTransferFrom(msg.sender, address(this), amount);
         IAutoCompoundApe(cApeV1).withdraw(amount);
-        IAutoCompoundApe(cApe).deposit(msg.sender, amount);
+        IAutoCompoundApe(cApe).deposit(to, amount);
     }
 }
