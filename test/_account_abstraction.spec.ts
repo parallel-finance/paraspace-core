@@ -164,7 +164,7 @@ describe("Account Abstraction", () => {
       account.interface.encodeFunctionData("execute", [pool.address, 0, []])
     );
 
-    builder.useMiddleware((0, Presets.Middleware.EOASignature)(user1.signer));
+    builder.useMiddleware(Presets.Middleware.EOASignature(user1.signer));
     const userOp = await builder.buildOp(
       entryPoint.address,
       await getChainId()
@@ -202,7 +202,7 @@ describe("Account Abstraction", () => {
       account.interface.encodeFunctionData("execute", [pool.address, 0, []])
     );
 
-    builder.useMiddleware((0, Presets.Middleware.EOASignature)(user1.signer));
+    builder.useMiddleware(Presets.Middleware.EOASignature(user1.signer));
     const userOp = await builder.buildOp(
       entryPoint.address,
       await getChainId()

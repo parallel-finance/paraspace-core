@@ -12,6 +12,8 @@ import {MAX_UINT_AMOUNT} from "../helpers/constants";
 import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {waitForTx} from "../helpers/misc-utils";
+import {deployAutoCompoundApeImplAndAssignItToProxy} from "../helpers/contracts-deployments";
+import {expect} from "chai";
 
 describe("Helper contract Test", () => {
   let testEnv: TestEnv;
@@ -89,5 +91,36 @@ describe("Helper contract Test", () => {
     );
     const apeBalance = await ape.balanceOf(user1.address);
     almostEqual(apeBalance, parseEther("10000"));
+  });
+
+  it("cApeMigration", async () => {
+    const {
+      users: [user1],
+      ape,
+    } = await loadFixture(fixture);
+
+    await mintAndValidate(ape, "10000", user1);
+    await waitForTx(
+        await ape
+            .connect(user1.signer)
+            .approve(cApe.address, MAX_UINT_AMOUNT)
+    );
+
+    await waitForTx(
+        await cApe.connect(user1.signer).deposit(user1.address, parseEther("10000"))
+    );
+    expect(await cApe.balanceOf(user1.address)).to.be.eq(parseEther("10000"))
+
+    await waitForTx(
+        await cApe
+            .connect(user1.signer)
+            .approve(helperContract.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+        await helperContract
+            .connect(user1.signer)
+            .cApeMigration(parseEther("10000"))
+    );
+    expect(await cApe.balanceOf(user1.address)).to.be.eq(parseEther("10000"))
   });
 });

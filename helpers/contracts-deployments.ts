@@ -1,5 +1,7 @@
 import {MockContract} from "ethereum-waffle";
 import {
+  Account,
+  AccountFactory,
   ACLManager,
   AirdropFlashClaimReceiver,
   ApeStakingLogic,
@@ -31,9 +33,9 @@ import {
   DelegationRegistry,
   DepositContract,
   Doodles,
+  ERC20OracleWrapper,
   ERC721Delegate,
   ERC721OracleWrapper,
-  ERC20OracleWrapper,
   ExecutionDelegate,
   ExecutionManager,
   ExecutorWithTimelock,
@@ -129,6 +131,7 @@ import {
   StETHMocked,
   StKSMDebtToken,
   StrategyStandardSaleForFixedPrice,
+  SupplyExtendedLogic,
   SupplyLogic,
   TimeLock,
   TransferManagerERC1155,
@@ -149,86 +152,6 @@ import {
   WstETHMocked,
   X2Y2Adapter,
   X2Y2R1,
-  X2Y2R1__factory,
-  AutoCompoundApe,
-  InitializableAdminUpgradeabilityProxy__factory,
-  InitializableAdminUpgradeabilityProxy,
-  ParaProxyInterfaces__factory,
-  ParaProxyInterfaces,
-  MockedDelegateRegistry,
-  MockedDelegateRegistry__factory,
-  NTokenBAKC,
-  NTokenBAKC__factory,
-  P2PPairStaking__factory,
-  P2PPairStaking,
-  AirdropFlashClaimReceiver__factory,
-  AirdropFlashClaimReceiver,
-  CLwstETHSynchronicityPriceAdapter__factory,
-  CLExchangeRateSynchronicityPriceAdapter__factory,
-  CLwstETHSynchronicityPriceAdapter,
-  WstETHMocked__factory,
-  WstETHMocked,
-  BAYCSewerPass__factory,
-  BAYCSewerPass,
-  BAYCSewerPassClaim__factory,
-  AutoYieldApe__factory,
-  AutoYieldApe,
-  PYieldToken__factory,
-  PYieldToken,
-  UniswapV3TwapOracleWrapper,
-  UniswapV3TwapOracleWrapper__factory,
-  HelperContract,
-  HelperContract__factory,
-  ParaSpaceAirdrop__factory,
-  ParaSpaceAirdrop,
-  CLExchangeRateSynchronicityPriceAdapter,
-  PTokenAStETH__factory,
-  PTokenAStETH,
-  AStETHDebtToken__factory,
-  AStETHDebtToken,
-  MockAStETH,
-  MockAStETH__factory,
-  MockRETH,
-  MockRETH__factory,
-  CLCETHSynchronicityPriceAdapter__factory,
-  CLCETHSynchronicityPriceAdapter,
-  MockCToken,
-  MockCToken__factory,
-  TimeLock__factory,
-  DefaultTimeLockStrategy__factory,
-  DefaultTimeLockStrategy,
-  NTokenOtherdeed__factory,
-  NTokenOtherdeed,
-  HotWalletProxy__factory,
-  HotWalletProxy,
-  NTokenStakefish__factory,
-  NTokenStakefish,
-  DelegationRegistry,
-  DelegationRegistry__factory,
-  StakefishNFTManager__factory,
-  StakefishNFTManager,
-  StakefishValidatorV1__factory,
-  StakefishValidatorV1,
-  DepositContract__factory,
-  DepositContract,
-  StakefishValidatorFactory__factory,
-  StakefishValidatorFactory,
-  MockFeePool,
-  MockFeePool__factory,
-  MockLendPool__factory,
-  PoolPositionMover__factory,
-  PoolPositionMover,
-  PositionMoverLogic,
-  PositionMoverLogic__factory,
-  TimeLock,
-  NTokenChromieSquiggle__factory,
-  CLFixedPriceSynchronicityPriceAdapter,
-  CLFixedPriceSynchronicityPriceAdapter__factory,
-  Account,
-  Account__factory,
-  AccountFactory,
-  AccountFactory__factory,
-  AccountRegistry,
 } from "../types";
 import {
   getACLManager,
@@ -272,14 +195,15 @@ import {Contract} from "ethers";
 import {Address, Libraries} from "hardhat-deploy/dist/types";
 
 import {parseEther} from "ethers/lib/utils";
+import fs from "fs";
 import {pick, upperFirst} from "lodash";
+import shell from "shelljs";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES, ZK_LIBRARIES_PATH} from "./hardhat-constants";
-import fs from "fs";
-import shell from "shelljs";
 
 export const deployAllLibraries = async (verify?: boolean) => {
   const supplyLogic = await deploySupplyLogic(verify);
+  const supplyExtendedLogic = await deploySupplyExtendedLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
   const auctionLogic = await deployAuctionLogic(verify);
   const flashClaimLogic = await deployFlashClaimLogic(verify);
@@ -295,6 +219,9 @@ export const deployAllLibraries = async (verify?: boolean) => {
     },
     ["contracts/protocol/libraries/logic/SupplyLogic.sol"]: {
       SupplyLogic: supplyLogic.address,
+    },
+    ["contracts/protocol/libraries/logic/SupplyExtendedLogic.sol"]: {
+      SupplyLogic: supplyExtendedLogic.address,
     },
     ["contracts/protocol/libraries/logic/BorrowLogic.sol"]: {
       BorrowLogic: borrowLogic.address,
@@ -351,6 +278,8 @@ export const deployAllLibraries = async (verify?: boolean) => {
     {
       "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
         supplyLogic.address,
+      "contracts/protocol/libraries/logic/SupplyExtendedLogic.sol:SupplyExtendedLogic":
+        supplyExtendedLogic.address,
       "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
         borrowLogic.address,
     },
@@ -436,6 +365,14 @@ export const deploySupplyLogic = async (verify?: boolean) =>
     verify
   ) as Promise<SupplyLogic>;
 
+export const deploySupplyExtendedLogic = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("SupplyExtendedLogic"),
+    eContractid.SupplyExtendedLogic,
+    [],
+    verify
+  ) as Promise<SupplyExtendedLogic>;
+
 export const deployFlashClaimLogic = async (verify?: boolean) =>
   withSaveAndVerify(
     await getContractFactory("FlashClaimLogic"),
@@ -498,6 +435,7 @@ export const deployPoolCoreLibraries = async (
   verify?: boolean
 ): Promise<Libraries> => {
   const supplyLogic = await deploySupplyLogic(verify);
+  const supplyExtendedLogic = await deploySupplyExtendedLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
   const auctionLogic = await deployAuctionLogic(verify);
   const liquidationLogic = await deployLiquidationLogic(
@@ -516,6 +454,8 @@ export const deployPoolCoreLibraries = async (
       liquidationLogic.address,
     ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
       supplyLogic.address,
+    ["contracts/protocol/libraries/logic/SupplyExtendedLogic.sol:SupplyExtendedLogic"]:
+      supplyExtendedLogic.address,
     ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
       borrowLogic.address,
     ["contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"]:
@@ -554,11 +494,14 @@ export const deployPoolMarketplace = async (
   verify?: boolean
 ) => {
   const supplyLogic = await deploySupplyLogic(verify);
+  const supplyExtendedLogic = await deploySupplyExtendedLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
   const marketplaceLogic = await deployMarketplaceLogic(
     {
       "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
         supplyLogic.address,
+      "contracts/protocol/libraries/logic/SupplyExtendedLogic.sol:SupplyExtendedLogic":
+        supplyExtendedLogic.address,
       "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
         borrowLogic.address,
     },
@@ -755,6 +698,7 @@ export const deployPoolMarketplaceLibraries = async (
   const marketplaceLogic = await deployMarketplaceLogic(
     pick(coreLibraries, [
       "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
+      "contracts/protocol/libraries/logic/SupplyExtendedLogic.sol:SupplyExtendedLogic",
       "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
     ]),
     verify
@@ -2819,7 +2763,7 @@ export const deployAutoYieldApeImplAndAssignItToProxy = async (
   );
 };
 
-export const deployHelperContractImpl = async (verify?: boolean) => {
+export const deployHelperContractImpl = async (cApeV1: tEthereumAddress, verify?: boolean) => {
   const allTokens = await getAllTokens();
   const protocolDataProvider = await getProtocolDataProvider();
   const pCApe = (
@@ -2828,6 +2772,7 @@ export const deployHelperContractImpl = async (verify?: boolean) => {
   const pool = await getPoolProxy();
   const args = [
     allTokens.APE.address,
+    cApeV1,
     allTokens.cAPE.address,
     pCApe,
     pool.address,
@@ -2841,8 +2786,8 @@ export const deployHelperContractImpl = async (verify?: boolean) => {
   ) as Promise<HelperContract>;
 };
 
-export const deployHelperContract = async (verify?: boolean) => {
-  const helperImplementation = await deployHelperContractImpl(verify);
+export const deployHelperContract = async (cApeV1: tEthereumAddress, verify?: boolean) => {
+  const helperImplementation = await deployHelperContractImpl(cApeV1, verify);
 
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
