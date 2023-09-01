@@ -1,7 +1,7 @@
 import {
   deployAccount,
   deployAccountFactory,
-  deployAccountRegistry,
+  deployBeacon,
 } from "../../../helpers/contracts-deployments";
 import {getParaSpaceConfig, isLocalTestnet} from "../../../helpers/misc-utils";
 import {Client} from "userop";
@@ -19,10 +19,7 @@ export const step_24 = async (verify = false) => {
         verify
       );
 
-      const accountRegistry = await deployAccountRegistry(
-        account.address,
-        verify
-      );
+      const accountRegistry = await deployBeacon(account.address, verify);
 
       await deployAccountFactory(accountRegistry.address, verify);
     }

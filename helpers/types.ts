@@ -292,9 +292,7 @@ export enum eContractid {
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
   Account = "Account",
   AccountFactory = "AccountFactory",
-  AccountProxy = "AccountProxy",
-  AccountRegistry = "AccountRegistry",
-  AccountRegistryProxy = "AccountRegistryProxy",
+  UpgradeableBeacon = "UpgradeableBeacon",
   ParaAccount = "ParaAccount",
 }
 

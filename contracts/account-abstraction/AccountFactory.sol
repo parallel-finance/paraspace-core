@@ -5,8 +5,8 @@ import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 
 import "./Account.sol";
-import "./AccountProxy.sol";
-import "./AccountRegistry.sol";
+import {BeaconProxy} from "./../dependencies/openzeppelin/upgradeability/BeaconProxy.sol";
+import {UpgradeableBeacon} from "./../dependencies/openzeppelin/upgradeability/UpgradeableBeacon.sol";
 
 /**
  * A factory contract for SimpleAccount
@@ -15,7 +15,7 @@ import "./AccountRegistry.sol";
  * This way, the entryPoint.getSenderAddress() can be called either before or after the account is created.
  */
 contract AccountFactory {
-    AccountRegistry public immutable accountRegistry;
+    UpgradeableBeacon public immutable beacon;
 
     event AccountCreated(
         address indexed owner,
@@ -23,8 +23,8 @@ contract AccountFactory {
         address accountAddress
     );
 
-    constructor(AccountRegistry _accountRegistry) {
-        accountRegistry = _accountRegistry;
+    constructor(UpgradeableBeacon _beacon) {
+        beacon = _beacon;
     }
 
     /**
@@ -38,7 +38,7 @@ contract AccountFactory {
         uint256 salt
     ) public returns (Account ret) {
         require(
-            accountRegistry.getLatestImplementation() != address(0),
+            beacon.implementation() != address(0),
             "Implementation Not Set"
         );
 
@@ -49,8 +49,8 @@ contract AccountFactory {
         }
         ret = Account(
             payable(
-                new AccountProxy{salt: bytes32(salt)}(
-                    accountRegistry,
+                new BeaconProxy{salt: bytes32(salt)}(
+                    address(beacon),
                     abi.encodeCall(Account.initialize, (owner))
                 )
             )
@@ -71,9 +71,9 @@ contract AccountFactory {
                 bytes32(salt),
                 keccak256(
                     abi.encodePacked(
-                        type(AccountProxy).creationCode,
+                        type(BeaconProxy).creationCode,
                         abi.encode(
-                            address(accountRegistry),
+                            address(beacon),
                             abi.encodeCall(Account.initialize, (owner))
                         )
                     )

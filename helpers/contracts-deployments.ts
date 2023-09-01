@@ -143,6 +143,7 @@ import {
   UniswapV3Factory,
   UniswapV3OracleWrapper,
   UniswapV3TwapOracleWrapper,
+  UpgradeableBeacon,
   UserFlashclaimRegistry,
   VariableDebtToken,
   WalletBalanceProvider,
@@ -3148,16 +3149,13 @@ export const deployAccountFactory = async (
     verify
   ) as Promise<AccountFactory>;
 
-export const deployAccountRegistry = async (
-  impl: tEthereumAddress,
-  verify?: boolean
-) =>
+export const deployBeacon = async (impl: tEthereumAddress, verify?: boolean) =>
   withSaveAndVerify(
-    await getContractFactory("AccountRegistry"),
-    eContractid.AccountRegistry,
+    await getContractFactory("UpgradeableBeacon"),
+    eContractid.UpgradeableBeacon,
     [impl],
     verify
-  ) as Promise<AccountRegistry>;
+  ) as Promise<UpgradeableBeacon>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK

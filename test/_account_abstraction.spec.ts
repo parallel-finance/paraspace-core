@@ -4,12 +4,12 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {
   deployAccount,
   deployAccountFactory,
-  deployAccountRegistry,
+  deployBeacon,
 } from "../helpers/contracts-deployments";
 import {getAccount, getChainId} from "../helpers/contracts-getters";
 import {expect} from "chai";
 import {calcOpHash, waitForTx} from "../helpers/misc-utils";
-import {AccountProxy__factory} from "../types";
+import {BeaconProxy__factory} from "../types";
 
 const fixture = async () => {
   const testEnv = await loadFixture(testEnvFixture);
@@ -17,11 +17,11 @@ const fixture = async () => {
     users: [, entryPoint],
   } = testEnv;
   const accountImpl = await deployAccount(entryPoint.address);
-  const accountRegistry = await deployAccountRegistry(accountImpl.address);
-  console.log("latest impl", await accountRegistry.getLatestImplementation());
-  const accountFactory = await deployAccountFactory(accountRegistry.address);
+  const beacon = await deployBeacon(accountImpl.address);
+  console.log("latest impl", await beacon.implementation());
+  const accountFactory = await deployAccountFactory(beacon.address);
 
-  return {...testEnv, accountFactory, accountRegistry};
+  return {...testEnv, accountFactory, beacon: beacon};
 };
 
 describe("Account Abstraction", () => {
@@ -225,24 +225,22 @@ describe("Account Abstraction", () => {
     const {
       users: [user1, entryPoint],
       accountFactory,
-      accountRegistry,
+      beacon: beacon,
     } = testEnv;
 
     await accountFactory.createAccount(user1.address, "1");
 
-    const account = AccountProxy__factory.connect(
+    const account = BeaconProxy__factory.connect(
       await accountFactory.getAddress(user1.address, "1"),
       user1.signer
     );
 
-    await expect(await account.getImplementation()).to.be.eq(
+    await expect(await beacon.implementation()).to.be.eq(
       await accountRegistry.getLatestImplementation()
     );
 
     const newAccountImpl = await deployAccount(entryPoint.address);
-    await waitForTx(
-      await accountRegistry.setLatestImplementation(newAccountImpl.address)
-    );
+    await waitForTx(await beacon.upgradeTo(newAccountImpl.address));
 
     await expect(await account.getImplementation()).to.be.eq(
       newAccountImpl.address
