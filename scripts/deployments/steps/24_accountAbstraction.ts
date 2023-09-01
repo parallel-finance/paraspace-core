@@ -2,9 +2,7 @@ import {
   deployAccount,
   deployAccountFactory,
   deployAccountRegistry,
-  deployAccountRegistryProxy,
 } from "../../../helpers/contracts-deployments";
-import {getFirstSigner} from "../../../helpers/contracts-getters";
 import {getParaSpaceConfig, isLocalTestnet} from "../../../helpers/misc-utils";
 import {Client} from "userop";
 
@@ -26,15 +24,7 @@ export const step_24 = async (verify = false) => {
         verify
       );
 
-      const accountRegistryProxy = await deployAccountRegistryProxy(
-        paraSpaceConfig.ParaSpaceAdmin ||
-          (await (await getFirstSigner()).getAddress()),
-        accountRegistry.address,
-        "0x",
-        verify
-      );
-
-      await deployAccountFactory(accountRegistryProxy.address, verify);
+      await deployAccountFactory(accountRegistry.address, verify);
     }
   } catch (error) {
     console.error(error);

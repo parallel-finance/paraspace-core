@@ -220,28 +220,6 @@ describe("Account Abstraction", () => {
     );
   });
 
-  it("AA Account implementation should be upgraded by the owner", async () => {
-    const testEnv = await loadFixture(fixture);
-    const {
-      users: [user1, entryPoint, user2],
-      accountFactory,
-    } = testEnv;
-
-    await accountFactory.createAccount(user1.address, "1");
-
-    const account = await getAccount(
-      await accountFactory.getAddress(user1.address, "1")
-    );
-
-    const newAccount = await deployAccount(entryPoint.address);
-
-    await expect(
-      await account.connect(user1.signer).upgradeTo(newAccount.address)
-    );
-    await expect(account.connect(user2.signer).upgradeTo(newAccount.address)).to
-      .be.reverted;
-  });
-
   it("AA Account Delegation is true by default", async () => {
     const testEnv = await loadFixture(fixture);
     const {
