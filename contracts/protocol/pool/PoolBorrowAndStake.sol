@@ -25,10 +25,10 @@ import {IPriceOracleGetter} from "../../interfaces/IPriceOracleGetter.sol";
 import {Helpers} from "../libraries/helpers/Helpers.sol";
 
 contract PoolBorrowAndStake is
-ParaVersionedInitializable,
-ParaReentrancyGuard,
-PoolStorage,
-IPoolBorrowAndStake
+    ParaVersionedInitializable,
+    ParaReentrancyGuard,
+    PoolStorage,
+    IPoolBorrowAndStake
 {
     using ReserveLogic for DataTypes.ReserveData;
     using UserConfiguration for DataTypes.UserConfigurationMap;
@@ -92,7 +92,7 @@ IPoolBorrowAndStake
 
         require(
             stakingInfo.borrowAsset == address(APE_COIN) ||
-            stakingInfo.borrowAsset == address(APE_COMPOUND),
+                stakingInfo.borrowAsset == address(APE_COMPOUND),
             Errors.INVALID_ASSET_TYPE
         );
 
@@ -108,7 +108,7 @@ IPoolBorrowAndStake
         // 1, handle borrow part
         if (stakingInfo.borrowAmount > 0) {
             DataTypes.ReserveData storage borrowAssetReserve = ps._reserves[
-            stakingInfo.borrowAsset
+                stakingInfo.borrowAsset
             ];
             if (stakingInfo.borrowAsset == address(APE_COIN)) {
                 IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
@@ -132,7 +132,7 @@ IPoolBorrowAndStake
 
         // 2, send cash part to xTokenAddress
         DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
-        msg.sender
+            msg.sender
         ];
         if (stakingInfo.cashAmount > 0) {
             if (stakingInfo.cashAsset == address(APE_COIN)) {
@@ -144,10 +144,10 @@ IPoolBorrowAndStake
             } else {
                 //pcApe
                 DataTypes.ReserveData storage cApeReserve = ps._reserves[
-                address(APE_COMPOUND)
+                    address(APE_COMPOUND)
                 ];
                 DataTypes.ReserveCache memory cApeReserveCache = cApeReserve
-                .cache();
+                    .cache();
                 address PCAPE = cApeReserveCache.xTokenAddress;
                 require(
                     stakingInfo.cashAsset == PCAPE,
@@ -172,7 +172,10 @@ IPoolBorrowAndStake
                     uint256 userBalance = IPToken(PCAPE).balanceOf(msg.sender);
                     if (userBalance == 0) {
                         userConfig.setUsingAsCollateral(cApeId, false);
-                        emit ReserveUsedAsCollateralDisabled(address(APE_COMPOUND), msg.sender);
+                        emit ReserveUsedAsCollateralDisabled(
+                            address(APE_COMPOUND),
+                            msg.sender
+                        );
                     }
                 }
 
@@ -213,7 +216,7 @@ IPoolBorrowAndStake
                 );
 
                 localVar.transferredTokenOwners[
-                index
+                    index
                 ] = _validateBAKCOwnerAndTransfer(
                     localVar,
                     _nftPairs[index].bakcTokenId,
@@ -251,47 +254,45 @@ IPoolBorrowAndStake
                 ps._reservesList,
                 ps._usersConfig[msg.sender],
                 DataTypes.ExecuteBorrowParams({
-            asset: stakingInfo.borrowAsset,
-            user: msg.sender,
-            onBehalfOf: msg.sender,
-            amount: stakingInfo.borrowAmount,
-            referralCode: 0,
-            releaseUnderlying: false,
-            reservesCount: ps._reservesCount,
-            oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-            priceOracleSentinel: ADDRESSES_PROVIDER
-            .getPriceOracleSentinel()
-            })
+                    asset: stakingInfo.borrowAsset,
+                    user: msg.sender,
+                    onBehalfOf: msg.sender,
+                    amount: stakingInfo.borrowAmount,
+                    referralCode: 0,
+                    releaseUnderlying: false,
+                    reservesCount: ps._reservesCount,
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle(),
+                    priceOracleSentinel: ADDRESSES_PROVIDER
+                        .getPriceOracleSentinel()
+                })
             );
         }
 
         //7 checkout ape balance
         require(
             APE_COIN.balanceOf(localVar.xTokenAddress) ==
-            localVar.balanceBefore,
+                localVar.balanceBefore,
             Errors.TOTAL_STAKING_AMOUNT_WRONG
         );
     }
 
-    function _generalCache(DataTypes.PoolStorage storage ps, address nftAsset)
-    internal
-    view
-    returns (ApeStakingLocalVars memory localVar)
-    {
+    function _generalCache(
+        DataTypes.PoolStorage storage ps,
+        address nftAsset
+    ) internal view returns (ApeStakingLocalVars memory localVar) {
         localVar.xTokenAddress = ps._reserves[nftAsset].xTokenAddress;
         localVar.bakcContract = INTokenApeStaking(localVar.xTokenAddress)
-        .getBAKC();
+            .getBAKC();
         localVar.bakcNToken = ps
-        ._reserves[address(localVar.bakcContract)]
-        .xTokenAddress;
+            ._reserves[address(localVar.bakcContract)]
+            .xTokenAddress;
     }
 
-    function _checkSApeIsNotPaused(DataTypes.PoolStorage storage ps)
-    internal
-    view
-    {
+    function _checkSApeIsNotPaused(
+        DataTypes.PoolStorage storage ps
+    ) internal view {
         DataTypes.ReserveData storage reserve = ps._reserves[
-        DataTypes.SApeAddress
+            DataTypes.SApeAddress
         ];
 
         (bool isActive, , , bool isPaused, ) = reserve.configuration.getFlags();
@@ -308,7 +309,7 @@ IPoolBorrowAndStake
         bakcOwner = localVar.bakcContract.ownerOf(tokenId);
         require(
             (userAddress == bakcOwner) ||
-            (userAddress == INToken(localVar.bakcNToken).ownerOf(tokenId)),
+                (userAddress == INToken(localVar.bakcNToken).ownerOf(tokenId)),
             Errors.NOT_THE_BAKC_OWNER
         );
         localVar.bakcContract.safeTransferFrom(

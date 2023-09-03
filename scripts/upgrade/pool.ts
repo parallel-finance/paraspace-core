@@ -1,6 +1,7 @@
 import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
-  deployPoolApeStaking, deployPoolBorrowAndStake,
+  deployPoolApeStaking,
+  deployPoolBorrowAndStake,
   deployPoolComponents,
   deployPoolCore,
   deployPoolMarketplace,
@@ -286,21 +287,22 @@ export const upgradePoolApeStaking = async (
 };
 
 export const upgradeBorrowApeAndStake = async (
-    oldPoolApeStaking: tEthereumAddress,
-    verify = false
+  oldPoolApeStaking: tEthereumAddress,
+  verify = false
 ) => {
   const addressesProvider = await getPoolAddressesProvider();
   let oldPoolApeStakingSelectors: Array<string> = [];
   if (oldPoolApeStaking != zeroAddress()) {
     const pool = await getPoolProxy();
     oldPoolApeStakingSelectors = await pool.facetFunctionSelectors(
-        oldPoolApeStaking
+      oldPoolApeStaking
     );
   }
 
-
-  const {poolBorrowAndStake, poolBorrowAndStakeSelectors: newPoolApeStakingSelectors} =
-      await deployPoolBorrowAndStake(addressesProvider.address, verify);
+  const {
+    poolBorrowAndStake,
+    poolBorrowAndStakeSelectors: newPoolApeStakingSelectors,
+  } = await deployPoolBorrowAndStake(addressesProvider.address, verify);
 
   const implementations = [
     [

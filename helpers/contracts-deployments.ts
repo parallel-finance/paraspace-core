@@ -151,7 +151,9 @@ import {
   WPunkGateway,
   WstETHMocked,
   X2Y2Adapter,
-  X2Y2R1, PoolBorrowAndStake__factory, PoolBorrowAndStake,
+  X2Y2R1,
+  PoolBorrowAndStake__factory,
+  PoolBorrowAndStake,
 } from "../types";
 import {
   getACLManager,
@@ -582,14 +584,14 @@ export const deployPoolApeStaking = async (
 };
 
 export const deployPoolBorrowAndStake = async (
-    provider: string,
-    verify?: boolean
+  provider: string,
+  verify?: boolean
 ) => {
   const borrowLogic = await deployBorrowLogic(verify);
 
   const apeStakingLibraries = {
     "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
-    borrowLogic.address,
+      borrowLogic.address,
   };
 
   const {poolBorrowAndStakeSelectors} = await getPoolSignatures();
@@ -597,22 +599,20 @@ export const deployPoolBorrowAndStake = async (
   const allTokens = await getAllTokens();
   const cApe = await getAutoCompoundApe();
   const poolBorrowAndStake = (await withSaveAndVerify(
-      await getContractFactory("PoolBorrowAndStake", apeStakingLibraries),
-      eContractid.PoolApeStakingImpl,
-      [
-        provider,
-        cApe.address,
-        allTokens.APE.address,
-      ],
-      verify,
-      false,
-      apeStakingLibraries,
-      poolBorrowAndStakeSelectors
+    await getContractFactory("PoolBorrowAndStake", apeStakingLibraries),
+    eContractid.PoolApeStakingImpl,
+    [provider, cApe.address, allTokens.APE.address],
+    verify,
+    false,
+    apeStakingLibraries,
+    poolBorrowAndStakeSelectors
   )) as PoolApeStaking;
 
   return {
     poolBorrowAndStake,
-    poolBorrowAndStakeSelectors: poolBorrowAndStakeSelectors.map((s) => s.signature),
+    poolBorrowAndStakeSelectors: poolBorrowAndStakeSelectors.map(
+      (s) => s.signature
+    ),
   };
 };
 
@@ -772,7 +772,7 @@ export const getPoolSignatures = () => {
   );
 
   const poolBorrowAndStakeSelectors = getFunctionSignatures(
-      PoolBorrowAndStake__factory.abi
+    PoolBorrowAndStake__factory.abi
   );
 
   const poolPositionMoverSelectors = getFunctionSignatures(
@@ -949,20 +949,16 @@ export const deployPoolComponents = async (
     "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
   ]);
   const poolBorrowAndStake = allTokens.APE
-      ? ((await withSaveAndVerify(
-          await getContractFactory("PoolBorrowAndStake", BorrowAndStakeLibraries),
-          eContractid.PoolApeStakingImpl,
-          [
-            provider,
-            cApe.address,
-            allTokens.APE.address,
-          ],
-          verify,
-          false,
-          BorrowAndStakeLibraries,
-          poolBorrowAndStakeSelectors
+    ? ((await withSaveAndVerify(
+        await getContractFactory("PoolBorrowAndStake", BorrowAndStakeLibraries),
+        eContractid.PoolApeStakingImpl,
+        [provider, cApe.address, allTokens.APE.address],
+        verify,
+        false,
+        BorrowAndStakeLibraries,
+        poolBorrowAndStakeSelectors
       )) as PoolBorrowAndStake)
-      : undefined;
+    : undefined;
 
   return {
     poolCore,
@@ -974,7 +970,9 @@ export const deployPoolComponents = async (
     poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
     poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
     poolApeStakingSelectors: poolApeStakingSelectors.map((s) => s.signature),
-    poolBorrowAndStakeSelectors: poolBorrowAndStakeSelectors.map((s) => s.signature),
+    poolBorrowAndStakeSelectors: poolBorrowAndStakeSelectors.map(
+      (s) => s.signature
+    ),
   };
 };
 

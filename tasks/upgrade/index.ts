@@ -64,14 +64,19 @@ task("upgrade:pool-ape-staking", "upgrade pool ape staking")
   });
 
 task("upgrade:borrow-ape-and-stake", "upgrade borrow ape and stake")
-    .addPositionalParam("oldPoolBorrowAndStake", "old pool borrow and stake")
-    .setAction(async ({oldPoolBorrowAndStake}, DRE) => {
-        const {upgradeBorrowApeAndStake} = await import("../../scripts/upgrade/pool");
-        await DRE.run("set-DRE");
-        console.time("upgrade borrowApeAndStake");
-        await upgradeBorrowApeAndStake(oldPoolBorrowAndStake, ETHERSCAN_VERIFICATION);
-        console.timeEnd("upgrade borrowApeAndStake");
-    });
+  .addPositionalParam("oldPoolBorrowAndStake", "old pool borrow and stake")
+  .setAction(async ({oldPoolBorrowAndStake}, DRE) => {
+    const {upgradeBorrowApeAndStake} = await import(
+      "../../scripts/upgrade/pool"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade borrowApeAndStake");
+    await upgradeBorrowApeAndStake(
+      oldPoolBorrowAndStake,
+      ETHERSCAN_VERIFICATION
+    );
+    console.timeEnd("upgrade borrowApeAndStake");
+  });
 
 task("upgrade:pool-parameters", "upgrade pool parameters")
   .addPositionalParam("oldPoolParameters", "old pool parameters")

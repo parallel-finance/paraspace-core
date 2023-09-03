@@ -140,18 +140,18 @@ export const step_06 = async (verify = false) => {
 
     if (poolBorrowAndStake) {
       await waitForTx(
-          await addressesProvider.updatePoolImpl(
-              [
-                {
-                  implAddress: poolBorrowAndStake.address,
-                  action: 0,
-                  functionSelectors: poolBorrowAndStakeSelectors,
-                },
-              ],
-              ZERO_ADDRESS,
-              "0x",
-              GLOBAL_OVERRIDES
-          )
+        await addressesProvider.updatePoolImpl(
+          [
+            {
+              implAddress: poolBorrowAndStake.address,
+              action: 0,
+              functionSelectors: poolBorrowAndStakeSelectors,
+            },
+          ],
+          ZERO_ADDRESS,
+          "0x",
+          GLOBAL_OVERRIDES
+        )
       );
     }
 
