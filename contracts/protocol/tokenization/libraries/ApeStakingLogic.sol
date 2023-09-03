@@ -209,13 +209,6 @@ library ApeStakingLogic {
                 unstakedAmount = unstakedAmount - incentiveAmount;
             }
         }
-
-        //3 repay and supply
-        params.POOL.repayAndSupply(
-            params._underlyingAsset,
-            positionOwner,
-            unstakedAmount
-        );
     }
 
     /**

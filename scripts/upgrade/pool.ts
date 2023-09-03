@@ -284,6 +284,25 @@ export const upgradePoolApeStaking = async (
   await upgradeProxyImplementations(implementations);
 };
 
+export const upgradeBorrowApeAndStake = async (
+    verify = false
+) => {
+  const addressesProvider = await getPoolAddressesProvider();
+
+  const {poolApeStaking, poolApeStakingSelectors: newPoolApeStakingSelectors} =
+      await deployPoolApeStaking(addressesProvider.address, verify);
+
+  const implementations = [
+    [
+      poolApeStaking.address,
+      newPoolApeStakingSelectors,
+      [],
+    ],
+  ] as [string, string[], string[]][];
+
+  await upgradeProxyImplementations(implementations);
+};
+
 export const upgradePoolParameters = async (
   oldPoolParameters: tEthereumAddress,
   verify = false
