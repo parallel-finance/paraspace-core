@@ -555,8 +555,8 @@ export const deployPoolApeStaking = async (
   const treasuryAddress = config.Treasury;
 
   const cApe = await getAutoCompoundApe();
-  let pcApeAddress = "0x5F56386F21766237707a447FB37C717dC221bb13";//for test env
-  if ((await getContractAddressInDb(eContractid.PoolProxy))) {
+  let pcApeAddress = "0x5F56386F21766237707a447FB37C717dC221bb13"; //for test env
+  if (await getContractAddressInDb(eContractid.PoolProxy)) {
     //upgrade logic
     const pool = await getPoolProxy();
     pcApeAddress = await pool.getReserveXToken(cApe.address);
@@ -888,8 +888,8 @@ export const deployPoolComponents = async (
   const config = getParaSpaceConfig();
   const treasuryAddress = config.Treasury;
   const cApe = await getAutoCompoundApe();
-  let pcApeAddress = "0x5F56386F21766237707a447FB37C717dC221bb13";//for test env
-  if ((await getContractAddressInDb(eContractid.PoolProxy))) {
+  let pcApeAddress = "0x5F56386F21766237707a447FB37C717dC221bb13"; //for test env
+  if (await getContractAddressInDb(eContractid.PoolProxy)) {
     //upgrade logic
     const pool = await getPoolProxy();
     pcApeAddress = await pool.getReserveXToken(cApe.address);
@@ -2780,7 +2780,10 @@ export const deployAutoYieldApeImplAndAssignItToProxy = async (
   );
 };
 
-export const deployHelperContractImpl = async (cApeV1: tEthereumAddress, verify?: boolean) => {
+export const deployHelperContractImpl = async (
+  cApeV1: tEthereumAddress,
+  verify?: boolean
+) => {
   const allTokens = await getAllTokens();
   const protocolDataProvider = await getProtocolDataProvider();
   const pCApe = (
@@ -2803,7 +2806,10 @@ export const deployHelperContractImpl = async (cApeV1: tEthereumAddress, verify?
   ) as Promise<HelperContract>;
 };
 
-export const deployHelperContract = async (cApeV1: tEthereumAddress, verify?: boolean) => {
+export const deployHelperContract = async (
+  cApeV1: tEthereumAddress,
+  verify?: boolean
+) => {
   const helperImplementation = await deployHelperContractImpl(cApeV1, verify);
 
   const deployer = await getFirstSigner();
