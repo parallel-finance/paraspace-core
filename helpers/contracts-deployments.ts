@@ -553,12 +553,21 @@ export const deployPoolApeStaking = async (
 
   const config = getParaSpaceConfig();
   const treasuryAddress = config.Treasury;
+
+  const cApe = await getAutoCompoundApe();
+  let pcApeAddress = "0x5F56386F21766237707a447FB37C717dC221bb13";//for test env
+  if ((await getContractAddressInDb(eContractid.PoolProxy))) {
+    //upgrade logic
+    const pool = await getPoolProxy();
+    pcApeAddress = await pool.getReserveXToken(cApe.address);
+  }
   const poolApeStaking = (await withSaveAndVerify(
     await getContractFactory("PoolApeStaking", apeStakingLibraries),
     eContractid.PoolApeStakingImpl,
     [
       provider,
-      (await getAutoCompoundApe()).address,
+      cApe.address,
+      pcApeAddress,
       allTokens.APE.address,
       allTokens.USDC.address,
       (await getUniswapV3SwapRouter()).address,
@@ -878,13 +887,21 @@ export const deployPoolComponents = async (
 
   const config = getParaSpaceConfig();
   const treasuryAddress = config.Treasury;
+  const cApe = await getAutoCompoundApe();
+  let pcApeAddress = "0x5F56386F21766237707a447FB37C717dC221bb13";//for test env
+  if ((await getContractAddressInDb(eContractid.PoolProxy))) {
+    //upgrade logic
+    const pool = await getPoolProxy();
+    pcApeAddress = await pool.getReserveXToken(cApe.address);
+  }
   const poolApeStaking = allTokens.APE
     ? ((await withSaveAndVerify(
         await getContractFactory("PoolApeStaking", apeStakingLibraries),
         eContractid.PoolApeStakingImpl,
         [
           provider,
-          (await getAutoCompoundApe()).address,
+          cApe.address,
+          pcApeAddress,
           allTokens.APE.address,
           allTokens.USDC.address,
           (await getUniswapV3SwapRouter()).address,

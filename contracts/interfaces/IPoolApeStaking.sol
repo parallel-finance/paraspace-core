@@ -16,6 +16,7 @@ interface IPoolApeStaking {
         address borrowAsset;
         // Borrow amount of Ape from lending pool
         uint256 borrowAmount;
+        address cashAsset;
         // Cash amount of Ape from user wallet
         uint256 cashAmount;
     }

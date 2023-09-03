@@ -43,6 +43,7 @@ contract PoolApeStaking is
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     IAutoCompoundApe internal immutable APE_COMPOUND;
+    IPToken internal immutable PCAPE;
     IERC20 internal immutable APE_COIN;
     uint256 internal constant POOL_REVISION = 149;
     IERC20 internal immutable USDC;
@@ -83,6 +84,7 @@ contract PoolApeStaking is
     constructor(
         IPoolAddressesProvider provider,
         IAutoCompoundApe apeCompound,
+        IPToken pcApe,
         IERC20 apeCoin,
         IERC20 usdc,
         ISwapRouter uniswapV3SwapRouter,
@@ -104,6 +106,7 @@ contract PoolApeStaking is
         APE_WETH_FEE = apeWethFee;
         WETH_USDC_FEE = wethUsdcFee;
         APE_COMPOUND_TREASURY = apeCompoundTreasury;
+        PCAPE = pcApe;
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -269,6 +272,12 @@ contract PoolApeStaking is
             Errors.INVALID_ASSET_TYPE
         );
 
+        require(
+            stakingInfo.cashAsset == address(APE_COIN) ||
+            stakingInfo.cashAsset == address(PCAPE),
+            Errors.INVALID_ASSET_TYPE
+        );
+
         ApeStakingLocalVars memory localVar = _generalCache(
             ps,
             stakingInfo.nftAsset
@@ -276,13 +285,13 @@ contract PoolApeStaking is
         localVar.transferredTokenOwners = new address[](_nftPairs.length);
         localVar.balanceBefore = APE_COIN.balanceOf(localVar.xTokenAddress);
 
-        DataTypes.ReserveData storage borrowAssetReserve = ps._reserves[
-            stakingInfo.borrowAsset
-        ];
         // no time lock needed here
         DataTypes.TimeLockParams memory timeLockParams;
         // 1, handle borrow part
         if (stakingInfo.borrowAmount > 0) {
+            DataTypes.ReserveData storage borrowAssetReserve = ps._reserves[
+            stakingInfo.borrowAsset
+            ];
             if (stakingInfo.borrowAsset == address(APE_COIN)) {
                 IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
                     localVar.xTokenAddress,
@@ -305,11 +314,32 @@ contract PoolApeStaking is
 
         // 2, send cash part to xTokenAddress
         if (stakingInfo.cashAmount > 0) {
-            APE_COIN.safeTransferFrom(
-                msg.sender,
-                localVar.xTokenAddress,
-                stakingInfo.cashAmount
-            );
+            if (stakingInfo.cashAsset == address(APE_COIN)) {
+                APE_COIN.safeTransferFrom(
+                    msg.sender,
+                    localVar.xTokenAddress,
+                    stakingInfo.cashAmount
+                );
+            } else {
+                DataTypes.ReserveData storage cApeReserve = ps._reserves[address(APE_COMPOUND)];
+                DataTypes.ReserveCache memory cApeReserveCache = cApeReserve.cache();
+                cApeReserve.updateState(cApeReserveCache);
+                cApeReserve.updateInterestRates(
+                    cApeReserveCache,
+                    address(APE_COMPOUND),
+                    0,
+                    stakingInfo.cashAmount
+                );
+                IPToken(PCAPE).burn(
+                    msg.sender,
+                    address(this),
+                    stakingInfo.cashAmount,
+                        cApeReserveCache.nextLiquidityIndex,
+                    timeLockParams
+                );
+                APE_COMPOUND.withdraw(stakingInfo.cashAmount);
+                APE_COIN.safeTransfer(localVar.xTokenAddress, stakingInfo.cashAmount);
+            }
         }
 
         // 3, deposit bayc or mayc pool
@@ -364,7 +394,18 @@ contract PoolApeStaking is
             }
         }
 
-        // 5 mint debt token
+        //5 collateralize sAPE
+        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+        msg.sender
+        ];
+        Helpers.setAssetUsedAsCollateral(
+            userConfig,
+            ps._reserves,
+            DataTypes.SApeAddress,
+            msg.sender
+        );
+
+        // 6 mint debt token
         if (stakingInfo.borrowAmount > 0) {
             BorrowLogic.executeBorrow(
                 ps._reserves,
@@ -385,22 +426,11 @@ contract PoolApeStaking is
             );
         }
 
-        //6 checkout ape balance
+        //7 checkout ape balance
         require(
             APE_COIN.balanceOf(localVar.xTokenAddress) ==
                 localVar.balanceBefore,
             Errors.TOTAL_STAKING_AMOUNT_WRONG
-        );
-
-        //7 collateralize sAPE
-        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
-            msg.sender
-        ];
-        Helpers.setAssetUsedAsCollateral(
-            userConfig,
-            ps._reserves,
-            DataTypes.SApeAddress,
-            msg.sender
         );
     }
 
