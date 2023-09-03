@@ -274,7 +274,7 @@ contract PoolApeStaking is
 
         require(
             stakingInfo.cashAsset == address(APE_COIN) ||
-            stakingInfo.cashAsset == address(PCAPE),
+                stakingInfo.cashAsset == address(PCAPE),
             Errors.INVALID_ASSET_TYPE
         );
 
@@ -290,7 +290,7 @@ contract PoolApeStaking is
         // 1, handle borrow part
         if (stakingInfo.borrowAmount > 0) {
             DataTypes.ReserveData storage borrowAssetReserve = ps._reserves[
-            stakingInfo.borrowAsset
+                stakingInfo.borrowAsset
             ];
             if (stakingInfo.borrowAsset == address(APE_COIN)) {
                 IPToken(borrowAssetReserve.xTokenAddress).transferUnderlyingTo(
@@ -321,8 +321,11 @@ contract PoolApeStaking is
                     stakingInfo.cashAmount
                 );
             } else {
-                DataTypes.ReserveData storage cApeReserve = ps._reserves[address(APE_COMPOUND)];
-                DataTypes.ReserveCache memory cApeReserveCache = cApeReserve.cache();
+                DataTypes.ReserveData storage cApeReserve = ps._reserves[
+                    address(APE_COMPOUND)
+                ];
+                DataTypes.ReserveCache memory cApeReserveCache = cApeReserve
+                    .cache();
                 cApeReserve.updateState(cApeReserveCache);
                 cApeReserve.updateInterestRates(
                     cApeReserveCache,
@@ -334,11 +337,14 @@ contract PoolApeStaking is
                     msg.sender,
                     address(this),
                     stakingInfo.cashAmount,
-                        cApeReserveCache.nextLiquidityIndex,
+                    cApeReserveCache.nextLiquidityIndex,
                     timeLockParams
                 );
                 APE_COMPOUND.withdraw(stakingInfo.cashAmount);
-                APE_COIN.safeTransfer(localVar.xTokenAddress, stakingInfo.cashAmount);
+                APE_COIN.safeTransfer(
+                    localVar.xTokenAddress,
+                    stakingInfo.cashAmount
+                );
             }
         }
 
@@ -371,8 +377,8 @@ contract PoolApeStaking is
                 );
 
                 localVar.transferredTokenOwners[
-                        index
-                    ] = _validateBAKCOwnerAndTransfer(
+                    index
+                ] = _validateBAKCOwnerAndTransfer(
                     localVar,
                     _nftPairs[index].bakcTokenId,
                     msg.sender
@@ -396,7 +402,7 @@ contract PoolApeStaking is
 
         //5 collateralize sAPE
         DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
-        msg.sender
+            msg.sender
         ];
         Helpers.setAssetUsedAsCollateral(
             userConfig,
