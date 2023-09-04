@@ -132,7 +132,7 @@ describe("Account Abstraction Migration", () => {
     return testEnv;
   };
 
-  it("position migration one by one", async () => {
+  it("position batch migration one by one", async () => {
     const testEnv = await loadFixture(fixture);
     const {
       users: [user1, user2],
@@ -150,7 +150,7 @@ describe("Account Abstraction Migration", () => {
     const borrowDaiAmount = parseEther("5000");
 
     let txReceipt = await waitForTx(
-      await pool.connect(user2.signer).positionMoveToAA([user1.address], [1])
+      await pool.connect(user2.signer).batchPositionMoveToAA([user1.address], [1])
     );
     let logLength = txReceipt.logs.length;
     let aaAccount = "0x" + txReceipt.logs[logLength - 1].data.substring(26);
@@ -166,7 +166,7 @@ describe("Account Abstraction Migration", () => {
     );
 
     txReceipt = await waitForTx(
-      await pool.connect(user2.signer).positionMoveToAA([user2.address], [2])
+      await pool.connect(user2.signer).batchPositionMoveToAA([user2.address], [2])
     );
     logLength = txReceipt.logs.length;
     aaAccount = "0x" + txReceipt.logs[logLength - 1].data.substring(26);
@@ -207,7 +207,7 @@ describe("Account Abstraction Migration", () => {
     const txReceipt = await waitForTx(
       await pool
         .connect(user2.signer)
-        .positionMoveToAA([user1.address, user2.address], [1, 2])
+        .batchPositionMoveToAA([user1.address, user2.address], [1, 2])
     );
     const logLength = txReceipt.logs.length;
     const aaAccount = "0x" + txReceipt.logs[logLength - 1].data.substring(26);
@@ -252,7 +252,7 @@ describe("Account Abstraction Migration", () => {
     const txReceipt = await waitForTx(
       await pool
         .connect(user2.signer)
-        .positionMoveToAA([user2.address, user1.address], [2, 1])
+        .batchPositionMoveToAA([user2.address, user1.address], [2, 1])
     );
     const logLength = txReceipt.logs.length;
     const aaAccount = "0x" + txReceipt.logs[logLength - 1].data.substring(26);
@@ -283,5 +283,60 @@ describe("Account Abstraction Migration", () => {
     expect(isUsingAsCollateral(userConfig, wethData.id)).to.be.true;
     expect(isUsingAsCollateral(userConfig, uniswapData.id)).to.be.true;
     expect(isBorrowing(userConfig, daiData.id)).to.be.true;
+  });
+
+  it("user position migration", async () => {
+    const testEnv = await loadFixture(fixture);
+    const {
+      users: [user1, user2],
+      pool,
+      dai,
+      pDai,
+      weth,
+      pWETH,
+      nUniswapV3,
+      nftPositionManager,
+    } = testEnv;
+
+    const daiAmount = parseEther("10000");
+    const wethAmount = parseEther("100");
+    const borrowDaiAmount = parseEther("5000");
+
+    let txReceipt = await waitForTx(
+        await pool.connect(user1.signer).positionMoveToAA(1)
+    );
+    let logLength = txReceipt.logs.length;
+    let aaAccount = "0x" + txReceipt.logs[logLength - 1].data.substring(26);
+
+    expect(await pWETH.balanceOf(aaAccount)).to.be.closeTo(
+        wethAmount,
+        parseEther("0.01")
+    );
+    expect(await nUniswapV3.balanceOf(aaAccount)).to.eq(1);
+    expect(await variableDebt.balanceOf(aaAccount)).to.be.closeTo(
+        borrowDaiAmount,
+        parseEther("1")
+    );
+
+    txReceipt = await waitForTx(
+        await pool.connect(user2.signer).positionMoveToAA(2)
+    );
+    logLength = txReceipt.logs.length;
+    aaAccount = "0x" + txReceipt.logs[logLength - 1].data.substring(26);
+
+    expect(await pDai.balanceOf(aaAccount)).to.be.closeTo(
+        daiAmount,
+        parseEther("1")
+    );
+
+    expect(await dai.balanceOf(pDai.address)).to.be.closeTo(
+        borrowDaiAmount,
+        parseEther("1")
+    );
+    expect(await weth.balanceOf(pWETH.address)).to.be.closeTo(
+        wethAmount,
+        parseEther("0.01")
+    );
+    expect(await nftPositionManager.balanceOf(nUniswapV3.address)).to.be.eq(1);
   });
 });

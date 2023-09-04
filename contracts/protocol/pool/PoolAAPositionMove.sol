@@ -44,7 +44,18 @@ contract PoolAAPositionMover is
         AA_MOVER = aaMover;
     }
 
-    function positionMoveToAA(
+    function positionMoveToAA(uint256 salt) external nonReentrant returns (address) {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        address[] memory users = new address[](1);
+        uint256[] memory salts = new uint256[](1);
+        users[0] = msg.sender;
+        salts[0] = salt;
+        address[] memory addresses = _executePositionMoveToAA(ps, ACCOUNT_FACTORY, users, salts);
+        return addresses[0];
+    }
+
+    function batchPositionMoveToAA(
         address[] calldata users,
         uint256[] calldata salts
     ) external nonReentrant returns (address[] memory) {
@@ -71,8 +82,8 @@ contract PoolAAPositionMover is
     function _executePositionMoveToAA(
         DataTypes.PoolStorage storage ps,
         IAccountFactory accountFactory,
-        address[] calldata users,
-        uint256[] calldata salts
+        address[] memory users,
+        uint256[] memory salts
     ) internal returns (address[] memory) {
         require(users.length == salts.length, Errors.INVALID_PARAMETER);
 
