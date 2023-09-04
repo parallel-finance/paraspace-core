@@ -7,7 +7,6 @@ pragma solidity ^0.8.0;
  * @notice Defines the basic interface for an ParaSpace Pool.
  **/
 interface IPoolAAPositionMover {
-
     function positionMoveToAA(uint256 salt) external returns (address);
 
     function batchPositionMoveToAA(

@@ -150,7 +150,9 @@ describe("Account Abstraction Migration", () => {
     const borrowDaiAmount = parseEther("5000");
 
     let txReceipt = await waitForTx(
-      await pool.connect(user2.signer).batchPositionMoveToAA([user1.address], [1])
+      await pool
+        .connect(user2.signer)
+        .batchPositionMoveToAA([user1.address], [1])
     );
     let logLength = txReceipt.logs.length;
     let aaAccount = "0x" + txReceipt.logs[logLength - 1].data.substring(26);
@@ -166,7 +168,9 @@ describe("Account Abstraction Migration", () => {
     );
 
     txReceipt = await waitForTx(
-      await pool.connect(user2.signer).batchPositionMoveToAA([user2.address], [2])
+      await pool
+        .connect(user2.signer)
+        .batchPositionMoveToAA([user2.address], [2])
     );
     logLength = txReceipt.logs.length;
     aaAccount = "0x" + txReceipt.logs[logLength - 1].data.substring(26);
@@ -303,39 +307,39 @@ describe("Account Abstraction Migration", () => {
     const borrowDaiAmount = parseEther("5000");
 
     let txReceipt = await waitForTx(
-        await pool.connect(user1.signer).positionMoveToAA(1)
+      await pool.connect(user1.signer).positionMoveToAA(1)
     );
     let logLength = txReceipt.logs.length;
     let aaAccount = "0x" + txReceipt.logs[logLength - 1].data.substring(26);
 
     expect(await pWETH.balanceOf(aaAccount)).to.be.closeTo(
-        wethAmount,
-        parseEther("0.01")
+      wethAmount,
+      parseEther("0.01")
     );
     expect(await nUniswapV3.balanceOf(aaAccount)).to.eq(1);
     expect(await variableDebt.balanceOf(aaAccount)).to.be.closeTo(
-        borrowDaiAmount,
-        parseEther("1")
+      borrowDaiAmount,
+      parseEther("1")
     );
 
     txReceipt = await waitForTx(
-        await pool.connect(user2.signer).positionMoveToAA(2)
+      await pool.connect(user2.signer).positionMoveToAA(2)
     );
     logLength = txReceipt.logs.length;
     aaAccount = "0x" + txReceipt.logs[logLength - 1].data.substring(26);
 
     expect(await pDai.balanceOf(aaAccount)).to.be.closeTo(
-        daiAmount,
-        parseEther("1")
+      daiAmount,
+      parseEther("1")
     );
 
     expect(await dai.balanceOf(pDai.address)).to.be.closeTo(
-        borrowDaiAmount,
-        parseEther("1")
+      borrowDaiAmount,
+      parseEther("1")
     );
     expect(await weth.balanceOf(pWETH.address)).to.be.closeTo(
-        wethAmount,
-        parseEther("0.01")
+      wethAmount,
+      parseEther("0.01")
     );
     expect(await nftPositionManager.balanceOf(nUniswapV3.address)).to.be.eq(1);
   });

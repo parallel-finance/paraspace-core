@@ -21,10 +21,12 @@ const migrate_zksync_user = async () => {
     let usersCount = 0;
     for (let i = startIndex; i < users.length; i++) {
       migrationUsers.push(users[i]);
-      userSalts.push(String(i+2));
+      userSalts.push(String(i + 2));
       usersCount++;
       if (usersCount == batchAmount || i == users.length - 1) {
-        await waitForTx(await pool.batchPositionMoveToAA(migrationUsers, userSalts));
+        await waitForTx(
+          await pool.batchPositionMoveToAA(migrationUsers, userSalts)
+        );
 
         migrationUsers = [];
         userSalts = [];

@@ -44,14 +44,21 @@ contract PoolAAPositionMover is
         AA_MOVER = aaMover;
     }
 
-    function positionMoveToAA(uint256 salt) external nonReentrant returns (address) {
+    function positionMoveToAA(
+        uint256 salt
+    ) external nonReentrant returns (address) {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         address[] memory users = new address[](1);
         uint256[] memory salts = new uint256[](1);
         users[0] = msg.sender;
         salts[0] = salt;
-        address[] memory addresses = _executePositionMoveToAA(ps, ACCOUNT_FACTORY, users, salts);
+        address[] memory addresses = _executePositionMoveToAA(
+            ps,
+            ACCOUNT_FACTORY,
+            users,
+            salts
+        );
         return addresses[0];
     }
 
