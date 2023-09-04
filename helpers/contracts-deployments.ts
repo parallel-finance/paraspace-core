@@ -600,7 +600,7 @@ export const deployPoolBorrowAndStake = async (
   const cApe = await getAutoCompoundApe();
   const poolBorrowAndStake = (await withSaveAndVerify(
     await getContractFactory("PoolBorrowAndStake", apeStakingLibraries),
-    eContractid.PoolApeStakingImpl,
+    eContractid.PoolBorrowAndStakeImpl,
     [provider, cApe.address, allTokens.APE.address],
     verify,
     false,
@@ -951,7 +951,7 @@ export const deployPoolComponents = async (
   const poolBorrowAndStake = allTokens.APE
     ? ((await withSaveAndVerify(
         await getContractFactory("PoolBorrowAndStake", BorrowAndStakeLibraries),
-        eContractid.PoolApeStakingImpl,
+        eContractid.PoolBorrowAndStakeImpl,
         [provider, cApe.address, allTokens.APE.address],
         verify,
         false,
