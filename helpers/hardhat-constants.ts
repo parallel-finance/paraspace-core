@@ -432,6 +432,7 @@ export const eContractidToContractName = {
   PoolMarketplaceImpl: "PoolMarketplace",
   PoolParametersImpl: "PoolParameters",
   PoolApeStakingImpl: "PoolApeStaking",
+  PoolBorrowAndStakeImpl: "PoolBorrowAndStake",
   ApeCoinStaking: "ApeCoinStaking",
   ATokenDebtToken: "ATokenDebtToken",
   StETHDebtToken: "StETHDebtToken",
