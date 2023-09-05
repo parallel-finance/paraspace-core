@@ -3,19 +3,19 @@ pragma solidity ^0.8.0;
 
 import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
-import "../dependencies/openzeppelin/upgradeability/ERC721EnumerableUpgradeable.sol";
+import "../dependencies/ERC721A/ERC721AUpgradeable.sol";
 
 contract ParaX is
     Initializable,
     OwnableUpgradeable,
-    ERC721EnumerableUpgradeable
+    ERC721AUpgradeable
 {
     uint256 private tokenId_;
     string private tokenURI_;
 
-    function initialize() public initializer {
+    function initialize() public initializerERC721A initializer {
         __Ownable_init();
-        __ERC721_init("ParaX Medal", "XMEDAL");
+        __ERC721A_init("ParaX Medal", "XMEDAL");
         _setTokenURI(
             "https://ipfs.io/ipfs/QmcuVLoBB6QZipC1EpPciuKodyCXRVgh3YbYh9jzVarMzY"
         );
@@ -23,12 +23,9 @@ contract ParaX is
 
     function mint(address[] calldata users) external onlyOwner {
         uint256 userLength = users.length;
-        uint256 curTokenId = tokenId_;
         for (uint256 index = 0; index < userLength; index++) {
-            _safeMint(users[index], curTokenId);
-            curTokenId++;
+            _mint(users[index], 1);
         }
-        tokenId_ = curTokenId;
     }
 
     function setTokenURI(string memory _tokenURI) public onlyOwner {

@@ -38,4 +38,49 @@ describe("ParaX Test", () => {
 
     expect(await ParaX.tokenURI(0)).to.be.eq("https://ipfs.io/ipfs/QmcuVLoBB6QZipC1EpPciuKodyCXRVgh3YbYh9jzVarMzY");
   });
+
+  it("ParaX operation test: 10", async () => {
+    await loadFixture(testEnvFixture);
+    await mintForUser(10);
+  });
+
+  it("ParaX operation test: 25", async () => {
+    await loadFixture(testEnvFixture);
+    await mintForUser(25);
+  });
+
+  it("ParaX operation test: 50", async () => {
+    await loadFixture(testEnvFixture);
+    await mintForUser(50);
+  });
+
+  it("ParaX operation test: 75", async () => {
+    await loadFixture(testEnvFixture);
+    await mintForUser(75);
+  });
+
+  it("ParaX operation test: 100", async () => {
+    await loadFixture(testEnvFixture);
+    await mintForUser(100);
+  });
+
+  it("ParaX operation test: 200", async () => {
+    await loadFixture(testEnvFixture);
+    await mintForUser(200);
+  });
 });
+
+const mintForUser = async (mintNum: number) => {
+  const ParaX = await deployPapaX(false);
+
+  const addressPrex = "0x0000000000000000000000000000000000000000";
+  const addressArr: Array<string> = [];
+  for (let i=1; i<=mintNum; i++) {
+    const strLength = String(i).length;
+    const address = addressPrex.slice(0, 0-strLength) + String(i);
+    addressArr.push(address);
+  }
+
+  const txReceipt = await waitForTx(await ParaX.mint(addressArr));
+  console.log("------------txReceipt.gasUsed:", txReceipt.gasUsed);
+}
