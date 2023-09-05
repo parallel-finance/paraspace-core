@@ -3,7 +3,6 @@ pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts/interfaces/IERC1271.sol";
 import {SignatureChecker} from "../dependencies/openzeppelin/contracts/SignatureChecker.sol";
 import "./base-account-abstraction/core/BaseAccount.sol";
@@ -15,13 +14,7 @@ import "./callback/TokenCallbackHandler.sol";
  *  has execute, eth handling methods
  *  has a single signer that can send requests through the entryPoint.
  */
-contract Account is
-    BaseAccount,
-    TokenCallbackHandler,
-    UUPSUpgradeable,
-    IERC1271,
-    Initializable
-{
+contract Account is BaseAccount, TokenCallbackHandler, IERC1271, Initializable {
     using ECDSA for bytes32;
 
     address public owner;
@@ -127,12 +120,13 @@ contract Account is
     ) internal virtual override returns (uint256 validationData) {
         bytes32 hash = userOpHash;
 
-        if (owner.code.length == 0) {
+        address curOwner = owner;
+        if (curOwner.code.length == 0) {
             hash = userOpHash.toEthSignedMessageHash();
         }
 
         bool isValid = SignatureChecker.isValidSignatureNow(
-            owner,
+            curOwner,
             hash,
             userOp.signature
         );
@@ -144,11 +138,10 @@ contract Account is
         return SIG_VALIDATION_FAILED;
     }
 
-    function isValidSignature(bytes32 hash, bytes memory signature)
-        external
-        view
-        returns (bytes4)
-    {
+    function isValidSignature(
+        bytes32 hash,
+        bytes memory signature
+    ) external view returns (bytes4) {
         bool isValid = SignatureChecker.isValidSignatureNow(
             owner,
             hash,
@@ -162,11 +155,7 @@ contract Account is
         return "";
     }
 
-    function _call(
-        address target,
-        uint256 value,
-        bytes memory data
-    ) internal {
+    function _call(address target, uint256 value, bytes memory data) internal {
         (bool success, bytes memory result) = target.call{value: value}(data);
         if (!success) {
             assembly {
@@ -194,19 +183,10 @@ contract Account is
      * @param withdrawAddress target to send to
      * @param amount to withdraw
      */
-    function withdrawDepositTo(address payable withdrawAddress, uint256 amount)
-        public
-        onlyOwner
-    {
+    function withdrawDepositTo(
+        address payable withdrawAddress,
+        uint256 amount
+    ) public onlyOwner {
         entryPoint().withdrawTo(withdrawAddress, amount);
-    }
-
-    function _authorizeUpgrade(address newImplementation)
-        internal
-        view
-        override
-    {
-        (newImplementation);
-        _onlyOwner();
     }
 }

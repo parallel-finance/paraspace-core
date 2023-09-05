@@ -2,6 +2,7 @@ import {MockContract} from "ethereum-waffle";
 import {
   Account,
   AccountFactory,
+  AccountRegistry,
   ACLManager,
   AirdropFlashClaimReceiver,
   ApeStakingLogic,
@@ -1600,14 +1601,14 @@ export const deployWETHGateway = async (
 
 export const deployWETHGatewayProxy = async (
   admin: string,
-  wethGateway: string,
+  impl: string,
   initData: string,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await getContractFactory("InitializableImmutableAdminUpgradeabilityProxy"),
     eContractid.WETHGatewayProxy,
-    [admin, wethGateway, initData],
+    [admin, impl, initData],
     verify,
     true
   ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
@@ -2763,7 +2764,10 @@ export const deployAutoYieldApeImplAndAssignItToProxy = async (
   );
 };
 
-export const deployHelperContractImpl = async (cApeV1: tEthereumAddress, verify?: boolean) => {
+export const deployHelperContractImpl = async (
+  cApeV1: tEthereumAddress,
+  verify?: boolean
+) => {
   const allTokens = await getAllTokens();
   const protocolDataProvider = await getProtocolDataProvider();
   const pCApe = (
@@ -2786,7 +2790,10 @@ export const deployHelperContractImpl = async (cApeV1: tEthereumAddress, verify?
   ) as Promise<HelperContract>;
 };
 
-export const deployHelperContract = async (cApeV1: tEthereumAddress, verify?: boolean) => {
+export const deployHelperContract = async (
+  cApeV1: tEthereumAddress,
+  verify?: boolean
+) => {
   const helperImplementation = await deployHelperContractImpl(cApeV1, verify);
 
   const deployer = await getFirstSigner();
@@ -3131,15 +3138,26 @@ export const deployAccount = async (
   ) as Promise<Account>;
 
 export const deployAccountFactory = async (
-  entryPoint: tEthereumAddress,
+  accountRegistry: tEthereumAddress,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await getContractFactory("AccountFactory"),
     eContractid.AccountFactory,
-    [entryPoint],
+    [accountRegistry],
     verify
   ) as Promise<AccountFactory>;
+
+export const deployAccountRegistry = async (
+  impl: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("AccountRegistry"),
+    eContractid.AccountRegistry,
+    [impl],
+    verify
+  ) as Promise<AccountRegistry>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK

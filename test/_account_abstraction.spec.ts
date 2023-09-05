@@ -4,20 +4,24 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {
   deployAccount,
   deployAccountFactory,
+  deployAccountRegistry,
 } from "../helpers/contracts-deployments";
 import {getAccount, getChainId} from "../helpers/contracts-getters";
 import {expect} from "chai";
-import {calcOpHash} from "../helpers/misc-utils";
+import {calcOpHash, waitForTx} from "../helpers/misc-utils";
+import {AccountProxy__factory} from "../types";
 
 const fixture = async () => {
   const testEnv = await loadFixture(testEnvFixture);
   const {
     users: [, entryPoint],
   } = testEnv;
+  const accountImpl = await deployAccount(entryPoint.address);
+  const accountRegistry = await deployAccountRegistry(accountImpl.address);
+  console.log("latest impl", await accountRegistry.getLatestImplementation());
+  const accountFactory = await deployAccountFactory(accountRegistry.address);
 
-  const accountFactory = await deployAccountFactory(entryPoint.address);
-
-  return {...testEnv, accountFactory};
+  return {...testEnv, accountFactory, accountRegistry};
 };
 
 describe("Account Abstraction", () => {
@@ -216,25 +220,32 @@ describe("Account Abstraction", () => {
     );
   });
 
-  it("AA Account implementation should be upgraded by the owner", async () => {
+  it("AA Account Delegation is true by default", async () => {
     const testEnv = await loadFixture(fixture);
     const {
-      users: [user1, entryPoint, user2],
+      users: [user1, entryPoint],
       accountFactory,
+      accountRegistry,
     } = testEnv;
 
     await accountFactory.createAccount(user1.address, "1");
 
-    const account = await getAccount(
-      await accountFactory.getAddress(user1.address, "1")
+    const account = AccountProxy__factory.connect(
+      await accountFactory.getAddress(user1.address, "1"),
+      user1.signer
     );
 
-    const newAccount = await deployAccount(entryPoint.address);
-
-    await expect(
-      await account.connect(user1.signer).upgradeTo(newAccount.address)
+    await expect(await account.getImplementation()).to.be.eq(
+      await accountRegistry.getLatestImplementation()
     );
-    await expect(account.connect(user2.signer).upgradeTo(newAccount.address)).to
-      .be.reverted;
+
+    const newAccountImpl = await deployAccount(entryPoint.address);
+    await waitForTx(
+      await accountRegistry.setLatestImplementation(newAccountImpl.address)
+    );
+
+    await expect(await account.getImplementation()).to.be.eq(
+      newAccountImpl.address
+    );
   });
 });
