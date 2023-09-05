@@ -43,7 +43,7 @@ contract PoolPositionMover is
     IERC20 internal immutable APE_COIN;
     ITimeLock internal immutable TIME_LOCK_V1;
     IP2PPairStaking internal immutable P2P_PAIR_STAKING_V1;
-    uint256 internal constant POOL_REVISION = 149;
+    uint256 internal constant POOL_REVISION = 200;
 
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using ReserveLogic for DataTypes.ReserveData;

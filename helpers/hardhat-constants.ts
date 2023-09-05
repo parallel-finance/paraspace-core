@@ -489,3 +489,8 @@ export const eContractidToContractName = {
   PositionMoverLogic: "PositionMoverLogic",
   PoolPositionMoverImpl: "PoolPositionMover",
 };
+
+export const XTOKEN_TYPE_UPGRADE_WHITELIST =
+  process.env.XTOKEN_TYPE_UPGRADE_WHITELIST?.trim()
+    .split(/\s?,\s?/)
+    .map((x) => +x);

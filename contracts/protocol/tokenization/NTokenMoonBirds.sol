@@ -26,15 +26,18 @@ import {ITimeLock} from "../../interfaces/ITimeLock.sol";
  * @notice Implementation of the interest bearing token for the ParaSpace protocol
  */
 contract NTokenMoonBirds is NToken, IMoonBirdBase {
+    address internal immutable timeLockV1;
+
     /**
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
     constructor(
         IPool pool,
-        address delegateRegistry
+        address delegateRegistry,
+        address _timeLockV1
     ) NToken(pool, false, delegateRegistry) {
-        // Intentionally left blank
+        timeLockV1 = _timeLockV1;
     }
 
     function getXTokenType() external pure override returns (XTokenType) {
@@ -95,7 +98,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
     ) external virtual override returns (bytes4) {
         // if the operator is the pool, this means that the pool is transferring the token to this contract
         // which can happen during a normal supplyERC721 pool tx
-        if (operator == address(POOL)) {
+        if (operator == address(POOL) || operator == timeLockV1) {
             return this.onERC721Received.selector;
         }
 
