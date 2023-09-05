@@ -7,9 +7,9 @@ import {
   deployPoolParameters,
   deployPoolPositionMover,
   deployAAPoolPositionMover,
-  deployAccountFactory,
 } from "../../helpers/contracts-deployments";
 import {
+  getAccountFactory,
   getAllTokens,
   getPoolAddressesProvider,
   getPoolProxy,
@@ -365,14 +365,14 @@ export const upgradePoolAAPositionMover = async (
   const oldPoolPositionMoverSelectors = await pool.facetFunctionSelectors(
     oldAAPoolPositionMover
   );
-  const accountFactory =
-    (await getContractAddressInDb(eContractid.AccountFactory)) ||
-    (await deployAccountFactory(ZERO_ADDRESS)).address;
+
+  const accountFactory = await getAccountFactory();
   const {
     poolAAPositionMover,
+
     poolAAPositionMoverSelectors: newPoolPositionMoverSelectors,
   } = await deployAAPoolPositionMover(
-    accountFactory,
+    accountFactory.address,
     process.env.AA_MOVER || "0xE5904695748fe4A84b40b3fc79De2277660BD1D3", //user2 address for test env
     verify
   );

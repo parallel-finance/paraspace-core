@@ -14,6 +14,7 @@ import {
   getAllTokens,
   getUniswapV3SwapRouter,
   getWETH,
+  getAccountFactory,
 } from "../../../helpers/contracts-getters";
 import {
   getContractAddressInDb,
@@ -27,6 +28,7 @@ import {
 } from "../../../helpers/misc-utils";
 import {eContractid, ERC20TokenContractId} from "../../../helpers/types";
 import {zeroAddress} from "ethereumjs-util";
+import {Client} from "userop";
 
 export const step_06 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
@@ -122,9 +124,21 @@ export const step_06 = async (verify = false) => {
       );
     }
 
-    const accountFactory =
-      (await getContractAddressInDb(eContractid.AccountFactory)) ||
-      (await deployAccountFactory(zeroAddress()));
+    if (!(await getContractAddressInDb(eContractid.AccountFactory))) {
+      try {
+        let entryPoint = zeroAddress();
+        if (!isLocalTestnet()) {
+          const paraSpaceConfig = getParaSpaceConfig();
+          const client = Client.init(paraSpaceConfig.AccountAbstraction.rpcUrl);
+          entryPoint = (await client).entryPoint.address;
+        }
+        await deployAccountFactory(entryPoint, verify);
+      } catch (error) {
+        console.error(error);
+        process.exit(1);
+      }
+    }
+    const accountFactory = await getAccountFactory();
     const {poolAAPositionMover, poolAAPositionMoverSelectors} =
       await deployAAPoolPositionMover(
         accountFactory.address,

@@ -2,7 +2,8 @@
 pragma solidity ^0.8.10;
 
 interface IAccountFactory {
-    function createAccount(address owner, uint256 salt)
-        external
-        returns (address);
+    function createAccount(
+        address owner,
+        uint256 salt
+    ) external returns (address);
 }
