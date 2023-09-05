@@ -1,5 +1,8 @@
 import {MockContract} from "ethereum-waffle";
 import {
+  Account,
+  AccountFactory,
+  AccountRegistry,
   ACLManager,
   AirdropFlashClaimReceiver,
   ApeStakingLogic,
@@ -31,9 +34,9 @@ import {
   DelegationRegistry,
   DepositContract,
   Doodles,
+  ERC20OracleWrapper,
   ERC721Delegate,
   ERC721OracleWrapper,
-  ERC20OracleWrapper,
   ExecutionDelegate,
   ExecutionManager,
   ExecutorWithTimelock,
@@ -129,6 +132,7 @@ import {
   StETHMocked,
   StKSMDebtToken,
   StrategyStandardSaleForFixedPrice,
+  SupplyExtendedLogic,
   SupplyLogic,
   TimeLock,
   TransferManagerERC1155,
@@ -273,14 +277,15 @@ import {Contract} from "ethers";
 import {Address, Libraries} from "hardhat-deploy/dist/types";
 
 import {parseEther} from "ethers/lib/utils";
+import fs from "fs";
 import {pick, upperFirst} from "lodash";
+import shell from "shelljs";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES, ZK_LIBRARIES_PATH} from "./hardhat-constants";
-import fs from "fs";
-import shell from "shelljs";
 
 export const deployAllLibraries = async (verify?: boolean) => {
   const supplyLogic = await deploySupplyLogic(verify);
+  const supplyExtendedLogic = await deploySupplyExtendedLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
   const auctionLogic = await deployAuctionLogic(verify);
   const flashClaimLogic = await deployFlashClaimLogic(verify);
@@ -296,6 +301,9 @@ export const deployAllLibraries = async (verify?: boolean) => {
     },
     ["contracts/protocol/libraries/logic/SupplyLogic.sol"]: {
       SupplyLogic: supplyLogic.address,
+    },
+    ["contracts/protocol/libraries/logic/SupplyExtendedLogic.sol"]: {
+      SupplyLogic: supplyExtendedLogic.address,
     },
     ["contracts/protocol/libraries/logic/BorrowLogic.sol"]: {
       BorrowLogic: borrowLogic.address,
@@ -352,6 +360,8 @@ export const deployAllLibraries = async (verify?: boolean) => {
     {
       "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
         supplyLogic.address,
+      "contracts/protocol/libraries/logic/SupplyExtendedLogic.sol:SupplyExtendedLogic":
+        supplyExtendedLogic.address,
       "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
         borrowLogic.address,
     },
@@ -437,6 +447,14 @@ export const deploySupplyLogic = async (verify?: boolean) =>
     verify
   ) as Promise<SupplyLogic>;
 
+export const deploySupplyExtendedLogic = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("SupplyExtendedLogic"),
+    eContractid.SupplyExtendedLogic,
+    [],
+    verify
+  ) as Promise<SupplyExtendedLogic>;
+
 export const deployFlashClaimLogic = async (verify?: boolean) =>
   withSaveAndVerify(
     await getContractFactory("FlashClaimLogic"),
@@ -499,6 +517,7 @@ export const deployPoolCoreLibraries = async (
   verify?: boolean
 ): Promise<Libraries> => {
   const supplyLogic = await deploySupplyLogic(verify);
+  const supplyExtendedLogic = await deploySupplyExtendedLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
   const auctionLogic = await deployAuctionLogic(verify);
   const liquidationLogic = await deployLiquidationLogic(
@@ -517,6 +536,8 @@ export const deployPoolCoreLibraries = async (
       liquidationLogic.address,
     ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
       supplyLogic.address,
+    ["contracts/protocol/libraries/logic/SupplyExtendedLogic.sol:SupplyExtendedLogic"]:
+      supplyExtendedLogic.address,
     ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
       borrowLogic.address,
     ["contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"]:
@@ -555,11 +576,14 @@ export const deployPoolMarketplace = async (
   verify?: boolean
 ) => {
   const supplyLogic = await deploySupplyLogic(verify);
+  const supplyExtendedLogic = await deploySupplyExtendedLogic(verify);
   const borrowLogic = await deployBorrowLogic(verify);
   const marketplaceLogic = await deployMarketplaceLogic(
     {
       "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
         supplyLogic.address,
+      "contracts/protocol/libraries/logic/SupplyExtendedLogic.sol:SupplyExtendedLogic":
+        supplyExtendedLogic.address,
       "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
         borrowLogic.address,
     },
@@ -781,6 +805,7 @@ export const deployPoolMarketplaceLibraries = async (
   const marketplaceLogic = await deployMarketplaceLogic(
     pick(coreLibraries, [
       "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
+      "contracts/protocol/libraries/logic/SupplyExtendedLogic.sol:SupplyExtendedLogic",
       "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
     ]),
     verify
@@ -1688,14 +1713,14 @@ export const deployWETHGateway = async (
 
 export const deployWETHGatewayProxy = async (
   admin: string,
-  wethGateway: string,
+  impl: string,
   initData: string,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await getContractFactory("InitializableImmutableAdminUpgradeabilityProxy"),
     eContractid.WETHGatewayProxy,
-    [admin, wethGateway, initData],
+    [admin, impl, initData],
     verify,
     true
   ) as Promise<InitializableImmutableAdminUpgradeabilityProxy>;
@@ -2851,7 +2876,10 @@ export const deployAutoYieldApeImplAndAssignItToProxy = async (
   );
 };
 
-export const deployHelperContractImpl = async (verify?: boolean) => {
+export const deployHelperContractImpl = async (
+  cApeV1: tEthereumAddress,
+  verify?: boolean
+) => {
   const allTokens = await getAllTokens();
   const protocolDataProvider = await getProtocolDataProvider();
   const pCApe = (
@@ -2860,6 +2888,7 @@ export const deployHelperContractImpl = async (verify?: boolean) => {
   const pool = await getPoolProxy();
   const args = [
     allTokens.APE.address,
+    cApeV1,
     allTokens.cAPE.address,
     pCApe,
     pool.address,
@@ -2873,8 +2902,11 @@ export const deployHelperContractImpl = async (verify?: boolean) => {
   ) as Promise<HelperContract>;
 };
 
-export const deployHelperContract = async (verify?: boolean) => {
-  const helperImplementation = await deployHelperContractImpl(verify);
+export const deployHelperContract = async (
+  cApeV1: tEthereumAddress,
+  verify?: boolean
+) => {
+  const helperImplementation = await deployHelperContractImpl(cApeV1, verify);
 
   const deployer = await getFirstSigner();
   const deployerAddress = await deployer.getAddress();
@@ -3218,15 +3250,26 @@ export const deployAccount = async (
   ) as Promise<Account>;
 
 export const deployAccountFactory = async (
-  entryPoint: tEthereumAddress,
+  accountRegistry: tEthereumAddress,
   verify?: boolean
 ) =>
   withSaveAndVerify(
     await getContractFactory("AccountFactory"),
     eContractid.AccountFactory,
-    [entryPoint],
+    [accountRegistry],
     verify
   ) as Promise<AccountFactory>;
+
+export const deployAccountRegistry = async (
+  impl: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("AccountRegistry"),
+    eContractid.AccountRegistry,
+    [impl],
+    verify
+  ) as Promise<AccountRegistry>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK

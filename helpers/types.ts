@@ -117,6 +117,7 @@ export enum eContractid {
   ReserveLogic = "ReserveLogic",
   GenericLogic = "GenericLogic",
   SupplyLogic = "SupplyLogic",
+  SupplyExtendedLogic = "SupplyExtendedLogic",
   BorrowLogic = "BorrowLogic",
   LiquidationLogic = "LiquidationLogic",
   AuctionLogic = "AuctionLogic",
@@ -293,7 +294,8 @@ export enum eContractid {
   Account = "Account",
   AccountFactory = "AccountFactory",
   AccountProxy = "AccountProxy",
-  ERC6551Registry = "ERC6551Registry",
+  AccountRegistry = "AccountRegistry",
+  AccountRegistryProxy = "AccountRegistryProxy",
   ParaAccount = "ParaAccount",
 }
 
