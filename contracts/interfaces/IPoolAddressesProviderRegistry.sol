@@ -41,20 +41,18 @@ interface IPoolAddressesProviderRegistry {
      * @param addressesProvider The address of the PoolAddressesProvider
      * @return The id of the PoolAddressesProvider or 0 if is not registered
      */
-    function getAddressesProviderIdByAddress(address addressesProvider)
-        external
-        view
-        returns (uint256);
+    function getAddressesProviderIdByAddress(
+        address addressesProvider
+    ) external view returns (uint256);
 
     /**
      * @notice Returns the address of a registered PoolAddressesProvider
      * @param id The id of the market
      * @return The address of the PoolAddressesProvider with the given id or zero address if it is not registered
      */
-    function getAddressesProviderAddressById(uint256 id)
-        external
-        view
-        returns (address);
+    function getAddressesProviderAddressById(
+        uint256 id
+    ) external view returns (address);
 
     /**
      * @notice Registers an addresses provider

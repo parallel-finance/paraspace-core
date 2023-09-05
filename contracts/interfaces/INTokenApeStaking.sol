@@ -11,8 +11,10 @@ interface INTokenApeStaking {
 
     function depositApeCoin(ApeCoinStaking.SingleNft[] calldata _nfts) external;
 
-    function claimApeCoin(uint256[] calldata _nfts, address _recipient)
-        external;
+    function claimApeCoin(
+        uint256[] calldata _nfts,
+        address _recipient
+    ) external;
 
     function withdrawApeCoin(
         ApeCoinStaking.SingleNft[] calldata _nfts,
@@ -33,11 +35,12 @@ interface INTokenApeStaking {
         address _apeRecipient
     ) external;
 
-    function unstakePositionAndRepay(uint256 tokenId, address unstaker)
-        external;
+    function unstakePositionAndRepay(
+        uint256 tokenId,
+        address unstaker
+    ) external;
 
-    function getUserApeStakingAmount(address user)
-        external
-        view
-        returns (uint256);
+    function getUserApeStakingAmount(
+        address user
+    ) external view returns (uint256);
 }

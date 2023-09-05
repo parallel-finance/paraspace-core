@@ -101,11 +101,10 @@ contract AutoYieldApe is
     }
 
     /// @inheritdoc IAutoYieldApe
-    function deposit(address onBehalf, uint256 amount)
-        external
-        override
-        whenNotPaused
-    {
+    function deposit(
+        address onBehalf,
+        uint256 amount
+    ) external override whenNotPaused {
         require(amount > 0, Errors.INVALID_AMOUNT);
         _updateYieldIndex(onBehalf, amount.toInt256());
         _mint(onBehalf, amount);
@@ -134,21 +133,18 @@ contract AutoYieldApe is
     }
 
     /// @inheritdoc IAutoYieldApe
-    function harvest(bytes memory swapPath, uint256 minimumDealPrice)
-        external
-        override
-    {
+    function harvest(
+        bytes memory swapPath,
+        uint256 minimumDealPrice
+    ) external override {
         require(msg.sender == harvestOperator, Errors.CALLER_NOT_OPERATOR);
         _harvest(swapPath, minimumDealPrice);
     }
 
     /// @inheritdoc IAutoYieldApe
-    function yieldAmount(address account)
-        external
-        view
-        override
-        returns (uint256)
-    {
+    function yieldAmount(
+        address account
+    ) external view override returns (uint256) {
         (uint256 freeYield, ) = _yieldAmount(account);
         if (freeYield > 0) {
             uint256 liquidityIndex = _lendingPool.getReserveNormalizedIncome(
@@ -173,10 +169,9 @@ contract AutoYieldApe is
      * @notice Set a new address for harvest role. Only pool admin can call this function
      * @param _harvestOperator The address of the harvest role
      **/
-    function setHarvestOperator(address _harvestOperator)
-        external
-        onlyPoolAdmin
-    {
+    function setHarvestOperator(
+        address _harvestOperator
+    ) external onlyPoolAdmin {
         require(_harvestOperator != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
         address oldOperator = harvestOperator;
         if (oldOperator != _harvestOperator) {
@@ -254,10 +249,10 @@ contract AutoYieldApe is
      * @param delegateContract The delegate registry contract address
      * @param spaceId The id of the space delegating for
      **/
-    function clearVotingDelegate(address delegateContract, bytes32 spaceId)
-        external
-        onlyPoolAdmin
-    {
+    function clearVotingDelegate(
+        address delegateContract,
+        bytes32 spaceId
+    ) external onlyPoolAdmin {
         IDelegation(delegateContract).clearDelegate(spaceId);
     }
 
@@ -266,11 +261,10 @@ contract AutoYieldApe is
      * @param delegateContract The delegate registry contract address
      * @param spaceId The id of the space delegating for
      **/
-    function getDelegate(address delegateContract, bytes32 spaceId)
-        external
-        view
-        returns (address)
-    {
+    function getDelegate(
+        address delegateContract,
+        bytes32 spaceId
+    ) external view returns (address) {
         return IDelegation(delegateContract).delegation(address(this), spaceId);
     }
 
@@ -335,11 +329,9 @@ contract AutoYieldApe is
         emit Redeem(msg.sender, amount);
     }
 
-    function _yieldAmount(address account)
-        internal
-        view
-        returns (uint256, uint256)
-    {
+    function _yieldAmount(
+        address account
+    ) internal view returns (uint256, uint256) {
         uint256 userBalance = balanceOf(account);
         //free_yield = pending_yield + accrued_yield - free_yield
         uint256 freeYield = _userPendingYield[account];
@@ -387,9 +379,10 @@ contract AutoYieldApe is
     /**
      * @notice implementation for harvest function.
      **/
-    function _harvest(bytes memory swapPath, uint256 minimumDealPrice)
-        internal
-    {
+    function _harvest(
+        bytes memory swapPath,
+        uint256 minimumDealPrice
+    ) internal {
         //1, get current pending ape coin reward amount from ApeCoinStaking
         uint256 rewardAmount = _apeStaking.pendingRewards(
             APE_COIN_POOL_ID,

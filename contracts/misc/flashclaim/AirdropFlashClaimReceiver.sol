@@ -260,11 +260,10 @@ contract AirdropFlashClaimReceiver is
      * @param to The address of the recipient
      * @param amount The amount being transfer
      **/
-    function transferEther(address to, uint256 amount)
-        external
-        nonReentrant
-        onlyOwner
-    {
+    function transferEther(
+        address to,
+        uint256 amount
+    ) external nonReentrant onlyOwner {
         (bool success, ) = to.call{value: amount}(new bytes(0));
         require(success, "ETH_TRANSFER_FAILED");
     }

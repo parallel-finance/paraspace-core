@@ -11,10 +11,10 @@ interface INonceManager {
      * @param key the high 192 bit of the nonce
      * @return nonce a full nonce to pass for next UserOp with this sender.
      */
-    function getNonce(address sender, uint192 key)
-        external
-        view
-        returns (uint256 nonce);
+    function getNonce(
+        address sender,
+        uint192 key
+    ) external view returns (uint256 nonce);
 
     /**
      * Manually increment the nonce of the sender.

@@ -30,9 +30,10 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, address delegateRegistry)
-        NToken(pool, false, delegateRegistry)
-    {
+    constructor(
+        IPool pool,
+        address delegateRegistry
+    ) NToken(pool, false, delegateRegistry) {
         // Intentionally left blank
     }
 
@@ -137,15 +138,9 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
         @dev an additional function that is custom to MoonBirds reserve.
         This function allows NToken holders to get nesting the state for the underlying tokens
     */
-    function nestingPeriod(uint256 tokenId)
-        external
-        view
-        returns (
-            bool nesting,
-            uint256 current,
-            uint256 total
-        )
-    {
+    function nestingPeriod(
+        uint256 tokenId
+    ) external view returns (bool nesting, uint256 current, uint256 total) {
         return IMoonBird(_ERC721Data.underlyingAsset).nestingPeriod(tokenId);
     }
 

@@ -145,11 +145,7 @@ interface IPToken is
      * @param to The address of the recipient
      * @param amount The amount of token to transfer
      */
-    function rescueTokens(
-        address token,
-        address to,
-        uint256 amount
-    ) external;
+    function rescueTokens(address token, address to, uint256 amount) external;
 
     function claimUnderlying(
         address timeLockV1,

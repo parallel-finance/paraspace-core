@@ -667,16 +667,7 @@ library LiquidationLogic {
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ExecuteLiquidateParams memory params,
         ExecuteLiquidateLocalVars memory superVars
-    )
-        internal
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    ) internal view returns (uint256, uint256, uint256, uint256) {
         LiquidateParametersLocalVars memory vars;
 
         vars.userCollateral = IPToken(superVars.collateralXToken).balanceOf(
@@ -694,8 +685,8 @@ library LiquidationLogic {
             .getDecimals();
 
         unchecked {
-            vars.collateralAssetUnit = 10**vars.collateralDecimals;
-            vars.liquidationAssetUnit = 10**vars.liquidationAssetDecimals;
+            vars.collateralAssetUnit = 10 ** vars.collateralDecimals;
+            vars.liquidationAssetUnit = 10 ** vars.liquidationAssetDecimals;
         }
 
         vars.liquidationProtocolFeePercentage = collateralReserve
@@ -765,16 +756,7 @@ library LiquidationLogic {
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ExecuteLiquidateParams memory params,
         ExecuteLiquidateLocalVars memory superVars
-    )
-        internal
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256,
-            uint256
-        )
-    {
+    ) internal view returns (uint256, uint256, uint256, uint256) {
         LiquidateParametersLocalVars memory vars;
 
         vars.userCollateral = ICollateralizableERC721(
@@ -831,7 +813,7 @@ library LiquidationLogic {
             .getDecimals();
 
         unchecked {
-            vars.liquidationAssetUnit = 10**vars.liquidationAssetDecimals;
+            vars.liquidationAssetUnit = 10 ** vars.liquidationAssetDecimals;
         }
 
         vars.liquidationProtocolFeePercentage = collateralReserve
