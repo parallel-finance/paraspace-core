@@ -12,7 +12,6 @@ import {MAX_UINT_AMOUNT} from "../helpers/constants";
 import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {waitForTx} from "../helpers/misc-utils";
-import {deployAutoCompoundApeImplAndAssignItToProxy} from "../helpers/contracts-deployments";
 import {expect} from "chai";
 
 describe("Helper contract Test", () => {

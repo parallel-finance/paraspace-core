@@ -1,6 +1,6 @@
 import rawBRE from "hardhat";
 
-const adHoc = async (verify = false) => {
+const adHoc = async () => {
   console.time("ad-hoc");
   console.timeEnd("ad-hoc");
 };
