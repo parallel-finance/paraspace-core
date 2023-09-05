@@ -8,6 +8,7 @@ import {
   deployPoolPositionMover,
 } from "../../helpers/contracts-deployments";
 import {
+  getAllTokens,
   getPoolAddressesProvider,
   getPoolProxy,
 } from "../../helpers/contracts-getters";
@@ -17,7 +18,11 @@ import {
 } from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
-import {eContractid, tEthereumAddress} from "../../helpers/types";
+import {
+  eContractid,
+  ERC20TokenContractId,
+  tEthereumAddress,
+} from "../../helpers/types";
 import {IParaProxy} from "../../types";
 
 export const upgradeProxyImplementations = async (
@@ -309,6 +314,7 @@ export const upgradePoolPositionMover = async (
 ) => {
   const addressesProvider = await getPoolAddressesProvider();
   const pool = await getPoolProxy();
+  const allTokens = await getAllTokens();
   const paraSpaceConfig = getParaSpaceConfig();
   const oldPoolPositionMoverSelectors = await pool.facetFunctionSelectors(
     oldPoolPositionMover
@@ -328,6 +334,13 @@ export const upgradePoolPositionMover = async (
     addressesProvider.address,
     bendDaoLendPoolLoan,
     bendDaoLendPool,
+    paraSpaceConfig.ParaSpaceV1?.PoolV1 || ZERO_ADDRESS,
+    paraSpaceConfig.ParaSpaceV1?.ProtocolDataProviderV1 || ZERO_ADDRESS,
+    paraSpaceConfig.ParaSpaceV1?.CApeV1 || ZERO_ADDRESS,
+    allTokens[ERC20TokenContractId.cAPE].address,
+    allTokens[ERC20TokenContractId.APE].address,
+    paraSpaceConfig.ParaSpaceV1?.TimeLockV1 || ZERO_ADDRESS,
+    paraSpaceConfig.ParaSpaceV1?.P2PPairStakingV1 || ZERO_ADDRESS,
     verify
   );
 

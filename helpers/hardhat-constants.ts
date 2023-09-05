@@ -155,7 +155,7 @@ export const BROWSER_URLS = {
 };
 
 export const DEPLOY_START = parseInt(process.env.DEPLOY_START || "0");
-export const DEPLOY_END = parseInt(process.env.DEPLOY_END || "24");
+export const DEPLOY_END = parseInt(process.env.DEPLOY_END || "25");
 export const DEPLOY_INCREMENTAL =
   process.env.DEPLOY_INCREMENTAL == "true" ? true : false;
 
@@ -193,8 +193,8 @@ export interface Overrides {
 export const GLOBAL_OVERRIDES: Overrides = {
   // maxFeePerGas: ethers.utils.parseUnits("20", "gwei"),
   // maxPriorityFeePerGas: ethers.utils.parseUnits("1.5", "gwei"),
-  // type: 2,
-  // gasLimit: 12_450_000,
+  type: 2,
+  // gasLimit: 30_000_000,
 };
 
 export const L1_RPC_URL = process.env.L1_RPC_URL || "";

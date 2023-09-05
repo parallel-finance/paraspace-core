@@ -150,4 +150,12 @@ interface IPToken is
         address to,
         uint256 amount
     ) external;
+
+    function claimUnderlying(
+        address timeLockV1,
+        address cApeV1,
+        address cApeV2,
+        address apeCoin,
+        uint256[] calldata agreementIds
+    ) external returns (uint256);
 }

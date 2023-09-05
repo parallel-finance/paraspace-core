@@ -7,6 +7,7 @@ import {ReserveConfiguration} from "../libraries/configuration/ReserveConfigurat
 import {PoolLogic} from "../libraries/logic/PoolLogic.sol";
 import {ReserveLogic} from "../libraries/logic/ReserveLogic.sol";
 import {SupplyLogic} from "../libraries/logic/SupplyLogic.sol";
+import {SupplyExtendedLogic} from "../libraries/logic/SupplyExtendedLogic.sol";
 import {MarketplaceLogic} from "../libraries/logic/MarketplaceLogic.sol";
 import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
 import {LiquidationLogic} from "../libraries/logic/LiquidationLogic.sol";
@@ -411,7 +412,7 @@ contract PoolCore is
     {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        SupplyLogic.executeUseERC20AsCollateral(
+        SupplyExtendedLogic.executeUseERC20AsCollateral(
             ps._reserves,
             ps._reservesList,
             ps._usersConfig[msg.sender],
@@ -430,7 +431,7 @@ contract PoolCore is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         if (useAsCollateral) {
-            SupplyLogic.executeCollateralizeERC721(
+            SupplyExtendedLogic.executeCollateralizeERC721(
                 ps._reserves,
                 ps._usersConfig[msg.sender],
                 asset,
@@ -438,7 +439,7 @@ contract PoolCore is
                 msg.sender
             );
         } else {
-            SupplyLogic.executeUncollateralizeERC721(
+            SupplyExtendedLogic.executeUncollateralizeERC721(
                 ps._reserves,
                 ps._reservesList,
                 ps._usersConfig[msg.sender],
@@ -734,7 +735,7 @@ contract PoolCore is
             msg.sender == ps._reserves[asset].xTokenAddress,
             Errors.CALLER_NOT_XTOKEN
         );
-        SupplyLogic.executeFinalizeTransferERC20(
+        SupplyExtendedLogic.executeFinalizeTransferERC20(
             ps._reserves,
             ps._reservesList,
             ps._usersConfig,
@@ -767,7 +768,7 @@ contract PoolCore is
             msg.sender == ps._reserves[asset].xTokenAddress,
             Errors.CALLER_NOT_XTOKEN
         );
-        SupplyLogic.executeFinalizeTransferERC721(
+        SupplyExtendedLogic.executeFinalizeTransferERC721(
             ps._reserves,
             ps._reservesList,
             ps._usersConfig,

@@ -189,7 +189,7 @@ library ReserveLogic {
         ) = IReserveInterestRateStrategy(reserve.interestRateStrategyAddress)
             .calculateInterestRates(
                 DataTypes.CalculateInterestRatesParams({
-                    liquidityAdded: liquidityAdded,
+                    liquidityAdded: liquidityAdded + reserve.unbacked,
                     liquidityTaken: liquidityTaken,
                     totalVariableDebt: vars.totalVariableDebt,
                     reserveFactor: reserveCache.reserveFactor,

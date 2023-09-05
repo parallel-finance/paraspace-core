@@ -97,6 +97,7 @@ import {
   NTokenStakefish__factory,
   MockLendPool__factory,
   NTokenChromieSquiggle__factory,
+  Account__factory,
   NTokenIzumi__factory,
   IZiSwapFactory__factory,
   LiquidityManager__factory,
@@ -283,6 +284,17 @@ export const getSupplyLogic = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.SupplyLogic}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getSupplyExtendedLogic = async (address?: tEthereumAddress) =>
+  await SupplyLogic__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.SupplyExtendedLogic}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
@@ -1361,6 +1373,15 @@ export const getNTokenStakefish = async (address?: tEthereumAddress) =>
         await getDb()
           .get(`${eContractid.NTokenStakefishImpl}.${DRE.network.name}`)
           .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getAccount = async (address?: tEthereumAddress) =>
+  await Account__factory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.Account}.${DRE.network.name}`).value()
       ).address,
     await getFirstSigner()
   );

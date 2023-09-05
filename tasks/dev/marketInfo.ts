@@ -56,7 +56,6 @@ task("market-info", "Print markets info")
           ).toString()
         );
       }
-
       console.log(" xTokenProxy:", x.xTokenAddress);
       console.log(
         " xTokenImpl:",
