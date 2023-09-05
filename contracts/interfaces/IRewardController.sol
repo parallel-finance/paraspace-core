@@ -48,14 +48,9 @@ interface IRewardController {
      * @return The emission per second
      * @return The last updated timestamp
      **/
-    function getAssetData(address asset)
-        external
-        view
-        returns (
-            uint256,
-            uint256,
-            uint256
-        );
+    function getAssetData(
+        address asset
+    ) external view returns (uint256, uint256, uint256);
 
     /**
      * LEGACY **************************
@@ -63,14 +58,9 @@ interface IRewardController {
      * @param asset The address of the reference asset of the distribution
      * @return The asset index, the emission per second and the last updated timestamp
      **/
-    function assets(address asset)
-        external
-        view
-        returns (
-            uint128,
-            uint128,
-            uint256
-        );
+    function assets(
+        address asset
+    ) external view returns (uint128, uint128, uint256);
 
     /**
      * @notice Whitelists an address to claim the rewards on behalf of another address
@@ -114,10 +104,10 @@ interface IRewardController {
      * @param user The address of the user
      * @return The rewards
      **/
-    function getRewardsBalance(address[] calldata assets, address user)
-        external
-        view
-        returns (uint256);
+    function getRewardsBalance(
+        address[] calldata assets,
+        address user
+    ) external view returns (uint256);
 
     /**
      * @notice Claims reward for a user, on the assets of the pool, accumulating the pending rewards
@@ -153,10 +143,9 @@ interface IRewardController {
      * @param user The address of the user
      * @return The unclaimed user rewards
      */
-    function getUserUnclaimedRewards(address user)
-        external
-        view
-        returns (uint256);
+    function getUserUnclaimedRewards(
+        address user
+    ) external view returns (uint256);
 
     /**
      * @notice Returns the user index for a specific asset
@@ -164,10 +153,10 @@ interface IRewardController {
      * @param asset The asset to incentivize
      * @return The user index for the asset
      */
-    function getUserAssetData(address user, address asset)
-        external
-        view
-        returns (uint256);
+    function getUserAssetData(
+        address user,
+        address asset
+    ) external view returns (uint256);
 
     /**
      * @notice for backward compatibility with previous implementation of the Incentives controller

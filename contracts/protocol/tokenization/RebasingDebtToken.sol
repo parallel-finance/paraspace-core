@@ -46,7 +46,9 @@ contract RebasingDebtToken is VariableDebtToken {
      * @param user The user whose balance is calculated
      * @return The scaled balance of the user
      **/
-    function scaledBalanceOf(address user)
+    function scaledBalanceOf(
+        address user
+    )
         public
         view
         override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
@@ -61,7 +63,9 @@ contract RebasingDebtToken is VariableDebtToken {
      * @return The scaled balance of the user
      * @return The scaled balance and the scaled total supply
      **/
-    function getScaledUserBalanceAndSupply(address user)
+    function getScaledUserBalanceAndSupply(
+        address user
+    )
         external
         view
         override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
@@ -107,11 +111,10 @@ contract RebasingDebtToken is VariableDebtToken {
         return _scaledTotalSupply(lastRebasingIndex());
     }
 
-    function _scaledBalanceOf(address user, uint256 rebasingIndex)
-        internal
-        view
-        returns (uint256)
-    {
+    function _scaledBalanceOf(
+        address user,
+        uint256 rebasingIndex
+    ) internal view returns (uint256) {
         uint256 scaledBalance = super.scaledBalanceOf(user);
 
         if (scaledBalance == 0) {
@@ -121,11 +124,9 @@ contract RebasingDebtToken is VariableDebtToken {
         return scaledBalance.rayMul(rebasingIndex);
     }
 
-    function _scaledTotalSupply(uint256 rebasingIndex)
-        internal
-        view
-        returns (uint256)
-    {
+    function _scaledTotalSupply(
+        uint256 rebasingIndex
+    ) internal view returns (uint256) {
         uint256 scaledTotalSupply_ = super.scaledTotalSupply();
 
         return scaledTotalSupply_.rayMul(rebasingIndex);

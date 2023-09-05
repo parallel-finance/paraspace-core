@@ -492,13 +492,13 @@ library SupplyLogic {
         );
 
         INTokenUniswapV3(reserveCache.xTokenAddress).decreaseUniswapV3Liquidity(
-                params.user,
-                params.tokenId,
-                params.liquidityDecrease,
-                params.amount0Min,
-                params.amount1Min,
-                params.receiveEthAsWeth
-            );
+            params.user,
+            params.tokenId,
+            params.liquidityDecrease,
+            params.amount0Min,
+            params.amount1Min,
+            params.receiveEthAsWeth
+        );
 
         bool isUsedAsCollateral = ICollateralizableERC721(
             reserveCache.xTokenAddress

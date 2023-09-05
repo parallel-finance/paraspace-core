@@ -21,10 +21,9 @@ struct UinswapV3PositionData {
 @notice Interface for UniswapV3 Lp token position info.*/
 
 interface IUniswapV3PositionInfoProvider {
-    function getOnchainPositionData(uint256 tokenId)
-        external
-        view
-        returns (UinswapV3PositionData memory);
+    function getOnchainPositionData(
+        uint256 tokenId
+    ) external view returns (UinswapV3PositionData memory);
 
     function getLiquidityAmountFromPositionData(
         UinswapV3PositionData memory positionData

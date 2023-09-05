@@ -109,10 +109,9 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         return agreementId;
     }
 
-    function _validateAndDeleteAgreement(uint256 agreementId)
-        internal
-        returns (Agreement memory)
-    {
+    function _validateAndDeleteAgreement(
+        uint256 agreementId
+    ) internal returns (Agreement memory) {
         Agreement memory agreement = agreements[agreementId];
         require(msg.sender == agreement.beneficiary, "Not beneficiary");
         require(
@@ -164,10 +163,9 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         }
     }
 
-    function claimMoonBirds(uint256[] calldata agreementIds)
-        external
-        nonReentrant
-    {
+    function claimMoonBirds(
+        uint256[] calldata agreementIds
+    ) external nonReentrant {
         require(!frozen, "TimeLock is frozen");
 
         for (uint256 index = 0; index < agreementIds.length; index++) {
@@ -231,10 +229,9 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
 
     receive() external payable {}
 
-    function freezeAgreement(uint256 agreementId)
-        external
-        onlyEmergencyAdminOrPoolAdmins
-    {
+    function freezeAgreement(
+        uint256 agreementId
+    ) external onlyEmergencyAdminOrPoolAdmins {
         agreements[agreementId].isFrozen = true;
         emit AgreementFrozen(agreementId, true);
     }
@@ -254,11 +251,9 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         emit TimeLockFrozen(false);
     }
 
-    function getAgreement(uint256 agreementId)
-        external
-        view
-        returns (Agreement memory agreement)
-    {
+    function getAgreement(
+        uint256 agreementId
+    ) external view returns (Agreement memory agreement) {
         agreement = agreements[agreementId];
     }
 

@@ -36,10 +36,10 @@ interface ICreditDelegationToken {
      * @param toUser The user to give allowance to
      * @return The current allowance of `toUser`
      **/
-    function borrowAllowance(address fromUser, address toUser)
-        external
-        view
-        returns (uint256);
+    function borrowAllowance(
+        address fromUser,
+        address toUser
+    ) external view returns (uint256);
 
     /**
      * @notice Delegates borrowing power to a user on the specific debt token via ERC712 signature

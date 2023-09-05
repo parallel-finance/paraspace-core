@@ -27,12 +27,9 @@ contract X2Y2Adapter is IMarketplace {
         uint256 tokenId;
     }
 
-    function getAskOrderInfo(bytes memory params)
-        external
-        pure
-        override
-        returns (DataTypes.OrderInfo memory orderInfo)
-    {
+    function getAskOrderInfo(
+        bytes memory params
+    ) external pure override returns (DataTypes.OrderInfo memory orderInfo) {
         IX2Y2.RunInput memory runInput = abi.decode(params, (IX2Y2.RunInput));
         require(runInput.details.length == 1, Errors.INVALID_MARKETPLACE_ORDER);
 
@@ -80,12 +77,9 @@ contract X2Y2Adapter is IMarketplace {
         orderInfo.consideration = consideration;
     }
 
-    function getBidOrderInfo(bytes memory)
-        external
-        pure
-        override
-        returns (DataTypes.OrderInfo memory)
-    {
+    function getBidOrderInfo(
+        bytes memory
+    ) external pure override returns (DataTypes.OrderInfo memory) {
         revert(Errors.CALL_MARKETPLACE_FAILED);
     }
 
@@ -105,12 +99,10 @@ contract X2Y2Adapter is IMarketplace {
             );
     }
 
-    function matchBidWithTakerAsk(address, bytes calldata)
-        external
-        pure
-        override
-        returns (bytes memory)
-    {
+    function matchBidWithTakerAsk(
+        address,
+        bytes calldata
+    ) external pure override returns (bytes memory) {
         revert(Errors.CALL_MARKETPLACE_FAILED);
     }
 }

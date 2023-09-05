@@ -30,10 +30,9 @@ interface IStakefishValidator {
 
     function feePoolAddress() external view returns (address);
 
-    function stateHistory(uint256 index)
-        external
-        view
-        returns (StateChange memory);
+    function stateHistory(
+        uint256 index
+    ) external view returns (StateChange memory);
 
     /// @notice Inspect state of the change
     function lastStateChange() external view returns (StateChange memory);

@@ -121,13 +121,9 @@ abstract contract MintableIncentivizedERC721 is
         return _ERC721Data.symbol;
     }
 
-    function balanceOf(address account)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function balanceOf(
+        address account
+    ) public view virtual override returns (uint256) {
         return _ERC721Data.userState[account].balance;
     }
 
@@ -148,10 +144,9 @@ abstract contract MintableIncentivizedERC721 is
      * @notice Sets a new Incentives Controller
      * @param controller the new Incentives controller
      **/
-    function setIncentivesController(IRewardController controller)
-        external
-        onlyPoolAdmin
-    {
+    function setIncentivesController(
+        IRewardController controller
+    ) external onlyPoolAdmin {
         _ERC721Data.rewardController = controller;
     }
 
@@ -182,26 +177,18 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev See {IERC721-ownerOf}.
      */
-    function ownerOf(uint256 tokenId)
-        public
-        view
-        virtual
-        override
-        returns (address)
-    {
+    function ownerOf(
+        uint256 tokenId
+    ) public view virtual override returns (address) {
         return _ERC721Data.owners[tokenId];
     }
 
     /**
      * @dev See {IERC721Metadata-tokenURI}.
      */
-    function tokenURI(uint256 tokenId)
-        external
-        view
-        virtual
-        override
-        returns (string memory)
-    {
+    function tokenURI(
+        uint256 tokenId
+    ) external view virtual override returns (string memory) {
         return IERC721Metadata(_ERC721Data.underlyingAsset).tokenURI(tokenId);
     }
 
@@ -223,13 +210,9 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev See {IERC721-getApproved}.
      */
-    function getApproved(uint256 tokenId)
-        public
-        view
-        virtual
-        override
-        returns (address)
-    {
+    function getApproved(
+        uint256 tokenId
+    ) public view virtual override returns (address) {
         require(
             _exists(tokenId),
             "ERC721: approved query for nonexistent token"
@@ -241,11 +224,10 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev See {IERC721-setApprovalForAll}.
      */
-    function setApprovalForAll(address operator, bool approved)
-        external
-        virtual
-        override
-    {
+    function setApprovalForAll(
+        address operator,
+        bool approved
+    ) external virtual override {
         MintableERC721Logic.executeApprovalForAll(
             _ERC721Data,
             _msgSender(),
@@ -257,13 +239,10 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev See {IERC721-isApprovedForAll}.
      */
-    function isApprovedForAll(address owner, address operator)
-        public
-        view
-        virtual
-        override
-        returns (bool)
-    {
+    function isApprovedForAll(
+        address owner,
+        address operator
+    ) public view virtual override returns (bool) {
         return _ERC721Data.operatorApprovals[owner][operator];
     }
 
@@ -365,12 +344,10 @@ abstract contract MintableIncentivizedERC721 is
      *
      * - `tokenId` must exist.
      */
-    function _isApprovedOrOwner(address spender, uint256 tokenId)
-        internal
-        view
-        virtual
-        returns (bool)
-    {
+    function _isApprovedOrOwner(
+        address spender,
+        uint256 tokenId
+    ) internal view virtual returns (bool) {
         require(
             _exists(tokenId),
             "ERC721: operator query for nonexistent token"
@@ -401,7 +378,10 @@ abstract contract MintableIncentivizedERC721 is
             );
     }
 
-    function _burnMultiple(address user, uint256[] calldata tokenIds)
+    function _burnMultiple(
+        address user,
+        uint256[] calldata tokenIds
+    )
         internal
         virtual
         returns (
@@ -499,13 +479,9 @@ abstract contract MintableIncentivizedERC721 is
     }
 
     /// @inheritdoc ICollateralizableERC721
-    function collateralizedBalanceOf(address account)
-        public
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function collateralizedBalanceOf(
+        address account
+    ) public view virtual override returns (uint256) {
         return _ERC721Data.userState[account].collateralizedBalance;
     }
 
@@ -551,22 +527,16 @@ abstract contract MintableIncentivizedERC721 is
     }
 
     /// @inheritdoc ICollateralizableERC721
-    function isUsedAsCollateral(uint256 tokenId)
-        external
-        view
-        override
-        returns (bool)
-    {
+    function isUsedAsCollateral(
+        uint256 tokenId
+    ) external view override returns (bool) {
         return _ERC721Data.isUsedAsCollateral[tokenId];
     }
 
     /// @inheritdoc IAuctionableERC721
-    function isAuctioned(uint256 tokenId)
-        external
-        view
-        override
-        returns (bool)
-    {
+    function isAuctioned(
+        uint256 tokenId
+    ) external view override returns (bool) {
         return MintableERC721Logic.isAuctioned(_ERC721Data, POOL, tokenId);
     }
 
@@ -584,24 +554,16 @@ abstract contract MintableIncentivizedERC721 is
     }
 
     /// @inheritdoc IAuctionableERC721
-    function startAuction(uint256 tokenId)
-        external
-        virtual
-        override
-        onlyPool
-        nonReentrant
-    {
+    function startAuction(
+        uint256 tokenId
+    ) external virtual override onlyPool nonReentrant {
         MintableERC721Logic.executeStartAuction(_ERC721Data, POOL, tokenId);
     }
 
     /// @inheritdoc IAuctionableERC721
-    function endAuction(uint256 tokenId)
-        external
-        virtual
-        override
-        onlyPool
-        nonReentrant
-    {
+    function endAuction(
+        uint256 tokenId
+    ) external virtual override onlyPool nonReentrant {
         MintableERC721Logic.executeEndAuction(_ERC721Data, POOL, tokenId);
     }
 
@@ -616,22 +578,16 @@ abstract contract MintableIncentivizedERC721 is
         );
     }
 
-    function resetUserAvgMultiplier(address user)
-        external
-        virtual
-        onlyPoolAdmin
-        nonReentrant
-    {
+    function resetUserAvgMultiplier(
+        address user
+    ) external virtual onlyPoolAdmin nonReentrant {
         MintableERC721Logic.executeResetUserAvgMultiplier(_ERC721Data, user);
     }
 
     /// @inheritdoc IAuctionableERC721
-    function getAuctionData(uint256 tokenId)
-        external
-        view
-        override
-        returns (DataTypes.Auction memory auction)
-    {
+    function getAuctionData(
+        uint256 tokenId
+    ) external view override returns (DataTypes.Auction memory auction) {
         bool _isAuctioned = MintableERC721Logic.isAuctioned(
             _ERC721Data,
             POOL,
@@ -643,12 +599,9 @@ abstract contract MintableIncentivizedERC721 is
     }
 
     /// @inheritdoc IAtomicCollateralizableERC721
-    function getTraitMultiplier(uint256 tokenId)
-        external
-        view
-        override
-        returns (uint256)
-    {
+    function getTraitMultiplier(
+        uint256 tokenId
+    ) external view override returns (uint256) {
         return
             MintableERC721Logic.getTraitMultiplier(
                 _ERC721Data.traitsMultipliers[tokenId]
@@ -658,13 +611,9 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId)
-        external
-        view
-        virtual
-        override(IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) external view virtual override(IERC165) returns (bool) {
         return
             interfaceId == type(IERC721).interfaceId ||
             interfaceId == type(IERC721Enumerable).interfaceId ||
@@ -675,13 +624,10 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev See {IERC721Enumerable-tokenOfOwnerByIndex}.
      */
-    function tokenOfOwnerByIndex(address owner, uint256 index)
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function tokenOfOwnerByIndex(
+        address owner,
+        uint256 index
+    ) external view virtual override returns (uint256) {
         require(
             index < balanceOf(owner),
             "ERC721Enumerable: owner index out of bounds"
@@ -699,13 +645,9 @@ abstract contract MintableIncentivizedERC721 is
     /**
      * @dev See {IERC721Enumerable-tokenByIndex}.
      */
-    function tokenByIndex(uint256 index)
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function tokenByIndex(
+        uint256 index
+    ) external view virtual override returns (uint256) {
         require(
             index < totalSupply(),
             "ERC721Enumerable: global index out of bounds"
