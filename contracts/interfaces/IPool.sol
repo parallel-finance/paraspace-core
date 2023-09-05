@@ -7,6 +7,7 @@ import {IPoolParameters} from "./IPoolParameters.sol";
 import {IParaProxyInterfaces} from "./IParaProxyInterfaces.sol";
 import {IPoolPositionMover} from "./IPoolPositionMover.sol";
 import "./IPoolApeStaking.sol";
+import "./IPoolBorrowAndStake.sol";
 
 /**
  * @title IPool
@@ -19,7 +20,8 @@ interface IPool is
     IPoolParameters,
     IPoolApeStaking,
     IParaProxyInterfaces,
-    IPoolPositionMover
+    IPoolPositionMover,
+    IPoolBorrowAndStake
 {
 
 }
