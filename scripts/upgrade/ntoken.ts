@@ -64,6 +64,7 @@ export const upgradeNToken = async (verify = false) => {
         XTokenType.NToken,
         XTokenType.NTokenMoonBirds,
         XTokenType.NTokenUniswapV3,
+        XTokenType.NTokenIZUMILp,
         XTokenType.NTokenBAYC,
         XTokenType.NTokenMAYC,
         XTokenType.NTokenBAKC,
