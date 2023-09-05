@@ -146,6 +146,30 @@ task("upgrade:p2p-pair-staking", "upgrade p2p pair staking").setAction(
   }
 );
 
+task("upgrade:helper-contract", "upgrade helper contract").setAction(
+  async (_, DRE) => {
+    const {upgradeHelperContract} = await import(
+      "../../scripts/upgrade/helperContract"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade helper contract");
+    await upgradeHelperContract(ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade helper contract");
+  }
+);
+
+task("upgrade:account-abstraction", "upgrade account abstraction").setAction(
+  async (_, DRE) => {
+    const {upgradeAccountAbstraction} = await import(
+      "../../scripts/upgrade/accountAbstraction"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade account abstraction");
+    await upgradeAccountAbstraction(ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade account abstraction");
+  }
+);
+
 task("upgrade:ptoken", "upgrade ptoken").setAction(async (_, DRE) => {
   const {upgradePToken} = await import("../../scripts/upgrade/ptoken");
   await DRE.run("set-DRE");
