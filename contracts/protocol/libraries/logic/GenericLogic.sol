@@ -143,7 +143,7 @@ library GenericLogic {
             ) = vars.reserveConfiguration.getParams();
 
             unchecked {
-                vars.assetUnit = 10**vars.decimals;
+                vars.assetUnit = 10 ** vars.decimals;
             }
 
             vars.xTokenAddress = currentReserve.xTokenAddress;
@@ -516,11 +516,10 @@ library GenericLogic {
         }
     }
 
-    function _getAssetPrice(address oracle, address currentReserveAddress)
-        internal
-        view
-        returns (uint256)
-    {
+    function _getAssetPrice(
+        address oracle,
+        address currentReserveAddress
+    ) internal view returns (uint256) {
         return IPriceOracleGetter(oracle).getAssetPrice(currentReserveAddress);
     }
 

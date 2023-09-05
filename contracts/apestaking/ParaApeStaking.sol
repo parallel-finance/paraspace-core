@@ -227,20 +227,18 @@ contract ParaApeStaking is
      *common Logic
      */
     /// @inheritdoc IParaApeStaking
-    function poolTokenStatus(uint256 poolId, uint256 tokenId)
-        external
-        view
-        returns (IParaApeStaking.TokenStatus memory)
-    {
+    function poolTokenStatus(
+        uint256 poolId,
+        uint256 tokenId
+    ) external view returns (IParaApeStaking.TokenStatus memory) {
         return poolStates[poolId].tokenStatus[tokenId];
     }
 
     /// @inheritdoc IParaApeStaking
-    function getPendingReward(uint256 poolId, uint32[] calldata tokenIds)
-        external
-        view
-        returns (uint256)
-    {
+    function getPendingReward(
+        uint256 poolId,
+        uint32[] calldata tokenIds
+    ) external view returns (uint256) {
         return
             ApeCoinPoolLogic.getPendingReward(
                 poolStates[poolId],
@@ -250,11 +248,10 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IParaApeStaking
-    function claimPendingReward(uint256 poolId, uint32[] calldata tokenIds)
-        external
-        whenNotPaused
-        nonReentrant
-    {
+    function claimPendingReward(
+        uint256 poolId,
+        uint32[] calldata tokenIds
+    ) external whenNotPaused nonReentrant {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         address owner = ApeCoinPoolLogic.claimPendingReward(
             poolStates[poolId],
@@ -307,11 +304,10 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IParaApeStaking
-    function depositFreeSApe(address cashAsset, uint128 amount)
-        external
-        whenNotPaused
-        nonReentrant
-    {
+    function depositFreeSApe(
+        address cashAsset,
+        uint128 amount
+    ) external whenNotPaused nonReentrant {
         ApeCoinPoolLogic.depositFreeSApe(
             sApeBalance,
             apeCoin,
@@ -323,11 +319,10 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IParaApeStaking
-    function withdrawFreeSApe(address receiveAsset, uint128 amount)
-        external
-        whenNotPaused
-        nonReentrant
-    {
+    function withdrawFreeSApe(
+        address receiveAsset,
+        uint128 amount
+    ) external whenNotPaused nonReentrant {
         ApeCoinPoolLogic.withdrawFreeSApe(
             sApeBalance,
             pool,
@@ -344,11 +339,9 @@ contract ParaApeStaking is
      *Ape Coin Staking Pool Logic
      */
     /// @inheritdoc IApeCoinPool
-    function depositApeCoinPool(ApeCoinDepositInfo calldata depositInfo)
-        external
-        whenNotPaused
-        nonReentrant
-    {
+    function depositApeCoinPool(
+        ApeCoinDepositInfo calldata depositInfo
+    ) external whenNotPaused nonReentrant {
         require(
             msg.sender == pool || msg.sender == depositInfo.onBehalf,
             Errors.CALLER_NOT_ALLOWED
@@ -367,10 +360,10 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeCoinPool
-    function compoundApeCoinPool(bool isBAYC, uint32[] calldata tokenIds)
-        external
-        onlyApeStakingBot
-    {
+    function compoundApeCoinPool(
+        bool isBAYC,
+        uint32[] calldata tokenIds
+    ) external onlyApeStakingBot {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;
         uint256 poolId = isBAYC
@@ -386,11 +379,9 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeCoinPool
-    function withdrawApeCoinPool(ApeCoinWithdrawInfo calldata withdrawInfo)
-        external
-        whenNotPaused
-        nonReentrant
-    {
+    function withdrawApeCoinPool(
+        ApeCoinWithdrawInfo calldata withdrawInfo
+    ) external whenNotPaused nonReentrant {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;
         vars.sApeReserveId = sApeReserveId;
@@ -409,11 +400,9 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeCoinPool
-    function depositApeCoinPairPool(ApeCoinPairDepositInfo calldata depositInfo)
-        external
-        whenNotPaused
-        nonReentrant
-    {
+    function depositApeCoinPairPool(
+        ApeCoinPairDepositInfo calldata depositInfo
+    ) external whenNotPaused nonReentrant {
         require(
             msg.sender == pool || msg.sender == depositInfo.onBehalf,
             Errors.CALLER_NOT_ALLOWED
@@ -474,11 +463,9 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeCoinPool
-    function nBakcOwnerChangeCallback(uint32[] calldata tokenIds)
-        external
-        whenNotPaused
-        nonReentrant
-    {
+    function nBakcOwnerChangeCallback(
+        uint32[] calldata tokenIds
+    ) external whenNotPaused nonReentrant {
         require(msg.sender == nBakc, Errors.CALLER_NOT_ALLOWED);
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID;
@@ -492,11 +479,10 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeCoinPool
-    function nApeOwnerChangeCallback(bool isBAYC, uint32[] calldata tokenIds)
-        external
-        whenNotPaused
-        nonReentrant
-    {
+    function nApeOwnerChangeCallback(
+        bool isBAYC,
+        uint32[] calldata tokenIds
+    ) external whenNotPaused nonReentrant {
         require(
             msg.sender == nBayc || msg.sender == nMayc,
             Errors.CALLER_NOT_ALLOWED
@@ -597,11 +583,9 @@ contract ParaApeStaking is
      */
 
     /// @inheritdoc IApeStakingP2P
-    function cancelListing(ListingOrder calldata listingOrder)
-        external
-        override
-        nonReentrant
-    {
+    function cancelListing(
+        ListingOrder calldata listingOrder
+    ) external override nonReentrant {
         bytes32 orderHash = ApeStakingP2PLogic.cancelListing(
             listingOrder,
             listingOrderStatus
@@ -657,12 +641,9 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeStakingP2P
-    function breakUpMatchedOrder(bytes32 orderHash)
-        external
-        override
-        nonReentrant
-        whenNotPaused
-    {
+    function breakUpMatchedOrder(
+        bytes32 orderHash
+    ) external override nonReentrant whenNotPaused {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;
         vars.sApeReserveId = sApeReserveId;
@@ -681,12 +662,9 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeStakingP2P
-    function claimForMatchedOrderAndCompound(bytes32[] calldata orderHashes)
-        external
-        override
-        nonReentrant
-        whenNotPaused
-    {
+    function claimForMatchedOrderAndCompound(
+        bytes32[] calldata orderHashes
+    ) external override nonReentrant whenNotPaused {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;
         ApeStakingP2PLogic.claimForMatchedOrdersAndCompound(
@@ -698,12 +676,9 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeStakingP2P
-    function claimCApeReward(address receiver)
-        external
-        override
-        nonReentrant
-        whenNotPaused
-    {
+    function claimCApeReward(
+        address receiver
+    ) external override nonReentrant whenNotPaused {
         uint256 cApeAmount = pendingCApeReward(msg.sender);
         if (cApeAmount > 0) {
             IERC20(cApe).safeTransfer(receiver, cApeAmount);
@@ -713,12 +688,9 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeStakingP2P
-    function pendingCApeReward(address user)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function pendingCApeReward(
+        address user
+    ) public view override returns (uint256) {
         uint256 amount = 0;
         uint256 shareBalance = cApeShareBalance[user];
         if (shareBalance > 0) {
@@ -728,12 +700,9 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeStakingP2P
-    function getApeCoinStakingCap(StakingType stakingType)
-        public
-        view
-        override
-        returns (uint256)
-    {
+    function getApeCoinStakingCap(
+        StakingType stakingType
+    ) public view override returns (uint256) {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         return ApeStakingP2PLogic.getApeCoinStakingCap(stakingType, vars);
     }
@@ -742,10 +711,9 @@ contract ParaApeStaking is
      * Ape Staking Vault Logic
      */
 
-    function setSinglePoolApeRewardRatio(uint32 apeRewardRatio)
-        external
-        onlyPoolAdmin
-    {
+    function setSinglePoolApeRewardRatio(
+        uint32 apeRewardRatio
+    ) external onlyPoolAdmin {
         require(
             apeRewardRatio < PercentageMath.PERCENTAGE_FACTOR,
             Errors.INVALID_PARAMETER
@@ -838,12 +806,10 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeStakingVault
-    function depositNFT(address nft, uint32[] calldata tokenIds)
-        external
-        override
-        whenNotPaused
-        nonReentrant
-    {
+    function depositNFT(
+        address nft,
+        uint32[] calldata tokenIds
+    ) external override whenNotPaused nonReentrant {
         require(
             nft == bayc || nft == mayc || nft == bakc,
             Errors.NFT_NOT_ALLOWED
@@ -863,12 +829,10 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeStakingVault
-    function stakingApe(bool isBAYC, uint32[] calldata tokenIds)
-        external
-        override
-        whenNotPaused
-        nonReentrant
-    {
+    function stakingApe(
+        bool isBAYC,
+        uint32[] calldata tokenIds
+    ) external override whenNotPaused nonReentrant {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = isBAYC
             ? ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID
@@ -882,22 +846,18 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeStakingVault
-    function stakingBAKC(BAKCPairActionInfo calldata actionInfo)
-        external
-        override
-        whenNotPaused
-        nonReentrant
-    {
+    function stakingBAKC(
+        BAKCPairActionInfo calldata actionInfo
+    ) external override whenNotPaused nonReentrant {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         ApeStakingSinglePoolLogic.stakingBAKC(poolStates, vars, actionInfo);
     }
 
     /// @inheritdoc IApeStakingVault
-    function compoundApe(bool isBAYC, uint32[] calldata tokenIds)
-        external
-        override
-        onlyApeStakingBot
-    {
+    function compoundApe(
+        bool isBAYC,
+        uint32[] calldata tokenIds
+    ) external override onlyApeStakingBot {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;
         uint256 poolId = isBAYC
@@ -913,11 +873,9 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeStakingVault
-    function compoundBAKC(BAKCPairActionInfo calldata actionInfo)
-        external
-        override
-        onlyApeStakingBot
-    {
+    function compoundBAKC(
+        BAKCPairActionInfo calldata actionInfo
+    ) external override onlyApeStakingBot {
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         vars.compoundFee = compoundFee;
         vars.apeRewardRatio = apePairStakingRewardRatio;
@@ -930,12 +888,10 @@ contract ParaApeStaking is
     }
 
     /// @inheritdoc IApeStakingVault
-    function withdrawNFT(address nft, uint32[] calldata tokenIds)
-        external
-        override
-        whenNotPaused
-        nonReentrant
-    {
+    function withdrawNFT(
+        address nft,
+        uint32[] calldata tokenIds
+    ) external override whenNotPaused nonReentrant {
         require(
             nft == bayc || nft == mayc || nft == bakc,
             Errors.NFT_NOT_ALLOWED

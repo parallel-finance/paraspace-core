@@ -1,5 +1,5 @@
 import {isZeroAddress} from "ethereumjs-util";
-import {BigNumber, ContractTransaction, Wallet} from "ethers";
+import {BigNumber, ContractTransaction, Wallet, utils} from "ethers";
 import {isAddress} from "ethers/lib/utils";
 import {HardhatRuntimeEnvironment} from "hardhat/types";
 import low from "lowdb";
@@ -281,4 +281,40 @@ export const notFalsyOrZeroAddress = (
     return false;
   }
   return isAddress(address) && !isZeroAddress(address);
+};
+
+export const calcOpHash = function (op, entryPoint, chainId) {
+  const packed = utils.defaultAbiCoder.encode(
+    [
+      "address",
+      "uint256",
+      "bytes32",
+      "bytes32",
+      "uint256",
+      "uint256",
+      "uint256",
+      "uint256",
+      "uint256",
+      "bytes32",
+    ],
+    [
+      op.sender,
+      op.nonce,
+      utils.keccak256(op.initCode),
+      utils.keccak256(op.callData),
+      op.callGasLimit,
+      op.verificationGasLimit,
+      op.preVerificationGas,
+      op.maxFeePerGas,
+      op.maxPriorityFeePerGas,
+      utils.keccak256(op.paymasterAndData),
+    ]
+  );
+
+  const enc = utils.defaultAbiCoder.encode(
+    ["bytes32", "address", "uint256"],
+    [utils.keccak256(packed), entryPoint, chainId]
+  );
+
+  return utils.keccak256(enc);
 };

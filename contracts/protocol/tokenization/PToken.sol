@@ -17,6 +17,8 @@ import {EIP712Base} from "./base/EIP712Base.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {ICApe} from "../../interfaces/ICApe.sol";
+import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
 
 /**
  * @title ParaSpace ERC20 PToken
@@ -53,7 +55,9 @@ contract PToken is
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool)
+    constructor(
+        IPool pool
+    )
         ScaledBalanceTokenBaseERC20(pool, "PTOKEN_IMPL", "PTOKEN_IMPL", 0)
         EIP712Base()
     {
@@ -137,12 +141,10 @@ contract PToken is
     }
 
     /// @inheritdoc IPToken
-    function mintToTreasury(uint256 amount, uint256 index)
-        external
-        virtual
-        override
-        onlyPool
-    {
+    function mintToTreasury(
+        uint256 amount,
+        uint256 index
+    ) external virtual override onlyPool {
         if (amount == 0) {
             return;
         }
@@ -159,7 +161,9 @@ contract PToken is
     }
 
     /// @inheritdoc IERC20
-    function balanceOf(address user)
+    function balanceOf(
+        address user
+    )
         public
         view
         virtual
@@ -239,12 +243,10 @@ contract PToken is
     }
 
     /// @inheritdoc IPToken
-    function handleRepayment(address user, uint256 amount)
-        external
-        virtual
-        override
-        onlyPool
-    {
+    function handleRepayment(
+        address user,
+        uint256 amount
+    ) external virtual override onlyPool {
         // Intentionally left blank
     }
 
@@ -352,12 +354,9 @@ contract PToken is
      * @dev Overrides the base function to fully implement IPToken
      * @dev see `IncentivizedERC20.nonces()` for more detailed documentation
      */
-    function nonces(address owner)
-        public
-        view
-        override(IPToken, EIP712Base)
-        returns (uint256)
-    {
+    function nonces(
+        address owner
+    ) public view override(IPToken, EIP712Base) returns (uint256) {
         return super.nonces(owner);
     }
 
@@ -384,5 +383,39 @@ contract PToken is
         returns (XTokenType)
     {
         return XTokenType.PToken;
+    }
+
+    function claimUnderlying(
+        address timeLockV1,
+        address cApeV1,
+        address cApeV2,
+        address apeCoin,
+        uint256[] calldata agreementIds
+    ) external virtual onlyPool returns (uint256) {
+        address underlyingAsset = _underlyingAsset;
+        bool isCApeV2 = underlyingAsset == address(cApeV2);
+        uint256 beforeBalance = isCApeV2
+            ? IERC20(cApeV1).balanceOf(address(this))
+            : IERC20(underlyingAsset).balanceOf(address(this));
+
+        ITimeLock(timeLockV1).claim(agreementIds);
+
+        if (!isCApeV2) {
+            return
+                IERC20(underlyingAsset).balanceOf(address(this)) -
+                beforeBalance;
+        }
+
+        uint256 diff = IERC20(cApeV1).balanceOf(address(this)) - beforeBalance;
+        if (diff == 0) {
+            return 0;
+        }
+
+        IAutoCompoundApe(cApeV1).withdraw(diff);
+        if (IERC20(apeCoin).allowance(address(this), address(cApeV2)) == 0) {
+            IERC20(apeCoin).approve(cApeV2, type(uint256).max);
+        }
+        IAutoCompoundApe(cApeV2).deposit(address(this), diff);
+        return diff;
     }
 }

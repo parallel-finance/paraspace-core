@@ -12,10 +12,9 @@ pragma solidity ^0.8.0;
 interface IPunks {
     function balanceOf(address account) external view returns (uint256);
 
-    function punkIndexToAddress(uint256 punkIndex)
-        external
-        view
-        returns (address owner);
+    function punkIndexToAddress(
+        uint256 punkIndex
+    ) external view returns (address owner);
 
     function buyPunk(uint256 punkIndex) external;
 

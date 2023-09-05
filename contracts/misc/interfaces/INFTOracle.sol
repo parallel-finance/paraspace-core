@@ -7,8 +7,7 @@ pragma solidity ^0.8.0;
 interface INFTOracle {
     /* CAUTION: Price uint is ETH based (WEI, 18 decimals) */
     // get asset price
-    function getAssetPrice(address _nftContract)
-        external
-        view
-        returns (uint256);
+    function getAssetPrice(
+        address _nftContract
+    ) external view returns (uint256);
 }

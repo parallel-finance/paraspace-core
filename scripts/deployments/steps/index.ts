@@ -23,6 +23,7 @@ export const getAllSteps = async () => {
   const {step_21} = await import("./21_helperContract");
   const {step_22} = await import("./22_timelock");
   const {step_23} = await import("./23_renounceOwnership");
+  const {step_24} = await import("./24_accountAbstraction");
 
   return [
     step_00,
@@ -49,5 +50,6 @@ export const getAllSteps = async () => {
     step_21,
     step_22,
     step_23,
+    step_24,
   ];
 };

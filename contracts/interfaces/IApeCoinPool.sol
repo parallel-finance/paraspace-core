@@ -77,8 +77,9 @@ interface IApeCoinPool {
      * @notice deposit Ape and ape coin position to Ape coin Pool.
      * @param depositInfo Detail deposit info
      **/
-    function depositApeCoinPool(ApeCoinDepositInfo calldata depositInfo)
-        external;
+    function depositApeCoinPool(
+        ApeCoinDepositInfo calldata depositInfo
+    ) external;
 
     /**
      * @notice claim Ape staking reward from ApeCoinStaking and compound as cApe for user
@@ -86,22 +87,26 @@ interface IApeCoinPool {
      * @param isBAYC if Ape is BAYC
      * @param tokenIds Ape token ids
      */
-    function compoundApeCoinPool(bool isBAYC, uint32[] calldata tokenIds)
-        external;
+    function compoundApeCoinPool(
+        bool isBAYC,
+        uint32[] calldata tokenIds
+    ) external;
 
     /**
      * @notice withdraw Ape and ape coin position from Ape coin Pool
      * @param withdrawInfo Detail withdraw info
      */
-    function withdrawApeCoinPool(ApeCoinWithdrawInfo calldata withdrawInfo)
-        external;
+    function withdrawApeCoinPool(
+        ApeCoinWithdrawInfo calldata withdrawInfo
+    ) external;
 
     /**
      * @notice deposit Ape and ape coin position to Ape coin Pool.
      * @param depositInfo Detail deposit info
      **/
-    function depositApeCoinPairPool(ApeCoinPairDepositInfo calldata depositInfo)
-        external;
+    function depositApeCoinPairPool(
+        ApeCoinPairDepositInfo calldata depositInfo
+    ) external;
 
     /**
      * @notice claim Ape pair staking reward from ApeCoinStaking and compound as cApe for user
@@ -129,8 +134,10 @@ interface IApeCoinPool {
      * @param isBAYC if Ape is BAYC
      * @param tokenIds Ape token ids
      */
-    function nApeOwnerChangeCallback(bool isBAYC, uint32[] calldata tokenIds)
-        external;
+    function nApeOwnerChangeCallback(
+        bool isBAYC,
+        uint32[] calldata tokenIds
+    ) external;
 
     /**
      * @notice Callback function for BAKC nToken owner change, will auto claim owner's pending reward

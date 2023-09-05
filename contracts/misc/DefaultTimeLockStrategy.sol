@@ -61,10 +61,10 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
         PERIOD = period;
     }
 
-    function _updatePeriodLimit(uint48 currentTimestamp, uint128 amount)
-        internal
-        returns (uint48 extraDelay)
-    {
+    function _updatePeriodLimit(
+        uint48 currentTimestamp,
+        uint128 amount
+    ) internal returns (uint48 extraDelay) {
         if (currentTimestamp - lastResetTimestamp >= PERIOD) {
             totalAmountInCurrentPeriod = 0;
             lastResetTimestamp = currentTimestamp;

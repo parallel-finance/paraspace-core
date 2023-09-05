@@ -96,7 +96,9 @@ export const step_11 = async (verify = false) => {
         xTokenImpl === eContractid.PTokenCApeImpl ||
         xTokenImpl === eContractid.PYieldTokenImpl ||
         xTokenImpl === eContractid.NTokenBAKCImpl ||
-        xTokenImpl === eContractid.NTokenStakefishImpl
+        xTokenImpl === eContractid.NTokenStakefishImpl ||
+        xTokenImpl === eContractid.NTokenOtherdeedImpl ||
+        xTokenImpl === eContractid.NTokenChromieSquiggleImpl
     ) as [string, IReserveParams][];
     const chunkedReserves = chunk(reserves, 20);
 

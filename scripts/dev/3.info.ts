@@ -6,9 +6,9 @@ import {
 } from "../../helpers/contracts-helpers";
 import {DRE} from "../../helpers/misc-utils";
 import * as envs from "../../helpers/hardhat-constants";
-import {fromBn} from "evm-bn";
 import {HttpNetworkConfig} from "hardhat/types";
 import * as zk from "zksync-web3";
+import {fromBn} from "evm-bn";
 
 const info = async () => {
   console.time("info");
@@ -19,6 +19,7 @@ const info = async () => {
   console.log(DRE.network.name);
   console.log(await DRE.ethers.provider.getNetwork());
   console.log(await DRE.ethers.provider.getFeeData());
+  console.log(fromBn(await DRE.ethers.provider.getBalance(signerAddress)));
   console.log(envs);
   console.log(await getParaSpaceAdmins());
   console.log(signerAddress);

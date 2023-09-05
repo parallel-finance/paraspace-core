@@ -1,5 +1,6 @@
 import {task} from "hardhat/config";
 import {ETHERSCAN_VERIFICATION} from "../../helpers/hardhat-constants";
+import {upgradeBorrowApeAndStake} from "../../scripts/upgrade/pool";
 
 task("upgrade:all", "upgrade all").setAction(async (_, DRE) => {
   const {upgradeAll} = await import("../../scripts/upgrade");
@@ -60,6 +61,21 @@ task("upgrade:pool-ape-staking", "upgrade pool ape staking")
     console.time("upgrade poolApeStaking");
     await upgradePoolApeStaking(oldPoolApeStaking, ETHERSCAN_VERIFICATION);
     console.timeEnd("upgrade poolApeStaking");
+  });
+
+task("upgrade:borrow-ape-and-stake", "upgrade borrow ape and stake")
+  .addPositionalParam("oldPoolBorrowAndStake", "old pool borrow and stake")
+  .setAction(async ({oldPoolBorrowAndStake}, DRE) => {
+    const {upgradeBorrowApeAndStake} = await import(
+      "../../scripts/upgrade/pool"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade borrowApeAndStake");
+    await upgradeBorrowApeAndStake(
+      oldPoolBorrowAndStake,
+      ETHERSCAN_VERIFICATION
+    );
+    console.timeEnd("upgrade borrowApeAndStake");
   });
 
 task("upgrade:pool-parameters", "upgrade pool parameters")

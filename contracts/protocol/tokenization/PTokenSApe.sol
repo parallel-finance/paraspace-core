@@ -52,7 +52,9 @@ contract PTokenSApe is PToken {
         return paraApeStaking.totalSApeBalance(user);
     }
 
-    function scaledBalanceOf(address user)
+    function scaledBalanceOf(
+        address user
+    )
         public
         view
         override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
@@ -77,11 +79,7 @@ contract PTokenSApe is PToken {
         return paraApeStaking.transferFreeSApeBalance(from, to, value);
     }
 
-    function _transfer(
-        address,
-        address,
-        uint128
-    ) internal virtual override {
+    function _transfer(address, address, uint128) internal virtual override {
         revert("not allowed");
     }
 

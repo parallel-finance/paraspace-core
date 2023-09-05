@@ -147,7 +147,9 @@ interface IPoolParameters {
      * @return ltv The loan to value of The user
      * @return healthFactor The current health factor of the user
      **/
-    function getUserAccountData(address user)
+    function getUserAccountData(
+        address user
+    )
         external
         view
         returns (
@@ -167,8 +169,8 @@ interface IPoolParameters {
      * @return ltv The loan to value of the asset
      * @return lt The liquidation threshold value of the asset
      **/
-    function getAssetLtvAndLT(address asset, uint256 tokenId)
-        external
-        view
-        returns (uint256 ltv, uint256 lt);
+    function getAssetLtvAndLT(
+        address asset,
+        uint256 tokenId
+    ) external view returns (uint256 ltv, uint256 lt);
 }

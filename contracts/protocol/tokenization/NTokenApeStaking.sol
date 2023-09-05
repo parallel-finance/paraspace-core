@@ -32,9 +32,10 @@ abstract contract NTokenApeStaking is NToken {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, address delegateRegistry)
-        NToken(pool, false, delegateRegistry)
-    {
+    constructor(
+        IPool pool,
+        address delegateRegistry
+    ) NToken(pool, false, delegateRegistry) {
         paraApeStaking = IParaApeStaking(pool.paraApeStaking());
     }
 
@@ -86,10 +87,10 @@ abstract contract NTokenApeStaking is NToken {
         super._transfer(from, to, tokenId, validate);
     }
 
-    function unstakeApeStakingPosition(address user, uint32[] calldata tokenIds)
-        external
-        nonReentrant
-    {
+    function unstakeApeStakingPosition(
+        address user,
+        uint32[] calldata tokenIds
+    ) external nonReentrant {
         uint256 arrayLength = tokenIds.length;
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 tokenId = tokenIds[index];

@@ -117,6 +117,7 @@ export enum eContractid {
   ReserveLogic = "ReserveLogic",
   GenericLogic = "GenericLogic",
   SupplyLogic = "SupplyLogic",
+  SupplyExtendedLogic = "SupplyExtendedLogic",
   BorrowLogic = "BorrowLogic",
   LiquidationLogic = "LiquidationLogic",
   AuctionLogic = "AuctionLogic",
@@ -234,6 +235,7 @@ export enum eContractid {
   PoolMarketplaceImpl = "PoolMarketplaceImpl",
   PoolParametersImpl = "PoolParametersImpl",
   PoolApeStakingImpl = "PoolApeStakingImpl",
+  PoolBorrowAndStakeImpl = "PoolBorrowAndStakeImpl",
   ApeCoinStaking = "ApeCoinStaking",
   ATokenDebtToken = "ATokenDebtToken",
   StETHDebtToken = "StETHDebtToken",
@@ -294,6 +296,12 @@ export enum eContractid {
   MockBendDaoLendPool = "MockBendDaoLendPool",
   PositionMoverLogic = "PositionMoverLogic",
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
+  Account = "Account",
+  AccountFactory = "AccountFactory",
+  AccountProxy = "AccountProxy",
+  AccountRegistry = "AccountRegistry",
+  AccountRegistryProxy = "AccountRegistryProxy",
+  ParaAccount = "ParaAccount",
 }
 
 /*
@@ -839,9 +847,11 @@ export interface IChainlinkConfig {
   WMATIC?: tEthereumAddress;
   stMATIC?: tEthereumAddress;
   CRV?: tEthereumAddress;
+  BLUR?: tEthereumAddress;
   // ERC721
   DOODLE?: tEthereumAddress;
   BAYC?: tEthereumAddress;
+  BAKC?: tEthereumAddress;
   MAYC?: tEthereumAddress;
   WPUNKS?: tEthereumAddress;
   MOONBIRD?: tEthereumAddress;
@@ -857,6 +867,9 @@ export interface IChainlinkConfig {
   KODA?: tEthereumAddress;
   BLOCKS?: tEthereumAddress;
   EXRP?: tEthereumAddress;
+  UniswapV3?: tEthereumAddress;
+  SFVLDR?: tEthereumAddress;
+  SEWER?: tEthereumAddress;
 }
 
 export interface IYogaLabs {
@@ -875,6 +888,14 @@ export interface IUniswapConfig {
 export interface IBendDAOConfig {
   LendingPool?: tEthereumAddress;
   LendingPoolLoan?: tEthereumAddress;
+}
+
+export interface IParaSpaceV1Config {
+  PoolV1: tEthereumAddress;
+  ProtocolDataProviderV1: tEthereumAddress;
+  CApeV1: tEthereumAddress;
+  TimeLockV1: tEthereumAddress;
+  P2PPairStakingV1: tEthereumAddress;
 }
 
 export interface IStakefish {
@@ -907,6 +928,11 @@ export interface IRate {
   borrowRate: string;
 }
 
+export interface IAccountAbstraction {
+  rpcUrl: string;
+  paymasterUrl: string;
+}
+
 export interface ICommonConfiguration {
   WrappedNativeTokenId: ERC20TokenContractId;
   MarketId: string;
@@ -931,6 +957,7 @@ export interface ICommonConfiguration {
   YogaLabs: IYogaLabs;
   Uniswap: IUniswapConfig;
   BendDAO: IBendDAOConfig;
+  ParaSpaceV1: IParaSpaceV1Config | undefined;
   Stakefish: IStakefish;
   Marketplace: IMarketplaceConfig;
   Chainlink: IChainlinkConfig;
@@ -942,6 +969,8 @@ export interface ICommonConfiguration {
   DelegationRegistry: tEthereumAddress;
 
   Governance: IGovernanceConfig;
+
+  AccountAbstraction: IAccountAbstraction;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {

@@ -16,7 +16,9 @@ interface IProtocolDataProvider {
      * @return variableBorrowIndex The variable borrow index of the reserve
      * @return lastUpdateTimestamp The timestamp of the last update of the reserve
      **/
-    function getReserveData(address asset)
+    function getReserveData(
+        address asset
+    )
         external
         view
         returns (
@@ -35,10 +37,9 @@ interface IProtocolDataProvider {
      * @param asset The address of the underlying asset of the reserve
      * @return The total supply of the xToken
      **/
-    function getXTokenTotalSupply(address asset)
-        external
-        view
-        returns (uint256);
+    function getXTokenTotalSupply(
+        address asset
+    ) external view returns (uint256);
 
     /**
      * @notice Returns the total debt for a given asset
@@ -71,10 +72,9 @@ interface IProtocolDataProvider {
      * @dev Not returning borrow and supply caps for compatibility, nor pause flag
      * @param asset The address of the underlying asset of the reserve
      **/
-    function getReserveConfigurationData(address asset)
-        external
-        view
-        returns (DataTypes.ReserveConfigData memory reserveData);
+    function getReserveConfigurationData(
+        address asset
+    ) external view returns (DataTypes.ReserveConfigData memory reserveData);
 
     /**
      * @notice Returns the caps parameters of the reserve
@@ -82,10 +82,9 @@ interface IProtocolDataProvider {
      * @return borrowCap The borrow cap of the reserve
      * @return supplyCap The supply cap of the reserve
      **/
-    function getReserveCaps(address asset)
-        external
-        view
-        returns (uint256, uint256);
+    function getReserveCaps(
+        address asset
+    ) external view returns (uint256, uint256);
 
     /**
      * @notice Returns the siloed borrowing flag
@@ -99,10 +98,9 @@ interface IProtocolDataProvider {
      * @param asset The address of the underlying asset of the reserve
      * @return The protocol fee on liquidation
      **/
-    function getLiquidationProtocolFee(address asset)
-        external
-        view
-        returns (uint256);
+    function getLiquidationProtocolFee(
+        address asset
+    ) external view returns (uint256);
 
     /**
      * @notice Returns the user data in a reserve
@@ -117,7 +115,10 @@ interface IProtocolDataProvider {
      * @return usageAsCollateralEnabled True if the user is using the asset as collateral, false
      *         otherwise
      **/
-    function getUserReserveData(address asset, address user)
+    function getUserReserveData(
+        address asset,
+        address user
+    )
         external
         view
         returns (
@@ -136,7 +137,9 @@ interface IProtocolDataProvider {
      * @return xTokenAddress The PToken address of the reserve
      * @return variableDebtTokenAddress The VariableDebtToken address of the reserve
      */
-    function getReserveTokensAddresses(address asset)
+    function getReserveTokensAddresses(
+        address asset
+    )
         external
         view
         returns (address xTokenAddress, address variableDebtTokenAddress);
@@ -147,7 +150,9 @@ interface IProtocolDataProvider {
      * @return interestRateStrategyAddress The address of the Interest Rate strategy
      * @return auctionStrategyAddress The address of the Auction strategy
      */
-    function getStrategyAddresses(address asset)
+    function getStrategyAddresses(
+        address asset
+    )
         external
         view
         returns (

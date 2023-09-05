@@ -27,9 +27,10 @@ contract NTokenBAKC is NToken {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, address delegateRegistry)
-        NToken(pool, false, delegateRegistry)
-    {
+    constructor(
+        IPool pool,
+        address delegateRegistry
+    ) NToken(pool, false, delegateRegistry) {
         paraApeStaking = IParaApeStaking(pool.paraApeStaking());
     }
 

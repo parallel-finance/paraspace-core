@@ -12,9 +12,10 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
  * @notice Implementation of the NToken for the ParaSpace protocol
  */
 contract NTokenBAYC is NTokenApeStaking {
-    constructor(IPool pool, address delegateRegistry)
-        NTokenApeStaking(pool, delegateRegistry)
-    {}
+    constructor(
+        IPool pool,
+        address delegateRegistry
+    ) NTokenApeStaking(pool, delegateRegistry) {}
 
     function isBayc() internal pure virtual override returns (bool) {
         return true;

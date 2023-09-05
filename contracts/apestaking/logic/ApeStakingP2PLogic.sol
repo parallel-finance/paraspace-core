@@ -671,11 +671,9 @@ library ApeStakingP2PLogic {
         return false;
     }
 
-    function getMatchedOrderHash(IApeStakingP2P.MatchedOrder memory order)
-        public
-        pure
-        returns (bytes32)
-    {
+    function getMatchedOrderHash(
+        IApeStakingP2P.MatchedOrder memory order
+    ) public pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -692,11 +690,9 @@ library ApeStakingP2PLogic {
             );
     }
 
-    function getListingOrderHash(IApeStakingP2P.ListingOrder calldata order)
-        public
-        pure
-        returns (bytes32)
-    {
+    function getListingOrderHash(
+        IApeStakingP2P.ListingOrder calldata order
+    ) public pure returns (bytes32) {
         return
             keccak256(
                 abi.encode(

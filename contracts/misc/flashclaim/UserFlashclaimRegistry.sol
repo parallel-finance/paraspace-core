@@ -30,13 +30,9 @@ contract UserFlashclaimRegistry is IUserFlashclaimRegistry {
      * @notice get receiver contract address for the user
      * @param user The user address
      */
-    function getUserReceivers(address user)
-        external
-        view
-        virtual
-        override
-        returns (address)
-    {
+    function getUserReceivers(
+        address user
+    ) external view virtual override returns (address) {
         return userReceivers[user];
     }
 }

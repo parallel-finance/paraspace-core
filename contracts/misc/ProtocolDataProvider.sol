@@ -111,11 +111,9 @@ contract ProtocolDataProvider is IProtocolDataProvider {
     }
 
     /// @inheritdoc IProtocolDataProvider
-    function getReserveConfigurationData(address asset)
-        external
-        view
-        returns (DataTypes.ReserveConfigData memory reserveData)
-    {
+    function getReserveConfigurationData(
+        address asset
+    ) external view returns (DataTypes.ReserveConfigData memory reserveData) {
         DataTypes.ReserveConfigurationMap memory configuration = IPool(
             ADDRESSES_PROVIDER.getPool()
         ).getConfiguration(asset);
@@ -141,11 +139,9 @@ contract ProtocolDataProvider is IProtocolDataProvider {
     }
 
     /// @inheritdoc IProtocolDataProvider
-    function getReserveCaps(address asset)
-        external
-        view
-        returns (uint256 borrowCap, uint256 supplyCap)
-    {
+    function getReserveCaps(
+        address asset
+    ) external view returns (uint256 borrowCap, uint256 supplyCap) {
         (borrowCap, supplyCap) = IPool(ADDRESSES_PROVIDER.getPool())
             .getConfiguration(asset)
             .getCaps();
@@ -160,11 +156,9 @@ contract ProtocolDataProvider is IProtocolDataProvider {
     }
 
     /// @inheritdoc IProtocolDataProvider
-    function getLiquidationProtocolFee(address asset)
-        external
-        view
-        returns (uint256)
-    {
+    function getLiquidationProtocolFee(
+        address asset
+    ) external view returns (uint256) {
         return
             IPool(ADDRESSES_PROVIDER.getPool())
                 .getConfiguration(asset)
@@ -172,7 +166,9 @@ contract ProtocolDataProvider is IProtocolDataProvider {
     }
 
     /// @inheritdoc IProtocolDataProvider
-    function getReserveData(address asset)
+    function getReserveData(
+        address asset
+    )
         external
         view
         override
@@ -204,12 +200,9 @@ contract ProtocolDataProvider is IProtocolDataProvider {
     }
 
     /// @inheritdoc IProtocolDataProvider
-    function getXTokenTotalSupply(address asset)
-        external
-        view
-        override
-        returns (uint256)
-    {
+    function getXTokenTotalSupply(
+        address asset
+    ) external view override returns (uint256) {
         DataTypes.ReserveData memory reserve = IPool(
             ADDRESSES_PROVIDER.getPool()
         ).getReserveData(asset);
@@ -221,12 +214,9 @@ contract ProtocolDataProvider is IProtocolDataProvider {
     }
 
     /// @inheritdoc IProtocolDataProvider
-    function getTotalDebt(address asset)
-        external
-        view
-        override
-        returns (uint256)
-    {
+    function getTotalDebt(
+        address asset
+    ) external view override returns (uint256) {
         DataTypes.ReserveData memory reserve = IPool(
             ADDRESSES_PROVIDER.getPool()
         ).getReserveData(asset);
@@ -234,7 +224,10 @@ contract ProtocolDataProvider is IProtocolDataProvider {
     }
 
     /// @inheritdoc IProtocolDataProvider
-    function getUserReserveData(address asset, address user)
+    function getUserReserveData(
+        address asset,
+        address user
+    )
         external
         view
         returns (
@@ -284,7 +277,9 @@ contract ProtocolDataProvider is IProtocolDataProvider {
     }
 
     /// @inheritdoc IProtocolDataProvider
-    function getReserveTokensAddresses(address asset)
+    function getReserveTokensAddresses(
+        address asset
+    )
         external
         view
         returns (address xTokenAddress, address variableDebtTokenAddress)
@@ -297,7 +292,9 @@ contract ProtocolDataProvider is IProtocolDataProvider {
     }
 
     /// @inheritdoc IProtocolDataProvider
-    function getStrategyAddresses(address asset)
+    function getStrategyAddresses(
+        address asset
+    )
         external
         view
         returns (

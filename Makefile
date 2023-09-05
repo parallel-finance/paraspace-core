@@ -624,6 +624,10 @@ upgrade-pool-marketplace:
 upgrade-pool-ape-staking:
 	make TASK_NAME=upgrade:pool-ape-staking run-task
 
+.PHONY: upgrade-borrow_ape_and_stake
+upgrade-borrow_ape_and_stake:
+	make TASK_NAME=upgrade:borrow-ape-and-stake run-task
+
 .PHONY: upgrade-pool-parameters
 upgrade-pool-parameters:
 	make TASK_NAME=upgrade:pool-parameters run-task

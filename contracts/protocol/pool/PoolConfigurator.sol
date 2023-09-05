@@ -116,11 +116,10 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setReserveBorrowing(address asset, bool enabled)
-        external
-        override
-        onlyRiskOrPoolAdmins
-    {
+    function setReserveBorrowing(
+        address asset,
+        bool enabled
+    ) external override onlyRiskOrPoolAdmins {
         DataTypes.ReserveConfigurationMap memory currentConfig = _pool
             .getConfiguration(asset);
         currentConfig.setBorrowingEnabled(enabled);
@@ -181,11 +180,10 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setReserveActive(address asset, bool active)
-        external
-        override
-        onlyPoolAdmin
-    {
+    function setReserveActive(
+        address asset,
+        bool active
+    ) external override onlyPoolAdmin {
         if (!active) _checkNoSuppliers(asset);
         DataTypes.ReserveConfigurationMap memory currentConfig = _pool
             .getConfiguration(asset);
@@ -195,11 +193,10 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setReserveFreeze(address asset, bool freeze)
-        external
-        override
-        onlyRiskOrPoolAdmins
-    {
+    function setReserveFreeze(
+        address asset,
+        bool freeze
+    ) external override onlyRiskOrPoolAdmins {
         DataTypes.ReserveConfigurationMap memory currentConfig = _pool
             .getConfiguration(asset);
         currentConfig.setFrozen(freeze);
@@ -208,11 +205,9 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function pauseReserve(address asset)
-        public
-        override
-        onlyEmergencyOrPoolAdmin
-    {
+    function pauseReserve(
+        address asset
+    ) public override onlyEmergencyOrPoolAdmin {
         DataTypes.ReserveConfigurationMap memory currentConfig = _pool
             .getConfiguration(asset);
         currentConfig.setPaused(true);
@@ -230,11 +225,10 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setReserveFactor(address asset, uint256 newReserveFactor)
-        external
-        override
-        onlyRiskOrPoolAdmins
-    {
+    function setReserveFactor(
+        address asset,
+        uint256 newReserveFactor
+    ) external override onlyRiskOrPoolAdmins {
         require(
             newReserveFactor <= PercentageMath.PERCENTAGE_FACTOR,
             Errors.INVALID_RESERVE_FACTOR
@@ -248,11 +242,10 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setSiloedBorrowing(address asset, bool newSiloed)
-        external
-        override
-        onlyRiskOrPoolAdmins
-    {
+    function setSiloedBorrowing(
+        address asset,
+        bool newSiloed
+    ) external override onlyRiskOrPoolAdmins {
         if (newSiloed) {
             _checkNoBorrowers(asset);
         }
@@ -269,11 +262,10 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setBorrowCap(address asset, uint256 newBorrowCap)
-        external
-        override
-        onlyRiskOrPoolAdmins
-    {
+    function setBorrowCap(
+        address asset,
+        uint256 newBorrowCap
+    ) external override onlyRiskOrPoolAdmins {
         DataTypes.ReserveConfigurationMap memory currentConfig = _pool
             .getConfiguration(asset);
         uint256 oldBorrowCap = currentConfig.getBorrowCap();
@@ -283,11 +275,10 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setSupplyCap(address asset, uint256 newSupplyCap)
-        external
-        override
-        onlyRiskOrPoolAdmins
-    {
+    function setSupplyCap(
+        address asset,
+        uint256 newSupplyCap
+    ) external override onlyRiskOrPoolAdmins {
         DataTypes.ReserveConfigurationMap memory currentConfig = _pool
             .getConfiguration(asset);
         uint256 oldSupplyCap = currentConfig.getSupplyCap();
@@ -297,11 +288,10 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setLiquidationProtocolFee(address asset, uint256 newFee)
-        external
-        override
-        onlyRiskOrPoolAdmins
-    {
+    function setLiquidationProtocolFee(
+        address asset,
+        uint256 newFee
+    ) external override onlyRiskOrPoolAdmins {
         require(
             newFee <= PercentageMath.PERCENTAGE_FACTOR,
             Errors.INVALID_LIQUIDATION_PROTOCOL_FEE
@@ -385,11 +375,9 @@ contract PoolConfigurator is VersionedInitializable, IPoolConfigurator {
     }
 
     /// @inheritdoc IPoolConfigurator
-    function setAuctionRecoveryHealthFactor(uint64 value)
-        external
-        override
-        onlyRiskOrPoolAdmins
-    {
+    function setAuctionRecoveryHealthFactor(
+        uint64 value
+    ) external override onlyRiskOrPoolAdmins {
         _pool.setAuctionRecoveryHealthFactor(value);
     }
 

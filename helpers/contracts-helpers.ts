@@ -378,9 +378,19 @@ ${
 } \
 ${
   libraries
-    ? Object.entries(libraries)
-        .map(([k, v]) => `--libraries ${k}:${v}`)
-        .join(" ")
+    ? (
+        await Promise.all(
+          Object.entries(libraries).map(async ([k, v]) => {
+            const sourceName =
+              (
+                await DRE.artifacts.readArtifact(
+                  eContractidToContractName[k] || k
+                )
+              )?.sourceName || "";
+            return `--libraries ${sourceName}:${k}:${v}`;
+          })
+        )
+      ).join(" ")
     : ""
 } \
   --compiler-version v${COMPILER_VERSION}`;

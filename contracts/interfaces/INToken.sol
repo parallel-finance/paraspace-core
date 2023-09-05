@@ -143,4 +143,9 @@ interface INToken is
      * @return The address of the underlying asset
      **/
     function UNDERLYING_ASSET_ADDRESS() external view returns (address);
+
+    function claimUnderlying(
+        address timeLockV1,
+        uint256[] calldata agreementIds
+    ) external;
 }
