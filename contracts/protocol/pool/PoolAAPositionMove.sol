@@ -17,6 +17,8 @@ import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IAccountFactory} from "../../interfaces/IAccountFactory.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {IVariableDebtToken} from "../../interfaces/IVariableDebtToken.sol";
+import {MathUtils} from "../libraries/math/MathUtils.sol";
+import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 
 /**
  * @title Pool PositionMover contract
@@ -36,6 +38,7 @@ contract PoolAAPositionMover is
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using ReserveLogic for DataTypes.ReserveData;
     using SafeCast for uint256;
+    using WadRayMath for uint256;
 
     event PositionMovedToAA(address indexed user, address aaAccount);
 
@@ -80,7 +83,7 @@ contract PoolAAPositionMover is
         uint256 reservesCount;
         address[] xTokenAddresses;
         address[] debtTokenAddresses;
-        DataTypes.ReserveConfigurationMap[] reserveConfigurations;
+        DataTypes.AssetType[] assetTypes;
         uint256[] liquidityIndex;
         uint256[] debtIndex;
         address[] aaAccounts;
@@ -99,13 +102,12 @@ contract PoolAAPositionMover is
         vars.reservesCount = ps._reservesCount;
         vars.xTokenAddresses = new address[](vars.reservesCount);
         vars.debtTokenAddresses = new address[](vars.reservesCount);
-        vars.reserveConfigurations = new DataTypes.ReserveConfigurationMap[](
-            vars.reservesCount
-        );
+        vars.assetTypes = new DataTypes.AssetType[](vars.reservesCount);
         vars.liquidityIndex = new uint256[](vars.reservesCount);
         vars.debtIndex = new uint256[](vars.reservesCount);
         vars.aaAccounts = new address[](users.length);
 
+        DataTypes.TimeLockParams memory timeLockParams;
         for (uint256 index = 0; index < users.length; index++) {
             address user = users[index];
 
@@ -136,24 +138,21 @@ contract PoolAAPositionMover is
 
                     DataTypes.ReserveCache memory reserveCache = currentReserve
                         .cache();
-                    currentReserve.updateState(reserveCache);
+                    _calculateLiquidityAndDebtIndex(reserveCache);
                     vars.xTokenAddresses[j] = reserveCache.xTokenAddress;
-                    vars.reserveConfigurations[j] = reserveCache
-                        .reserveConfiguration;
+                    vars.assetTypes[j] = reserveCache
+                        .reserveConfiguration
+                        .getAssetType();
                     vars.liquidityIndex[j] = reserveCache.nextLiquidityIndex;
                     vars.debtIndex[j] = reserveCache.nextVariableBorrowIndex;
                 }
 
-                if (
-                    vars.reserveConfigurations[j].getAssetType() ==
-                    DataTypes.AssetType.ERC20
-                ) {
+                if (vars.assetTypes[j] == DataTypes.AssetType.ERC20) {
                     //handle ptoken
                     {
                         IPToken pToken = IPToken(vars.xTokenAddresses[j]);
                         uint256 balance = pToken.balanceOf(user);
                         if (balance > 0) {
-                            DataTypes.TimeLockParams memory timeLockParams;
                             pToken.burn(
                                 user,
                                 vars.xTokenAddresses[j],
@@ -219,5 +218,25 @@ contract PoolAAPositionMover is
         }
 
         return vars.aaAccounts;
+    }
+
+    function _calculateLiquidityAndDebtIndex(
+        DataTypes.ReserveCache memory reserveCache
+    ) internal view {
+        uint256 cumulatedLiquidityInterest = MathUtils.calculateLinearInterest(
+            reserveCache.currLiquidityRate,
+            reserveCache.reserveLastUpdateTimestamp
+        );
+        reserveCache.nextLiquidityIndex = cumulatedLiquidityInterest.rayMul(
+            reserveCache.currLiquidityIndex
+        );
+
+        uint256 cumulatedVariableBorrowInterest = MathUtils
+            .calculateCompoundedInterest(
+                reserveCache.currVariableBorrowRate,
+                reserveCache.reserveLastUpdateTimestamp
+            );
+        reserveCache.nextVariableBorrowIndex = cumulatedVariableBorrowInterest
+            .rayMul(reserveCache.currVariableBorrowIndex);
     }
 }
