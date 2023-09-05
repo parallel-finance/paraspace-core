@@ -206,8 +206,10 @@ interface IPoolAddressesProvider {
      * @param id The id
      * @param newImplementationAddress The address of the new implementation
      */
-    function setAddressAsProxy(bytes32 id, address newImplementationAddress)
-        external;
+    function setAddressAsProxy(
+        bytes32 id,
+        address newImplementationAddress
+    ) external;
 
     /**
      * @notice Sets an address for an id replacing the address saved in the addresses map.
@@ -314,10 +316,9 @@ interface IPoolAddressesProvider {
      * @notice Returns the info of the marketplace.
      * @return The info of the marketplace
      */
-    function getMarketplace(bytes32 id)
-        external
-        view
-        returns (DataTypes.Marketplace memory);
+    function getMarketplace(
+        bytes32 id
+    ) external view returns (DataTypes.Marketplace memory);
 
     /**
      * @notice Updates the address of the data provider.

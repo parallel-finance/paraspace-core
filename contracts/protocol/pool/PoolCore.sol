@@ -76,11 +76,9 @@ contract PoolCore is
      * @dev Caching the address of the PoolAddressesProvider in order to reduce gas consumption on subsequent operations
      * @param provider The address of the PoolAddressesProvider
      **/
-    function initialize(IPoolAddressesProvider provider)
-        external
-        virtual
-        initializer
-    {
+    function initialize(
+        IPoolAddressesProvider provider
+    ) external virtual initializer {
         require(
             provider == ADDRESSES_PROVIDER,
             Errors.INVALID_ADDRESSES_PROVIDER
@@ -317,13 +315,10 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function repayWithPTokens(address asset, uint256 amount)
-        external
-        virtual
-        override
-        nonReentrant
-        returns (uint256)
-    {
+    function repayWithPTokens(
+        address asset,
+        uint256 amount
+    ) external virtual override nonReentrant returns (uint256) {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return
@@ -382,12 +377,10 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function setUserUseERC20AsCollateral(address asset, bool useAsCollateral)
-        external
-        virtual
-        override
-        nonReentrant
-    {
+    function setUserUseERC20AsCollateral(
+        address asset,
+        bool useAsCollateral
+    ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         SupplyExtendedLogic.executeUseERC20AsCollateral(
@@ -455,7 +448,8 @@ contract PoolCore is
                 liquidator: msg.sender,
                 receiveXToken: receivePToken,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                priceOracleSentinel: ADDRESSES_PROVIDER
+                    .getPriceOracleSentinel(),
                 collateralTokenId: 0
             })
         );
@@ -560,33 +554,27 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function getReserveData(address asset)
-        external
-        view
-        virtual
-        override
-        returns (DataTypes.ReserveData memory)
-    {
+    function getReserveData(
+        address asset
+    ) external view virtual override returns (DataTypes.ReserveData memory) {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return ps._reserves[asset];
     }
 
     /// @inheritdoc IPoolCore
-    function getReserveXToken(address asset)
-        external
-        view
-        virtual
-        override
-        returns (address)
-    {
+    function getReserveXToken(
+        address asset
+    ) external view virtual override returns (address) {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return ps._reserves[asset].xTokenAddress;
     }
 
     /// @inheritdoc IPoolCore
-    function getConfiguration(address asset)
+    function getConfiguration(
+        address asset
+    )
         external
         view
         virtual
@@ -599,7 +587,9 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function getUserConfiguration(address user)
+    function getUserConfiguration(
+        address user
+    )
         external
         view
         virtual
@@ -612,26 +602,18 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function getReserveNormalizedIncome(address asset)
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function getReserveNormalizedIncome(
+        address asset
+    ) external view virtual override returns (uint256) {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return ps._reserves[asset].getNormalizedIncome();
     }
 
     /// @inheritdoc IPoolCore
-    function getReserveNormalizedVariableDebt(address asset)
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function getReserveNormalizedVariableDebt(
+        address asset
+    ) external view virtual override returns (uint256) {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return ps._reserves[asset].getNormalizedDebt();
@@ -764,7 +746,10 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function getAuctionData(address ntokenAsset, uint256 tokenId)
+    function getAuctionData(
+        address ntokenAsset,
+        uint256 tokenId
+    )
         external
         view
         virtual

@@ -392,9 +392,10 @@ interface IPoolCore {
      * - Send the value type(uint256).max in order to repay the whole debt for `asset` on the specific `debtMode`
      * @return The final amount repaid
      **/
-    function repayWithPTokens(address asset, uint256 amount)
-        external
-        returns (uint256);
+    function repayWithPTokens(
+        address asset,
+        uint256 amount
+    ) external returns (uint256);
 
     /**
      * @notice Repay with transfer approval of asset to be repaid done via permit function
@@ -426,8 +427,10 @@ interface IPoolCore {
      * @param asset The address of the underlying asset supplied
      * @param useAsCollateral True if the user wants to use the supply as collateral, false otherwise
      **/
-    function setUserUseERC20AsCollateral(address asset, bool useAsCollateral)
-        external;
+    function setUserUseERC20AsCollateral(
+        address asset,
+        bool useAsCollateral
+    ) external;
 
     /**
      * @notice Allows suppliers to enable/disable a specific supplied ERC721 asset with a tokenID as collateral
@@ -497,50 +500,45 @@ interface IPoolCore {
      * @param user The user address
      * @return The configuration of the user
      **/
-    function getUserConfiguration(address user)
-        external
-        view
-        returns (DataTypes.UserConfigurationMap memory);
+    function getUserConfiguration(
+        address user
+    ) external view returns (DataTypes.UserConfigurationMap memory);
 
     /**
      * @notice Returns the configuration of the reserve
      * @param asset The address of the underlying asset of the reserve
      * @return The configuration of the reserve
      **/
-    function getConfiguration(address asset)
-        external
-        view
-        returns (DataTypes.ReserveConfigurationMap memory);
+    function getConfiguration(
+        address asset
+    ) external view returns (DataTypes.ReserveConfigurationMap memory);
 
     /**
      * @notice Returns the normalized income normalized income of the reserve
      * @param asset The address of the underlying asset of the reserve
      * @return The reserve's normalized income
      */
-    function getReserveNormalizedIncome(address asset)
-        external
-        view
-        returns (uint256);
+    function getReserveNormalizedIncome(
+        address asset
+    ) external view returns (uint256);
 
     /**
      * @notice Returns the normalized variable debt per unit of asset
      * @param asset The address of the underlying asset of the reserve
      * @return The reserve normalized variable debt
      */
-    function getReserveNormalizedVariableDebt(address asset)
-        external
-        view
-        returns (uint256);
+    function getReserveNormalizedVariableDebt(
+        address asset
+    ) external view returns (uint256);
 
     /**
      * @notice Returns the state and configuration of the reserve
      * @param asset The address of the underlying asset of the reserve
      * @return The state and configuration data of the reserve
      **/
-    function getReserveData(address asset)
-        external
-        view
-        returns (DataTypes.ReserveData memory);
+    function getReserveData(
+        address asset
+    ) external view returns (DataTypes.ReserveData memory);
 
     function getReserveXToken(address asset) external view returns (address);
 
@@ -602,10 +600,10 @@ interface IPoolCore {
      * @param tokenId The token id which is currently auctioned for liquidation
      * @return The auction related data of the corresponding (ntokenAsset, tokenId)
      */
-    function getAuctionData(address ntokenAsset, uint256 tokenId)
-        external
-        view
-        returns (DataTypes.AuctionData memory);
+    function getAuctionData(
+        address ntokenAsset,
+        uint256 tokenId
+    ) external view returns (DataTypes.AuctionData memory);
 
     // function getAuctionData(address user, address) external view returns (DataTypes.AuctionData memory);
     /**

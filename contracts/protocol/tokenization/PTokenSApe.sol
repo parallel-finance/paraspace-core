@@ -26,11 +26,7 @@ contract PTokenSApe is PToken {
     INTokenApeStaking immutable nBAYC;
     INTokenApeStaking immutable nMAYC;
 
-    constructor(
-        IPool pool,
-        address _nBAYC,
-        address _nMAYC
-    ) PToken(pool) {
+    constructor(IPool pool, address _nBAYC, address _nMAYC) PToken(pool) {
         require(_nBAYC != address(0) && _nMAYC != address(0));
         nBAYC = INTokenApeStaking(_nBAYC);
         nMAYC = INTokenApeStaking(_nMAYC);
@@ -61,7 +57,9 @@ contract PTokenSApe is PToken {
         return totalStakedAPE;
     }
 
-    function scaledBalanceOf(address user)
+    function scaledBalanceOf(
+        address user
+    )
         public
         view
         override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
@@ -86,11 +84,7 @@ contract PTokenSApe is PToken {
         revert("not allowed");
     }
 
-    function _transfer(
-        address,
-        address,
-        uint128
-    ) internal virtual override {
+    function _transfer(address, address, uint128) internal virtual override {
         revert("not allowed");
     }
 

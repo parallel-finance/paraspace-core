@@ -13,8 +13,6 @@ import {
   supplyAndValidate,
 } from "./helpers/validated-steps";
 import {parseEther} from "ethers/lib/utils";
-import {upgradeBorrowApeAndStake} from "../scripts/upgrade/pool";
-import {zeroAddress} from "ethereumjs-util";
 
 describe("APE Coin Staking Test", () => {
   let testEnv: TestEnv;

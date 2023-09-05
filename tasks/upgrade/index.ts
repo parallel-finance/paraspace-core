@@ -1,6 +1,5 @@
 import {task} from "hardhat/config";
 import {ETHERSCAN_VERIFICATION} from "../../helpers/hardhat-constants";
-import {upgradeBorrowApeAndStake} from "../../scripts/upgrade/pool";
 
 task("upgrade:all", "upgrade all").setAction(async (_, DRE) => {
   const {upgradeAll} = await import("../../scripts/upgrade");
@@ -144,6 +143,30 @@ task("upgrade:p2p-pair-staking", "upgrade p2p pair staking").setAction(
     console.time("upgrade p2p pair staking");
     await upgradeP2PPairStaking(ETHERSCAN_VERIFICATION);
     console.timeEnd("upgrade p2p pair staking");
+  }
+);
+
+task("upgrade:helper-contract", "upgrade helper contract").setAction(
+  async (_, DRE) => {
+    const {upgradeHelperContract} = await import(
+      "../../scripts/upgrade/helperContract"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade helper contract");
+    await upgradeHelperContract(ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade helper contract");
+  }
+);
+
+task("upgrade:account-abstraction", "upgrade account abstraction").setAction(
+  async (_, DRE) => {
+    const {upgradeAccountAbstraction} = await import(
+      "../../scripts/upgrade/accountAbstraction"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade account abstraction");
+    await upgradeAccountAbstraction(ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade account abstraction");
   }
 );
 

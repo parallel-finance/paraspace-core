@@ -31,9 +31,10 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, address delegateRegistry)
-        NToken(pool, true, delegateRegistry)
-    {
+    constructor(
+        IPool pool,
+        address delegateRegistry
+    ) NToken(pool, true, delegateRegistry) {
         _ERC721Data.balanceLimit = 30;
     }
 
@@ -146,12 +147,10 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
         );
     }
 
-    function setTraitsMultipliers(uint256[] calldata, uint256[] calldata)
-        external
-        override
-        onlyPoolAdmin
-        nonReentrant
-    {
+    function setTraitsMultipliers(
+        uint256[] calldata,
+        uint256[] calldata
+    ) external override onlyPoolAdmin nonReentrant {
         revert();
     }
 

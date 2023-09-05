@@ -73,10 +73,9 @@ contract PoolPositionMover is
         P2P_PAIR_STAKING_V1 = p2pPairStakingV1;
     }
 
-    function movePositionFromBendDAO(uint256[] calldata loanIds)
-        external
-        nonReentrant
-    {
+    function movePositionFromBendDAO(
+        uint256[] calldata loanIds
+    ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         PositionMoverLogic.executeMovePositionFromBendDAO(

@@ -110,19 +110,17 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
 
     /// @notice Allows owner to add assets.
     /// @param _assets assets to add
-    function addAssets(address[] calldata _assets)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function addAssets(
+        address[] calldata _assets
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _addAssets(_assets);
     }
 
     /// @notice Allows owner to remove assets.
     /// @param _assets asset to remove
-    function removeAssets(address[] calldata _assets)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function removeAssets(
+        address[] calldata _assets
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         for (uint256 i = 0; i < _assets.length; i++) {
             _removeAsset(_assets[i]);
         }
@@ -130,38 +128,35 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
 
     /// @notice Allows owner to add feeders.
     /// @param _feeders feeders to add
-    function addFeeders(address[] calldata _feeders)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function addFeeders(
+        address[] calldata _feeders
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _addFeeders(_feeders);
     }
 
     /// @notice Allows owner to remove feeders.
     /// @param _feeders feeders to remove
-    function removeFeeders(address[] calldata _feeders)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function removeFeeders(
+        address[] calldata _feeders
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         for (uint256 i = 0; i < _feeders.length; i++) {
             _removeFeeder(_feeders[i]);
         }
     }
 
     /// @notice Allows owner to update oracle configs
-    function setConfig(uint128 expirationPeriod, uint128 maxPriceDeviation)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setConfig(
+        uint128 expirationPeriod,
+        uint128 maxPriceDeviation
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _setConfig(expirationPeriod, maxPriceDeviation);
     }
 
     /// @notice Allows owner to pause asset
-    function setPause(address _asset, bool _flag)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-        onlyWhenAssetExisted(_asset)
-    {
+    function setPause(
+        address _asset,
+        bool _flag
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) onlyWhenAssetExisted(_asset) {
         assetFeederMap[_asset].paused = _flag;
         emit AssetPaused(_asset, _flag);
     }
@@ -170,11 +165,10 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     /// internal Median cumulativePrice.
     /// @param _asset The nft contract to set a floor price for
     /// @param _twap The last floor twap
-    function setEmergencyPrice(address _asset, uint256 _twap)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-        onlyWhenAssetExisted(_asset)
-    {
+    function setEmergencyPrice(
+        address _asset,
+        uint256 _twap
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) onlyWhenAssetExisted(_asset) {
         _finalizePrice(_asset, _twap);
     }
 
@@ -198,12 +192,9 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
 
     /// @param _asset The nft contract
     /// @return price The most recent price on chain
-    function getPrice(address _asset)
-        external
-        view
-        override
-        returns (uint256 price)
-    {
+    function getPrice(
+        address _asset
+    ) external view override returns (uint256 price) {
         PriceInformation storage priceInfo = assetPriceMap[_asset];
         require(priceInfo.updatedAt != 0, "NFTOracle: asset price not ready");
         require(
@@ -215,12 +206,9 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
 
     /// @param _asset The nft contract
     /// @return timestamp The timestamp of the last update for an asset
-    function getLastUpdateTime(address _asset)
-        external
-        view
-        override
-        returns (uint256 timestamp)
-    {
+    function getLastUpdateTime(
+        address _asset
+    ) external view override returns (uint256 timestamp) {
         return assetPriceMap[_asset].updatedTimestamp;
     }
 
@@ -251,20 +239,18 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         if (aggregate) _finalizePrice(_asset, medianPrice);
     }
 
-    function _addAsset(address _asset)
-        internal
-        onlyWhenAssetNotExisted(_asset)
-    {
+    function _addAsset(
+        address _asset
+    ) internal onlyWhenAssetNotExisted(_asset) {
         assetFeederMap[_asset].registered = true;
         assets.push(_asset);
         assetFeederMap[_asset].index = uint8(assets.length - 1);
         emit AssetAdded(_asset);
     }
 
-    function _removeAsset(address _asset)
-        internal
-        onlyWhenAssetExisted(_asset)
-    {
+    function _removeAsset(
+        address _asset
+    ) internal onlyWhenAssetExisted(_asset) {
         uint8 assetIndex = assetFeederMap[_asset].index;
         delete assets[assetIndex];
         delete assetPriceMap[_asset];
@@ -280,10 +266,9 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         }
     }
 
-    function _addFeeder(address _feeder)
-        internal
-        onlyWhenFeederNotExisted(_feeder)
-    {
+    function _addFeeder(
+        address _feeder
+    ) internal onlyWhenFeederNotExisted(_feeder) {
         feeders.push(_feeder);
         feederPositionMap[_feeder].index = uint8(feeders.length - 1);
         feederPositionMap[_feeder].registered = true;
@@ -291,10 +276,9 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         emit FeederAdded(_feeder);
     }
 
-    function _removeFeeder(address _feeder)
-        internal
-        onlyWhenFeederExisted(_feeder)
-    {
+    function _removeFeeder(
+        address _feeder
+    ) internal onlyWhenFeederExisted(_feeder) {
         uint8 feederIndex = feederPositionMap[_feeder].index;
         require(
             feeders[feederIndex] == _feeder,
@@ -323,9 +307,10 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     /// @notice set oracle configs
     /// @param _expirationPeriod only prices not expired will be aggregated with
     /// @param _maxPriceDeviation use to reject when price increase/decrease rate more than this value
-    function _setConfig(uint128 _expirationPeriod, uint128 _maxPriceDeviation)
-        internal
-    {
+    function _setConfig(
+        uint128 _expirationPeriod,
+        uint128 _maxPriceDeviation
+    ) internal {
         config.expirationPeriod = _expirationPeriod;
         config.maxPriceDeviation = _maxPriceDeviation;
         emit OracleConfigSet(_expirationPeriod, _maxPriceDeviation);

@@ -13,15 +13,13 @@ import {Address} from "../dependencies/openzeppelin/contracts/Address.sol";
 import {IERC1271} from "../dependencies/openzeppelin/contracts/IERC1271.sol";
 
 interface IMarketplace {
-    function getAskOrderInfo(bytes memory data)
-        external
-        view
-        returns (DataTypes.OrderInfo memory orderInfo);
+    function getAskOrderInfo(
+        bytes memory data
+    ) external view returns (DataTypes.OrderInfo memory orderInfo);
 
-    function getBidOrderInfo(bytes memory data)
-        external
-        view
-        returns (DataTypes.OrderInfo memory orderInfo);
+    function getBidOrderInfo(
+        bytes memory data
+    ) external view returns (DataTypes.OrderInfo memory orderInfo);
 
     function matchAskWithTakerBid(
         address marketplace,
@@ -29,7 +27,8 @@ interface IMarketplace {
         uint256 value
     ) external payable returns (bytes memory);
 
-    function matchBidWithTakerAsk(address marketplace, bytes calldata data)
-        external
-        returns (bytes memory);
+    function matchBidWithTakerAsk(
+        address marketplace,
+        bytes calldata data
+    ) external returns (bytes memory);
 }
