@@ -38,10 +38,9 @@ struct PairOracleData {
 @notice Interface for UniswapV3 Lp token position info.*/
 
 interface ILiquidityNFTPositionInfoProvider {
-    function getOnchainPositionData(uint256 tokenId)
-        external
-        view
-        returns (LiquidityNFTPositionData memory);
+    function getOnchainPositionData(
+        uint256 tokenId
+    ) external view returns (LiquidityNFTPositionData memory);
 
     function getLiquidityAmountFromPositionData(
         LiquidityNFTPositionData memory positionData

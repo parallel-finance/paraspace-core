@@ -34,20 +34,15 @@ contract UiIncentiveDataProvider is IUiIncentiveDataProvider {
         );
     }
 
-    function getReservesIncentivesData(IPoolAddressesProvider provider)
-        external
-        view
-        override
-        returns (AggregatedReserveIncentiveData[] memory)
-    {
+    function getReservesIncentivesData(
+        IPoolAddressesProvider provider
+    ) external view override returns (AggregatedReserveIncentiveData[] memory) {
         return _getReservesIncentivesData(provider);
     }
 
-    function _getReservesIncentivesData(IPoolAddressesProvider provider)
-        private
-        view
-        returns (AggregatedReserveIncentiveData[] memory)
-    {
+    function _getReservesIncentivesData(
+        IPoolAddressesProvider provider
+    ) private view returns (AggregatedReserveIncentiveData[] memory) {
         IPool pool = IPool(provider.getPool());
         address[] memory reserves = pool.getReservesList();
         AggregatedReserveIncentiveData[]

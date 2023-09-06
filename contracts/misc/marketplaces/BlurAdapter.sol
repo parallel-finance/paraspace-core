@@ -24,12 +24,9 @@ contract BlurAdapter is IMarketplace {
         POLICY_ALLOWED = policyAllowed;
     }
 
-    function getAskOrderInfo(bytes memory params)
-        external
-        view
-        override
-        returns (DataTypes.OrderInfo memory orderInfo)
-    {
+    function getAskOrderInfo(
+        bytes memory params
+    ) external view override returns (DataTypes.OrderInfo memory orderInfo) {
         (Input memory sell, Input memory buy) = abi.decode(
             params,
             (Input, Input)
@@ -75,12 +72,9 @@ contract BlurAdapter is IMarketplace {
         orderInfo.consideration = consideration;
     }
 
-    function getBidOrderInfo(bytes memory)
-        external
-        pure
-        override
-        returns (DataTypes.OrderInfo memory)
-    {
+    function getBidOrderInfo(
+        bytes memory
+    ) external pure override returns (DataTypes.OrderInfo memory) {
         revert(Errors.CALL_MARKETPLACE_FAILED);
     }
 
@@ -100,12 +94,10 @@ contract BlurAdapter is IMarketplace {
             );
     }
 
-    function matchBidWithTakerAsk(address, bytes calldata)
-        external
-        pure
-        override
-        returns (bytes memory)
-    {
+    function matchBidWithTakerAsk(
+        address,
+        bytes calldata
+    ) external pure override returns (bytes memory) {
         revert(Errors.CALL_MARKETPLACE_FAILED);
     }
 }

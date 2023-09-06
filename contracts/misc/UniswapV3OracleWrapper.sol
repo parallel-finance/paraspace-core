@@ -28,7 +28,9 @@ contract UniswapV3OracleWrapper is LiquidityNFTOracleWrapper {
         return IUniswapV3Factory(DEX_FACTORY).getPool(token0, token1, fee);
     }
 
-    function _getOnchainPositionData(uint256 tokenId)
+    function _getOnchainPositionData(
+        uint256 tokenId
+    )
         internal
         view
         override

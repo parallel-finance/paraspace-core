@@ -27,11 +27,10 @@ library Helpers {
      * @param debtTokenAddress The debt token address
      * @return The variable debt balance
      **/
-    function getUserCurrentDebt(address user, address debtTokenAddress)
-        internal
-        view
-        returns (uint256)
-    {
+    function getUserCurrentDebt(
+        address user,
+        address debtTokenAddress
+    ) internal view returns (uint256) {
         return (IERC20(debtTokenAddress).balanceOf(user));
     }
 

@@ -33,30 +33,28 @@ contract NTokenIzumi is NTokenLiquidity {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, address delegateRegistry)
-        NTokenLiquidity(pool, delegateRegistry)
-    {}
+    constructor(
+        IPool pool,
+        address delegateRegistry
+    ) NTokenLiquidity(pool, delegateRegistry) {}
 
     function getXTokenType() external pure override returns (XTokenType) {
         return XTokenType.NTokenIZUMILp;
     }
 
-    function _underlyingAsset(address positionManager, uint256 tokenId)
-        internal
-        view
-        override
-        returns (address token0, address token1)
-    {
+    function _underlyingAsset(
+        address positionManager,
+        uint256 tokenId
+    ) internal view override returns (address token0, address token1) {
         ILiquidityManager POSITION_MANAGER = ILiquidityManager(positionManager);
         (, , , , , , , uint128 poolId) = POSITION_MANAGER.liquidities(tokenId);
         (token0, token1, ) = POSITION_MANAGER.poolMetas(poolId);
     }
 
-    function _collect(address positionManager, uint256 tokenId)
-        internal
-        override
-        returns (uint256 amount0, uint256 amount1)
-    {
+    function _collect(
+        address positionManager,
+        uint256 tokenId
+    ) internal override returns (uint256 amount0, uint256 amount1) {
         ILiquidityManager POSITION_MANAGER = ILiquidityManager(positionManager);
 
         (amount0, amount1) = POSITION_MANAGER.collect(

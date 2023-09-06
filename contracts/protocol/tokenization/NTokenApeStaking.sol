@@ -186,10 +186,10 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
      * @param tokenId Token id of the ape staking position on
      * @param incentiveReceiver address to receive incentive
      */
-    function unstakePositionAndRepay(uint256 tokenId, address incentiveReceiver)
-        external
-        nonReentrant
-    {
+    function unstakePositionAndRepay(
+        uint256 tokenId,
+        address incentiveReceiver
+    ) external nonReentrant {
         address bakcNToken = getBAKCNTokenAddress();
         require(
             msg.sender == address(POOL) || msg.sender == bakcNToken,
@@ -214,11 +214,9 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
      * @notice get user total ape staking position
      * @param user user address
      */
-    function getUserApeStakingAmount(address user)
-        external
-        view
-        returns (uint256)
-    {
+    function getUserApeStakingAmount(
+        address user
+    ) external view returns (uint256) {
         return
             ApeStakingLogic.getUserTotalStakingAmount(
                 _ERC721Data.userState,

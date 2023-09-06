@@ -28,18 +28,17 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, address delegateRegistry)
-        NToken(pool, true, delegateRegistry)
-    {
+    constructor(
+        IPool pool,
+        address delegateRegistry
+    ) NToken(pool, true, delegateRegistry) {
         _ERC721Data.balanceLimit = 30;
     }
 
-    function _underlyingAsset(address, uint256)
-        internal
-        view
-        virtual
-        returns (address, address)
-    {
+    function _underlyingAsset(
+        address,
+        uint256
+    ) internal view virtual returns (address, address) {
         return (address(0), address(0));
     }
 
@@ -62,21 +61,18 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
         return (0, 0);
     }
 
-    function _collect(address, uint256)
-        internal
-        virtual
-        returns (uint256, uint256)
-    {
+    function _collect(
+        address,
+        uint256
+    ) internal virtual returns (uint256, uint256) {
         return (0, 0);
     }
 
     function _refundETH(address) internal virtual {}
 
-    function underlyingAsset(uint256 tokenId)
-        external
-        view
-        returns (address token0, address token1)
-    {
+    function underlyingAsset(
+        uint256 tokenId
+    ) external view returns (address token0, address token1) {
         return _underlyingAsset(_ERC721Data.underlyingAsset, tokenId);
     }
 
@@ -191,12 +187,10 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
         }
     }
 
-    function setTraitsMultipliers(uint256[] calldata, uint256[] calldata)
-        external
-        override
-        onlyPoolAdmin
-        nonReentrant
-    {
+    function setTraitsMultipliers(
+        uint256[] calldata,
+        uint256[] calldata
+    ) external override onlyPoolAdmin nonReentrant {
         revert();
     }
 

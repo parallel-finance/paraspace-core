@@ -6,8 +6,8 @@ interface IDelegation {
 
     function setDelegate(bytes32 id, address delegate) external;
 
-    function delegation(address delegator, bytes32 id)
-        external
-        view
-        returns (address);
+    function delegation(
+        address delegator,
+        bytes32 id
+    ) external view returns (address);
 }

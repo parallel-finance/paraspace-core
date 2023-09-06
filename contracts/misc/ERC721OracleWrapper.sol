@@ -31,20 +31,15 @@ contract ERC721OracleWrapper is IEACAggregatorProxy {
         );
     }
 
-    constructor(
-        address _provider,
-        address _oracleAddress,
-        address _asset
-    ) {
+    constructor(address _provider, address _oracleAddress, address _asset) {
         ADDRESSES_PROVIDER = IPoolAddressesProvider(_provider);
         oracleAddress = INFTFloorOracle(_oracleAddress);
         asset = _asset;
     }
 
-    function setOracle(address _oracleAddress)
-        external
-        onlyAssetListingOrPoolAdmins
-    {
+    function setOracle(
+        address _oracleAddress
+    ) external onlyAssetListingOrPoolAdmins {
         oracleAddress = INFTFloorOracle(_oracleAddress);
     }
 

@@ -624,6 +624,10 @@ upgrade-pool-marketplace:
 upgrade-pool-ape-staking:
 	make TASK_NAME=upgrade:pool-ape-staking run-task
 
+.PHONY: upgrade-borrow_ape_and_stake
+upgrade-borrow_ape_and_stake:
+	make TASK_NAME=upgrade:borrow-ape-and-stake run-task
+
 .PHONY: upgrade-pool-parameters
 upgrade-pool-parameters:
 	make TASK_NAME=upgrade:pool-parameters run-task
@@ -647,6 +651,14 @@ upgrade-auto-compound-ape:
 .PHONY: upgrade-timelock
 upgrade-timelock:
 	make TASK_NAME=upgrade:timelock run-task
+
+.PHONY: upgrade-helper-contract
+upgrade-helper-contract:
+	make TASK_NAME=upgrade:helper-contract run-task
+
+.PHONY: upgrade-account-abstraction
+upgrade-account-abstraction:
+	make TASK_NAME=upgrade:account-abstraction run-task
 
 .PHONY: upgrade-p2p-pair-staking
 upgrade-p2p-pair-staking:

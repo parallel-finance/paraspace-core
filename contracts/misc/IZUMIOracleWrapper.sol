@@ -30,7 +30,9 @@ contract IZUMIOracleWrapper is LiquidityNFTOracleWrapper {
         return IiZiSwapFactory(DEX_FACTORY).pool(token0, token1, fee);
     }
 
-    function _getOnchainPositionData(uint256 tokenId)
+    function _getOnchainPositionData(
+        uint256 tokenId
+    )
         internal
         view
         override
@@ -132,15 +134,7 @@ contract IZUMIOracleWrapper is LiquidityNFTOracleWrapper {
         int24 rightPoint,
         int24 currentPoint,
         uint160 sqrtPrice_96
-    )
-        private
-        pure
-        returns (
-            uint128 x,
-            uint128 y,
-            uint128 yc
-        )
-    {
+    ) private pure returns (uint128 x, uint128 y, uint128 yc) {
         x = 0;
         uint256 amountY = 0;
         uint160 sqrtPriceR_96 = LogPowMath.getSqrtPrice(rightPoint);
@@ -194,11 +188,10 @@ contract IZUMIOracleWrapper is LiquidityNFTOracleWrapper {
         require(y == amountY, "YOFL");
     }
 
-    function _computeDepositYc(uint128 liquidDelta, uint160 sqrtPrice_96)
-        private
-        pure
-        returns (uint128 y)
-    {
+    function _computeDepositYc(
+        uint128 liquidDelta,
+        uint160 sqrtPrice_96
+    ) private pure returns (uint128 y) {
         // to simplify computation,
         // minter is required to deposit only token y in point of current price
         uint256 amount = MulDivMath.mulDivCeil(

@@ -1,6 +1,7 @@
 import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
   deployPoolApeStaking,
+  deployPoolBorrowAndStake,
   deployPoolComponents,
   deployPoolCore,
   deployPoolMarketplace,
@@ -24,6 +25,7 @@ import {
   tEthereumAddress,
 } from "../../helpers/types";
 import {IParaProxy} from "../../types";
+import {zeroAddress} from "ethereumjs-util";
 
 export const upgradeProxyImplementations = async (
   implementations: [string, string[], string[]][]
@@ -276,6 +278,35 @@ export const upgradePoolApeStaking = async (
   const implementations = [
     [
       poolApeStaking.address,
+      newPoolApeStakingSelectors,
+      oldPoolApeStakingSelectors,
+    ],
+  ] as [string, string[], string[]][];
+
+  await upgradeProxyImplementations(implementations);
+};
+
+export const upgradeBorrowApeAndStake = async (
+  oldPoolApeStaking: tEthereumAddress,
+  verify = false
+) => {
+  const addressesProvider = await getPoolAddressesProvider();
+  let oldPoolApeStakingSelectors: Array<string> = [];
+  if (oldPoolApeStaking != zeroAddress()) {
+    const pool = await getPoolProxy();
+    oldPoolApeStakingSelectors = await pool.facetFunctionSelectors(
+      oldPoolApeStaking
+    );
+  }
+
+  const {
+    poolBorrowAndStake,
+    poolBorrowAndStakeSelectors: newPoolApeStakingSelectors,
+  } = await deployPoolBorrowAndStake(addressesProvider.address, verify);
+
+  const implementations = [
+    [
+      poolBorrowAndStake.address,
       newPoolApeStakingSelectors,
       oldPoolApeStakingSelectors,
     ],

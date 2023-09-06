@@ -81,8 +81,10 @@ interface IRewardsController is IRewardsDistributor {
      * @param reward The address of the reward to set the price aggregator
      * @param rewardOracle The address of price aggregator that follows IEACAggregatorProxy interface
      */
-    function setRewardOracle(address reward, IEACAggregatorProxy rewardOracle)
-        external;
+    function setRewardOracle(
+        address reward,
+        IEACAggregatorProxy rewardOracle
+    ) external;
 
     /**
      * @dev Get the price aggregator oracle address
@@ -103,10 +105,9 @@ interface IRewardsController is IRewardsDistributor {
      * @param reward The address of the reward
      * @return The address of the TransferStrategy contract
      */
-    function getTransferStrategy(address reward)
-        external
-        view
-        returns (address);
+    function getTransferStrategy(
+        address reward
+    ) external view returns (address);
 
     /**
      * @dev Configure assets to incentivize with an emission of rewards per second until the end of distribution.
@@ -189,7 +190,10 @@ interface IRewardsController is IRewardsDistributor {
      * @return rewardsList List of addresses of the reward tokens
      * @return claimedAmounts List that contains the claimed amount per reward, following same order as "rewardList"
      **/
-    function claimAllRewards(address[] calldata assets, address to)
+    function claimAllRewards(
+        address[] calldata assets,
+        address to
+    )
         external
         returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
 
@@ -216,7 +220,9 @@ interface IRewardsController is IRewardsDistributor {
      * @return rewardsList List of addresses of the reward tokens
      * @return claimedAmounts List that contains the claimed amount per reward, following same order as "rewardsList"
      **/
-    function claimAllRewardsToSelf(address[] calldata assets)
+    function claimAllRewardsToSelf(
+        address[] calldata assets
+    )
         external
         returns (address[] memory rewardsList, uint256[] memory claimedAmounts);
 }

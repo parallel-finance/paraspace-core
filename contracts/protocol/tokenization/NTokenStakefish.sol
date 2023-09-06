@@ -26,9 +26,10 @@ contract NTokenStakefish is NToken, INTokenStakefish {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, address delegateRegistry)
-        NToken(pool, false, delegateRegistry)
-    {
+    constructor(
+        IPool pool,
+        address delegateRegistry
+    ) NToken(pool, false, delegateRegistry) {
         WETH = IWETH(_addressesProvider.getWETH());
     }
 
@@ -87,11 +88,9 @@ contract NTokenStakefish is NToken, INTokenStakefish {
     }
 
     // @inheritdoc INTokenStakefish
-    function getNFTData(uint256 tokenId)
-        external
-        view
-        returns (DataTypes.StakefishNTokenData memory data)
-    {
+    function getNFTData(
+        uint256 tokenId
+    ) external view returns (DataTypes.StakefishNTokenData memory data) {
         address validatorAddr = _getValidatorAddr(tokenId);
         data.validatorIndex = IStakefishValidator(validatorAddr)
             .validatorIndex();
@@ -127,11 +126,9 @@ contract NTokenStakefish is NToken, INTokenStakefish {
     }
 
     // Internal function to get the validator contract address for the given tokenId
-    function _getValidatorAddr(uint256 tokenId)
-        internal
-        view
-        returns (address)
-    {
+    function _getValidatorAddr(
+        uint256 tokenId
+    ) internal view returns (address) {
         // Get the validator address from the underlying Stakefish NFTManager contract
         address validatorAddr = IStakefishNFTManager(
             _ERC721Data.underlyingAsset

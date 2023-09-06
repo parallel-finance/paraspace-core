@@ -115,11 +115,7 @@ library PositionMoverLogic {
         uint256 loanId
     )
         internal
-        returns (
-            address nftAsset,
-            uint256 tokenId,
-            uint256 borrowAmount
-        )
+        returns (address nftAsset, uint256 tokenId, uint256 borrowAmount)
     {
         BDaoDataTypes.LoanData memory loanData = lendPoolLoan.getLoan(loanId);
 
@@ -181,7 +177,8 @@ library PositionMoverLogic {
                 releaseUnderlying: false,
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
-                priceOracleSentinel: poolAddressProvider.getPriceOracleSentinel()
+                priceOracleSentinel: poolAddressProvider
+                    .getPriceOracleSentinel()
             })
         );
     }

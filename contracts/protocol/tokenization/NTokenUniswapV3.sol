@@ -31,30 +31,28 @@ contract NTokenUniswapV3 is NTokenLiquidity {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool, address delegateRegistry)
-        NTokenLiquidity(pool, delegateRegistry)
-    {}
+    constructor(
+        IPool pool,
+        address delegateRegistry
+    ) NTokenLiquidity(pool, delegateRegistry) {}
 
     function getXTokenType() external pure override returns (XTokenType) {
         return XTokenType.NTokenUniswapV3;
     }
 
-    function _underlyingAsset(address positionManager, uint256 tokenId)
-        internal
-        view
-        override
-        returns (address token0, address token1)
-    {
+    function _underlyingAsset(
+        address positionManager,
+        uint256 tokenId
+    ) internal view override returns (address token0, address token1) {
         (, , token0, token1, , , , , , , , ) = INonfungiblePositionManager(
             positionManager
         ).positions(tokenId);
     }
 
-    function _collect(address positionManager, uint256 tokenId)
-        internal
-        override
-        returns (uint256 amount0, uint256 amount1)
-    {
+    function _collect(
+        address positionManager,
+        uint256 tokenId
+    ) internal override returns (uint256 amount0, uint256 amount1) {
         INonfungiblePositionManager.CollectParams
             memory collectParams = INonfungiblePositionManager.CollectParams({
                 tokenId: tokenId,

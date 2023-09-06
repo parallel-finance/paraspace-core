@@ -131,11 +131,9 @@ library UserConfiguration {
      * @param self The configuration object
      * @return True if the user has been supplying as collateral one reserve, false otherwise
      **/
-    function isUsingAsCollateralOne(DataTypes.UserConfigurationMap memory self)
-        internal
-        pure
-        returns (bool)
-    {
+    function isUsingAsCollateralOne(
+        DataTypes.UserConfigurationMap memory self
+    ) internal pure returns (bool) {
         uint256 collateralData = self.data & COLLATERAL_MASK;
         return
             collateralData != 0 && (collateralData & (collateralData - 1) == 0);
@@ -146,11 +144,9 @@ library UserConfiguration {
      * @param self The configuration object
      * @return True if the user has been supplying as collateral any reserve, false otherwise
      **/
-    function isUsingAsCollateralAny(DataTypes.UserConfigurationMap memory self)
-        internal
-        pure
-        returns (bool)
-    {
+    function isUsingAsCollateralAny(
+        DataTypes.UserConfigurationMap memory self
+    ) internal pure returns (bool) {
         return self.data & COLLATERAL_MASK != 0;
     }
 
@@ -160,11 +156,9 @@ library UserConfiguration {
      * @param self The configuration object
      * @return True if the user has been supplying as collateral one reserve, false otherwise
      **/
-    function isBorrowingOne(DataTypes.UserConfigurationMap memory self)
-        internal
-        pure
-        returns (bool)
-    {
+    function isBorrowingOne(
+        DataTypes.UserConfigurationMap memory self
+    ) internal pure returns (bool) {
         uint256 borrowingData = self.data & BORROWING_MASK;
         return borrowingData != 0 && (borrowingData & (borrowingData - 1) == 0);
     }
@@ -174,11 +168,9 @@ library UserConfiguration {
      * @param self The configuration object
      * @return True if the user has been borrowing any reserve, false otherwise
      **/
-    function isBorrowingAny(DataTypes.UserConfigurationMap memory self)
-        internal
-        pure
-        returns (bool)
-    {
+    function isBorrowingAny(
+        DataTypes.UserConfigurationMap memory self
+    ) internal pure returns (bool) {
         return self.data & BORROWING_MASK != 0;
     }
 
@@ -187,11 +179,9 @@ library UserConfiguration {
      * @param self The configuration object
      * @return True if the user has not been borrowing or supplying any reserve, false otherwise
      **/
-    function isEmpty(DataTypes.UserConfigurationMap memory self)
-        internal
-        pure
-        returns (bool)
-    {
+    function isEmpty(
+        DataTypes.UserConfigurationMap memory self
+    ) internal pure returns (bool) {
         return self.data == 0;
     }
 

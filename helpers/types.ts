@@ -244,6 +244,7 @@ export enum eContractid {
   PoolMarketplaceImpl = "PoolMarketplaceImpl",
   PoolParametersImpl = "PoolParametersImpl",
   PoolApeStakingImpl = "PoolApeStakingImpl",
+  PoolBorrowAndStakeImpl = "PoolBorrowAndStakeImpl",
   ApeCoinStaking = "ApeCoinStaking",
   ATokenDebtToken = "ATokenDebtToken",
   StETHDebtToken = "StETHDebtToken",
@@ -303,8 +304,6 @@ export enum eContractid {
   AccountFactory = "AccountFactory",
   AccountProxy = "AccountProxy",
   AccountRegistry = "AccountRegistry",
-  AccountRegistryProxy = "AccountRegistryProxy",
-  ParaAccount = "ParaAccount",
 }
 
 /*

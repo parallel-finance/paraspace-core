@@ -25,11 +25,7 @@ abstract contract LiquidityNFTOracleWrapper is ILiquidityNFTOracleWrapper {
 
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
-    constructor(
-        address _factory,
-        address _manager,
-        address _addressProvider
-    ) {
+    constructor(address _factory, address _manager, address _addressProvider) {
         DEX_FACTORY = _factory;
         POSITION_MANAGER = _manager;
         ADDRESSES_PROVIDER = IPoolAddressesProvider(_addressProvider);
@@ -38,22 +34,18 @@ abstract contract LiquidityNFTOracleWrapper is ILiquidityNFTOracleWrapper {
     /**
      * @notice get onchain position data from uniswap for the specified tokenId.
      */
-    function getOnchainPositionData(uint256 tokenId)
-        external
-        view
-        returns (LiquidityNFTPositionData memory positionData)
-    {
+    function getOnchainPositionData(
+        uint256 tokenId
+    ) external view returns (LiquidityNFTPositionData memory positionData) {
         (, positionData) = _getOnchainPositionData(tokenId);
     }
 
     /**
      * @notice get onchain liquidity amount for the specified tokenId.
      */
-    function getLiquidityAmount(uint256 tokenId)
-        external
-        view
-        returns (uint256 token0Amount, uint256 token1Amount)
-    {
+    function getLiquidityAmount(
+        uint256 tokenId
+    ) external view returns (uint256 token0Amount, uint256 token1Amount) {
         (
             ,
             LiquidityNFTPositionData memory positionData
@@ -84,11 +76,9 @@ abstract contract LiquidityNFTOracleWrapper is ILiquidityNFTOracleWrapper {
     /**
      * @notice get liquidity provider fee amount for the specified tokenId.
      */
-    function getLpFeeAmount(uint256 tokenId)
-        external
-        view
-        returns (uint256 token0Amount, uint256 token1Amount)
-    {
+    function getLpFeeAmount(
+        uint256 tokenId
+    ) external view returns (uint256 token0Amount, uint256 token1Amount) {
         (
             address pool,
             LiquidityNFTPositionData memory positionData
@@ -145,9 +135,9 @@ abstract contract LiquidityNFTOracleWrapper is ILiquidityNFTOracleWrapper {
 
         return
             (((liquidityAmount0 + feeAmount0) * oracleData.token0Price) /
-                10**oracleData.token0Decimal) +
+                10 ** oracleData.token0Decimal) +
             (((liquidityAmount1 + feeAmount1) * oracleData.token1Price) /
-                10**oracleData.token1Decimal);
+                10 ** oracleData.token1Decimal);
     }
 
     function _getLpFeeAmountFromPositionData(
@@ -261,21 +251,16 @@ abstract contract LiquidityNFTOracleWrapper is ILiquidityNFTOracleWrapper {
         return address(0);
     }
 
-    function _getPendingFeeAmounts(address, LiquidityNFTPositionData memory)
-        internal
-        view
-        virtual
-        returns (uint256, uint256)
-    {
+    function _getPendingFeeAmounts(
+        address,
+        LiquidityNFTPositionData memory
+    ) internal view virtual returns (uint256, uint256) {
         return (0, 0);
     }
 
-    function _getOnchainPositionData(uint256)
-        internal
-        view
-        virtual
-        returns (address, LiquidityNFTPositionData memory)
-    {
+    function _getOnchainPositionData(
+        uint256
+    ) internal view virtual returns (address, LiquidityNFTPositionData memory) {
         LiquidityNFTPositionData memory positionData;
         return (address(0), positionData);
     }

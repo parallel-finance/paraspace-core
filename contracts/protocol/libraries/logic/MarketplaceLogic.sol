@@ -119,7 +119,8 @@ library MarketplaceLogic {
                 referralCode: referralCode,
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
-                priceOracleSentinel: poolAddressProvider.getPriceOracleSentinel()
+                priceOracleSentinel: poolAddressProvider
+                    .getPriceOracleSentinel()
             })
         );
 
@@ -271,7 +272,8 @@ library MarketplaceLogic {
                 referralCode: referralCode,
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
-                priceOracleSentinel: poolAddressProvider.getPriceOracleSentinel()
+                priceOracleSentinel: poolAddressProvider
+                    .getPriceOracleSentinel()
             })
         );
     }
