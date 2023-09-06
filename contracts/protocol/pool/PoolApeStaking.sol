@@ -45,7 +45,7 @@ contract PoolApeStaking is
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     IAutoCompoundApe internal immutable APE_COMPOUND;
     IERC20 internal immutable APE_COIN;
-    uint256 internal constant POOL_REVISION = 149;
+    uint256 internal constant POOL_REVISION = 200;
     address internal immutable PARA_APE_STAKING;
 
     event ReserveUsedAsCollateralEnabled(

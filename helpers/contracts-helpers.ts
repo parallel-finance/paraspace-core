@@ -1108,9 +1108,10 @@ export const proposeSafeTransaction = async (
   const safeTransactionData: SafeTransactionDataPartial = {
     to: target,
     value: "0",
-    nonce: staticNonce
-      ? staticNonce + idx
-      : await safeService.getNextNonce(MULTI_SIG),
+    nonce:
+      staticNonce != undefined
+        ? staticNonce + idx
+        : await safeService.getNextNonce(MULTI_SIG),
     operation,
     data,
   };
@@ -1124,10 +1125,14 @@ export const proposeSafeTransaction = async (
   const safeHash = await safeSdk.getTransactionHash(safeTransaction);
   console.log(safeHash);
 
-  await safeService.estimateSafeTransaction(MULTI_SIG, {
-    ...safeTransactionData,
-    operation: safeTransactionData.operation as number,
-  });
+  try {
+    await safeService.estimateSafeTransaction(MULTI_SIG, {
+      ...safeTransactionData,
+      operation: safeTransactionData.operation as number,
+    });
+  } catch (e) {
+    console.log(e);
+  }
 
   await safeService.proposeTransaction({
     safeAddress: MULTI_SIG,

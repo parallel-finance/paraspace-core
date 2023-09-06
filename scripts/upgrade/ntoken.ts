@@ -21,7 +21,11 @@ import {
 import {NTokenContractId, XTokenType} from "../../helpers/types";
 
 import dotenv from "dotenv";
-import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
+import {
+  DRY_RUN,
+  GLOBAL_OVERRIDES,
+  XTOKEN_TYPE_UPGRADE_WHITELIST,
+} from "../../helpers/hardhat-constants";
 import {dryRunEncodedData} from "../../helpers/contracts-helpers";
 
 dotenv.config();
@@ -56,20 +60,18 @@ export const upgradeNToken = async (verify = false) => {
     const name = await nToken.name();
     const symbol = await nToken.symbol();
     const xTokenType = await nToken.getXTokenType();
-
-    if (
-      ![
-        XTokenType.NToken,
-        XTokenType.NTokenMoonBirds,
-        XTokenType.NTokenUniswapV3,
-        XTokenType.NTokenBAYC,
-        XTokenType.NTokenMAYC,
-        XTokenType.NTokenBAKC,
-        XTokenType.NTokenOtherdeed,
-        XTokenType.NTokenStakefish,
-        XTokenType.NTokenChromieSquiggle,
-      ].includes(xTokenType)
-    ) {
+    const xTokenTypeUpgradeWhiteList = XTOKEN_TYPE_UPGRADE_WHITELIST || [
+      XTokenType.NToken,
+      XTokenType.NTokenMoonBirds,
+      XTokenType.NTokenUniswapV3,
+      XTokenType.NTokenBAYC,
+      XTokenType.NTokenMAYC,
+      XTokenType.NTokenBAKC,
+      XTokenType.NTokenOtherdeed,
+      XTokenType.NTokenStakefish,
+      XTokenType.NTokenChromieSquiggle,
+    ];
+    if (!xTokenTypeUpgradeWhiteList.includes(xTokenType)) {
       continue;
     }
 
