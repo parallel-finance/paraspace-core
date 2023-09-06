@@ -14,7 +14,11 @@ import {
   getProtocolDataProvider,
   getPToken,
 } from "../../helpers/contracts-getters";
-import {PTokenContractId, XTokenType} from "../../helpers/types";
+import {
+  NTokenContractId,
+  PTokenContractId,
+  XTokenType,
+} from "../../helpers/types";
 
 import dotenv from "dotenv";
 import {
@@ -88,8 +92,18 @@ export const upgradePToken = async (verify = false) => {
     } else if (xTokenType == XTokenType.PTokenSApe) {
       if (!pTokenSApeImplementationAddress) {
         console.log("deploy PTokenSApe implementation");
+        const nBAYC =
+          // eslint-disable-next-line
+          allXTokens.find(
+            (x) => x.symbol == NTokenContractId.nBAYC
+          )!.tokenAddress;
+        const nMAYC =
+          // eslint-disable-next-line
+          allXTokens.find(
+            (x) => x.symbol == NTokenContractId.nMAYC
+          )!.tokenAddress;
         pTokenSApeImplementationAddress = (
-          await deployPTokenSApe(poolAddress, verify)
+          await deployPTokenSApe(poolAddress, nBAYC, nMAYC, verify)
         ).address;
       }
       newImpl = pTokenSApeImplementationAddress;

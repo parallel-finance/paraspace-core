@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import {IPool} from "../../interfaces/IPool.sol";
 import {PToken} from "./PToken.sol";
+import {INTokenApeStaking} from "../../interfaces/INTokenApeStaking.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {ApeCoinStaking} from "../../dependencies/yoga-labs/ApeCoinStaking.sol";
@@ -24,9 +25,13 @@ contract PTokenSApe is PToken {
     using WadRayMath for uint256;
 
     IParaApeStaking immutable paraApeStaking;
+    INTokenApeStaking immutable nBAYC;
+    INTokenApeStaking immutable nMAYC;
 
-    constructor(IPool pool) PToken(pool) {
+    constructor(IPool pool, address _nBAYC, address _nMAYC) PToken(pool) {
         paraApeStaking = IParaApeStaking(pool.paraApeStaking());
+        nBAYC = INTokenApeStaking(_nBAYC);
+        nMAYC = INTokenApeStaking(_nMAYC);
     }
 
     function mint(
@@ -49,7 +54,10 @@ contract PTokenSApe is PToken {
     }
 
     function balanceOf(address user) public view override returns (uint256) {
-        return paraApeStaking.totalSApeBalance(user);
+        uint256 v1StakedAPE = nBAYC.getUserApeStakingAmount(user) +
+        nMAYC.getUserApeStakingAmount(user);
+        uint256 v2StakedAPE = paraApeStaking.totalSApeBalance(user);
+        return v1StakedAPE + v2StakedAPE;
     }
 
     function scaledBalanceOf(

@@ -235,8 +235,8 @@ describe("Para Ape staking ape coin pool test", () => {
           },
         ],
         ape.address,
-        parseEther("100000"),
-        parseEther("150000"),
+        parseEther("0"),
+        parseEther("250000"),
         true
       )
     ).to.be.revertedWith(ProtocolErrors.COLLATERAL_CANNOT_COVER_NEW_BORROW);

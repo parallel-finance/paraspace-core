@@ -159,6 +159,7 @@ import {
   ParaApeStaking,
   PoolBorrowAndStake__factory,
   PoolBorrowAndStake,
+  P2PPairStaking,
 } from "../types";
 import {
   getACLManager,
@@ -170,6 +171,7 @@ import {
   getFirstSigner,
   getHelperContract,
   getInitializableAdminUpgradeabilityProxy,
+  getP2PPairStaking,
   getParaApeStaking,
   getPoolProxy,
   getProtocolDataProvider,
@@ -238,6 +240,9 @@ export const deployAllLibraries = async (verify?: boolean) => {
     },
     "contracts/protocol/libraries/logic/PoolLogic.sol": {
       PoolLogic: poolLogic.address,
+    },
+    "contracts/protocol/tokenization/libraries/ApeStakingLogic.sol": {
+      ApeStakingLogic: apeStakingLogic.address,
     },
     "contracts/protocol/tokenization/libraries/MintableERC721Logic.sol": {
       MintableERC721Logic: mintableERC721Logic.address,
@@ -875,9 +880,6 @@ export const deployPoolComponents = async (
 
   const allTokens = await getAllTokens();
 
-  const APE_WETH_FEE = 3000;
-  const WETH_USDC_FEE = 500;
-
   const {
     poolCoreSelectors,
     poolParametersSelectors,
@@ -922,8 +924,6 @@ export const deployPoolComponents = async (
     poolMarketplaceSelectors
   )) as PoolMarketplace;
 
-  const config = getParaSpaceConfig();
-  const treasuryAddress = config.Treasury;
   const cApe = await getAutoCompoundApe();
   const poolApeStaking = allTokens.APE
     ? ((await withSaveAndVerify(
@@ -933,12 +933,6 @@ export const deployPoolComponents = async (
           provider,
           cApe.address,
           allTokens.APE.address,
-          allTokens.USDC.address,
-          (await getUniswapV3SwapRouter()).address,
-          allTokens.WETH.address,
-          APE_WETH_FEE,
-          WETH_USDC_FEE,
-          treasuryAddress,
           (await getParaApeStaking()).address,
         ],
         verify,
@@ -2709,6 +2703,65 @@ export const deployAutoCompoundApeImplAndAssignItToProxy = async (
       GLOBAL_OVERRIDES
     )
   );
+};
+
+export const deployP2PPairStakingImpl = async (verify?: boolean) => {
+  const allTokens = await getAllTokens();
+  const protocolDataProvider = await getProtocolDataProvider();
+  const nBAYC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAYC.address)
+  ).xTokenAddress;
+  const nMAYC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.MAYC.address)
+  ).xTokenAddress;
+  const nBAKC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAKC.address)
+  ).xTokenAddress;
+  const apeCoinStaking =
+    (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
+    (await deployApeCoinStaking(verify)).address;
+  const args = [
+    allTokens.BAYC.address,
+    allTokens.MAYC.address,
+    allTokens.BAKC.address,
+    nBAYC,
+    nMAYC,
+    nBAKC,
+    allTokens.APE.address,
+    allTokens.cAPE.address,
+    apeCoinStaking,
+  ];
+
+  return withSaveAndVerify(
+    await getContractFactory("P2PPairStaking"),
+    eContractid.P2PPairStakingImpl,
+    [...args],
+    verify
+  ) as Promise<P2PPairStaking>;
+};
+
+export const deployP2PPairStaking = async (verify?: boolean) => {
+  const p2pImplementation = await deployP2PPairStakingImpl(verify);
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const initData = p2pImplementation.interface.encodeFunctionData("initialize");
+
+  const proxyInstance = await withSaveAndVerify(
+    await getContractFactory("InitializableAdminUpgradeabilityProxy"),
+    eContractid.P2PPairStaking,
+    [],
+    verify
+  );
+
+  await waitForTx(
+    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+      "initialize(address,address,bytes)"
+    ](p2pImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+  );
+
+  return await getP2PPairStaking(proxyInstance.address);
 };
 
 export const deployApeStakingP2PLogic = async (verify?: boolean) =>

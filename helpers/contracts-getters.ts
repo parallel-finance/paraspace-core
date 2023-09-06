@@ -102,6 +102,7 @@ import {
   PoolMarketplace__factory,
   Account__factory,
   AccountRegistry__factory,
+  P2PPairStaking__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1133,6 +1134,17 @@ export const getAutoYieldApe = async (address?: tEthereumAddress) =>
     address ||
       (
         await getDb().get(`${eContractid.yAPE}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getP2PPairStaking = async (address?: tEthereumAddress) =>
+  await P2PPairStaking__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.P2PPairStaking}.${DRE.network.name}`)
+          .value()
       ).address,
     await getFirstSigner()
   );

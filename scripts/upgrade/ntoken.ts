@@ -106,8 +106,26 @@ export const upgradeNToken = async (verify = false) => {
     } else if (xTokenType == XTokenType.NTokenBAKC) {
       if (!nTokenBAKCImplementationAddress) {
         console.log("deploy NTokenBAKC implementation");
+        const apeCoinStaking = await getApeCoinStaking();
+        const nBAYC =
+          // eslint-disable-next-line
+          allXTokens.find(
+            (x) => x.symbol == NTokenContractId.nBAYC
+          )!.tokenAddress;
+        const nMAYC =
+          // eslint-disable-next-line
+          allXTokens.find(
+            (x) => x.symbol == NTokenContractId.nMAYC
+          )!.tokenAddress;
         nTokenBAKCImplementationAddress = (
-          await deployNTokenBAKCImpl(pool.address, delegationRegistry, verify)
+          await deployNTokenBAKCImpl(
+            pool.address,
+            apeCoinStaking.address,
+            nBAYC,
+            nMAYC,
+            delegationRegistry,
+            verify
+          )
         ).address;
       }
       newImpl = nTokenBAKCImplementationAddress;
