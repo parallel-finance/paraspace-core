@@ -340,19 +340,21 @@ library SupplyLogic {
             amountToWithdraw
         );
 
-        IPToken(reserveCache.xTokenAddress).burn(
-            msg.sender,
-            params.to,
-            amountToWithdraw,
-            reserveCache.nextLiquidityIndex,
-            Helpers.calculateTimeLockParams(
+        DataTypes.TimeLockParams memory timeLockParams = Helpers
+            .calculateTimeLockParams(
                 reserve,
                 DataTypes.AssetType.ERC20,
                 params.asset,
                 amountToWithdraw,
                 DataTypes.TimeLockActionType.WITHDRAW,
                 params.isWhiteListed
-            )
+            );
+        IPToken(reserveCache.xTokenAddress).burn(
+            msg.sender,
+            params.to,
+            amountToWithdraw,
+            reserveCache.nextLiquidityIndex,
+            timeLockParams
         );
 
         if (userConfig.isUsingAsCollateral(reserve.id)) {
