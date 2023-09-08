@@ -368,10 +368,12 @@ contract PoolParameters is
     /// @inheritdoc IPoolParameters
     function isTimeLockWhiteListed(
         address[] calldata users
-    ) external view returns (bool[] memory res) {
+    ) external view returns (bool[] memory) {
         DataTypes.PoolStorage storage ps = poolStorage();
+        bool[] memory res = new bool[](users.length);
         for (uint256 i = 0; i < users.length; i++) {
             res[i] = ps._timeLockWhiteList[users[i]];
         }
+        return res;
     }
 }

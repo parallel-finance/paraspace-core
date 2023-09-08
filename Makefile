@@ -276,9 +276,13 @@ test-sape-operation:
 test-acl-manager:
 	make TEST_TARGET=acl-manager.spec.ts test
 
-.PHONY: test-time-lock
-test-time-lock:
+.PHONY: test-timelock-executor
+test-timelock-executor:
 	make TEST_TARGET=time_lock_executor.spec.ts test
+
+.PHONY: test-timelock
+test-timelock:
+	make TEST_TARGET=_timelock.spec.ts test
 
 .PHONY: test-stakefish-nft
 test-stakefish-nft:

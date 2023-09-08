@@ -101,7 +101,7 @@ library Helpers {
         DataTypes.TimeLockActionType actionType,
         bool isWhiteListed
     ) internal returns (DataTypes.TimeLockParams memory timeLockParams) {
-        if (isWhiteListed) {
+        if (!isWhiteListed) {
             timeLockParams = GenericLogic.calculateTimeLockParams(
                 reserve,
                 DataTypes.TimeLockFactorParams({
@@ -111,7 +111,9 @@ library Helpers {
                 })
             );
         } else {
-            timeLockParams.releaseTime = MIN_WAIT_TIME;
+            timeLockParams.releaseTime =
+                uint48(block.timestamp) +
+                MIN_WAIT_TIME;
         }
         timeLockParams.actionType = actionType;
     }
