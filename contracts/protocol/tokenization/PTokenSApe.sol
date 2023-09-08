@@ -55,7 +55,7 @@ contract PTokenSApe is PToken {
 
     function balanceOf(address user) public view override returns (uint256) {
         uint256 v1StakedAPE = nBAYC.getUserApeStakingAmount(user) +
-        nMAYC.getUserApeStakingAmount(user);
+            nMAYC.getUserApeStakingAmount(user);
         uint256 v2StakedAPE = paraApeStaking.totalSApeBalance(user);
         return v1StakedAPE + v2StakedAPE;
     }

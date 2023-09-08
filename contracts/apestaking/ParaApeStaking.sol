@@ -727,10 +727,15 @@ contract ParaApeStaking is
 
     /// @inheritdoc IApeStakingVault
     function depositPairNFT(
+        address onBehalf,
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
     ) external override whenNotPaused nonReentrant {
+        require(
+            msg.sender == pool || msg.sender == onBehalf,
+            Errors.CALLER_NOT_ALLOWED
+        );
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = isBAYC
             ? ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID
@@ -738,6 +743,7 @@ contract ParaApeStaking is
         ApeStakingPairPoolLogic.depositPairNFT(
             poolStates[poolId],
             vars,
+            onBehalf,
             isBAYC,
             apeTokenIds,
             bakcTokenIds
@@ -807,12 +813,17 @@ contract ParaApeStaking is
 
     /// @inheritdoc IApeStakingVault
     function depositNFT(
+        address onBehalf,
         address nft,
         uint32[] calldata tokenIds
     ) external override whenNotPaused nonReentrant {
         require(
             nft == bayc || nft == mayc || nft == bakc,
             Errors.NFT_NOT_ALLOWED
+        );
+        require(
+            msg.sender == pool || msg.sender == onBehalf,
+            Errors.CALLER_NOT_ALLOWED
         );
         ApeStakingVaultCacheVars memory vars = _createCacheVars();
         uint256 poolId = (nft == bayc)
@@ -823,6 +834,7 @@ contract ParaApeStaking is
         ApeStakingSinglePoolLogic.depositNFT(
             poolStates[poolId],
             vars,
+            onBehalf,
             nft,
             tokenIds
         );

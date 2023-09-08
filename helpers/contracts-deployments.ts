@@ -553,16 +553,9 @@ export const deployPoolApeStaking = async (
       borrowLogic.address,
   };
 
-  const APE_WETH_FEE = 3000;
-  const WETH_USDC_FEE = 500;
-
   const {poolApeStakingSelectors} = await getPoolSignatures();
 
   const allTokens = await getAllTokens();
-
-  const config = getParaSpaceConfig();
-  const treasuryAddress = config.Treasury;
-
   const cApe = await getAutoCompoundApe();
   const poolApeStaking = (await withSaveAndVerify(
     await getContractFactory("PoolApeStaking", apeStakingLibraries),
@@ -571,12 +564,10 @@ export const deployPoolApeStaking = async (
       provider,
       cApe.address,
       allTokens.APE.address,
-      allTokens.USDC.address,
-      (await getUniswapV3SwapRouter()).address,
-      allTokens.WETH.address,
-      APE_WETH_FEE,
-      WETH_USDC_FEE,
-      treasuryAddress,
+      allTokens.BAYC.address,
+      allTokens.MAYC.address,
+      allTokens.BAKC.address,
+      (await getParaApeStaking()).address,
     ],
     verify,
     false,
@@ -933,6 +924,9 @@ export const deployPoolComponents = async (
           provider,
           cApe.address,
           allTokens.APE.address,
+          allTokens.BAYC.address,
+          allTokens.MAYC.address,
+          allTokens.BAKC.address,
           (await getParaApeStaking()).address,
         ],
         verify,

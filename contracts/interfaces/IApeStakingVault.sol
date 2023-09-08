@@ -42,6 +42,7 @@ interface IApeStakingVault {
      * @param bakcTokenIds BAKC token ids
      */
     function depositPairNFT(
+        address onBehalf,
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
@@ -90,7 +91,11 @@ interface IApeStakingVault {
      * @param nft Ape or BAKC token address
      * @param tokenIds nft token ids
      */
-    function depositNFT(address nft, uint32[] calldata tokenIds) external;
+    function depositNFT(
+        address onBehalf,
+        address nft,
+        uint32[] calldata tokenIds
+    ) external;
 
     /**
      * @notice stake pool's Ape into ApeCoinStaking

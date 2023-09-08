@@ -128,10 +128,12 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositPairNFT(true, [0, 1], [0, 1])
+        .depositPairNFT(user1.address, true, [0, 1], [0, 1])
     );
     await waitForTx(
-      await paraApeStaking.connect(user2.signer).depositPairNFT(true, [2], [2])
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositPairNFT(user2.address, true, [2], [2])
     );
     expect(await bayc.ownerOf(0)).to.be.equal(paraApeStaking.address);
     expect(await bayc.ownerOf(1)).to.be.equal(paraApeStaking.address);
@@ -290,10 +292,12 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositPairNFT(false, [0, 1], [0, 1])
+        .depositPairNFT(user1.address, false, [0, 1], [0, 1])
     );
     await waitForTx(
-      await paraApeStaking.connect(user2.signer).depositPairNFT(false, [2], [2])
+      await paraApeStaking
+        .connect(user2.signer)
+        .depositPairNFT(user2.address, false, [2], [2])
     );
     expect(await mayc.ownerOf(0)).to.be.equal(paraApeStaking.address);
     expect(await mayc.ownerOf(1)).to.be.equal(paraApeStaking.address);
@@ -446,17 +450,17 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositNFT(bayc.address, [0, 1, 2])
+        .depositNFT(user1.address, bayc.address, [0, 1, 2])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user2.signer)
-        .depositNFT(mayc.address, [0, 1, 2])
+        .depositNFT(user2.address, mayc.address, [0, 1, 2])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user3.signer)
-        .depositNFT(bakc.address, [0, 1, 2])
+        .depositNFT(user3.address, bakc.address, [0, 1, 2])
     );
     expect(await bayc.ownerOf(0)).to.be.equal(paraApeStaking.address);
     expect(await bayc.ownerOf(1)).to.be.equal(paraApeStaking.address);
@@ -693,23 +697,33 @@ describe("Para Ape Staking Test", () => {
     await supplyAndValidate(bakc, "3", user1, false);
 
     await expect(
-      paraApeStaking.connect(user2.signer).depositPairNFT(true, [0, 1], [0, 1])
+      paraApeStaking
+        .connect(user2.signer)
+        .depositPairNFT(user2.address, true, [0, 1], [0, 1])
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
 
     await expect(
-      paraApeStaking.connect(user1.signer).depositPairNFT(true, [0], [0])
+      paraApeStaking
+        .connect(user1.signer)
+        .depositPairNFT(user1.address, true, [0], [0])
     ).to.be.revertedWith(ProtocolErrors.APE_POSITION_EXISTED);
 
     await expect(
-      paraApeStaking.connect(user1.signer).depositPairNFT(true, [2], [1])
+      paraApeStaking
+        .connect(user1.signer)
+        .depositPairNFT(user1.address, true, [2], [1])
     ).to.be.revertedWith(ProtocolErrors.BAKC_POSITION_EXISTED);
 
     await expect(
-      paraApeStaking.connect(user1.signer).depositPairNFT(true, [1], [0])
+      paraApeStaking
+        .connect(user1.signer)
+        .depositPairNFT(user1.address, true, [1], [0])
     ).to.be.revertedWith(ProtocolErrors.PAIR_POSITION_EXISTED);
 
     await waitForTx(
-      await paraApeStaking.connect(user1.signer).depositPairNFT(true, [2], [2])
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositPairNFT(user1.address, true, [2], [2])
     );
   });
 
@@ -726,7 +740,7 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositPairNFT(true, [0, 1, 2], [0, 1, 2])
+        .depositPairNFT(user1.address, true, [0, 1, 2], [0, 1, 2])
     );
 
     await expect(
@@ -747,7 +761,7 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositPairNFT(true, [0, 1, 2], [0, 1, 2])
+        .depositPairNFT(user1.address, true, [0, 1, 2], [0, 1, 2])
     );
 
     await expect(
@@ -775,7 +789,7 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositPairNFT(true, [0, 1, 2], [0, 1, 2])
+        .depositPairNFT(user1.address, true, [0, 1, 2], [0, 1, 2])
     );
 
     await waitForTx(
@@ -821,7 +835,7 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositPairNFT(true, [0, 1, 2], [0, 1, 2])
+        .depositPairNFT(user1.address, true, [0, 1, 2], [0, 1, 2])
     );
 
     await waitForTx(
@@ -893,23 +907,33 @@ describe("Para Ape Staking Test", () => {
     await supplyAndValidate(bakc, "3", user1, false);
 
     await expect(
-      paraApeStaking.connect(user2.signer).depositNFT(bayc.address, [0])
+      paraApeStaking
+        .connect(user2.signer)
+        .depositNFT(user2.address, bayc.address, [0])
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
 
     await expect(
-      paraApeStaking.connect(user1.signer).depositNFT(bayc.address, [0])
+      paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(user1.address, bayc.address, [0])
     ).to.be.revertedWith(ProtocolErrors.APE_POSITION_EXISTED);
 
     await expect(
-      paraApeStaking.connect(user1.signer).depositNFT(bayc.address, [1])
+      paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(user1.address, bayc.address, [1])
     ).to.be.revertedWith(ProtocolErrors.PAIR_POSITION_EXISTED);
 
     await expect(
-      paraApeStaking.connect(user2.signer).depositNFT(bakc.address, [0])
+      paraApeStaking
+        .connect(user2.signer)
+        .depositNFT(user2.address, bakc.address, [0])
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
 
     await expect(
-      paraApeStaking.connect(user1.signer).depositNFT(bakc.address, [1])
+      paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(user1.address, bakc.address, [1])
     ).to.be.revertedWith(ProtocolErrors.APE_POSITION_EXISTED);
   });
 
@@ -924,7 +948,7 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositNFT(bayc.address, [0, 1])
+        .depositNFT(user1.address, bayc.address, [0, 1])
     );
 
     await expect(
@@ -949,12 +973,12 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositNFT(bayc.address, [0, 1])
+        .depositNFT(user1.address, bayc.address, [0, 1])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositNFT(bakc.address, [0, 1])
+        .depositNFT(user1.address, bakc.address, [0, 1])
     );
 
     await expect(
@@ -996,7 +1020,7 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositNFT(bayc.address, [0, 1])
+        .depositNFT(user1.address, bayc.address, [0, 1])
     );
 
     await waitForTx(
@@ -1027,12 +1051,12 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositNFT(bayc.address, [0, 1])
+        .depositNFT(user1.address, bayc.address, [0, 1])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositNFT(bakc.address, [0, 1])
+        .depositNFT(user1.address, bakc.address, [0, 1])
     );
 
     await waitForTx(
@@ -1089,12 +1113,12 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositNFT(bayc.address, [0, 1])
+        .depositNFT(user1.address, bayc.address, [0, 1])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositNFT(bakc.address, [0, 1])
+        .depositNFT(user1.address, bakc.address, [0, 1])
     );
 
     await waitForTx(
@@ -1184,12 +1208,12 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositNFT(bayc.address, [0, 1])
+        .depositNFT(user1.address, bayc.address, [0, 1])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositNFT(bakc.address, [0, 1])
+        .depositNFT(user1.address, bakc.address, [0, 1])
     );
 
     await waitForTx(
@@ -1262,20 +1286,24 @@ describe("Para Ape Staking Test", () => {
     await supplyAndValidate(bakc, "4", user1, true);
 
     let tx0 = paraApeStaking.interface.encodeFunctionData("depositPairNFT", [
+      user1.address,
       true,
       [0, 1],
       [0, 1],
     ]);
     let tx1 = paraApeStaking.interface.encodeFunctionData("depositPairNFT", [
+      user1.address,
       false,
       [0, 1],
       [2, 3],
     ]);
     let tx2 = paraApeStaking.interface.encodeFunctionData("depositNFT", [
+      user1.address,
       bayc.address,
       [2, 3],
     ]);
     let tx3 = paraApeStaking.interface.encodeFunctionData("depositNFT", [
+      user1.address,
       mayc.address,
       [2, 3],
     ]);
@@ -1393,17 +1421,17 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositNFT(bayc.address, [0, 1])
+        .depositNFT(user1.address, bayc.address, [0, 1])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user2.signer)
-        .depositNFT(mayc.address, [0, 1])
+        .depositNFT(user2.address, mayc.address, [0, 1])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user3.signer)
-        .depositNFT(bakc.address, [0, 1, 2, 3])
+        .depositNFT(user3.address, bakc.address, [0, 1, 2, 3])
     );
 
     await waitForTx(
@@ -1527,17 +1555,17 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositNFT(bayc.address, [0, 1, 2])
+        .depositNFT(user1.address, bayc.address, [0, 1, 2])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user2.signer)
-        .depositNFT(mayc.address, [0, 1, 2])
+        .depositNFT(user2.address, mayc.address, [0, 1, 2])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user3.signer)
-        .depositNFT(bakc.address, [0, 1, 2, 3])
+        .depositNFT(user3.address, bakc.address, [0, 1, 2, 3])
     );
 
     await waitForTx(
@@ -1629,17 +1657,17 @@ describe("Para Ape Staking Test", () => {
     await waitForTx(
       await paraApeStaking
         .connect(user1.signer)
-        .depositNFT(bayc.address, [0, 1, 2])
+        .depositNFT(user1.address, bayc.address, [0, 1, 2])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user2.signer)
-        .depositNFT(mayc.address, [0, 1, 2])
+        .depositNFT(user2.address, mayc.address, [0, 1, 2])
     );
     await waitForTx(
       await paraApeStaking
         .connect(user3.signer)
-        .depositNFT(bakc.address, [0, 1, 2, 3])
+        .depositNFT(user3.address, bakc.address, [0, 1, 2, 3])
     );
 
     await waitForTx(

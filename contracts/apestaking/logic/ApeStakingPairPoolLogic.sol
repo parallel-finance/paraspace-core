@@ -40,6 +40,7 @@ library ApeStakingPairPoolLogic {
     function depositPairNFT(
         IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
+        address onBehalf,
         bool isBAYC,
         uint32[] calldata apeTokenIds,
         uint32[] calldata bakcTokenIds
@@ -59,7 +60,6 @@ library ApeStakingPairPoolLogic {
             vars.apeToken = vars.mayc;
             vars.nApe = vars.nMayc;
         }
-        address msgSender = msg.sender;
         uint128 accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 apeTokenId = apeTokenIds[index];
@@ -70,7 +70,7 @@ library ApeStakingPairPoolLogic {
                 address nApeOwner = IERC721(vars.nApe).ownerOf(apeTokenId);
                 address nBakcOwner = IERC721(vars.nBakc).ownerOf(bakcTokenId);
                 require(
-                    msgSender == nApeOwner && msgSender == nBakcOwner,
+                    onBehalf == nApeOwner && onBehalf == nBakcOwner,
                     Errors.NOT_THE_OWNER
                 );
             }

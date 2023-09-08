@@ -34,6 +34,7 @@ library ApeStakingSinglePoolLogic {
     function depositNFT(
         IParaApeStaking.PoolState storage poolState,
         IParaApeStaking.ApeStakingVaultCacheVars memory vars,
+        address onBehalf,
         address nft,
         uint32[] calldata tokenIds
     ) external {
@@ -52,13 +53,12 @@ library ApeStakingSinglePoolLogic {
             nToken = vars.nBakc;
             apeStakingPoolId = ApeStakingCommonLogic.BAKC_POOL_ID;
         }
-        address msgSender = msg.sender;
         uint128 accumulatedRewardsPerNft = poolState.accumulatedRewardsPerNft;
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 tokenId = tokenIds[index];
 
             require(
-                msgSender == IERC721(nToken).ownerOf(tokenId),
+                onBehalf == IERC721(nToken).ownerOf(tokenId),
                 Errors.NOT_THE_OWNER
             );
 

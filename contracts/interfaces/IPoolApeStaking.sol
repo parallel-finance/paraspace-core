@@ -48,28 +48,32 @@ interface IPoolApeStaking {
         uint256 amount
     ) external returns (DataTypes.TimeLockParams memory);
 
-    struct StakingInfo {
-        // Contract address of BAYC/MAYC
+    struct UnstakingInfo {
         address nftAsset;
-        // address of borrowing asset, can be Ape or cApe
-        address borrowAsset;
-        // Borrow amount of Ape from lending pool
-        uint256 borrowAmount;
-        // Cash amount of Ape from user wallet
-        uint256 cashAmount;
+        ApeCoinStaking.SingleNft[] _nfts;
+        ApeCoinStaking.PairNftWithdrawWithAmount[] _nftPairs;
     }
 
-    /**
-     * @notice Deposit ape coin to BAYC/MAYC pool or BAKC pool
-     * @param stakingInfo Detail info of the staking
-     * @param _nfts Array of BAYC/MAYC NFT's with staked amounts
-     * @param _nftPairs Array of Paired BAYC/MAYC NFT's with staked amounts
-     * @dev Need check User health factor > 1.
-     */
-    function borrowApeAndStake(
-        StakingInfo calldata stakingInfo,
-        ApeCoinStaking.SingleNft[] calldata _nfts,
-        ApeCoinStaking.PairNftDepositWithAmount[] calldata _nftPairs
+    struct ParaStakingInfo {
+        //Para Ape Staking Pool Id
+        uint256 PoolId;
+        //Ape token ids
+        uint32[] apeTokenIds;
+        //BAKC token ids
+        uint32[] bakcTokenIds;
+    }
+
+    struct ApeCoinInfo {
+        address asset;
+        uint256 cashAmount;
+        uint256 borrowAmount;
+        bool openSApeCollateralFlag;
+    }
+
+    function apeStakingMigration(
+        UnstakingInfo[] calldata unstakingInfos,
+        ParaStakingInfo[] calldata stakingInfos,
+        ApeCoinInfo calldata apeCoinInfo
     ) external;
 
     /**
