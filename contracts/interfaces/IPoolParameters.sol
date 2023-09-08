@@ -31,6 +31,14 @@ interface IPoolParameters {
      **/
     event ClaimApeForYieldIncentiveUpdated(uint256 oldValue, uint256 newValue);
 
+    /**
+     * @notice TimeLockWhiteListEvents
+     * @dev This event is emitted when the time lock whitelist is updated. It provides information about
+     * addresses that were added to and removed from the whitelist during the update.
+     *
+     * @param added An array of addresses that were added to the time lock whitelist.
+     * @param removed An array of addresses that were removed from the time lock whitelist.
+     */
     event TimeLockWhitelistUpdated(address[] added, address[] removed);
 
     /**
@@ -155,6 +163,19 @@ interface IPoolParameters {
         address[] calldata toAdd,
         address[] calldata toRemove
     ) external;
+
+    /**
+     * @notice TimeLockWhiteList
+     * @dev This function allows external callers to check whether an array of addresses are
+     * on the time lock whitelist, indicating whether they have permission for specific actions.
+     *
+     * @param users An array of addresses to check for whitelist membership.
+     * @return isWhiteListed An array of boolean values indicating whether each provided address
+     * is on the time lock whitelist (true if whitelisted, false otherwise).
+     */
+    function isTimeLockWhiteListed(
+        address[] calldata users
+    ) external view returns (bool[] memory);
 
     /**
      * @notice get user ape compound strategy

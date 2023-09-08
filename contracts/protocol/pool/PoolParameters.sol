@@ -364,4 +364,14 @@ contract PoolParameters is
         }
         emit TimeLockWhitelistUpdated(toAdd, toRemove);
     }
+
+    /// @inheritdoc IPoolParameters
+    function isTimeLockWhiteListed(
+        address[] calldata users
+    ) external view returns (bool[] memory res) {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        for (uint256 i = 0; i < users.length; i++) {
+            res[i] = ps._timeLockWhiteList[users[i]];
+        }
+    }
 }
