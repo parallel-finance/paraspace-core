@@ -340,23 +340,19 @@ library SupplyLogic {
             amountToWithdraw
         );
 
-        DataTypes.TimeLockParams memory timeLockParams = GenericLogic
-            .calculateTimeLockParams(
-                reserve,
-                DataTypes.TimeLockFactorParams({
-                    assetType: DataTypes.AssetType.ERC20,
-                    asset: params.asset,
-                    amount: amountToWithdraw
-                })
-            );
-        timeLockParams.actionType = DataTypes.TimeLockActionType.WITHDRAW;
-
         IPToken(reserveCache.xTokenAddress).burn(
             msg.sender,
             params.to,
             amountToWithdraw,
             reserveCache.nextLiquidityIndex,
-            timeLockParams
+            Helpers.calculateTimeLockParams(
+                reserve,
+                DataTypes.AssetType.ERC20,
+                params.asset,
+                amountToWithdraw,
+                DataTypes.TimeLockActionType.WITHDRAW,
+                params.isWhiteListed
+            )
         );
 
         if (userConfig.isUsingAsCollateral(reserve.id)) {
@@ -445,23 +441,19 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve,
         DataTypes.ExecuteWithdrawERC721Params memory params
     ) internal returns (uint64, uint64) {
-        DataTypes.TimeLockParams memory timeLockParams = GenericLogic
-            .calculateTimeLockParams(
-                reserve,
-                DataTypes.TimeLockFactorParams({
-                    assetType: DataTypes.AssetType.ERC721,
-                    asset: params.asset,
-                    amount: params.tokenIds.length
-                })
-            );
-        timeLockParams.actionType = DataTypes.TimeLockActionType.WITHDRAW;
-
         return
             INToken(xTokenAddress).burn(
                 msg.sender,
                 params.to,
                 params.tokenIds,
-                timeLockParams
+                Helpers.calculateTimeLockParams(
+                    reserve,
+                    DataTypes.AssetType.ERC721,
+                    params.asset,
+                    params.tokenIds.length,
+                    DataTypes.TimeLockActionType.WITHDRAW,
+                    params.isWhiteListed
+                )
             );
     }
 

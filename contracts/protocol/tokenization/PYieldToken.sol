@@ -59,6 +59,7 @@ contract PYieldToken is PToken {
 
         _burnScaled(from, receiverOfUnderlying, amount, index);
         if (receiverOfUnderlying != address(this)) {
+            address underlyingAsset = _underlyingAsset;
             if (timeLockParams.releaseTime != 0) {
                 ITimeLock timeLock = POOL.TIME_LOCK();
                 uint256[] memory amounts = new uint256[](1);
@@ -67,14 +68,14 @@ contract PYieldToken is PToken {
                 timeLock.createAgreement(
                     DataTypes.AssetType.ERC20,
                     timeLockParams.actionType,
-                    _underlyingAsset,
+                    underlyingAsset,
                     amounts,
                     receiverOfUnderlying,
                     timeLockParams.releaseTime
                 );
                 receiverOfUnderlying = address(timeLock);
             }
-            IERC20(_underlyingAsset).safeTransfer(receiverOfUnderlying, amount);
+            IERC20(underlyingAsset).safeTransfer(receiverOfUnderlying, amount);
         }
     }
 

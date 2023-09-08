@@ -31,6 +31,8 @@ interface IPoolParameters {
      **/
     event ClaimApeForYieldIncentiveUpdated(uint256 oldValue, uint256 newValue);
 
+    event TimeLockWhitelistUpdated(address[] added, address[] removed);
+
     /**
      * @notice Initializes a reserve, activating it, assigning an xToken and debt tokens and an
      * interest rate strategy
@@ -142,6 +144,16 @@ interface IPoolParameters {
      */
     function setApeCompoundStrategy(
         DataTypes.ApeCompoundStrategy calldata strategy
+    ) external;
+
+    /**
+     * @dev Updates the time lock whitelist by adding and/or removing multiple addresses.
+     * @param toAdd An array of addresses to be added to the whitelist.
+     * @param toRemove An array of addresses to be removed from the whitelist.
+     */
+    function updateTimeLockWhiteList(
+        address[] calldata toAdd,
+        address[] calldata toRemove
     ) external;
 
     /**

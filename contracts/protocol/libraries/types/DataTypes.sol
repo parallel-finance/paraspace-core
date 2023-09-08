@@ -170,6 +170,7 @@ library DataTypes {
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;
+        bool isWhiteListed;
     }
 
     struct ExecuteRepayParams {
@@ -186,6 +187,7 @@ library DataTypes {
         address to;
         uint256 reservesCount;
         address oracle;
+        bool isWhiteListed;
     }
 
     struct ExecuteWithdrawERC721Params {
@@ -194,6 +196,7 @@ library DataTypes {
         address to;
         uint256 reservesCount;
         address oracle;
+        bool isWhiteListed;
     }
 
     struct ExecuteDecreaseUniswapV3LiquidityParams {
@@ -406,6 +409,8 @@ library DataTypes {
         uint16 _apeCompoundFee;
         // Map of user's ape compound strategies
         mapping(address => ApeCompoundStrategy) _apeCompoundStrategies;
+        // TimeLock whitelist
+        mapping(address => bool) _timeLockWhiteList;
     }
 
     struct ReserveConfigData {
