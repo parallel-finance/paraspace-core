@@ -340,7 +340,7 @@ library SupplyLogic {
             amountToWithdraw
         );
 
-        DataTypes.TimeLockParams memory timeLockParams = Helpers
+        DataTypes.TimeLockParams memory timeLockParams = GenericLogic
             .calculateTimeLockParams(
                 reserve,
                 DataTypes.AssetType.ERC20,
@@ -448,7 +448,7 @@ library SupplyLogic {
                 msg.sender,
                 params.to,
                 params.tokenIds,
-                Helpers.calculateTimeLockParams(
+                GenericLogic.calculateTimeLockParams(
                     reserve,
                     DataTypes.AssetType.ERC721,
                     params.asset,

@@ -104,7 +104,7 @@ library BorrowLogic {
             IPToken(reserveCache.xTokenAddress).transferUnderlyingTo(
                 params.user,
                 params.amount,
-                Helpers.calculateTimeLockParams(
+                GenericLogic.calculateTimeLockParams(
                     reserve,
                     DataTypes.AssetType.ERC20,
                     params.asset,

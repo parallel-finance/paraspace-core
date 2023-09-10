@@ -6,7 +6,7 @@ export $(shell sed 's/=.*//' .env)
 SCRIPT_PATH              := ./scripts/dev/1.ad-hoc.ts
 TASK_NAME                := print-contracts
 TEST_TARGET              := *.spec.ts
-RUST_TOOLCHAIN           := nightly-2022-09-19
+RUST_TOOLCHAIN           := nightly-2023-05-22
 
 .PHONY: init
 init: submodules
@@ -283,6 +283,10 @@ test-timelock-executor:
 .PHONY: test-timelock
 test-timelock:
 	make TEST_TARGET=_timelock.spec.ts test
+
+.PHONY: test-timelock-whitelist
+test-timelock-whitelist:
+	make TEST_TARGET=_timelock_whitelist.spec.ts test
 
 .PHONY: test-stakefish-nft
 test-stakefish-nft:
