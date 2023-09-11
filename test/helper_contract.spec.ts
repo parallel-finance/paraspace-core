@@ -94,7 +94,7 @@ describe("Helper contract Test", () => {
 
   it("cApeMigration", async () => {
     const {
-      users: [user1],
+      users: [user1, user2],
       ape,
     } = await loadFixture(fixture);
 
@@ -118,8 +118,15 @@ describe("Helper contract Test", () => {
     await waitForTx(
       await helperContract
         .connect(user1.signer)
-        .cApeMigration(parseEther("10000"), user1.address)
+        .cApeMigration(parseEther("5000"), user2.address)
     );
-    expect(await cApe.balanceOf(user1.address)).to.be.eq(parseEther("10000"));
+    expect(await cApe.balanceOf(user2.address)).to.be.eq(parseEther("5000"));
+
+    await waitForTx(
+      await helperContract
+        .connect(user1.signer)
+        .cApeMigration("0", user2.address)
+    );
+    expect(await cApe.balanceOf(user2.address)).to.be.eq(parseEther("10000"));
   });
 });

@@ -62,6 +62,9 @@ contract HelperContract is Initializable, OwnableUpgradeable {
     }
 
     function cApeMigration(uint256 amount, address to) external {
+        if (amount == 0 || amount == type(uint256).max) {
+            amount = IERC20(cApeV1).balanceOf(msg.sender);
+        }
         IERC20(cApeV1).safeTransferFrom(msg.sender, address(this), amount);
         IAutoCompoundApe(cApeV1).withdraw(amount);
         IAutoCompoundApe(cApe).deposit(to, amount);
