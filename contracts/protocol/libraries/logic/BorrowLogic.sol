@@ -101,17 +101,21 @@ library BorrowLogic {
         );
 
         if (params.releaseUnderlying) {
+            DataTypes.TimeLockParams memory timeLockParams = GenericLogic
+                .calculateTimeLockParams(
+                    reserve,
+                    DataTypes.TimeLockFactorParams({
+                        assetType: DataTypes.AssetType.ERC20,
+                        asset: params.asset,
+                        amount: params.amount
+                    })
+                );
+            timeLockParams.actionType = DataTypes.TimeLockActionType.BORROW;
+
             IPToken(reserveCache.xTokenAddress).transferUnderlyingTo(
                 params.user,
                 params.amount,
-                GenericLogic.calculateTimeLockParams(
-                    reserve,
-                    DataTypes.AssetType.ERC20,
-                    params.asset,
-                    params.amount,
-                    DataTypes.TimeLockActionType.BORROW,
-                    params.isWhiteListed
-                )
+                timeLockParams
             );
         }
 

@@ -380,8 +380,7 @@ contract PoolApeStaking is
                     reservesCount: ps._reservesCount,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                     priceOracleSentinel: ADDRESSES_PROVIDER
-                        .getPriceOracleSentinel(),
-                    isWhiteListed: false
+                        .getPriceOracleSentinel()
                 })
             );
         }

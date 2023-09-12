@@ -208,8 +208,7 @@ contract PoolCore is
                     amount: amount,
                     to: to,
                     reservesCount: ps._reservesCount,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                    isWhiteListed: ps._timeLockWhiteList[msg.sender]
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
                 })
             );
     }
@@ -232,8 +231,7 @@ contract PoolCore is
                     tokenIds: tokenIds,
                     to: to,
                     reservesCount: ps._reservesCount,
-                    oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                    isWhiteListed: ps._timeLockWhiteList[msg.sender]
+                    oracle: ADDRESSES_PROVIDER.getPriceOracle()
                 })
             );
     }
@@ -289,9 +287,7 @@ contract PoolCore is
                 releaseUnderlying: true,
                 reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER
-                    .getPriceOracleSentinel(),
-                isWhiteListed: ps._timeLockWhiteList[onBehalfOf]
+                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
             })
         );
     }

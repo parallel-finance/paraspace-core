@@ -588,8 +588,7 @@ library MarketplaceLogic {
                 releaseUnderlying: false,
                 reservesCount: params.reservesCount,
                 oracle: params.oracle,
-                priceOracleSentinel: params.priceOracleSentinel,
-                isWhiteListed: false
+                priceOracleSentinel: params.priceOracleSentinel
             })
         );
     }

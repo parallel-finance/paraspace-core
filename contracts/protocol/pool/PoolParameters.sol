@@ -345,35 +345,4 @@ contract PoolParameters is
         );
         userConfig.auctionValidityTime = block.timestamp;
     }
-
-    /// @inheritdoc IPoolParameters
-    function updateTimeLockWhiteList(
-        address[] calldata toAdd,
-        address[] calldata toRemove
-    ) external onlyPoolAdmin {
-        DataTypes.PoolStorage storage ps = poolStorage();
-        for (uint256 i = 0; i < toAdd.length; i++) {
-            if (!ps._timeLockWhiteList[toAdd[i]]) {
-                ps._timeLockWhiteList[toAdd[i]] = true;
-            }
-        }
-        for (uint256 i = 0; i < toRemove.length; i++) {
-            if (ps._timeLockWhiteList[toRemove[i]]) {
-                ps._timeLockWhiteList[toRemove[i]] = false;
-            }
-        }
-        emit TimeLockWhitelistUpdated(toAdd, toRemove);
-    }
-
-    /// @inheritdoc IPoolParameters
-    function isTimeLockWhiteListed(
-        address[] calldata users
-    ) external view returns (bool[] memory) {
-        DataTypes.PoolStorage storage ps = poolStorage();
-        bool[] memory res = new bool[](users.length);
-        for (uint256 i = 0; i < users.length; i++) {
-            res[i] = ps._timeLockWhiteList[users[i]];
-        }
-        return res;
-    }
 }

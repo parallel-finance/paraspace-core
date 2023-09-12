@@ -18,6 +18,7 @@ import {DataTypes} from "../types/DataTypes.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
+import {Helpers} from "../../libraries/helpers/Helpers.sol";
 
 /**
  * @title GenericLogic library
@@ -30,8 +31,6 @@ library GenericLogic {
     using PercentageMath for uint256;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using UserConfiguration for DataTypes.UserConfigurationMap;
-
-    uint48 internal constant MIN_WAIT_TIME = 12;
 
     struct CalculateUserAccountDataVars {
         uint256 assetPrice;
@@ -536,48 +535,16 @@ library GenericLogic {
             );
     }
 
-    /**
-     * @notice TimeLockParamsCalculator
-     * @dev This internal function is used to calculate the parameters required for a time-locked action
-     * on a specific asset within a reserve. It computes and returns a `TimeLockParams` structure containing
-     * essential information for executing the action.
-     *
-     * @param reserve The storage reference to the reserve data.
-     * @param assetType The type of the asset (e.g., collateral or debt).
-     * @param asset The address of the asset being affected.
-     * @param amount The amount of the asset involved in the time-locked action.
-     * @param actionType The type of time-locked action being performed (e.g., deposit or withdraw).
-     *
-     * @return timeLockParams A `TimeLockParams` structure with all the necessary parameters computed for
-     * executing the time-locked action.
-     */
     function calculateTimeLockParams(
         DataTypes.ReserveData storage reserve,
-        DataTypes.AssetType assetType,
-        address asset,
-        uint256 amount,
-        DataTypes.TimeLockActionType actionType,
-        bool isWhiteListed
+        DataTypes.TimeLockFactorParams memory params
     ) internal returns (DataTypes.TimeLockParams memory) {
         DataTypes.TimeLockParams memory timeLockParams;
-        if (!isWhiteListed) {
-            address timeLockStrategyAddress = reserve.timeLockStrategyAddress;
-            if (timeLockStrategyAddress != address(0)) {
-                timeLockParams = ITimeLockStrategy(timeLockStrategyAddress)
-                    .calculateTimeLockParams(
-                        DataTypes.TimeLockFactorParams({
-                            assetType: assetType,
-                            asset: asset,
-                            amount: amount
-                        })
-                    );
-            }
-        } else {
-            timeLockParams.releaseTime =
-                uint48(block.timestamp) +
-                MIN_WAIT_TIME;
+        address timeLockStrategyAddress = reserve.timeLockStrategyAddress;
+        if (timeLockStrategyAddress != address(0)) {
+            timeLockParams = ITimeLockStrategy(timeLockStrategyAddress)
+                .calculateTimeLockParams(params);
         }
-        timeLockParams.actionType = actionType;
 
         return timeLockParams;
     }
