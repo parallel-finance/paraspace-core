@@ -11,7 +11,7 @@ import {supplyAndValidate} from "./helpers/validated-steps";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {getInitializableAdminUpgradeabilityProxy} from "../helpers/contracts-getters";
-import {ZERO_ADDRESS} from "../helpers/constants";
+import {ONE_ADDRESS} from "../helpers/constants";
 
 describe("timeLock whiteList tests", function () {
   let defaultTimeLockStrategy: DefaultTimeLockStrategy;
@@ -95,7 +95,7 @@ describe("timeLock whiteList tests", function () {
     await waitForTx(
       await (await getInitializableAdminUpgradeabilityProxy(timeLock.address))
         .connect(poolAdmin.signer)
-        .changeAdmin(ZERO_ADDRESS)
+        .changeAdmin(ONE_ADDRESS)
     );
     await waitForTx(
       await timeLock

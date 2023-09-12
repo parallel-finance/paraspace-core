@@ -1,7 +1,7 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {deployReserveTimeLockStrategy} from "../helpers/contracts-deployments";
-import {MAX_UINT_AMOUNT, ZERO_ADDRESS} from "../helpers/constants";
+import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 import {
   getInitializableAdminUpgradeabilityProxy,
   getPoolConfiguratorProxy,
@@ -531,7 +531,7 @@ describe("TimeLock functionality tests", () => {
     await waitForTx(
       await (await getInitializableAdminUpgradeabilityProxy(timeLock.address))
         .connect(poolAdmin.signer)
-        .changeAdmin(ZERO_ADDRESS)
+        .changeAdmin(ONE_ADDRESS)
     );
     await waitForTx(
       await timeLock
