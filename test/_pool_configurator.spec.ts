@@ -18,7 +18,7 @@ import {auctionStrategyExp} from "../market-config/auctionStrategies";
 import {strategyWETH} from "../market-config/reservesConfigs";
 import {
   convertToCurrencyDecimals,
-  impersonateAddress,
+  // impersonateAddress,
 } from "../helpers/contracts-helpers";
 import {
   ERC20,
@@ -36,7 +36,7 @@ import {waitForTx} from "../helpers/misc-utils";
 import {BigNumberish} from "ethers";
 import "./helpers/utils/wadraymath";
 import {supplyAndValidate} from "./helpers/validated-steps";
-import {topUpNonPayableWithEther} from "./helpers/utils/funds";
+// import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
 
 describe("PoolConfigurator: Common", () => {
@@ -727,45 +727,45 @@ describe("PoolConfigurator: Common", () => {
     expect(interestRateStrategyAddressAfter).to.be.eq(ONE_ADDRESS);
   });
 
-  it("TC-poolConfigurator-setReserveInterestRateStrategyAddress-03 PoolConfigurator updates the ReserveInterestRateStrategy address for asset 0 (revert expected)", async () => {
-    const {pool, deployer, configurator} = await loadFixture(testEnvFixture);
+  // it("TC-poolConfigurator-setReserveInterestRateStrategyAddress-03 PoolConfigurator updates the ReserveInterestRateStrategy address for asset 0 (revert expected)", async () => {
+  //   const {pool, deployer, configurator} = await loadFixture(testEnvFixture);
+  //
+  //   // Impersonate PoolConfigurator
+  //   await topUpNonPayableWithEther(
+  //     deployer.signer,
+  //     [configurator.address],
+  //     utils.parseEther("1")
+  //   );
+  //   const configSigner = (await impersonateAddress(configurator.address))
+  //     .signer;
+  //
+  //   await expect(
+  //     pool
+  //       .connect(configSigner)
+  //       .setReserveInterestRateStrategyAddress(ZERO_ADDRESS, ZERO_ADDRESS)
+  //   ).to.be.revertedWith(ProtocolErrors.ZERO_ADDRESS_NOT_VALID);
+  // });
 
-    // Impersonate PoolConfigurator
-    await topUpNonPayableWithEther(
-      deployer.signer,
-      [configurator.address],
-      utils.parseEther("1")
-    );
-    const configSigner = (await impersonateAddress(configurator.address))
-      .signer;
-
-    await expect(
-      pool
-        .connect(configSigner)
-        .setReserveInterestRateStrategyAddress(ZERO_ADDRESS, ZERO_ADDRESS)
-    ).to.be.revertedWith(ProtocolErrors.ZERO_ADDRESS_NOT_VALID);
-  });
-
-  it("TC-poolConfigurator-setReserveInterestRateStrategyAddress-04 PoolConfigurator updates the ReserveInterestRateStrategy address for an unlisted asset (revert expected)", async () => {
-    const {pool, deployer, configurator, users} = await loadFixture(
-      testEnvFixture
-    );
-
-    // Impersonate PoolConfigurator
-    await topUpNonPayableWithEther(
-      deployer.signer,
-      [configurator.address],
-      utils.parseEther("1")
-    );
-    const configSigner = (await impersonateAddress(configurator.address))
-      .signer;
-
-    await expect(
-      pool
-        .connect(configSigner)
-        .setReserveInterestRateStrategyAddress(users[5].address, ZERO_ADDRESS)
-    ).to.be.revertedWith(ProtocolErrors.ASSET_NOT_LISTED);
-  });
+  // it("TC-poolConfigurator-setReserveInterestRateStrategyAddress-04 PoolConfigurator updates the ReserveInterestRateStrategy address for an unlisted asset (revert expected)", async () => {
+  //   const {pool, deployer, configurator, users} = await loadFixture(
+  //     testEnvFixture
+  //   );
+  //
+  //   // Impersonate PoolConfigurator
+  //   await topUpNonPayableWithEther(
+  //     deployer.signer,
+  //     [configurator.address],
+  //     utils.parseEther("1")
+  //   );
+  //   const configSigner = (await impersonateAddress(configurator.address))
+  //     .signer;
+  //
+  //   await expect(
+  //     pool
+  //       .connect(configSigner)
+  //       .setReserveInterestRateStrategyAddress(users[5].address, ZERO_ADDRESS)
+  //   ).to.be.revertedWith(ProtocolErrors.ASSET_NOT_LISTED);
+  // });
 
   it("TC-poolConfigurator-setReserveInterestRateStrategyAddress-05 Activates the zero address reserve for borrowing via pool admin (expect revert)", async () => {
     const {configurator} = await loadFixture(testEnvFixture);

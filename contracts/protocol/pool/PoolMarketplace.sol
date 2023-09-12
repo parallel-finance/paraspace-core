@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {ParaVersionedInitializable} from "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
 import {MarketplaceLogic} from "../libraries/logic/MarketplaceLogic.sol";
@@ -30,7 +30,7 @@ contract PoolMarketplace is
     IPoolMarketplace
 {
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
-    uint256 internal constant POOL_REVISION = 149;
+    uint256 internal constant POOL_REVISION = 200;
 
     /**
      * @dev Constructor.

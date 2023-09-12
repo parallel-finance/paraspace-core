@@ -309,7 +309,7 @@ describe("NFT Oracle Tests", () => {
 
     // grant admin role to user3
     await nftFloorOracle.grantRole(
-      aclManager.DEFAULT_ADMIN_ROLE(),
+      await aclManager.DEFAULT_ADMIN_ROLE(),
       user3.address
     );
 

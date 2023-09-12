@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IRewardsController} from "./interfaces/IRewardsController.sol";
@@ -34,20 +34,15 @@ contract UiIncentiveDataProvider is IUiIncentiveDataProvider {
         );
     }
 
-    function getReservesIncentivesData(IPoolAddressesProvider provider)
-        external
-        view
-        override
-        returns (AggregatedReserveIncentiveData[] memory)
-    {
+    function getReservesIncentivesData(
+        IPoolAddressesProvider provider
+    ) external view override returns (AggregatedReserveIncentiveData[] memory) {
         return _getReservesIncentivesData(provider);
     }
 
-    function _getReservesIncentivesData(IPoolAddressesProvider provider)
-        private
-        view
-        returns (AggregatedReserveIncentiveData[] memory)
-    {
+    function _getReservesIncentivesData(
+        IPoolAddressesProvider provider
+    ) private view returns (AggregatedReserveIncentiveData[] memory) {
         IPool pool = IPool(provider.getPool());
         address[] memory reserves = pool.getReservesList();
         AggregatedReserveIncentiveData[]

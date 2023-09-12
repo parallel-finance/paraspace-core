@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {ITimeLockStrategy} from "../../interfaces/ITimeLockStrategy.sol";
@@ -116,20 +116,21 @@ interface IUiPoolDataProvider {
         address[] delegations;
     }
 
-    function getReservesList(IPoolAddressesProvider provider)
-        external
-        view
-        returns (address[] memory);
+    function getReservesList(
+        IPoolAddressesProvider provider
+    ) external view returns (address[] memory);
 
-    function getReservesData(IPoolAddressesProvider provider)
+    function getReservesData(
+        IPoolAddressesProvider provider
+    )
         external
         view
         returns (AggregatedReserveData[] memory, BaseCurrencyInfo memory);
 
-    function getUserReservesData(IPoolAddressesProvider provider, address user)
-        external
-        view
-        returns (UserReserveData[] memory);
+    function getUserReservesData(
+        IPoolAddressesProvider provider,
+        address user
+    ) external view returns (UserReserveData[] memory);
 
     function getNTokenData(
         address[] memory nTokenAddresses,
@@ -158,8 +159,8 @@ interface IUiPoolDataProvider {
         view
         returns (UserGlobalData memory, TokenInLiquidationData[][] memory);
 
-    function getDelegatesForTokens(address vault, uint256[] calldata tokenIds)
-        external
-        view
-        returns (DelegationData[] memory);
+    function getDelegatesForTokens(
+        address vault,
+        uint256[] calldata tokenIds
+    ) external view returns (DelegationData[] memory);
 }

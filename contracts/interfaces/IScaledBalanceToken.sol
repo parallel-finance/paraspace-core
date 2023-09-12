@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 /**
  * @title IScaledBalanceToken
@@ -54,10 +54,9 @@ interface IScaledBalanceToken {
      * @return The scaled balance of the user
      * @return The scaled total supply
      **/
-    function getScaledUserBalanceAndSupply(address user)
-        external
-        view
-        returns (uint256, uint256);
+    function getScaledUserBalanceAndSupply(
+        address user
+    ) external view returns (uint256, uint256);
 
     /**
      * @notice Returns the scaled total supply of the scaled balance token. Represents sum(debt/index)

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {ISwapAdapter} from "../../interfaces/ISwapAdapter.sol";
-import {ISwapRouter} from "../../dependencies/univ3/interfaces/ISwapRouter.sol";
-import {BytesLib} from "../../dependencies/univ3/libraries/BytesLib.sol";
+import {ISwapRouter} from "../../dependencies/uniswapv3-periphery/interfaces/ISwapRouter.sol";
+import {BytesLib} from "../../dependencies/uniswapv3-core/libraries/BytesLib.sol";
 import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
@@ -14,11 +14,10 @@ contract UniswapV3SwapAdapter is ISwapAdapter {
     uint256 private constant ADDR_SIZE = 20;
     uint256 private constant FEE_SIZE = 3;
 
-    function getSwapInfo(bytes memory payload, bool exactInput)
-        external
-        pure
-        returns (DataTypes.SwapInfo memory)
-    {
+    function getSwapInfo(
+        bytes memory payload,
+        bool exactInput
+    ) external pure returns (DataTypes.SwapInfo memory) {
         if (exactInput) {
             return _getExactInputParams(payload);
         } else {
@@ -43,11 +42,9 @@ contract UniswapV3SwapAdapter is ISwapAdapter {
         return abi.decode(returnData, (uint256));
     }
 
-    function _getExactInputParams(bytes memory payload)
-        internal
-        pure
-        returns (DataTypes.SwapInfo memory swapInfo)
-    {
+    function _getExactInputParams(
+        bytes memory payload
+    ) internal pure returns (DataTypes.SwapInfo memory swapInfo) {
         ISwapRouter.ExactInputParams memory params = abi.decode(
             bytes(payload),
             (ISwapRouter.ExactInputParams)
@@ -67,11 +64,9 @@ contract UniswapV3SwapAdapter is ISwapAdapter {
         swapInfo.exactInput = true;
     }
 
-    function _getExactOutputParams(bytes memory payload)
-        internal
-        pure
-        returns (DataTypes.SwapInfo memory swapInfo)
-    {
+    function _getExactOutputParams(
+        bytes memory payload
+    ) internal pure returns (DataTypes.SwapInfo memory swapInfo) {
         ISwapRouter.ExactOutputParams memory params = abi.decode(
             bytes(payload),
             (ISwapRouter.ExactOutputParams)

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 import {ICLSynchronicityPriceAdapter} from "../dependencies/chainlink/ICLSynchronicityPriceAdapter.sol";
 import {CLExchangeRateSynchronicityPriceAdapter} from "./CLExchangeRateSynchronicityPriceAdapter.sol";

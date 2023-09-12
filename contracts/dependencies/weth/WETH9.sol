@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 contract WETH9 {
     string public name = "Wrapped Ether";
@@ -40,7 +40,8 @@ contract WETH9 {
     function withdraw(uint256 wad) public {
         require(balanceOf[msg.sender] >= wad);
         balanceOf[msg.sender] -= wad;
-        payable(msg.sender).transfer(wad);
+        (bool success, ) = msg.sender.call{value: wad}(new bytes(0));
+        require(success, "ETH_TRANSFER_FAILED");
         // msg.sender would have ethereum
         emit Withdrawal(msg.sender, wad);
     }

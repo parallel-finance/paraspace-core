@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 /******************************************************************************\
 * EIP-2535 Diamonds: https://eips.ethereum.org/EIPS/eip-2535
@@ -221,9 +221,10 @@ library ParaProxyLib {
         }
     }
 
-    function addFacet(ProxyStorage storage ds, address _implementationAddress)
-        internal
-    {
+    function addFacet(
+        ProxyStorage storage ds,
+        address _implementationAddress
+    ) internal {
         enforceHasContractCode(
             _implementationAddress,
             "ParaProxy: New implementation has no code"
@@ -323,9 +324,10 @@ library ParaProxyLib {
         }
     }
 
-    function initializeImplementation(address _init, bytes memory _calldata)
-        internal
-    {
+    function initializeImplementation(
+        address _init,
+        bytes memory _calldata
+    ) internal {
         if (_init == address(0)) {
             require(
                 _calldata.length == 0,

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 /**
  * @title Errors library
@@ -136,4 +136,6 @@ library Errors {
     string public constant CALL_SWAP_FAILED = "141"; //call swap failed.
     string public constant INVALID_SWAP_PAYLOAD = "142"; //invalid swap payload.
     string public constant SWAP_ADAPTER_PAUSED = "143"; //swap adapter paused.
+
+    string public constant INVALID_PARAMETER = "170"; //invalid parameter
 }

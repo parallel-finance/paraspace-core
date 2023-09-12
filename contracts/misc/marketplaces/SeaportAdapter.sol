@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
@@ -22,12 +22,9 @@ contract SeaportAdapter is IMarketplace {
         ADDRESSES_PROVIDER = provider;
     }
 
-    function getAskOrderInfo(bytes memory params)
-        external
-        pure
-        override
-        returns (DataTypes.OrderInfo memory orderInfo)
-    {
+    function getAskOrderInfo(
+        bytes memory params
+    ) external pure override returns (DataTypes.OrderInfo memory orderInfo) {
         AdvancedOrder[] memory advancedOrders = abi.decode(
             params,
             (AdvancedOrder[])
@@ -57,12 +54,9 @@ contract SeaportAdapter is IMarketplace {
         orderInfo.isSeaport = true;
     }
 
-    function getBidOrderInfo(bytes memory params)
-        external
-        pure
-        override
-        returns (DataTypes.OrderInfo memory orderInfo)
-    {
+    function getBidOrderInfo(
+        bytes memory params
+    ) external pure override returns (DataTypes.OrderInfo memory orderInfo) {
         AdvancedOrder[] memory advancedOrders = abi.decode(
             params,
             (AdvancedOrder[])
@@ -112,11 +106,10 @@ contract SeaportAdapter is IMarketplace {
             );
     }
 
-    function matchBidWithTakerAsk(address marketplace, bytes calldata params)
-        external
-        override
-        returns (bytes memory)
-    {
+    function matchBidWithTakerAsk(
+        address marketplace,
+        bytes calldata params
+    ) external override returns (bytes memory) {
         bytes4 selector = SeaportInterface.matchAdvancedOrders.selector;
         bytes memory data = abi.encodePacked(selector, params);
         return
@@ -127,11 +120,9 @@ contract SeaportAdapter is IMarketplace {
             );
     }
 
-    function isBasicOrder(AdvancedOrder memory advancedOrder)
-        private
-        pure
-        returns (bool)
-    {
+    function isBasicOrder(
+        AdvancedOrder memory advancedOrder
+    ) private pure returns (bool) {
         return
             // FULL_OPEN || FULL_RESTRICTED
             (uint256(advancedOrder.parameters.orderType) == 0 ||

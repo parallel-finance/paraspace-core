@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
@@ -40,11 +40,9 @@ library ReserveLogic {
      * @param reserve The reserve object
      * @return The normalized income, expressed in ray
      **/
-    function getNormalizedIncome(DataTypes.ReserveData storage reserve)
-        internal
-        view
-        returns (uint256)
-    {
+    function getNormalizedIncome(
+        DataTypes.ReserveData storage reserve
+    ) internal view returns (uint256) {
         uint40 timestamp = reserve.lastUpdateTimestamp;
 
         //solium-disable-next-line
@@ -69,11 +67,9 @@ library ReserveLogic {
      * @param reserve The reserve object
      * @return The normalized variable debt, expressed in ray
      **/
-    function getNormalizedDebt(DataTypes.ReserveData storage reserve)
-        internal
-        view
-        returns (uint256)
-    {
+    function getNormalizedDebt(
+        DataTypes.ReserveData storage reserve
+    ) internal view returns (uint256) {
         uint40 timestamp = reserve.lastUpdateTimestamp;
 
         //solium-disable-next-line
@@ -189,7 +185,7 @@ library ReserveLogic {
         ) = IReserveInterestRateStrategy(reserve.interestRateStrategyAddress)
             .calculateInterestRates(
                 DataTypes.CalculateInterestRatesParams({
-                    liquidityAdded: liquidityAdded,
+                    liquidityAdded: liquidityAdded + reserve.unbacked,
                     liquidityTaken: liquidityTaken,
                     totalVariableDebt: vars.totalVariableDebt,
                     reserveFactor: reserveCache.reserveFactor,
@@ -314,11 +310,9 @@ library ReserveLogic {
      * @param reserve The reserve object for which the cache will be filled
      * @return The cache object
      */
-    function cache(DataTypes.ReserveData storage reserve)
-        internal
-        view
-        returns (DataTypes.ReserveCache memory)
-    {
+    function cache(
+        DataTypes.ReserveData storage reserve
+    ) internal view returns (DataTypes.ReserveCache memory) {
         DataTypes.ReserveCache memory reserveCache;
 
         reserveCache.reserveConfiguration = reserve.configuration;

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 /**
  * @title IPriceOracleGetter
@@ -34,8 +34,8 @@ interface IPriceOracleGetter {
      * @param tokenId the token id
      * @return The price of the given token
      */
-    function getTokenPrice(address asset, uint256 tokenId)
-        external
-        view
-        returns (uint256);
+    function getTokenPrice(
+        address asset,
+        uint256 tokenId
+    ) external view returns (uint256);
 }

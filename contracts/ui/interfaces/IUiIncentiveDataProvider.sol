@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 
@@ -55,10 +55,9 @@ interface IUiIncentiveDataProvider {
         uint8 rewardTokenDecimals;
     }
 
-    function getReservesIncentivesData(IPoolAddressesProvider provider)
-        external
-        view
-        returns (AggregatedReserveIncentiveData[] memory);
+    function getReservesIncentivesData(
+        IPoolAddressesProvider provider
+    ) external view returns (AggregatedReserveIncentiveData[] memory);
 
     function getUserReservesIncentivesData(
         IPoolAddressesProvider provider,

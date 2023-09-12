@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {INToken} from "../../../interfaces/INToken.sol";
 import {IPoolAddressesProvider} from "../../../interfaces/IPoolAddressesProvider.sol";
@@ -9,6 +9,7 @@ import {IPToken} from "../../../interfaces/IPToken.sol";
 import {Errors} from "../helpers/Errors.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {SupplyLogic} from "./SupplyLogic.sol";
+import {SupplyExtendedLogic} from "./SupplyExtendedLogic.sol";
 import {BorrowLogic} from "./BorrowLogic.sol";
 import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
@@ -815,9 +816,9 @@ library MarketplaceLogic {
         }
     }
 
-    function _depositETH(DataTypes.ExecuteMarketplaceParams memory params)
-        internal
-    {
+    function _depositETH(
+        DataTypes.ExecuteMarketplaceParams memory params
+    ) internal {
         if (
             params.ethLeft == 0 ||
             params.orderInfo.consideration[0].itemType == ItemType.NATIVE
@@ -938,7 +939,7 @@ library MarketplaceLogic {
             assembly {
                 mstore(tokenIds, amountToCollateralize)
             }
-            SupplyLogic.executeCollateralizeERC721(
+            SupplyExtendedLogic.executeCollateralizeERC721(
                 ps._reserves,
                 ps._usersConfig[buyer],
                 vars.collectionToken,

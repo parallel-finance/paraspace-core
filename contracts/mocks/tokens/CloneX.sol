@@ -911,7 +911,7 @@ library Counters {
     A. Murakami Short Verbiage – User Experience Notice [Document #X-1, https://rtfkt.com/legal-X1]
 */
 
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.0;
 
 abstract contract CloneXRandomizer {
     function getTokenId(uint256 tokenId)

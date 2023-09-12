@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
@@ -30,7 +30,7 @@ import {IDelegationRegistry} from "../../dependencies/delegation/IDelegationRegi
 contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
     using SafeERC20 for IERC20;
 
-    uint256 public constant NTOKEN_REVISION = 149;
+    uint256 public constant NTOKEN_REVISION = 200;
 
     /// @inheritdoc VersionedInitializable
     function getRevision() internal pure virtual override returns (uint256) {
@@ -278,5 +278,12 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         returns (XTokenType)
     {
         return XTokenType.NToken;
+    }
+
+    function claimUnderlying(
+        address timeLockV1,
+        uint256[] calldata agreementIds
+    ) external virtual onlyPool {
+        ITimeLock(timeLockV1).claim(agreementIds);
     }
 }

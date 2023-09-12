@@ -2,6 +2,7 @@ import {expect} from "chai";
 import {TestEnv} from "./helpers/make-suite";
 import {ONE_ADDRESS, ZERO_ADDRESS} from "../helpers/constants";
 import {
+  getContractFactory,
   getFirstSigner,
   getMockInitializableImple,
   getMockInitializableImpleV2,
@@ -733,10 +734,9 @@ describe("Upgradeability", () => {
       );
       const timeLock = await getTimeLockProxy();
 
-      const poolCoreV2 = await new PoolCoreV2__factory(
-        coreLibraries,
-        await getFirstSigner()
-      ).deploy(addressesProvider.address, timeLock.address);
+      const poolCoreV2 = await (
+        await getContractFactory("PoolCoreV2", coreLibraries)
+      ).factory.deploy(addressesProvider.address, timeLock.address);
 
       await waitForTx(
         await addressesProvider.updatePoolImpl(

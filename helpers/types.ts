@@ -1,18 +1,5 @@
 import {BigNumber, BigNumberish, BytesLike} from "ethers";
-import {PromiseOrValue} from "../types/common";
-
-import {BlurExchangeLibraryAddresses} from "../types/factories/contracts/dependencies/blur-exchange/BlurExchange__factory";
-import {LiquidationLogicLibraryAddresses} from "../types/factories/contracts/protocol/libraries/logic/LiquidationLogic__factory";
-import {PoolConfiguratorLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolConfigurator__factory";
-import {PoolCoreLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolCore__factory";
-import {PoolMarketplaceLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolMarketplace__factory";
-import {PoolParametersLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolParameters__factory";
-import {NTokenBAYCLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenBAYC__factory";
-import {NTokenMAYCLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenMAYC__factory";
-import {NTokenMoonBirdsLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenMoonBirds__factory";
-import {NTokenUniswapV3LibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NTokenUniswapV3__factory";
-import {NTokenLibraryAddresses} from "../types/factories/contracts/protocol/tokenization/NToken__factory";
-import {PoolPositionMoverLibraryAddresses} from "../types/factories/contracts/protocol/pool/PoolPositionMover__factory";
+import {Libraries} from "hardhat/types";
 
 export enum AssetType {
   ERC20 = 0,
@@ -25,6 +12,11 @@ export enum DryRunExecutor {
   SafeWithTimeLock = "SafeWithTimeLock",
   Run = "Run",
   None = "",
+}
+
+export enum EtherscanVerificationProvider {
+  hardhat = "hardhat",
+  foundry = "foundry",
 }
 
 export enum TimeLockOperation {
@@ -63,6 +55,17 @@ export enum XTokenType {
   NTokenOtherdeed = 15,
   NTokenStakefish = 16,
   NTokenChromieSquiggle = 17,
+  PhantomData1 = 18,
+  PhantomData2 = 19,
+  PhantomData3 = 20,
+  PhantomData4 = 21,
+  PhantomData5 = 22,
+  PhantomData6 = 23,
+  PhantomData7 = 24,
+  PhantomData8 = 25,
+  PhantomData9 = 26,
+  PhantomData10 = 27,
+  PTokenStKSM = 28,
 }
 
 export type ConstructorArgs = (
@@ -74,25 +77,11 @@ export type ConstructorArgs = (
   | boolean[]
 )[];
 
-export type LibraryAddresses = {[key: string]: string};
+export type LibraryAddresses = Libraries;
 
-export type ParaSpaceLibraryAddresses =
-  | LiquidationLogicLibraryAddresses
-  | PoolCoreLibraryAddresses
-  | PoolMarketplaceLibraryAddresses
-  | PoolParametersLibraryAddresses
-  | PoolConfiguratorLibraryAddresses
-  | BlurExchangeLibraryAddresses
-  | NTokenBAYCLibraryAddresses
-  | NTokenMAYCLibraryAddresses
-  | NTokenLibraryAddresses
-  | NTokenUniswapV3LibraryAddresses
-  | NTokenMoonBirdsLibraryAddresses
-  | PoolPositionMoverLibraryAddresses
-  | {["NFTDescriptor"]: string};
+export type ParaSpaceLibraryAddresses = Libraries;
 
 export enum eEthereumNetwork {
-  kovan = "kovan",
   ropsten = "ropsten",
   goerli = "goerli",
   mainnet = "mainnet",
@@ -103,8 +92,17 @@ export enum eEthereumNetwork {
   localhost = "localhost",
   anvil = "anvil",
   moonbeam = "moonbeam",
+  moonbase = "moonbase",
   arbitrum = "arbitrum",
   arbitrumGoerli = "arbitrumGoerli",
+  polygon = "polygon",
+  polygonMumbai = "polygonMumbai",
+  polygonZkevm = "polygonZkevm",
+  polygonZkevmGoerli = "polygonZkevmGoerli",
+  zksync = "zksync",
+  zksyncGoerli = "zksyncGoerli",
+  linea = "linea",
+  lineaGoerli = "lineaGoerli",
 }
 
 export enum eContractid {
@@ -114,12 +112,12 @@ export enum eContractid {
   MintableDelegationERC20 = "MintableDelegationERC20",
   PoolAddressesProviderRegistry = "PoolAddressesProviderRegistry",
   ACLManager = "ACLManager",
-  PoolParametersProvider = "PoolParametersProvider",
   PoolConfiguratorProxy = "PoolConfiguratorProxy",
   ValidationLogic = "ValidationLogic",
   ReserveLogic = "ReserveLogic",
   GenericLogic = "GenericLogic",
   SupplyLogic = "SupplyLogic",
+  SupplyExtendedLogic = "SupplyExtendedLogic",
   BorrowLogic = "BorrowLogic",
   LiquidationLogic = "LiquidationLogic",
   AuctionLogic = "AuctionLogic",
@@ -138,6 +136,7 @@ export enum eContractid {
   PTokenSApeImpl = "PTokenSApeImpl",
   PTokenATokenImpl = "PTokenATokenImpl",
   PTokenStETHImpl = "PTokenStETHImpl",
+  PTokenStKSMImpl = "PTokenStKSMImpl",
   PTokenAStETHImpl = "PTokenAStETHImpl",
   PTokenCApeImpl = "PTokenCApeImpl",
   PYieldTokenImpl = "PYieldTokenImpl",
@@ -149,7 +148,6 @@ export enum eContractid {
   NTokenBAKCImpl = "NTokenBAKCImpl",
   DelegationAwarePTokenImpl = "DelegationAwarePTokenImpl",
   VariableDebtTokenImpl = "VariableDebtTokenImpl",
-  PsAPeDebtTokenImpl = "PsAPeDebtTokenImpl",
   MockVariableDebtToken = "MockVariableDebtToken",
   FlashClaimRegistry = "FlashClaimRegistry",
   UserFlashClaimRegistryProxy = "UserFlashClaimRegistryProxy",
@@ -238,9 +236,11 @@ export enum eContractid {
   PoolMarketplaceImpl = "PoolMarketplaceImpl",
   PoolParametersImpl = "PoolParametersImpl",
   PoolApeStakingImpl = "PoolApeStakingImpl",
+  PoolBorrowAndStakeImpl = "PoolBorrowAndStakeImpl",
   ApeCoinStaking = "ApeCoinStaking",
   ATokenDebtToken = "ATokenDebtToken",
   StETHDebtToken = "StETHDebtToken",
+  StKSMDebtToken = "StKSMDebtToken",
   CApeDebtToken = "CApeDebtToken",
   AStETHDebtToken = "AStETHDebtToken",
   ApeStakingLogic = "ApeStakingLogic",
@@ -287,10 +287,16 @@ export enum eContractid {
   VSL = "VSL",
   KODA = "KODA",
   BLOCKS = "BLOCKS",
+  EXRP = "EXRP",
+  WGLMR = "WGLMR",
   MockBendDaoLendPool = "MockBendDaoLendPool",
   PositionMoverLogic = "PositionMoverLogic",
   PoolPositionMoverImpl = "PoolPositionMoverImpl",
   UniswapV3SwapAdapter = "UniswapV3SwapAdapter",
+  Account = "Account",
+  AccountFactory = "AccountFactory",
+  AccountProxy = "AccountProxy",
+  AccountRegistry = "AccountRegistry",
 }
 
 /*
@@ -481,6 +487,11 @@ export interface iAssetBase<T> {
   cETH: T;
   PUNK: T;
   xcDOT: T;
+  xcUSDT: T;
+  stDOT: T;
+  USDCWH: T;
+  WETHWH: T;
+  WBTCWH: T;
   WGLMR: T;
   BLUR: T;
   ARB: T;
@@ -490,6 +501,9 @@ export interface iAssetBase<T> {
   BAL: T;
   AAVE: T;
   RDNT: T;
+  MATIC: T;
+  stMATIC: T;
+  CRV: T;
   BAYC: T;
   WPUNKS: T;
   PUNKS: T;
@@ -508,6 +522,7 @@ export interface iAssetBase<T> {
   VSL: T;
   KODA: T;
   BLOCKS: T;
+  EXRP: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, "ETH">;
@@ -537,6 +552,11 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "cETH"
   | "PUNK"
   | "xcDOT"
+  | "xcUSDT"
+  | "stDOT"
+  | "USDCWH"
+  | "WETHWH"
+  | "WBTCWH"
   | "WGLMR"
   | "BLUR"
   | "ARB"
@@ -546,6 +566,9 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "BAL"
   | "AAVE"
   | "RDNT"
+  | "MATIC"
+  | "stMATIC"
+  | "CRV"
   | "BAYC"
   | "PUNKS"
   | "WPUNKS"
@@ -564,6 +587,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "VSL"
   | "KODA"
   | "BLOCKS"
+  | "EXRP"
 >;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iParaSpacePoolAssets<T>;
@@ -592,6 +616,11 @@ export enum ERC20TokenContractId {
   cETH = "cETH",
   PUNK = "PUNK",
   xcDOT = "xcDOT",
+  xcUSDT = "xcUSDT",
+  stDOT = "stDOT",
+  USDCWH = "USDCWH",
+  WETHWH = "WETHWH",
+  WBTCWH = "WBTCWH",
   WGLMR = "WGLMR",
   BLUR = "BLUR",
   ARB = "ARB",
@@ -601,6 +630,10 @@ export enum ERC20TokenContractId {
   BAL = "BAL",
   AAVE = "AAVE",
   RDNT = "RDNT",
+  MATIC = "MATIC",
+  stMATIC = "stMATIC",
+  CRV = "CRV",
+  WMATIC = "WMATIC",
 }
 
 export enum ERC721TokenContractId {
@@ -625,6 +658,7 @@ export enum ERC721TokenContractId {
   VSL = "VSL",
   KODA = "KODA",
   BLOCKS = "BLOCKS",
+  EXRP = "EXRP",
 }
 
 export enum NTokenContractId {
@@ -640,6 +674,7 @@ export enum NTokenContractId {
   nOTHR = "nOTHR",
   nSFVLDR = "nSFVLDR",
   nBLOCKS = "nBLOCKS",
+  nEXRP = "nEXRP",
 }
 
 export enum PTokenContractId {
@@ -717,8 +752,6 @@ export type iParamsPerNetwork<T> = iEthereumParamsPerNetwork<T>;
 export type iParamsPerNetworkAll<T> = iEthereumParamsPerNetwork<T>;
 
 export interface iEthereumParamsPerNetwork<T> {
-  [eEthereumNetwork.kovan]: T;
-  [eEthereumNetwork.ropsten]: T;
   [eEthereumNetwork.goerli]: T;
   [eEthereumNetwork.mainnet]: T;
   [eEthereumNetwork.hardhat]: T;
@@ -727,8 +760,17 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.parallel]: T;
   [eEthereumNetwork.tenderlyMain]: T;
   [eEthereumNetwork.moonbeam]: T;
+  [eEthereumNetwork.moonbase]: T;
   [eEthereumNetwork.arbitrum]: T;
   [eEthereumNetwork.arbitrumGoerli]: T;
+  [eEthereumNetwork.polygon]: T;
+  [eEthereumNetwork.polygonMumbai]: T;
+  [eEthereumNetwork.polygonZkevm]: T;
+  [eEthereumNetwork.polygonZkevmGoerli]: T;
+  [eEthereumNetwork.zksync]: T;
+  [eEthereumNetwork.zksyncGoerli]: T;
+  [eEthereumNetwork.linea]: T;
+  [eEthereumNetwork.lineaGoerli]: T;
 }
 
 export enum RateMode {
@@ -780,6 +822,11 @@ export interface IChainlinkConfig {
   cAPE?: tEthereumAddress;
   yAPE?: tEthereumAddress;
   xcDOT?: tEthereumAddress;
+  xcUSDT?: tEthereumAddress;
+  stDOT?: tEthereumAddress;
+  USDCWH?: tEthereumAddress;
+  WETHWH?: tEthereumAddress;
+  WBTCWH?: tEthereumAddress;
   WGLMR?: tEthereumAddress;
   ARB?: tEthereumAddress;
   GMX?: tEthereumAddress;
@@ -788,9 +835,14 @@ export interface IChainlinkConfig {
   AAVE?: tEthereumAddress;
   BAL?: tEthereumAddress;
   RDNT?: tEthereumAddress;
+  WMATIC?: tEthereumAddress;
+  stMATIC?: tEthereumAddress;
+  CRV?: tEthereumAddress;
+  BLUR?: tEthereumAddress;
   // ERC721
   DOODLE?: tEthereumAddress;
   BAYC?: tEthereumAddress;
+  BAKC?: tEthereumAddress;
   MAYC?: tEthereumAddress;
   WPUNKS?: tEthereumAddress;
   MOONBIRD?: tEthereumAddress;
@@ -805,6 +857,10 @@ export interface IChainlinkConfig {
   VSL?: tEthereumAddress;
   KODA?: tEthereumAddress;
   BLOCKS?: tEthereumAddress;
+  EXRP?: tEthereumAddress;
+  UniswapV3?: tEthereumAddress;
+  SFVLDR?: tEthereumAddress;
+  SEWER?: tEthereumAddress;
 }
 
 export interface IYogaLabs {
@@ -823,6 +879,14 @@ export interface IUniswapConfig {
 export interface IBendDAOConfig {
   LendingPool?: tEthereumAddress;
   LendingPoolLoan?: tEthereumAddress;
+}
+
+export interface IParaSpaceV1Config {
+  PoolV1: tEthereumAddress;
+  ProtocolDataProviderV1: tEthereumAddress;
+  CApeV1: tEthereumAddress;
+  TimeLockV1: tEthereumAddress;
+  P2PPairStakingV1: tEthereumAddress;
 }
 
 export interface IStakefish {
@@ -855,6 +919,11 @@ export interface IRate {
   borrowRate: string;
 }
 
+export interface IAccountAbstraction {
+  rpcUrl: string;
+  paymasterUrl: string;
+}
+
 export interface ICommonConfiguration {
   WrappedNativeTokenId: ERC20TokenContractId;
   MarketId: string;
@@ -879,6 +948,7 @@ export interface ICommonConfiguration {
   YogaLabs: IYogaLabs;
   Uniswap: IUniswapConfig;
   BendDAO: IBendDAOConfig;
+  ParaSpaceV1: IParaSpaceV1Config | undefined;
   Stakefish: IStakefish;
   Marketplace: IMarketplaceConfig;
   Chainlink: IChainlinkConfig;
@@ -890,6 +960,8 @@ export interface ICommonConfiguration {
   DelegationRegistry: tEthereumAddress;
 
   Governance: IGovernanceConfig;
+
+  AccountAbstraction: IAccountAbstraction;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {
@@ -899,10 +971,10 @@ export interface IParaSpaceConfiguration extends ICommonConfiguration {
 export type PoolConfiguration = ICommonConfiguration | IParaSpaceConfiguration;
 
 export type Action = [
-  PromiseOrValue<string>, // target
-  PromiseOrValue<BigNumberish>, // value
-  PromiseOrValue<string>, // signature
-  PromiseOrValue<BytesLike>, // data
-  PromiseOrValue<BigNumberish>, // executeTime
-  PromiseOrValue<boolean> // withDelegatecall
+  string, // target
+  BigNumberish, // value
+  string, // signature
+  BytesLike, // data
+  BigNumberish, // executeTime
+  boolean // withDelegatecall
 ];

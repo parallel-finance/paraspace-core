@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IPriceOracleGetter} from "./IPriceOracleGetter.sol";
 import {IPoolAddressesProvider} from "./IPoolAddressesProvider.sol";
@@ -63,10 +63,9 @@ interface IParaSpaceOracle is IPriceOracleGetter {
      * @param assets The list of assets addresses
      * @return The prices of the given assets
      */
-    function getAssetsPrices(address[] calldata assets)
-        external
-        view
-        returns (uint256[] memory);
+    function getAssetsPrices(
+        address[] calldata assets
+    ) external view returns (uint256[] memory);
 
     /**
      * @notice Returns the address of the source for an asset address

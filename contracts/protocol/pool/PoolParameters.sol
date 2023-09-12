@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {ParaVersionedInitializable} from "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
@@ -19,6 +19,7 @@ import {IACLManager} from "../../interfaces/IACLManager.sol";
 import {PoolStorage} from "./PoolStorage.sol";
 import {FlashClaimLogic} from "../libraries/logic/FlashClaimLogic.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
+import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {IERC721Receiver} from "../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IMarketplace} from "../../interfaces/IMarketplace.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
@@ -48,9 +49,10 @@ contract PoolParameters is
     using ReserveLogic for DataTypes.ReserveData;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
-    uint256 internal constant POOL_REVISION = 149;
+    uint256 internal constant POOL_REVISION = 200;
     uint256 internal constant MAX_AUCTION_HEALTH_FACTOR = 3e18;
     uint256 internal constant MIN_AUCTION_HEALTH_FACTOR = 1e18;
+    using SafeERC20 for IERC20;
 
     /**
      * @dev Only pool configurator can call functions marked by this modifier.
@@ -97,12 +99,9 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function mintToTreasury(address[] calldata assets)
-        external
-        virtual
-        override
-        nonReentrant
-    {
+    function mintToTreasury(
+        address[] calldata assets
+    ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         PoolLogic.executeMintToTreasury(ps._reserves, assets);
@@ -140,12 +139,9 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function dropReserve(address asset)
-        external
-        virtual
-        override
-        onlyPoolConfigurator
-    {
+    function dropReserve(
+        address asset
+    ) external virtual override onlyPoolConfigurator {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         PoolLogic.executeDropReserve(ps._reserves, ps._reservesList, asset);
@@ -222,23 +218,20 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function unlimitedApproveTo(address token, address to)
-        external
-        virtual
-        override
-        onlyPoolAdmin
-    {
-        IERC20(token).approve(to, 0);
-        IERC20(token).approve(to, type(uint256).max);
+    function unlimitedApproveTo(
+        address token,
+        address to
+    ) external virtual override onlyPoolAdmin {
+        if (IERC20(token).allowance(address(this), to) == 0) {
+            IERC20(token).safeApprove(to, type(uint256).max);
+        }
     }
 
     /// @inheritdoc IPoolParameters
-    function revokeUnlimitedApprove(address token, address to)
-        external
-        virtual
-        override
-        onlyPoolAdmin
-    {
+    function revokeUnlimitedApprove(
+        address token,
+        address to
+    ) external virtual override onlyPoolAdmin {
         IERC20(token).approve(to, 0);
     }
 
@@ -269,11 +262,9 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function getUserApeCompoundStrategy(address user)
-        external
-        view
-        returns (DataTypes.ApeCompoundStrategy memory strategy)
-    {
+    function getUserApeCompoundStrategy(
+        address user
+    ) external view returns (DataTypes.ApeCompoundStrategy memory strategy) {
         DataTypes.PoolStorage storage ps = poolStorage();
         strategy = ps._apeCompoundStrategies[user];
     }
@@ -294,22 +285,17 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function getSwapAdapter(bytes32 swapAdapterId)
-        external
-        view
-        returns (DataTypes.SwapAdapter memory adapter)
-    {
+    function getSwapAdapter(
+        bytes32 swapAdapterId
+    ) external view returns (DataTypes.SwapAdapter memory adapter) {
         DataTypes.PoolStorage storage ps = poolStorage();
         adapter = ps._swapAdapters[swapAdapterId];
     }
 
     /// @inheritdoc IPoolParameters
-    function setAuctionRecoveryHealthFactor(uint64 value)
-        external
-        virtual
-        override
-        onlyPoolConfigurator
-    {
+    function setAuctionRecoveryHealthFactor(
+        uint64 value
+    ) external virtual override onlyPoolConfigurator {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         require(value != 0, Errors.INVALID_AMOUNT);
@@ -324,7 +310,9 @@ contract PoolParameters is
     }
 
     /// @inheritdoc IPoolParameters
-    function getUserAccountData(address user)
+    function getUserAccountData(
+        address user
+    )
         external
         view
         virtual
@@ -349,24 +337,18 @@ contract PoolParameters is
             );
     }
 
-    function getAssetLtvAndLT(address asset, uint256 tokenId)
-        external
-        view
-        virtual
-        override
-        returns (uint256 ltv, uint256 lt)
-    {
+    function getAssetLtvAndLT(
+        address asset,
+        uint256 tokenId
+    ) external view virtual override returns (uint256 ltv, uint256 lt) {
         DataTypes.PoolStorage storage ps = poolStorage();
         return PoolLogic.executeGetAssetLtvAndLT(ps, asset, tokenId);
     }
 
     /// @inheritdoc IPoolParameters
-    function setAuctionValidityTime(address user)
-        external
-        virtual
-        override
-        nonReentrant
-    {
+    function setAuctionValidityTime(
+        address user
+    ) external virtual override nonReentrant {
         require(tx.origin == msg.sender, Errors.CALLER_NOT_EOA);
         DataTypes.PoolStorage storage ps = poolStorage();
 

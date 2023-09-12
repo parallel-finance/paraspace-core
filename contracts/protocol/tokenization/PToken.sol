@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
@@ -21,6 +21,8 @@ import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
 import {ISwapAdapter} from "../../interfaces/ISwapAdapter.sol";
 import {Helpers} from "../../protocol/libraries/helpers/Helpers.sol";
 import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
+import {ICApe} from "../../interfaces/ICApe.sol";
+import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
 
 /**
  * @title ParaSpace ERC20 PToken
@@ -42,7 +44,7 @@ contract PToken is
             "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
         );
 
-    uint256 public constant PTOKEN_REVISION = 149;
+    uint256 public constant PTOKEN_REVISION = 200;
 
     address internal _treasury;
     address internal _underlyingAsset;
@@ -57,7 +59,9 @@ contract PToken is
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool)
+    constructor(
+        IPool pool
+    )
         ScaledBalanceTokenBaseERC20(pool, "PTOKEN_IMPL", "PTOKEN_IMPL", 0)
         EIP712Base()
     {
@@ -158,12 +162,10 @@ contract PToken is
     }
 
     /// @inheritdoc IPToken
-    function mintToTreasury(uint256 amount, uint256 index)
-        external
-        virtual
-        override
-        onlyPool
-    {
+    function mintToTreasury(
+        uint256 amount,
+        uint256 index
+    ) external virtual override onlyPool {
         if (amount == 0) {
             return;
         }
@@ -180,7 +182,9 @@ contract PToken is
     }
 
     /// @inheritdoc IERC20
-    function balanceOf(address user)
+    function balanceOf(
+        address user
+    )
         public
         view
         virtual
@@ -393,12 +397,9 @@ contract PToken is
      * @dev Overrides the base function to fully implement IPToken
      * @dev see `IncentivizedERC20.nonces()` for more detailed documentation
      */
-    function nonces(address owner)
-        public
-        view
-        override(IPToken, EIP712Base)
-        returns (uint256)
-    {
+    function nonces(
+        address owner
+    ) public view override(IPToken, EIP712Base) returns (uint256) {
         return super.nonces(owner);
     }
 
@@ -450,5 +451,39 @@ contract PToken is
             target = address(timeLock);
         }
         IERC20(asset).safeTransfer(target, amount);
+    }
+
+    function claimUnderlying(
+        address timeLockV1,
+        address cApeV1,
+        address cApeV2,
+        address apeCoin,
+        uint256[] calldata agreementIds
+    ) external virtual onlyPool returns (uint256) {
+        address underlyingAsset = _underlyingAsset;
+        bool isCApeV2 = underlyingAsset == address(cApeV2);
+        uint256 beforeBalance = isCApeV2
+            ? IERC20(cApeV1).balanceOf(address(this))
+            : IERC20(underlyingAsset).balanceOf(address(this));
+
+        ITimeLock(timeLockV1).claim(agreementIds);
+
+        if (!isCApeV2) {
+            return
+                IERC20(underlyingAsset).balanceOf(address(this)) -
+                beforeBalance;
+        }
+
+        uint256 diff = IERC20(cApeV1).balanceOf(address(this)) - beforeBalance;
+        if (diff == 0) {
+            return 0;
+        }
+
+        IAutoCompoundApe(cApeV1).withdraw(diff);
+        if (IERC20(apeCoin).allowance(address(this), address(cApeV2)) == 0) {
+            IERC20(apeCoin).approve(cApeV2, type(uint256).max);
+        }
+        IAutoCompoundApe(cApeV2).deposit(address(this), diff);
+        return diff;
     }
 }

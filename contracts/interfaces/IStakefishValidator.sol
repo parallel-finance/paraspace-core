@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 /// @title The interface for StakefishValidator
 /// @notice Defines implementation of the wallet (deposit, withdraw, collect fees)
@@ -30,10 +30,9 @@ interface IStakefishValidator {
 
     function feePoolAddress() external view returns (address);
 
-    function stateHistory(uint256 index)
-        external
-        view
-        returns (StateChange memory);
+    function stateHistory(
+        uint256 index
+    ) external view returns (StateChange memory);
 
     /// @notice Inspect state of the change
     function lastStateChange() external view returns (StateChange memory);

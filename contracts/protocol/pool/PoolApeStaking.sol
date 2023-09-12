@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import "../libraries/paraspace-upgradeability/ParaReentrancyGuard.sol";
 import "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
@@ -23,7 +23,7 @@ import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
 import {PercentageMath} from "../libraries/math/PercentageMath.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
-import {ISwapRouter} from "../../dependencies/univ3/interfaces/ISwapRouter.sol";
+import {ISwapRouter} from "../../dependencies/uniswapv3-periphery/interfaces/ISwapRouter.sol";
 import {IPriceOracleGetter} from "../../interfaces/IPriceOracleGetter.sol";
 import {Helpers} from "../libraries/helpers/Helpers.sol";
 
@@ -44,7 +44,7 @@ contract PoolApeStaking is
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     IAutoCompoundApe internal immutable APE_COMPOUND;
     IERC20 internal immutable APE_COIN;
-    uint256 internal constant POOL_REVISION = 149;
+    uint256 internal constant POOL_REVISION = 200;
     IERC20 internal immutable USDC;
     ISwapRouter internal immutable SWAP_ROUTER;
 
@@ -133,10 +133,10 @@ contract PoolApeStaking is
     }
 
     /// @inheritdoc IPoolApeStaking
-    function claimApeCoin(address nftAsset, uint256[] calldata _nfts)
-        external
-        nonReentrant
-    {
+    function claimApeCoin(
+        address nftAsset,
+        uint256[] calldata _nfts
+    ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         _checkSApeIsNotPaused(ps);
 
@@ -182,8 +182,8 @@ contract PoolApeStaking is
                 localVar.bakcNToken
             ) {
                 localVar.transferredTokenOwners[
-                        actualTransferAmount
-                    ] = _validateBAKCOwnerAndTransfer(
+                    actualTransferAmount
+                ] = _validateBAKCOwnerAndTransfer(
                     localVar,
                     _nftPairs[index].bakcTokenId,
                     msg.sender
@@ -341,8 +341,8 @@ contract PoolApeStaking is
                 );
 
                 localVar.transferredTokenOwners[
-                        index
-                    ] = _validateBAKCOwnerAndTransfer(
+                    index
+                ] = _validateBAKCOwnerAndTransfer(
                     localVar,
                     _nftPairs[index].bakcTokenId,
                     msg.sender
@@ -411,10 +411,10 @@ contract PoolApeStaking is
     }
 
     /// @inheritdoc IPoolApeStaking
-    function unstakeApePositionAndRepay(address nftAsset, uint256 tokenId)
-        external
-        nonReentrant
-    {
+    function unstakeApePositionAndRepay(
+        address nftAsset,
+        uint256 tokenId
+    ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
@@ -528,8 +528,8 @@ contract PoolApeStaking is
                 );
 
                 localVar.transferredTokenOwners[
-                        j
-                    ] = _validateBAKCOwnerAndTransfer(
+                    j
+                ] = _validateBAKCOwnerAndTransfer(
                     localVar,
                     _nftPairs[i][j].bakcTokenId,
                     users[i]
@@ -555,11 +555,10 @@ contract PoolApeStaking is
         _compoundForUsers(ps, localVar, users);
     }
 
-    function _generalCache(DataTypes.PoolStorage storage ps, address nftAsset)
-        internal
-        view
-        returns (ApeStakingLocalVars memory localVar)
-    {
+    function _generalCache(
+        DataTypes.PoolStorage storage ps,
+        address nftAsset
+    ) internal view returns (ApeStakingLocalVars memory localVar) {
         localVar.xTokenAddress = ps._reserves[nftAsset].xTokenAddress;
         localVar.bakcContract = INTokenApeStaking(localVar.xTokenAddress)
             .getBAKC();
@@ -651,10 +650,9 @@ contract PoolApeStaking is
         }
     }
 
-    function _checkSApeIsNotPaused(DataTypes.PoolStorage storage ps)
-        internal
-        view
-    {
+    function _checkSApeIsNotPaused(
+        DataTypes.PoolStorage storage ps
+    ) internal view {
         DataTypes.ReserveData storage reserve = ps._reserves[
             DataTypes.SApeAddress
         ];
@@ -752,11 +750,10 @@ contract PoolApeStaking is
         _supplyForUser(ps, tokenOut, address(this), user, amountOut);
     }
 
-    function _getApeRelativePrice(address tokenOut, uint256 tokenOutUnit)
-        internal
-        view
-        returns (uint256)
-    {
+    function _getApeRelativePrice(
+        address tokenOut,
+        uint256 tokenOutUnit
+    ) internal view returns (uint256) {
         IPriceOracleGetter oracle = IPriceOracleGetter(
             ADDRESSES_PROVIDER.getPriceOracle()
         );

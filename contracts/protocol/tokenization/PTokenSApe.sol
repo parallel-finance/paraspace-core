@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IPool} from "../../interfaces/IPool.sol";
 import {PToken} from "./PToken.sol";
@@ -13,6 +13,7 @@ import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IScaledBalanceToken} from "../../interfaces/IScaledBalanceToken.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {ScaledBalanceTokenBaseERC20} from "contracts/protocol/tokenization/base/ScaledBalanceTokenBaseERC20.sol";
 
 /**
  * @title sApe PToken
@@ -25,11 +26,7 @@ contract PTokenSApe is PToken {
     INTokenApeStaking immutable nBAYC;
     INTokenApeStaking immutable nMAYC;
 
-    constructor(
-        IPool pool,
-        address _nBAYC,
-        address _nMAYC
-    ) PToken(pool) {
+    constructor(IPool pool, address _nBAYC, address _nMAYC) PToken(pool) {
         require(_nBAYC != address(0) && _nMAYC != address(0));
         nBAYC = INTokenApeStaking(_nBAYC);
         nMAYC = INTokenApeStaking(_nMAYC);
@@ -60,10 +57,12 @@ contract PTokenSApe is PToken {
         return totalStakedAPE;
     }
 
-    function scaledBalanceOf(address user)
+    function scaledBalanceOf(
+        address user
+    )
         public
         view
-        override
+        override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
         returns (uint256)
     {
         return balanceOf(user);
@@ -85,11 +84,7 @@ contract PTokenSApe is PToken {
         revert("not allowed");
     }
 
-    function _transfer(
-        address,
-        address,
-        uint128
-    ) internal virtual override {
+    function _transfer(address, address, uint128) internal virtual override {
         revert("not allowed");
     }
 

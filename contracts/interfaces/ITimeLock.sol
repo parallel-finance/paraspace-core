@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 
@@ -93,6 +93,11 @@ interface ITimeLock {
      * @param agreementIds Array of agreement IDs to be claimed
      */
     function claim(uint256[] calldata agreementIds) external;
+
+    /** @dev Function to claim MoonBird from time-lock agreements
+     * @param agreementIds Array of agreement IDs to be claimed
+     */
+    function claimMoonBirds(uint256[] calldata agreementIds) external;
 
     /** @dev Function to freeze a specific time-lock agreement
      * @param agreementId ID of the agreement to be frozen

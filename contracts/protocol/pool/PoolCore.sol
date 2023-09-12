@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {ParaVersionedInitializable} from "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
@@ -7,6 +7,7 @@ import {ReserveConfiguration} from "../libraries/configuration/ReserveConfigurat
 import {PoolLogic} from "../libraries/logic/PoolLogic.sol";
 import {ReserveLogic} from "../libraries/logic/ReserveLogic.sol";
 import {SupplyLogic} from "../libraries/logic/SupplyLogic.sol";
+import {SupplyExtendedLogic} from "../libraries/logic/SupplyExtendedLogic.sol";
 import {MarketplaceLogic} from "../libraries/logic/MarketplaceLogic.sol";
 import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
 import {LiquidationLogic} from "../libraries/logic/LiquidationLogic.sol";
@@ -52,7 +53,7 @@ contract PoolCore is
 {
     using ReserveLogic for DataTypes.ReserveData;
 
-    uint256 public constant POOL_REVISION = 149;
+    uint256 public constant POOL_REVISION = 200;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
     ITimeLock public immutable TIME_LOCK;
 
@@ -76,11 +77,9 @@ contract PoolCore is
      * @dev Caching the address of the PoolAddressesProvider in order to reduce gas consumption on subsequent operations
      * @param provider The address of the PoolAddressesProvider
      **/
-    function initialize(IPoolAddressesProvider provider)
-        external
-        virtual
-        initializer
-    {
+    function initialize(
+        IPoolAddressesProvider provider
+    ) external virtual initializer {
         require(
             provider == ADDRESSES_PROVIDER,
             Errors.INVALID_ADDRESSES_PROVIDER
@@ -290,7 +289,8 @@ contract PoolCore is
                 releaseUnderlying: true,
                 reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                priceOracleSentinel: ADDRESSES_PROVIDER
+                    .getPriceOracleSentinel(),
                 swapAdapter: DataTypes.SwapAdapter(
                     address(0),
                     address(0),
@@ -325,7 +325,8 @@ contract PoolCore is
                 releaseUnderlying: true,
                 reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                priceOracleSentinel: ADDRESSES_PROVIDER
+                    .getPriceOracleSentinel(),
                 swapAdapter: ps._swapAdapters[swapAdapterId],
                 swapPayload: swapPayload
             })
@@ -355,13 +356,10 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function repayWithPTokens(address asset, uint256 amount)
-        external
-        virtual
-        override
-        nonReentrant
-        returns (uint256)
-    {
+    function repayWithPTokens(
+        address asset,
+        uint256 amount
+    ) external virtual override nonReentrant returns (uint256) {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return
@@ -420,15 +418,13 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function setUserUseERC20AsCollateral(address asset, bool useAsCollateral)
-        external
-        virtual
-        override
-        nonReentrant
-    {
+    function setUserUseERC20AsCollateral(
+        address asset,
+        bool useAsCollateral
+    ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
-        SupplyLogic.executeUseERC20AsCollateral(
+        SupplyExtendedLogic.executeUseERC20AsCollateral(
             ps._reserves,
             ps._reservesList,
             ps._usersConfig[msg.sender],
@@ -447,7 +443,7 @@ contract PoolCore is
         DataTypes.PoolStorage storage ps = poolStorage();
 
         if (useAsCollateral) {
-            SupplyLogic.executeCollateralizeERC721(
+            SupplyExtendedLogic.executeCollateralizeERC721(
                 ps._reserves,
                 ps._usersConfig[msg.sender],
                 asset,
@@ -455,7 +451,7 @@ contract PoolCore is
                 msg.sender
             );
         } else {
-            SupplyLogic.executeUncollateralizeERC721(
+            SupplyExtendedLogic.executeUncollateralizeERC721(
                 ps._reserves,
                 ps._reservesList,
                 ps._usersConfig[msg.sender],
@@ -493,7 +489,8 @@ contract PoolCore is
                 liquidator: msg.sender,
                 receiveXToken: receivePToken,
                 priceOracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                priceOracleSentinel: ADDRESSES_PROVIDER
+                    .getPriceOracleSentinel(),
                 collateralTokenId: 0
             })
         );
@@ -551,7 +548,8 @@ contract PoolCore is
                 user: to,
                 reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                priceOracleSentinel: ADDRESSES_PROVIDER
+                    .getPriceOracleSentinel(),
                 swapAdapter: ps._swapAdapters[swapAdapterId],
                 swapPayload: swapPayload
             })
@@ -578,7 +576,8 @@ contract PoolCore is
                 user: msg.sender,
                 reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel(),
+                priceOracleSentinel: ADDRESSES_PROVIDER
+                    .getPriceOracleSentinel(),
                 swapAdapter: ps._swapAdapters[swapAdapterId],
                 swapPayload: swapPayload
             })
@@ -653,33 +652,27 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function getReserveData(address asset)
-        external
-        view
-        virtual
-        override
-        returns (DataTypes.ReserveData memory)
-    {
+    function getReserveData(
+        address asset
+    ) external view virtual override returns (DataTypes.ReserveData memory) {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return ps._reserves[asset];
     }
 
     /// @inheritdoc IPoolCore
-    function getReserveXToken(address asset)
-        external
-        view
-        virtual
-        override
-        returns (address)
-    {
+    function getReserveXToken(
+        address asset
+    ) external view virtual override returns (address) {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return ps._reserves[asset].xTokenAddress;
     }
 
     /// @inheritdoc IPoolCore
-    function getConfiguration(address asset)
+    function getConfiguration(
+        address asset
+    )
         external
         view
         virtual
@@ -692,7 +685,9 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function getUserConfiguration(address user)
+    function getUserConfiguration(
+        address user
+    )
         external
         view
         virtual
@@ -705,26 +700,18 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function getReserveNormalizedIncome(address asset)
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function getReserveNormalizedIncome(
+        address asset
+    ) external view virtual override returns (uint256) {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return ps._reserves[asset].getNormalizedIncome();
     }
 
     /// @inheritdoc IPoolCore
-    function getReserveNormalizedVariableDebt(address asset)
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function getReserveNormalizedVariableDebt(
+        address asset
+    ) external view virtual override returns (uint256) {
         DataTypes.PoolStorage storage ps = poolStorage();
 
         return ps._reserves[asset].getNormalizedDebt();
@@ -806,7 +793,7 @@ contract PoolCore is
             msg.sender == ps._reserves[asset].xTokenAddress,
             Errors.CALLER_NOT_XTOKEN
         );
-        SupplyLogic.executeFinalizeTransferERC20(
+        SupplyExtendedLogic.executeFinalizeTransferERC20(
             ps._reserves,
             ps._reservesList,
             ps._usersConfig,
@@ -839,7 +826,7 @@ contract PoolCore is
             msg.sender == ps._reserves[asset].xTokenAddress,
             Errors.CALLER_NOT_XTOKEN
         );
-        SupplyLogic.executeFinalizeTransferERC721(
+        SupplyExtendedLogic.executeFinalizeTransferERC721(
             ps._reserves,
             ps._reservesList,
             ps._usersConfig,
@@ -857,7 +844,10 @@ contract PoolCore is
     }
 
     /// @inheritdoc IPoolCore
-    function getAuctionData(address ntokenAsset, uint256 tokenId)
+    function getAuctionData(
+        address ntokenAsset,
+        uint256 tokenId
+    )
         external
         view
         virtual

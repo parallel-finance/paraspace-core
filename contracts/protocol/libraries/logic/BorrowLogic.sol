@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
@@ -134,12 +134,12 @@ library BorrowLogic {
                     })
                 );
                 IPToken(reserveCache.xTokenAddress).swapAndTransferUnderlyingTo(
-                        params.user,
-                        timeLockParams,
-                        params.swapAdapter,
-                        params.swapPayload,
-                        swapInfo
-                    );
+                    params.user,
+                    timeLockParams,
+                    params.swapAdapter,
+                    params.swapPayload,
+                    swapInfo
+                );
             }
         }
 

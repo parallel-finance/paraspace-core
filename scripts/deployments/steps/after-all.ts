@@ -35,7 +35,7 @@ export const afterAll = async () => {
     );
   }
 
-  if (!isFork() && BLOCKSCOUT_DISABLE_INDEXER) {
+  if (!isFork() || BLOCKSCOUT_DISABLE_INDEXER) {
     return;
   }
   await DRE.network.provider.send("evm_setAutomine", [false]);

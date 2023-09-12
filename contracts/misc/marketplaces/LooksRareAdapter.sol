@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
@@ -24,12 +24,9 @@ contract LooksRareAdapter is IMarketplace {
         STRATEGY_ALLOWED = strategyAllowed;
     }
 
-    function getAskOrderInfo(bytes memory params)
-        external
-        view
-        override
-        returns (DataTypes.OrderInfo memory orderInfo)
-    {
+    function getAskOrderInfo(
+        bytes memory params
+    ) external view override returns (DataTypes.OrderInfo memory orderInfo) {
         (
             OrderTypes.TakerOrder memory takerBid,
             OrderTypes.MakerOrder memory makerAsk
@@ -72,12 +69,9 @@ contract LooksRareAdapter is IMarketplace {
         orderInfo.consideration = consideration;
     }
 
-    function getBidOrderInfo(bytes memory)
-        external
-        pure
-        override
-        returns (DataTypes.OrderInfo memory)
-    {
+    function getBidOrderInfo(
+        bytes memory
+    ) external pure override returns (DataTypes.OrderInfo memory) {
         revert(Errors.CALL_MARKETPLACE_FAILED);
     }
 
@@ -104,12 +98,10 @@ contract LooksRareAdapter is IMarketplace {
             );
     }
 
-    function matchBidWithTakerAsk(address, bytes calldata)
-        external
-        pure
-        override
-        returns (bytes memory)
-    {
+    function matchBidWithTakerAsk(
+        address,
+        bytes calldata
+    ) external pure override returns (bytes memory) {
         revert(Errors.CALL_MARKETPLACE_FAILED);
     }
 }
