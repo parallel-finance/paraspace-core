@@ -90,9 +90,9 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         require(beneficiary != address(0), "Beneficiary cant be zero address");
         if (_whiteList[beneficiary]) {
             releaseTime = uint48(block.timestamp) + MIN_WAIT_TIME;
+        } else {
+            require(releaseTime > block.timestamp, "Release time not valid");
         }
-
-        require(releaseTime > block.timestamp, "Release time not valid");
 
         uint256 agreementId = agreementCount++;
         agreements[agreementId] = Agreement({
