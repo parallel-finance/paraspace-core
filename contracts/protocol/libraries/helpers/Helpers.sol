@@ -6,7 +6,6 @@ import {DataTypes} from "../types/DataTypes.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
 import {IAtomicCollateralizableERC721} from "../../../interfaces/IAtomicCollateralizableERC721.sol";
 import {UserConfiguration} from "../configuration/UserConfiguration.sol";
-import {GenericLogic} from "../../libraries/logic/GenericLogic.sol";
 
 /**
  * @title Helpers library
@@ -15,8 +14,6 @@ import {GenericLogic} from "../../libraries/logic/GenericLogic.sol";
 library Helpers {
     using WadRayMath for uint256;
     using UserConfiguration for DataTypes.UserConfigurationMap;
-
-    uint48 internal constant MIN_WAIT_TIME = 12;
 
     // See `IPool` for descriptions
     event ReserveUsedAsCollateralEnabled(
@@ -76,45 +73,5 @@ library Helpers {
             userConfig.setUsingAsCollateral(reserveId, true);
             emit ReserveUsedAsCollateralEnabled(token, user);
         }
-    }
-
-    /**
-     * @notice TimeLockParamsCalculator
-     * @dev This internal function is used to calculate the parameters required for a time-locked action
-     * on a specific asset within a reserve. It computes and returns a `TimeLockParams` structure containing
-     * essential information for executing the action.
-     *
-     * @param reserve The storage reference to the reserve data.
-     * @param assetType The type of the asset (e.g., collateral or debt).
-     * @param asset The address of the asset being affected.
-     * @param amount The amount of the asset involved in the time-locked action.
-     * @param actionType The type of time-locked action being performed (e.g., deposit or withdraw).
-     *
-     * @return timeLockParams A `TimeLockParams` structure with all the necessary parameters computed for
-     * executing the time-locked action.
-     */
-    function calculateTimeLockParams(
-        DataTypes.ReserveData storage reserve,
-        DataTypes.AssetType assetType,
-        address asset,
-        uint256 amount,
-        DataTypes.TimeLockActionType actionType,
-        bool isWhiteListed
-    ) internal returns (DataTypes.TimeLockParams memory timeLockParams) {
-        if (!isWhiteListed) {
-            timeLockParams = GenericLogic.calculateTimeLockParams(
-                reserve,
-                DataTypes.TimeLockFactorParams({
-                    assetType: assetType,
-                    asset: asset,
-                    amount: amount
-                })
-            );
-        } else {
-            timeLockParams.releaseTime =
-                uint48(block.timestamp) +
-                MIN_WAIT_TIME;
-        }
-        timeLockParams.actionType = actionType;
     }
 }
