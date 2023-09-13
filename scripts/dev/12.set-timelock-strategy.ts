@@ -54,6 +54,7 @@ import {
   timeLockStrategyVSL,
   timeLockStrategyKODA,
   timeLockStrategyBLOCKS,
+  timeLockStrategyELEM,
   timeLockStrategyARB,
   timeLockStrategyGMX,
   timeLockStrategyLINK,
@@ -144,6 +145,7 @@ const TIME_LOCK_STRATEGY = {
   KODA: timeLockStrategyKODA,
   BLOCKS: timeLockStrategyBLOCKS,
   EXRP: timeLockStrategyEXRP,
+  ELEM: timeLockStrategyELEM,
 };
 
 const setTimeLockStrategy = async () => {
