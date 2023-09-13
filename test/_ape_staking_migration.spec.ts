@@ -202,7 +202,7 @@ describe("Para Ape Staking Test", () => {
         ],
         {
           asset: ape.address,
-          cashAmount: 0,
+          totalAmount: 0,
           borrowAmount: 0,
           openSApeCollateralFlag: true,
         }
@@ -284,7 +284,7 @@ describe("Para Ape Staking Test", () => {
         ],
         {
           asset: ape.address,
-          cashAmount: 0,
+          totalAmount: 0,
           borrowAmount: 0,
           openSApeCollateralFlag: true,
         }
@@ -365,7 +365,7 @@ describe("Para Ape Staking Test", () => {
         ],
         {
           asset: cApe.address,
-          cashAmount: 0,
+          totalAmount: parseEther("85600"),
           borrowAmount: parseEther("85600"),
           openSApeCollateralFlag: true,
         }
@@ -448,7 +448,7 @@ describe("Para Ape Staking Test", () => {
         ],
         {
           asset: cApe.address,
-          cashAmount: 0,
+          totalAmount: parseEther("85600"),
           borrowAmount: parseEther("85600"),
           openSApeCollateralFlag: true,
         }
@@ -523,13 +523,13 @@ describe("Para Ape Staking Test", () => {
           },
           {
             PoolId: 5,
-            apeTokenIds: [],
-            bakcTokenIds: [0],
+            apeTokenIds: [0],
+            bakcTokenIds: [],
           },
         ],
         {
           asset: ape.address,
-          cashAmount: 0,
+          totalAmount: 0,
           borrowAmount: 0,
           openSApeCollateralFlag: true,
         }
@@ -603,13 +603,13 @@ describe("Para Ape Staking Test", () => {
           },
           {
             PoolId: 5,
-            apeTokenIds: [],
-            bakcTokenIds: [0],
+            apeTokenIds: [0],
+            bakcTokenIds: [],
           },
         ],
         {
           asset: ape.address,
-          cashAmount: 0,
+          totalAmount: 0,
           borrowAmount: 0,
           openSApeCollateralFlag: true,
         }
@@ -682,13 +682,13 @@ describe("Para Ape Staking Test", () => {
           },
           {
             PoolId: 5,
-            apeTokenIds: [],
-            bakcTokenIds: [0],
+            apeTokenIds: [0],
+            bakcTokenIds: [],
           },
         ],
         {
           asset: cApe.address,
-          cashAmount: 0,
+          totalAmount: 0,
           borrowAmount: 0,
           openSApeCollateralFlag: true,
         }
@@ -763,13 +763,13 @@ describe("Para Ape Staking Test", () => {
           },
           {
             PoolId: 5,
-            apeTokenIds: [],
-            bakcTokenIds: [0],
+            apeTokenIds: [0],
+            bakcTokenIds: [],
           },
         ],
         {
           asset: cApe.address,
-          cashAmount: 0,
+          totalAmount: 0,
           borrowAmount: 0,
           openSApeCollateralFlag: true,
         }
@@ -843,7 +843,7 @@ describe("Para Ape Staking Test", () => {
         ],
         {
           asset: ape.address,
-          cashAmount: 0,
+          totalAmount: 0,
           borrowAmount: 0,
           openSApeCollateralFlag: true,
         }
@@ -918,7 +918,7 @@ describe("Para Ape Staking Test", () => {
         ],
         {
           asset: ape.address,
-          cashAmount: 0,
+          totalAmount: 0,
           borrowAmount: 0,
           openSApeCollateralFlag: true,
         }
@@ -992,7 +992,7 @@ describe("Para Ape Staking Test", () => {
         ],
         {
           asset: cApe.address,
-          cashAmount: 0,
+          totalAmount: 0,
           borrowAmount: 0,
           openSApeCollateralFlag: true,
         }
@@ -1068,7 +1068,7 @@ describe("Para Ape Staking Test", () => {
         ],
         {
           asset: cApe.address,
-          cashAmount: 0,
+          totalAmount: 0,
           borrowAmount: 0,
           openSApeCollateralFlag: true,
         }

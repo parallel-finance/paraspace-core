@@ -272,7 +272,7 @@ contract PoolApeStaking is
                     if (nBakc == address(0)) {
                         nBakc = ps._reserves[BAKC].xTokenAddress;
                     }
-                    //transfer bakc from nBakc to ape
+                    //transfer bakc from nBakc to nApe
                     for (uint256 j = 0; j < pairLength; j++) {
                         IERC721(BAKC).safeTransferFrom(
                             nBakc,
@@ -304,11 +304,13 @@ contract PoolApeStaking is
                 Errors.INVALID_ASSET_TYPE
             );
             // 1, prepare cash part.
-            if (apeCoinInfo.cashAmount > 0) {
+            uint256 cashAmount = apeCoinInfo.totalAmount -
+                apeCoinInfo.borrowAmount;
+            if (cashAmount > 0) {
                 IERC20(apeCoinInfo.asset).transferFrom(
                     onBehalf,
                     address(this),
-                    apeCoinInfo.cashAmount
+                    cashAmount
                 );
             }
 
@@ -326,132 +328,99 @@ contract PoolApeStaking is
                 );
             }
 
-            uint256 totalAmount = apeCoinInfo.cashAmount +
-                apeCoinInfo.borrowAmount;
-            if (apeCoinInfo.asset == address(APE_COMPOUND) && totalAmount > 0) {
-                APE_COMPOUND.withdraw(totalAmount);
+            if (
+                apeCoinInfo.asset == address(APE_COMPOUND) &&
+                apeCoinInfo.totalAmount > 0
+            ) {
+                APE_COMPOUND.withdraw(apeCoinInfo.totalAmount);
             }
         }
 
         //staking in paraApeStaking
         {
             uint256 stakingLength = stakingInfos.length;
+            uint256 bakcPairCap;
             for (uint256 index = 0; index < stakingLength; index++) {
                 ParaStakingInfo calldata stakingInfo = stakingInfos[index];
 
                 if (
                     stakingInfo.PoolId ==
-                    ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID
-                ) {
-                    IParaApeStaking(PARA_APE_STAKING).depositPairNFT(
-                        onBehalf,
-                        true,
-                        stakingInfo.apeTokenIds,
-                        stakingInfo.bakcTokenIds
-                    );
-                } else if (
+                    ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID ||
                     stakingInfo.PoolId ==
                     ApeStakingCommonLogic.MAYC_BAKC_PAIR_POOL_ID
                 ) {
+                    bool isBayc = (stakingInfo.PoolId ==
+                        ApeStakingCommonLogic.BAYC_BAKC_PAIR_POOL_ID);
                     IParaApeStaking(PARA_APE_STAKING).depositPairNFT(
                         onBehalf,
-                        false,
+                        isBayc,
                         stakingInfo.apeTokenIds,
                         stakingInfo.bakcTokenIds
                     );
                 } else if (
                     stakingInfo.PoolId ==
-                    ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID
-                ) {
-                    IParaApeStaking(PARA_APE_STAKING).depositNFT(
-                        onBehalf,
-                        BAYC,
-                        stakingInfo.apeTokenIds
-                    );
-                } else if (
+                    ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID ||
                     stakingInfo.PoolId ==
-                    ApeStakingCommonLogic.MAYC_SINGLE_POOL_ID
-                ) {
-                    IParaApeStaking(PARA_APE_STAKING).depositNFT(
-                        onBehalf,
-                        MAYC,
-                        stakingInfo.apeTokenIds
-                    );
-                } else if (
+                    ApeStakingCommonLogic.MAYC_SINGLE_POOL_ID ||
                     stakingInfo.PoolId ==
                     ApeStakingCommonLogic.BAKC_SINGLE_POOL_ID
                 ) {
+                    address nft = (stakingInfo.PoolId ==
+                        ApeStakingCommonLogic.BAYC_SINGLE_POOL_ID)
+                        ? BAYC
+                        : (stakingInfo.PoolId ==
+                            ApeStakingCommonLogic.MAYC_SINGLE_POOL_ID)
+                        ? MAYC
+                        : BAKC;
                     IParaApeStaking(PARA_APE_STAKING).depositNFT(
                         onBehalf,
-                        BAKC,
-                        stakingInfo.bakcTokenIds
+                        nft,
+                        stakingInfo.apeTokenIds
                     );
                 } else if (
                     stakingInfo.PoolId ==
-                    ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID
-                ) {
-                    uint256 cap = IParaApeStaking(PARA_APE_STAKING)
-                        .getApeCoinStakingCap(
-                            IApeStakingP2P.StakingType.BAYCStaking
-                        );
-                    IParaApeStaking(PARA_APE_STAKING).depositApeCoinPool(
-                        IApeCoinPool.ApeCoinDepositInfo({
-                            onBehalf: onBehalf,
-                            cashToken: address(APE_COIN),
-                            cashAmount: cap * stakingInfo.apeTokenIds.length,
-                            isBAYC: true,
-                            tokenIds: stakingInfo.apeTokenIds
-                        })
-                    );
-                } else if (
+                    ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID ||
                     stakingInfo.PoolId ==
                     ApeStakingCommonLogic.MAYC_APECOIN_POOL_ID
                 ) {
+                    bool isBayc = (stakingInfo.PoolId ==
+                        ApeStakingCommonLogic.BAYC_APECOIN_POOL_ID);
+                    IApeStakingP2P.StakingType stakingType = isBayc
+                        ? IApeStakingP2P.StakingType.BAYCStaking
+                        : IApeStakingP2P.StakingType.MAYCStaking;
                     uint256 cap = IParaApeStaking(PARA_APE_STAKING)
-                        .getApeCoinStakingCap(
-                            IApeStakingP2P.StakingType.MAYCStaking
-                        );
+                        .getApeCoinStakingCap(stakingType);
                     IParaApeStaking(PARA_APE_STAKING).depositApeCoinPool(
                         IApeCoinPool.ApeCoinDepositInfo({
                             onBehalf: onBehalf,
                             cashToken: address(APE_COIN),
                             cashAmount: cap * stakingInfo.apeTokenIds.length,
-                            isBAYC: false,
+                            isBAYC: isBayc,
                             tokenIds: stakingInfo.apeTokenIds
                         })
                     );
                 } else if (
                     stakingInfo.PoolId ==
-                    ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID
-                ) {
-                    uint256 cap = IParaApeStaking(PARA_APE_STAKING)
-                        .getApeCoinStakingCap(
-                            IApeStakingP2P.StakingType.BAKCPairStaking
-                        );
-                    IParaApeStaking(PARA_APE_STAKING).depositApeCoinPairPool(
-                        IApeCoinPool.ApeCoinPairDepositInfo({
-                            onBehalf: onBehalf,
-                            cashToken: address(APE_COIN),
-                            cashAmount: cap * stakingInfo.apeTokenIds.length,
-                            isBAYC: true,
-                            apeTokenIds: stakingInfo.apeTokenIds,
-                            bakcTokenIds: stakingInfo.bakcTokenIds
-                        })
-                    );
-                } else if (
+                    ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID ||
                     stakingInfo.PoolId ==
                     ApeStakingCommonLogic.MAYC_BAKC_APECOIN_POOL_ID
                 ) {
-                    uint256 cap = IParaApeStaking(PARA_APE_STAKING)
-                        .getApeCoinStakingCap(
-                            IApeStakingP2P.StakingType.BAKCPairStaking
-                        );
+                    if (bakcPairCap == 0) {
+                        bakcPairCap = IParaApeStaking(PARA_APE_STAKING)
+                            .getApeCoinStakingCap(
+                                IApeStakingP2P.StakingType.BAKCPairStaking
+                            );
+                    }
+
+                    bool isBayc = (stakingInfo.PoolId ==
+                        ApeStakingCommonLogic.BAYC_BAKC_APECOIN_POOL_ID);
                     IParaApeStaking(PARA_APE_STAKING).depositApeCoinPairPool(
                         IApeCoinPool.ApeCoinPairDepositInfo({
                             onBehalf: onBehalf,
                             cashToken: address(APE_COIN),
-                            cashAmount: cap * stakingInfo.apeTokenIds.length,
-                            isBAYC: false,
+                            cashAmount: bakcPairCap *
+                                stakingInfo.apeTokenIds.length,
+                            isBAYC: isBayc,
                             apeTokenIds: stakingInfo.apeTokenIds,
                             bakcTokenIds: stakingInfo.bakcTokenIds
                         })
@@ -463,11 +432,7 @@ contract PoolApeStaking is
         // repay and supply remaining apecoin
         uint256 diffBalance = APE_COIN.balanceOf(address(this)) - beforeBalance;
         if (diffBalance > 0) {
-            //wrong cashAmount or borrowAmount
-            require(
-                apeCoinInfo.cashAmount + apeCoinInfo.borrowAmount == 0,
-                Errors.INVALID_PARAMETER
-            );
+            require(apeCoinInfo.totalAmount == 0, Errors.INVALID_PARAMETER);
             APE_COMPOUND.deposit(address(this), diffBalance);
             _repayAndSupplyForUser(
                 ps,

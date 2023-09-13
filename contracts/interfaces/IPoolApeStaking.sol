@@ -65,7 +65,7 @@ interface IPoolApeStaking {
 
     struct ApeCoinInfo {
         address asset;
-        uint256 cashAmount;
+        uint256 totalAmount;
         uint256 borrowAmount;
         bool openSApeCollateralFlag;
     }
