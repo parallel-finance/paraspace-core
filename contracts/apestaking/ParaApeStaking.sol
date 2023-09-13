@@ -50,20 +50,20 @@ contract ParaApeStaking is
     uint16 public immutable sApeReserveId;
     address private immutable psApe;
 
+    //P2P storage
+    bytes32 internal DOMAIN_SEPARATOR;
+    mapping(bytes32 => ListingOrderStatus) public listingOrderStatus;
+    mapping(bytes32 => MatchedOrder) public matchedOrders;
+    mapping(address => mapping(uint32 => uint256)) private apeMatchedCount;
+    mapping(address => uint256) private cApeShareBalance;
+
+    uint256[5] private __gap;
+
     //record all pool states
     mapping(uint256 => PoolState) public poolStates;
 
     //record user sApe balance
     mapping(address => SApeBalance) private sApeBalance;
-
-    //P2P storage
-    bytes32 internal DOMAIN_SEPARATOR;
-    mapping(bytes32 => ListingOrderStatus) public listingOrderStatus;
-    mapping(bytes32 => MatchedOrder) public matchedOrders;
-
-    //record Ape in P2P and ApeCoin pool
-    mapping(address => mapping(uint32 => uint256)) private apeMatchedCount;
-    mapping(address => uint256) private cApeShareBalance;
 
     address public apeStakingBot;
     uint64 public compoundFee;
@@ -129,11 +129,52 @@ contract ParaApeStaking is
         );
 
         //approve ApeCoin for apeCoinStaking
-        IERC20(apeCoin).safeApprove(address(apeCoinStaking), type(uint256).max);
+        uint256 allowance = IERC20(apeCoin).allowance(
+            address(this),
+            address(apeCoinStaking)
+        );
+        if (allowance == 0) {
+            IERC20(apeCoin).safeApprove(
+                address(apeCoinStaking),
+                type(uint256).max
+            );
+        }
+
         //approve ApeCoin for cApe
-        IERC20(apeCoin).safeApprove(cApe, type(uint256).max);
+        allowance = IERC20(apeCoin).allowance(address(this), address(cApe));
+        if (allowance == 0) {
+            IERC20(apeCoin).safeApprove(cApe, type(uint256).max);
+        }
+
         //approve cApe for pool
-        IERC20(cApe).safeApprove(pool, type(uint256).max);
+        allowance = IERC20(cApe).allowance(address(this), pool);
+        if (allowance == 0) {
+            IERC20(cApe).safeApprove(pool, type(uint256).max);
+        }
+    }
+
+    //only for migration
+    function reset_initialize() external onlyPoolAdmin {
+        assembly {
+            sstore(0, 0)
+        }
+    }
+
+    //only for migration
+    function updateP2PSApeBalance(
+        bytes32[] calldata orderHashes
+    ) external onlyPoolAdmin {
+        uint256 orderlength = orderHashes.length;
+        for (uint256 i = 0; i < orderlength; i++) {
+            bytes32 orderHash = orderHashes[i];
+            MatchedOrder storage order = matchedOrders[orderHash];
+            uint128 apePrincipleAmount = order.apePrincipleAmount.toUint128();
+            if (apePrincipleAmount > 0) {
+                order.apePrincipleAmount = 0;
+                sApeBalance[order.apeCoinOfferer]
+                    .stakedBalance += apePrincipleAmount;
+            }
+        }
     }
 
     /**

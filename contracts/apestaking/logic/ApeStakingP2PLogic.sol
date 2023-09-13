@@ -127,6 +127,7 @@ library ApeStakingP2PLogic {
                 bakcShare: 0,
                 apeCoinOfferer: apeCoinOrder.offerer,
                 apeCoinShare: apeCoinOrder.share,
+                apePrincipleAmount: 0,
                 apeCoinListingOrderHash: apeCoinListingOrderHash
             });
         orderHash = getMatchedOrderHash(matchedOrder);
@@ -222,6 +223,7 @@ library ApeStakingP2PLogic {
                 bakcShare: bakcOrder.share,
                 apeCoinOfferer: apeCoinOrder.offerer,
                 apeCoinShare: apeCoinOrder.share,
+                apePrincipleAmount: 0,
                 apeCoinListingOrderHash: apeCoinListingOrderHash
             });
         orderHash = getMatchedOrderHash(matchedOrder);

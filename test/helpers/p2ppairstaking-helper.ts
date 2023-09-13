@@ -1,5 +1,5 @@
 import {DRE} from "../../helpers/misc-utils";
-import {ParaApeStaking} from "../../types";
+import {P2PPairStaking, ParaApeStaking} from "../../types";
 import {SignerWithAddress} from "./make-suite";
 import {convertSignatureToEIP2098} from "../../helpers/seaport-helpers/encoding";
 import {BigNumberish, BytesLike} from "ethers";
@@ -18,7 +18,7 @@ export type ListingOrder = {
 };
 
 export async function getSignedListingOrder(
-  p2pPairStaking: ParaApeStaking,
+  p2pPairStaking: ParaApeStaking | P2PPairStaking,
   stakingType: number,
   listingToken: string,
   tokenId: number,

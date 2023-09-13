@@ -36,6 +36,8 @@ interface IApeStakingP2P {
         uint32 bakcShare;
         address apeCoinOfferer;
         uint32 apeCoinShare;
+        //used for placeholder when P2P migration to ParaApeStaking, will always be 0 in ParaApeStaking
+        uint256 apePrincipleAmount;
         bytes32 apeCoinListingOrderHash;
     }
 
