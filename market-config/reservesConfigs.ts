@@ -23,6 +23,7 @@ import {
   auctionStrategyZero,
   auctionStrategyEXRP,
   auctionStrategyUniswapV3,
+  auctionStrategyMBEAN,
   auctionStrategyELEM,
 } from "./auctionStrategies";
 import {
@@ -113,6 +114,7 @@ import {
   timeLockStrategyWBTCWH,
   timeLockStrategySTDOT,
   timeLockStrategyEXRP,
+  timeLockStrategyMBEAN,
   timeLockStrategyELEM,
 } from "./timeLockStrategies";
 
@@ -1068,6 +1070,22 @@ export const strategyEXRP: IReserveParams = {
   strategy: rateStrategyNFT,
   auctionStrategy: auctionStrategyEXRP,
   timeLockStrategy: timeLockStrategyEXRP,
+  baseLTVAsCollateral: "2000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationThreshold: "3500",
+  liquidationBonus: "10500",
+  borrowingEnabled: false,
+  reserveDecimals: "0",
+  xTokenImpl: eContractid.NTokenImpl,
+  reserveFactor: "0",
+  borrowCap: "0",
+  supplyCap: "1000",
+};
+
+export const strategyMBEAN: IReserveParams = {
+  strategy: rateStrategyNFT,
+  auctionStrategy: auctionStrategyMBEAN,
+  timeLockStrategy: timeLockStrategyMBEAN,
   baseLTVAsCollateral: "2000",
   liquidationProtocolFeePercentage: "0",
   liquidationThreshold: "3500",

@@ -64,6 +64,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   KODA: parseEther("9.5").toString(),
   BLOCKS: parseEther("9.54").toString(),
   EXRP: parseEther("0.2").toString(),
+  MBEAN: parseEther("0.55").toString(),
   ELEM: parseEther("0.35").toString(),
 };
 
@@ -129,6 +130,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_USD_PRICES = {
   KODA: parseUnits("14154", 8).toString(),
   BLOCKS: parseUnits("10800", 8).toString(),
   EXRP: parseUnits("170", 8).toString(),
+  MBEAN: parseUnits("800", 8).toString(),
   ELEM: parseUnits("550", 8).toString(),
 };
 
@@ -170,6 +172,7 @@ export const MOCK_TOKEN_MINT_VALUE = {
   BLOCKS: 1,
   EXRP: 1,
   ELEM: 1,
+  MBEAN: 1,
 };
 
 export const MocksConfig: IMocksConfig = {

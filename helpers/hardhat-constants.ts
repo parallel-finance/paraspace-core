@@ -485,6 +485,7 @@ export const eContractidToContractName = {
   BLOCKS: "MintableERC721",
   EXRP: "MintableERC721",
   WGLMR: "MintableERC20",
+  MBEAN: "MintableERC721",
   ELEM: "MintableERC721",
   MockBendDaoLendPool: "MockLendPool",
   PositionMoverLogic: "PositionMoverLogic",

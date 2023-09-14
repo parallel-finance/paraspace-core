@@ -287,6 +287,7 @@ export enum eContractid {
   KODA = "KODA",
   BLOCKS = "BLOCKS",
   EXRP = "EXRP",
+  MBEAN = "MBEAN",
   ELEM = "ELEM",
   WGLMR = "WGLMR",
   MockBendDaoLendPool = "MockBendDaoLendPool",
@@ -509,6 +510,7 @@ export interface iAssetBase<T> {
   KODA: T;
   BLOCKS: T;
   EXRP: T;
+  MBEAN: T;
   ELEM: T;
 }
 
@@ -575,6 +577,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "KODA"
   | "BLOCKS"
   | "EXRP"
+  | "MBEAN"
   | "ELEM"
 >;
 
@@ -647,6 +650,7 @@ export enum ERC721TokenContractId {
   KODA = "KODA",
   BLOCKS = "BLOCKS",
   EXRP = "EXRP",
+  MBEAN = "MBEAN",
   ELEM = "ELEM",
 }
 
@@ -664,6 +668,7 @@ export enum NTokenContractId {
   nSFVLDR = "nSFVLDR",
   nBLOCKS = "nBLOCKS",
   nEXRP = "nEXRP",
+  nMBEAN = "nMBEAN",
   nELEM = "nELEM",
 }
 
@@ -842,6 +847,7 @@ export interface IChainlinkConfig {
   KODA?: tEthereumAddress;
   BLOCKS?: tEthereumAddress;
   EXRP?: tEthereumAddress;
+  MBEAN?: tEthereumAddress;
   ELEM?: tEthereumAddress;
   UniswapV3?: tEthereumAddress;
   SFVLDR?: tEthereumAddress;

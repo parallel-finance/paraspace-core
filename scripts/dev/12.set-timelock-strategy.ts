@@ -54,6 +54,7 @@ import {
   timeLockStrategyVSL,
   timeLockStrategyKODA,
   timeLockStrategyBLOCKS,
+  timeLockStrategyMBEAN,
   timeLockStrategyELEM,
   timeLockStrategyARB,
   timeLockStrategyGMX,
@@ -145,6 +146,7 @@ const TIME_LOCK_STRATEGY = {
   KODA: timeLockStrategyKODA,
   BLOCKS: timeLockStrategyBLOCKS,
   EXRP: timeLockStrategyEXRP,
+  MBEAN: timeLockStrategyMBEAN,
   ELEM: timeLockStrategyELEM,
 };
 
