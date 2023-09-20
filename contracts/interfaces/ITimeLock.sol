@@ -71,6 +71,16 @@ interface ITimeLock {
      */
     event TimeLockFrozen(bool value);
 
+    /**
+     * @notice TimeLockWhiteListEvents
+     * @dev This event is emitted when the time lock whitelist is updated. It provides information about
+     * addresses that were added to and removed from the whitelist during the update.
+     *
+     * @param added An array of addresses that were added to the time lock whitelist.
+     * @param removed An array of addresses that were removed from the time lock whitelist.
+     */
+    event TimeLockWhitelistUpdated(address[] added, address[] removed);
+
     /** @dev Function to create a new time-lock agreement
      * @param assetType Type of the asset involved
      * @param actionType Type of action for the time-lock
@@ -118,4 +128,27 @@ interface ITimeLock {
      * @notice This function can only be called by an authorized user
      */
     function unfreezeAllAgreements() external;
+
+    /**
+     * @dev Updates the time lock whitelist by adding and/or removing multiple addresses.
+     * @param toAdd An array of addresses to be added to the whitelist.
+     * @param toRemove An array of addresses to be removed from the whitelist.
+     */
+    function updateTimeLockWhiteList(
+        address[] calldata toAdd,
+        address[] calldata toRemove
+    ) external;
+
+    /**
+     * @notice TimeLockWhiteList
+     * @dev This function allows external callers to check whether an array of addresses are
+     * on the time lock whitelist, indicating whether they have permission for specific actions.
+     *
+     * @param users An array of addresses to check for whitelist membership.
+     * @return isWhiteListed An array of boolean values indicating whether each provided address
+     * is on the time lock whitelist (true if whitelisted, false otherwise).
+     */
+    function isTimeLockWhiteListed(
+        address[] calldata users
+    ) external view returns (bool[] memory);
 }

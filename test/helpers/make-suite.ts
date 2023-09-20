@@ -55,6 +55,7 @@ import {
   getNTokenOtherdeed,
   getStakefishNFTManager,
   getNTokenStakefish,
+  getTimeLockProxy,
 } from "../../helpers/contracts-getters";
 import {
   eContractid,
@@ -88,6 +89,7 @@ import {
   SeaportAdapter,
   StakefishNFTManager,
   StETHDebtToken,
+  TimeLock,
   UiPoolDataProvider,
   WstETHMocked,
   X2Y2Adapter,
@@ -218,6 +220,7 @@ export interface TestEnv {
   executionDelegate: ExecutionDelegate;
   blurExchange: BlurExchange;
   blurAdapter: BlurAdapter;
+  timeLock: TimeLock;
 }
 
 export async function initializeMakeSuite() {
@@ -290,6 +293,7 @@ export async function initializeMakeSuite() {
     executionDelegate: {} as ExecutionDelegate,
     blurExchange: {} as BlurExchange,
     blurAdapter: {} as BlurAdapter,
+    timeLock: {} as TimeLock,
   } as TestEnv;
   const paraSpaceConfig = getParaSpaceConfig();
   const signers = await Promise.all(
@@ -566,6 +570,7 @@ export async function initializeMakeSuite() {
   testEnv.executionDelegate = await getExecutionDelegate();
   testEnv.blurExchange = await getBlurExchangeProxy();
   testEnv.blurAdapter = await getBlurAdapter();
+  testEnv.timeLock = await getTimeLockProxy();
 
   return testEnv;
 }

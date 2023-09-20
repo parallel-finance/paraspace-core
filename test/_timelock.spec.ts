@@ -1,14 +1,15 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
 import {deployReserveTimeLockStrategy} from "../helpers/contracts-deployments";
-import {MAX_UINT_AMOUNT} from "../helpers/constants";
+import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 import {
+  getInitializableAdminUpgradeabilityProxy,
   getPoolConfiguratorProxy,
   getTimeLockProxy,
 } from "../helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
-import {eContractid} from "../helpers/types";
+import {eContractid, ProtocolErrors} from "../helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {supplyAndValidate} from "./helpers/validated-steps";
 import {parseEther} from "ethers/lib/utils";
@@ -503,5 +504,72 @@ describe("TimeLock functionality tests", () => {
     const balanceAfter = await punks.balanceOf(user1.address);
 
     await expect(balanceAfter).to.be.eq(balanceBefore.add(3));
+  });
+
+  it("non-pool admin cannot update timeLockWhiteList", async () => {
+    const {
+      users: [user1],
+      timeLock,
+    } = await loadFixture(fixture);
+    await expect(
+      timeLock.updateTimeLockWhiteList([user1.address], [])
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
+    await expect(
+      timeLock.updateTimeLockWhiteList([], [user1.address])
+    ).to.be.revertedWith(ProtocolErrors.CALLER_NOT_POOL_ADMIN);
+  });
+
+  it("pool admin can update timeLockWhiteList", async () => {
+    const {
+      users: [user1, user2],
+      poolAdmin,
+      timeLock,
+    } = await loadFixture(fixture);
+    await expect(await timeLock.isTimeLockWhiteListed([user1.address])).deep.eq(
+      [false]
+    );
+    await waitForTx(
+      await (await getInitializableAdminUpgradeabilityProxy(timeLock.address))
+        .connect(poolAdmin.signer)
+        .changeAdmin(ONE_ADDRESS)
+    );
+    await waitForTx(
+      await timeLock
+        .connect(poolAdmin.signer)
+        .updateTimeLockWhiteList([user1.address], [])
+    );
+    await expect(await timeLock.isTimeLockWhiteListed([user1.address])).deep.eq(
+      [true]
+    );
+
+    await waitForTx(
+      await timeLock
+        .connect(poolAdmin.signer)
+        .updateTimeLockWhiteList([], [user1.address])
+    );
+    await expect(await timeLock.isTimeLockWhiteListed([user1.address])).deep.eq(
+      [false]
+    );
+
+    await waitForTx(
+      await timeLock
+        .connect(poolAdmin.signer)
+        .updateTimeLockWhiteList([user1.address], [user1.address])
+    );
+    await expect(
+      await timeLock.isTimeLockWhiteListed([user1.address, user2.address])
+    ).deep.eq([false, false]);
+
+    await waitForTx(
+      await timeLock
+        .connect(poolAdmin.signer)
+        .updateTimeLockWhiteList(
+          [user1.address, user2.address],
+          [user1.address]
+        )
+    );
+    await expect(
+      await timeLock.isTimeLockWhiteListed([user1.address, user2.address])
+    ).deep.eq([false, true]);
   });
 });
