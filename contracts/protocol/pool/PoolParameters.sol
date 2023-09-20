@@ -326,7 +326,6 @@ contract PoolParameters is
     function setAuctionValidityTime(
         address user
     ) external virtual override nonReentrant {
-        require(tx.origin == msg.sender, Errors.CALLER_NOT_EOA);
         DataTypes.PoolStorage storage ps = poolStorage();
 
         require(user != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
