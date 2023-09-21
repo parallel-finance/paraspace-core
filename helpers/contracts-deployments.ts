@@ -1213,6 +1213,9 @@ export const deployGenericMoonbirdNTokenImpl = async (
   const mintableERC721Logic =
     (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
     (await deployMintableERC721Logic(verify)).address;
+  const paraSpaceConfig = getParaSpaceConfig();
+
+  const timeLockV1 = paraSpaceConfig.ParaSpaceV1?.TimeLockV1 || ZERO_ADDRESS;
 
   const libraries = {
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
@@ -1221,7 +1224,7 @@ export const deployGenericMoonbirdNTokenImpl = async (
   return withSaveAndVerify(
     await getContractFactory("NTokenMoonBirds", libraries),
     eContractid.NTokenMoonBirdsImpl,
-    [poolAddress, delegationRegistry],
+    [poolAddress, delegationRegistry, timeLockV1],
     verify,
     false,
     libraries

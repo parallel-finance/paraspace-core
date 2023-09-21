@@ -52,7 +52,7 @@ contract PoolCore is
 {
     using ReserveLogic for DataTypes.ReserveData;
 
-    uint256 public constant POOL_REVISION = 149;
+    uint256 public constant POOL_REVISION = 200;
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
     ITimeLock public immutable TIME_LOCK;
 
