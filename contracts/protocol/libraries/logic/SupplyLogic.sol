@@ -520,13 +520,15 @@ library SupplyLogic {
 
         //currently don't need to update state for erc721
         //reserve.updateState(reserveCache);
-        INToken nToken = INToken(reserveCache.xTokenAddress);
-        XTokenType tokenType = nToken.getXTokenType();
-        require(
-            tokenType == XTokenType.NTokenUniswapV3 ||
-                tokenType == XTokenType.NTokenIZUMILp,
-            Errors.XTOKEN_TYPE_NOT_ALLOWED
-        );
+        {
+            XTokenType tokenType = INToken(reserveCache.xTokenAddress)
+                .getXTokenType();
+            require(
+                tokenType == XTokenType.NTokenUniswapV3 ||
+                    tokenType == XTokenType.NTokenIZUMILp,
+                Errors.XTOKEN_TYPE_NOT_ALLOWED
+            );
+        }
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = params.tokenId;
@@ -541,7 +543,8 @@ library SupplyLogic {
             address token0,
             address token1,
             uint256 amount0,
-            uint256 amount1
+            uint256 amount1,
+            bool isBurned
         ) = INTokenLiquidity(reserveCache.xTokenAddress).decreaseLiquidity(
                 params.user,
                 params.tokenId,
@@ -550,9 +553,34 @@ library SupplyLogic {
                 params.amount1Min
             );
 
-        bool isUsedAsCollateral = ICollateralizableERC721(
-            reserveCache.xTokenAddress
-        ).isUsedAsCollateral(params.tokenId);
+        bool isUsedAsCollateral;
+        if (isBurned) {
+            uint64 oldCollateralizedBalance;
+            uint64 newCollateralizedBalance;
+            {
+                DataTypes.TimeLockParams memory timeLockParams;
+                (oldCollateralizedBalance, newCollateralizedBalance) = INToken(
+                    reserveCache.xTokenAddress
+                ).burn(
+                        msg.sender,
+                        reserveCache.xTokenAddress,
+                        tokenIds,
+                        timeLockParams
+                    );
+            }
+
+            if (oldCollateralizedBalance > 0 && newCollateralizedBalance == 0) {
+                userConfig.setUsingAsCollateral(reserve.id, false);
+                emit ReserveUsedAsCollateralDisabled(params.asset, msg.sender);
+            }
+            isUsedAsCollateral = (oldCollateralizedBalance >
+                newCollateralizedBalance);
+        } else {
+            isUsedAsCollateral = ICollateralizableERC721(
+                reserveCache.xTokenAddress
+            ).isUsedAsCollateral(params.tokenId);
+        }
+
         if (amount0 > 0) {
             executeSupply(
                 reservesData,

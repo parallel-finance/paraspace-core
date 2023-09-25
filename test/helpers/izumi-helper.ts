@@ -30,7 +30,7 @@ export const approveTo = async ({token, target, user}) => {
   );
 };
 
-export const createNewPool = async ({
+export const createIzumiNewPool = async ({
   positionManager,
   token0,
   token1,
@@ -50,7 +50,7 @@ export const createNewPool = async ({
   );
 };
 
-export const mintNewPosition = async ({
+export const mintIzumiNewPosition = async ({
   nft,
   token0,
   token1,

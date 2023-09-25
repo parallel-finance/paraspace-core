@@ -245,6 +245,7 @@ export enum eContractid {
   PoolParametersImpl = "PoolParametersImpl",
   PoolApeStakingImpl = "PoolApeStakingImpl",
   PoolBorrowAndStakeImpl = "PoolBorrowAndStakeImpl",
+  PoolLpOperationImpl = "PoolLpOperationImpl",
   ApeCoinStaking = "ApeCoinStaking",
   ATokenDebtToken = "ATokenDebtToken",
   StETHDebtToken = "StETHDebtToken",

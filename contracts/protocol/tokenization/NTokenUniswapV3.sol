@@ -88,6 +88,20 @@ contract NTokenUniswapV3 is NTokenLiquidity {
             .increaseLiquidity{value: msg.value}(params);
     }
 
+    function _liquidity(
+        address positionManager,
+        uint256 tokenId
+    ) internal view override returns (uint256) {
+        (, , , , , , , uint256 liquidity, , , , ) = INonfungiblePositionManager(
+            positionManager
+        ).positions(tokenId);
+        return liquidity;
+    }
+
+    function _burn(address positionManager, uint256 tokenId) internal override {
+        INonfungiblePositionManager(positionManager).burn(tokenId);
+    }
+
     function _decreaseLiquidity(
         address positionManager,
         uint256 tokenId,

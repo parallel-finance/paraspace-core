@@ -165,6 +165,7 @@ import {
   Swap,
   PoolBorrowAndStake__factory,
   PoolBorrowAndStake,
+  PoolLpOperation__factory,
 } from "../types";
 import {
   getACLManager,
@@ -791,6 +792,10 @@ export const getPoolSignatures = () => {
     PoolPositionMover__factory.abi
   );
 
+  const poolLpOperationSelectors = getFunctionSignatures(
+    PoolLpOperation__factory.abi
+  );
+
   const poolProxySelectors = getFunctionSignatures(ParaProxy__factory.abi);
 
   const poolParaProxyInterfacesSelectors = getFunctionSignatures(
@@ -807,6 +812,7 @@ export const getPoolSignatures = () => {
     ...poolProxySelectors,
     ...poolParaProxyInterfacesSelectors,
     ...poolPositionMoverSelectors,
+    ...poolLpOperationSelectors,
   ];
   for (const selector of poolSelectors) {
     if (!allSelectors[selector.signature]) {
@@ -828,6 +834,7 @@ export const getPoolSignatures = () => {
     poolBorrowAndStakeSelectors,
     poolParaProxyInterfacesSelectors,
     poolPositionMoverSelectors,
+    poolLpOperationSelectors,
   };
 };
 
@@ -883,6 +890,11 @@ export const deployPoolComponents = async (
     "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
   ]);
 
+  const lpOperationLibraries = pick(coreLibraries, [
+    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
+    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
+  ]);
+
   const allTokens = await getAllTokens();
 
   const APE_WETH_FEE = 3000;
@@ -894,6 +906,7 @@ export const deployPoolComponents = async (
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
     poolBorrowAndStakeSelectors,
+    poolLpOperationSelectors,
   } = getPoolSignatures();
 
   const poolCore = (await withSaveAndVerify(
@@ -930,6 +943,16 @@ export const deployPoolComponents = async (
     false,
     marketplaceLibraries,
     poolMarketplaceSelectors
+  )) as PoolMarketplace;
+
+  const poolLpOperation = (await withSaveAndVerify(
+    await getContractFactory("PoolLpOperation", lpOperationLibraries),
+    eContractid.PoolLpOperationImpl,
+    [provider],
+    verify,
+    false,
+    lpOperationLibraries,
+    poolLpOperationSelectors
   )) as PoolMarketplace;
 
   const config = getParaSpaceConfig();
@@ -978,6 +1001,7 @@ export const deployPoolComponents = async (
     poolMarketplace,
     poolApeStaking,
     poolBorrowAndStake,
+    poolLpOperation,
     poolCoreSelectors: poolCoreSelectors.map((s) => s.signature),
     poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
     poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
@@ -985,6 +1009,7 @@ export const deployPoolComponents = async (
     poolBorrowAndStakeSelectors: poolBorrowAndStakeSelectors.map(
       (s) => s.signature
     ),
+    poolLpOperationSelectors: poolLpOperationSelectors.map((s) => s.signature),
   };
 };
 

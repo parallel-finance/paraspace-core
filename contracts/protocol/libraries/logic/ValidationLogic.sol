@@ -186,6 +186,24 @@ library ValidationLogic {
         require(!isPaused, Errors.RESERVE_PAUSED);
     }
 
+    function validateAssetStatus(
+        DataTypes.ReserveConfigurationMap memory reserveConfiguration,
+        DataTypes.AssetType assetType
+    ) internal pure {
+        (
+            bool isActive,
+            bool isFrozen,
+            ,
+            bool isPaused,
+            DataTypes.AssetType reserveAssetType
+        ) = reserveConfiguration.getFlags();
+
+        require(reserveAssetType == assetType, Errors.INVALID_ASSET_TYPE);
+        require(isActive, Errors.RESERVE_INACTIVE);
+        require(!isPaused, Errors.RESERVE_PAUSED);
+        require(!isFrozen, Errors.RESERVE_FROZEN);
+    }
+
     function validateWithdrawERC721(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.ReserveCache memory reserveCache,
@@ -314,6 +332,10 @@ library ValidationLogic {
                     Errors.BORROW_CAP_EXCEEDED
                 );
             }
+        }
+
+        if (!params.verifyCollateral) {
+            return;
         }
 
         (

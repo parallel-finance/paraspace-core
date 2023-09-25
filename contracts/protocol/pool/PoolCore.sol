@@ -309,7 +309,9 @@ contract PoolCore is
                 releaseUnderlying: true,
                 reservesCount: ps._reservesCount,
                 oracle: ADDRESSES_PROVIDER.getPriceOracle(),
-                priceOracleSentinel: ADDRESSES_PROVIDER.getPriceOracleSentinel()
+                priceOracleSentinel: ADDRESSES_PROVIDER
+                    .getPriceOracleSentinel(),
+                verifyCollateral: true
             })
         );
     }

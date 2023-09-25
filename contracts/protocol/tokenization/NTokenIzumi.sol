@@ -107,6 +107,19 @@ contract NTokenIzumi is NTokenLiquidity {
         );
     }
 
+    function _liquidity(
+        address positionManager,
+        uint256 tokenId
+    ) internal view override returns (uint256) {
+        (, , uint256 liquidity, , , , , ) = ILiquidityManager(positionManager)
+            .liquidities(tokenId);
+        return liquidity;
+    }
+
+    function _burn(address positionManager, uint256 tokenId) internal override {
+        ILiquidityManager(positionManager).burn(tokenId);
+    }
+
     function _refundETH(address positionManager) internal override {
         IBase(positionManager).refundETH();
     }

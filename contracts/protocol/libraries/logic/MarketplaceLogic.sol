@@ -590,7 +590,8 @@ library MarketplaceLogic {
                 releaseUnderlying: false,
                 reservesCount: params.reservesCount,
                 oracle: params.oracle,
-                priceOracleSentinel: params.priceOracleSentinel
+                priceOracleSentinel: params.priceOracleSentinel,
+                verifyCollateral: true
             })
         );
     }

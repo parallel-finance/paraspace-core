@@ -68,6 +68,15 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
         return (0, 0);
     }
 
+    function _liquidity(
+        address,
+        uint256
+    ) internal view virtual returns (uint256) {
+        return 0;
+    }
+
+    function _burn(address, uint256) internal virtual {}
+
     function _refundETH(address) internal virtual {}
 
     function underlyingAsset(
@@ -91,7 +100,8 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
             address token0,
             address token1,
             uint256 amount0,
-            uint256 amount1
+            uint256 amount1,
+            bool isBurned
         )
     {
         require(user == ownerOf(tokenId), Errors.NOT_THE_OWNER);
@@ -110,6 +120,12 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
         (token0, token1) = _underlyingAsset(positionManager, tokenId);
 
         (amount0, amount1) = _collect(positionManager, tokenId);
+
+        uint256 currentLiquidity = _liquidity(positionManager, tokenId);
+        if (currentLiquidity == 0) {
+            _burn(positionManager, tokenId);
+            isBurned = true;
+        }
     }
 
     /// @inheritdoc INTokenLiquidity

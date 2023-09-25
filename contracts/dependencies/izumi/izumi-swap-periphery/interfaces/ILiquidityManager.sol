@@ -94,14 +94,14 @@ interface ILiquidityManager {
         uint256 amountX,
         uint256 amountY
     );
-    
+
     function liquidities(uint256 lid) external view returns(
         int24 leftPt,
         // right point of liquidity-token, the range is [leftPt, rightPt)
         int24 rightPt,
         // amount of liquidity on each point in [leftPt, rightPt)
         uint128 liquidity,
-        // a 128-fixpoint number, as integral of { fee(pt, t)/L(pt, t) }. 
+        // a 128-fixpoint number, as integral of { fee(pt, t)/L(pt, t) }.
         // here fee(pt, t) denotes fee generated on point pt at time t
         // L(pt, t) denotes liquidity on point pt at time t
         // pt varies in [leftPt, rightPt)
@@ -139,4 +139,6 @@ interface ILiquidityManager {
         uint256 amountX,
         uint256 amountY
     );
+
+    function burn(uint256 lid) external returns (bool success);
 }

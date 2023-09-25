@@ -178,7 +178,8 @@ library PositionMoverLogic {
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
                 priceOracleSentinel: poolAddressProvider
-                    .getPriceOracleSentinel()
+                    .getPriceOracleSentinel(),
+                verifyCollateral: true
             })
         );
     }
@@ -401,7 +402,8 @@ library PositionMoverLogic {
                     releaseUnderlying: false,
                     reservesCount: params.reservesCount,
                     oracle: params.priceOracle,
-                    priceOracleSentinel: params.priceOracleSentinel
+                    priceOracleSentinel: params.priceOracleSentinel,
+                    verifyCollateral: true
                 })
             );
         }

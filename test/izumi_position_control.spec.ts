@@ -4,8 +4,8 @@ import {waitForTx} from "../helpers/misc-utils";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {
   almostEqual,
-  createNewPool,
-  mintNewPosition,
+  createIzumiNewPool,
+  mintIzumiNewPosition,
   approveSwapRouter,
   swapToken,
   fund,
@@ -62,14 +62,14 @@ describe("IZUMI LP NFT position control", () => {
     const initialPrice = encodeSqrtRatioX96(1, 1000);
     const lowerPrice = encodeSqrtRatioX96(1, 10000);
     const upperPrice = encodeSqrtRatioX96(1, 100);
-    await createNewPool({
+    await createIzumiNewPool({
       positionManager: nft,
       token0: dai,
       token1: weth,
       fee: fee,
       initialSqrtPrice: initialPrice,
     });
-    await mintNewPosition({
+    await mintIzumiNewPosition({
       nft: nft,
       token0: dai,
       token1: weth,
