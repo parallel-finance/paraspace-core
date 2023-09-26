@@ -225,6 +225,7 @@ describe("Pool LP Operation", () => {
             token1BorrowAmount: parseEther("1"),
           },
           {
+            decreaseLiquidity: false,
             tokenId: 1,
             liquidityDecrease: 0,
             amount0Min: 0,
@@ -232,6 +233,7 @@ describe("Pool LP Operation", () => {
             burnNFT: true,
           },
           {
+            mintNewToken: true,
             fee: 3000,
             tickLower: tickLower,
             tickUpper: tickUpper,
@@ -296,6 +298,7 @@ describe("Pool LP Operation", () => {
             token1BorrowAmount: parseEther("10"),
           },
           {
+            decreaseLiquidity: true,
             tokenId: 1,
             liquidityDecrease: beforeLiquidity,
             amount0Min: 0,
@@ -303,6 +306,7 @@ describe("Pool LP Operation", () => {
             burnNFT: true,
           },
           {
+            mintNewToken: true,
             fee: 3000,
             tickLower: tickLower,
             tickUpper: tickUpper,
@@ -367,6 +371,7 @@ describe("Pool LP Operation", () => {
             token1BorrowAmount: 0,
           },
           {
+            decreaseLiquidity: true,
             tokenId: 1,
             liquidityDecrease: beforeLiquidity,
             amount0Min: 0,
@@ -374,6 +379,7 @@ describe("Pool LP Operation", () => {
             burnNFT: true,
           },
           {
+            mintNewToken: true,
             fee: 3000,
             tickLower: tickLower,
             tickUpper: tickUpper,
@@ -428,6 +434,7 @@ describe("Pool LP Operation", () => {
             token1BorrowAmount: 0,
           },
           {
+            decreaseLiquidity: true,
             tokenId: 1,
             liquidityDecrease: beforeLiquidity,
             amount0Min: 0,
@@ -435,6 +442,7 @@ describe("Pool LP Operation", () => {
             burnNFT: true,
           },
           {
+            mintNewToken: true,
             fee: 3000,
             tickLower: tickLower,
             tickUpper: tickUpper,
@@ -501,6 +509,7 @@ describe("Pool LP Operation", () => {
             token1BorrowAmount: parseEther("10"),
           },
           {
+            decreaseLiquidity: true,
             tokenId: 1,
             liquidityDecrease: beforeLiquidity,
             amount0Min: 0,
@@ -508,6 +517,7 @@ describe("Pool LP Operation", () => {
             burnNFT: true,
           },
           {
+            mintNewToken: true,
             fee: 3000,
             tickLower: tickLower,
             tickUpper: tickUpper,
@@ -566,6 +576,7 @@ describe("Pool LP Operation", () => {
             token1BorrowAmount: parseEther("1"),
           },
           {
+            decreaseLiquidity: false,
             tokenId: 0,
             liquidityDecrease: 0,
             amount0Min: 0,
@@ -573,6 +584,7 @@ describe("Pool LP Operation", () => {
             burnNFT: true,
           },
           {
+            mintNewToken: true,
             fee: 2000,
             tickLower: tickLower,
             tickUpper: tickUpper,
@@ -638,6 +650,7 @@ describe("Pool LP Operation", () => {
             token1BorrowAmount: parseEther("10"),
           },
           {
+            decreaseLiquidity: true,
             tokenId: 0,
             liquidityDecrease: beforeLiquidity,
             amount0Min: 0,
@@ -645,6 +658,7 @@ describe("Pool LP Operation", () => {
             burnNFT: true,
           },
           {
+            mintNewToken: true,
             fee: 2000,
             tickLower: tickLower,
             tickUpper: tickUpper,
@@ -710,6 +724,7 @@ describe("Pool LP Operation", () => {
             token1BorrowAmount: 0,
           },
           {
+            decreaseLiquidity: true,
             tokenId: 0,
             liquidityDecrease: beforeLiquidity,
             amount0Min: 0,
@@ -717,6 +732,7 @@ describe("Pool LP Operation", () => {
             burnNFT: true,
           },
           {
+            mintNewToken: true,
             fee: 2000,
             tickLower: tickLower,
             tickUpper: tickUpper,
@@ -772,6 +788,7 @@ describe("Pool LP Operation", () => {
             token1BorrowAmount: 0,
           },
           {
+            decreaseLiquidity: true,
             tokenId: 0,
             liquidityDecrease: beforeLiquidity,
             amount0Min: 0,
@@ -779,6 +796,7 @@ describe("Pool LP Operation", () => {
             burnNFT: true,
           },
           {
+            mintNewToken: true,
             fee: 2000,
             tickLower: tickLower,
             tickUpper: tickUpper,
@@ -846,6 +864,7 @@ describe("Pool LP Operation", () => {
             token1BorrowAmount: parseEther("10"),
           },
           {
+            decreaseLiquidity: true,
             tokenId: 0,
             liquidityDecrease: beforeLiquidity,
             amount0Min: 0,
@@ -853,6 +872,7 @@ describe("Pool LP Operation", () => {
             burnNFT: true,
           },
           {
+            mintNewToken: true,
             fee: 2000,
             tickLower: tickLower,
             tickUpper: tickUpper,

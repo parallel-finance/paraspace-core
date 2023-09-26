@@ -87,6 +87,32 @@ contract PoolLpOperation is
         uint256 token1RefundDecreaseLiquidity;
     }
 
+    /// @inheritdoc IPoolLpOperation
+    function increaseLiquidity(
+        address asset,
+        uint256 tokenId,
+        uint256 amountAdd0,
+        uint256 amountAdd1,
+        uint256 amount0Min,
+        uint256 amount1Min
+    ) external payable virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        DataTypes.ReserveData storage reserve = ps._reserves[asset];
+        DataTypes.ReserveCache memory reserveCache = reserve.cache();
+
+        ValidationLogic.validateAddLiquidity(
+            ps._reserves,
+            reserveCache,
+            tokenId
+        );
+
+        INTokenLiquidity(reserveCache.xTokenAddress).increaseLiquidity{
+            value: msg.value
+        }(msg.sender, tokenId, amountAdd0, amountAdd1, amount0Min, amount1Min);
+    }
+
+    /// @inheritdoc IPoolLpOperation
     function adjustLpPosition(
         DataTypes.AssetInfo calldata assetInfo,
         DataTypes.DecreaseLiquidityParam calldata decreaseLiquidityParam,
@@ -112,22 +138,6 @@ contract PoolLpOperation is
             reserveCache.reserveConfiguration,
             DataTypes.AssetType.ERC721
         );
-        if (
-            decreaseLiquidityParam.liquidityDecrease == 0 ||
-            !decreaseLiquidityParam.burnNFT
-        ) {
-            //need check supply cap
-            uint256 supplyCap = reserveCache
-                .reserveConfiguration
-                .getSupplyCap();
-            require(
-                supplyCap == 0 ||
-                    (INToken(reserveCache.xTokenAddress).totalSupply() + 1 <=
-                        supplyCap),
-                Errors.SUPPLY_CAP_EXCEEDED
-            );
-        }
-
         //check underlying asset status
         ValidationLogic.validateAssetStatus(
             ps._reserves[assetInfo.token0].configuration,
@@ -163,7 +173,7 @@ contract PoolLpOperation is
         _flashBorrowAsset(vars.token1XToken, assetInfo.token1BorrowAmount);
 
         //decrease liquidity
-        if (decreaseLiquidityParam.liquidityDecrease > 0) {
+        if (decreaseLiquidityParam.decreaseLiquidity) {
             (
                 address token0,
                 address token1,
@@ -198,94 +208,110 @@ contract PoolLpOperation is
         }
 
         //mint new nft
-        if (mintParams.amount0Desired > 0) {
-            IERC20(assetInfo.token0).safeApprove(
-                assetInfo.asset,
-                mintParams.amount0Desired
-            );
-        }
-        if (mintParams.amount1Desired > 0) {
-            IERC20(assetInfo.token1).safeApprove(
-                assetInfo.asset,
-                mintParams.amount1Desired
-            );
-        }
-        uint256 newTokenId;
-        if (tokenType == XTokenType.NTokenUniswapV3) {
-            INonfungiblePositionManager.MintParams
-                memory params = INonfungiblePositionManager.MintParams({
-                    token0: assetInfo.token0,
-                    token1: assetInfo.token1,
-                    fee: mintParams.fee,
-                    tickLower: mintParams.tickLower,
-                    tickUpper: mintParams.tickUpper,
-                    amount0Desired: mintParams.amount0Desired,
-                    amount1Desired: mintParams.amount1Desired,
-                    amount0Min: mintParams.amount0Min,
-                    amount1Min: mintParams.amount1Min,
-                    recipient: reserveCache.xTokenAddress,
-                    deadline: block.timestamp
-                });
-            (newTokenId, , , ) = INonfungiblePositionManager(assetInfo.asset)
-                .mint(params);
-        } else {
-            // izumi
-            ILiquidityManager.MintParam memory params = ILiquidityManager
-                .MintParam({
-                    miner: reserveCache.xTokenAddress,
-                    tokenX: assetInfo.token0,
-                    tokenY: assetInfo.token1,
-                    fee: mintParams.fee,
-                    pl: mintParams.tickLower,
-                    pr: mintParams.tickUpper,
-                    xLim: mintParams.amount0Desired.toUint128(),
-                    yLim: mintParams.amount1Desired.toUint128(),
-                    amountXMin: mintParams.amount0Min.toUint128(),
-                    amountYMin: mintParams.amount1Min.toUint128(),
-                    deadline: block.timestamp
-                });
-            (newTokenId, , , ) = ILiquidityManager(assetInfo.asset).mint(
-                params
-            );
-        }
-        if (mintParams.amount0Desired > 0) {
-            IERC20(assetInfo.token0).safeApprove(assetInfo.asset, 0);
-        }
-        if (mintParams.amount1Desired > 0) {
-            IERC20(assetInfo.token1).safeApprove(assetInfo.asset, 0);
-        }
-
-        //supply new mint nft
-        {
-            DataTypes.ERC721SupplyParams[]
-                memory tokenData = new DataTypes.ERC721SupplyParams[](1);
-            tokenData[0] = DataTypes.ERC721SupplyParams({
-                tokenId: newTokenId,
-                useAsCollateral: true
-            });
-            (
-                uint64 oldCollateralizedBalance,
-                uint64 newCollateralizedBalance
-            ) = INToken(reserveCache.xTokenAddress).mint(msg.sender, tokenData);
-            bool isFirstSupplyCollateral = (oldCollateralizedBalance == 0 &&
-                newCollateralizedBalance > 0);
-            if (isFirstSupplyCollateral) {
-                Helpers.setAssetUsedAsCollateral(
-                    ps._usersConfig[msg.sender],
-                    ps._reserves,
+        if (mintParams.mintNewToken) {
+            if (mintParams.amount0Desired > 0) {
+                IERC20(assetInfo.token0).safeApprove(
                     assetInfo.asset,
-                    msg.sender
+                    mintParams.amount0Desired
                 );
             }
+            if (mintParams.amount1Desired > 0) {
+                IERC20(assetInfo.token1).safeApprove(
+                    assetInfo.asset,
+                    mintParams.amount1Desired
+                );
+            }
+            uint256 newTokenId;
+            if (tokenType == XTokenType.NTokenUniswapV3) {
+                INonfungiblePositionManager.MintParams
+                    memory params = INonfungiblePositionManager.MintParams({
+                        token0: assetInfo.token0,
+                        token1: assetInfo.token1,
+                        fee: mintParams.fee,
+                        tickLower: mintParams.tickLower,
+                        tickUpper: mintParams.tickUpper,
+                        amount0Desired: mintParams.amount0Desired,
+                        amount1Desired: mintParams.amount1Desired,
+                        amount0Min: mintParams.amount0Min,
+                        amount1Min: mintParams.amount1Min,
+                        recipient: reserveCache.xTokenAddress,
+                        deadline: block.timestamp
+                    });
+                (newTokenId, , , ) = INonfungiblePositionManager(
+                    assetInfo.asset
+                ).mint(params);
+            } else {
+                // izumi
+                ILiquidityManager.MintParam memory params = ILiquidityManager
+                    .MintParam({
+                        miner: reserveCache.xTokenAddress,
+                        tokenX: assetInfo.token0,
+                        tokenY: assetInfo.token1,
+                        fee: mintParams.fee,
+                        pl: mintParams.tickLower,
+                        pr: mintParams.tickUpper,
+                        xLim: mintParams.amount0Desired.toUint128(),
+                        yLim: mintParams.amount1Desired.toUint128(),
+                        amountXMin: mintParams.amount0Min.toUint128(),
+                        amountYMin: mintParams.amount1Min.toUint128(),
+                        deadline: block.timestamp
+                    });
+                (newTokenId, , , ) = ILiquidityManager(assetInfo.asset).mint(
+                    params
+                );
+            }
+            if (mintParams.amount0Desired > 0) {
+                IERC20(assetInfo.token0).safeApprove(assetInfo.asset, 0);
+            }
+            if (mintParams.amount1Desired > 0) {
+                IERC20(assetInfo.token1).safeApprove(assetInfo.asset, 0);
+            }
 
-            emit SupplyERC721(
-                assetInfo.asset,
-                msg.sender,
-                msg.sender,
-                tokenData,
-                0,
-                false
-            );
+            //supply new mint nft
+            {
+                DataTypes.ERC721SupplyParams[]
+                    memory tokenData = new DataTypes.ERC721SupplyParams[](1);
+                tokenData[0] = DataTypes.ERC721SupplyParams({
+                    tokenId: newTokenId,
+                    useAsCollateral: true
+                });
+                (
+                    uint64 oldCollateralizedBalance,
+                    uint64 newCollateralizedBalance
+                ) = INToken(reserveCache.xTokenAddress).mint(
+                        msg.sender,
+                        tokenData
+                    );
+                bool isFirstSupplyCollateral = (oldCollateralizedBalance == 0 &&
+                    newCollateralizedBalance > 0);
+                if (isFirstSupplyCollateral) {
+                    Helpers.setAssetUsedAsCollateral(
+                        ps._usersConfig[msg.sender],
+                        ps._reserves,
+                        assetInfo.asset,
+                        msg.sender
+                    );
+                }
+
+                uint256 supplyCap = reserveCache
+                    .reserveConfiguration
+                    .getSupplyCap();
+                require(
+                    supplyCap == 0 ||
+                        (INToken(reserveCache.xTokenAddress).totalSupply() <=
+                            supplyCap),
+                    Errors.SUPPLY_CAP_EXCEEDED
+                );
+
+                emit SupplyERC721(
+                    assetInfo.asset,
+                    msg.sender,
+                    msg.sender,
+                    tokenData,
+                    0,
+                    false
+                );
+            }
         }
 
         //calculate refund amount
@@ -483,6 +509,7 @@ contract PoolLpOperation is
                 })
             );
 
+            //for simplicity, we don't check where the erc20 came from and just set it as collateral
             Helpers.setAssetUsedAsCollateral(
                 userConfig,
                 reservesData,

@@ -207,8 +207,7 @@ library ValidationLogic {
     function validateWithdrawERC721(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.ReserveCache memory reserveCache,
-        uint256[] memory tokenIds,
-        bool validateUnderlyingForLiquidityToken
+        uint256[] memory tokenIds
     ) internal view {
         (
             bool isActive,
@@ -225,23 +224,21 @@ library ValidationLogic {
         require(isActive, Errors.RESERVE_INACTIVE);
         require(!isPaused, Errors.RESERVE_PAUSED);
 
-        if (validateUnderlyingForLiquidityToken) {
-            INToken nToken = INToken(reserveCache.xTokenAddress);
-            XTokenType tokenType = nToken.getXTokenType();
-            if (
-                tokenType == XTokenType.NTokenUniswapV3 ||
-                tokenType == XTokenType.NTokenIZUMILp
-            ) {
-                for (uint256 index = 0; index < tokenIds.length; index++) {
-                    ValidationLogic.validateForLiquidityNFT(
-                        reservesData,
-                        reserveCache.xTokenAddress,
-                        tokenIds[index],
-                        true,
-                        true,
-                        false
-                    );
-                }
+        INToken nToken = INToken(reserveCache.xTokenAddress);
+        XTokenType tokenType = nToken.getXTokenType();
+        if (
+            tokenType == XTokenType.NTokenUniswapV3 ||
+            tokenType == XTokenType.NTokenIZUMILp
+        ) {
+            for (uint256 index = 0; index < tokenIds.length; index++) {
+                ValidationLogic.validateForLiquidityNFT(
+                    reservesData,
+                    reserveCache.xTokenAddress,
+                    tokenIds[index],
+                    true,
+                    true,
+                    false
+                );
             }
         }
     }
@@ -1245,7 +1242,7 @@ library ValidationLogic {
     function validateAddLiquidity(
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.ReserveCache memory reserveCache,
-        DataTypes.ExecuteIncreaseLiquidityParams memory params
+        uint256 tokenId
     ) internal view {
         INToken nToken = INToken(reserveCache.xTokenAddress);
         XTokenType tokenType = nToken.getXTokenType();
@@ -1266,7 +1263,7 @@ library ValidationLogic {
         ValidationLogic.validateForLiquidityNFT(
             reservesData,
             reserveCache.xTokenAddress,
-            params.tokenId,
+            tokenId,
             true,
             true,
             true

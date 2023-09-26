@@ -325,40 +325,6 @@ interface IPoolCore {
     ) external returns (uint256);
 
     /**
-     * @notice Decreases liquidity for underlying NFT LP and validates
-     * that the user respects liquidation checks.
-     * @param asset The asset address of NFT LP
-     * @param tokenId The id of the erc721 token
-     * @param liquidityDecrease The amount of liquidity to remove of LP
-     * @param amount0Min The minimum amount to remove of token0
-     * @param amount1Min The minimum amount to remove of token1
-     */
-    function decreaseLiquidity(
-        address asset,
-        uint256 tokenId,
-        uint128 liquidityDecrease,
-        uint256 amount0Min,
-        uint256 amount1Min
-    ) external;
-
-    /**
-     * @notice Increases liquidity for underlying NFT LP
-     * @param tokenId The id of the erc721 token
-     * @param amountAdd0 The amount to add of token0
-     * @param amountAdd1 The amount to add of token1
-     * @param amount0Min The minimum amount to add of token0
-     * @param amount1Min The minimum amount to add of token1
-     */
-    function increaseLiquidity(
-        address asset,
-        uint256 tokenId,
-        uint256 amountAdd0,
-        uint256 amountAdd1,
-        uint256 amount0Min,
-        uint256 amount1Min
-    ) external payable;
-
-    /**
      * @notice Allows users to borrow a specific `amount` of the reserve underlying asset, provided that the borrower
      * already supplied enough collateral, or he was given enough allowance by a credit delegator on the
      * corresponding debt token (VariableDebtToken)

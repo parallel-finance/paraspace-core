@@ -207,15 +207,6 @@ library DataTypes {
         uint256 amount1Min;
     }
 
-    struct ExecuteIncreaseLiquidityParams {
-        address asset;
-        uint256 tokenId;
-        uint256 amountAdd0;
-        uint256 amountAdd1;
-        uint256 amount0Min;
-        uint256 amount1Min;
-    }
-
     struct FinalizeTransferParams {
         address asset;
         address from;
@@ -469,6 +460,7 @@ library DataTypes {
     }
 
     struct DecreaseLiquidityParam {
+        bool decreaseLiquidity;
         uint256 tokenId;
         uint128 liquidityDecrease;
         uint256 amount0Min;
@@ -477,6 +469,7 @@ library DataTypes {
     }
 
     struct MintParams {
+        bool mintNewToken;
         uint24 fee;
         int24 tickLower;
         int24 tickUpper;

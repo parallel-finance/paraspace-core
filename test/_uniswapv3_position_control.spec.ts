@@ -203,18 +203,35 @@ describe("Uniswap V3 NFT position control", () => {
     expect(userReserveData.usageAsCollateralEnabled).to.be.false;
 
     await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .decreaseLiquidity(
-          nftPositionManager.address,
-          1,
-          beforeLiquidity.div(3),
-          0,
-          0,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
+      await pool.connect(user1.signer).adjustLpPosition(
+        {
+          asset: nftPositionManager.address,
+          token0: dai.address,
+          token1: weth.address,
+          token0CashAmount: 0,
+          token1CashAmount: 0,
+          token0BorrowAmount: 0,
+          token1BorrowAmount: 0,
+        },
+        {
+          decreaseLiquidity: true,
+          tokenId: 1,
+          liquidityDecrease: beforeLiquidity.div(3),
+          amount0Min: 0,
+          amount1Min: 0,
+          burnNFT: false,
+        },
+        {
+          mintNewToken: false,
+          fee: 2000,
+          tickLower: 0,
+          tickUpper: 0,
+          amount0Desired: 0,
+          amount1Desired: 0,
+          amount0Min: 0,
+          amount1Min: 0,
+        }
+      )
     );
 
     const afterDaiBalance = (await dai.balanceOf(user1.address)).add(
@@ -275,11 +292,35 @@ describe("Uniswap V3 NFT position control", () => {
     const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
 
     await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .decreaseLiquidity(nftPositionManager.address, 1, 0, 0, 0, {
-          gasLimit: 12_450_000,
-        })
+      await pool.connect(user1.signer).adjustLpPosition(
+        {
+          asset: nftPositionManager.address,
+          token0: dai.address,
+          token1: weth.address,
+          token0CashAmount: 0,
+          token1CashAmount: 0,
+          token0BorrowAmount: 0,
+          token1BorrowAmount: 0,
+        },
+        {
+          decreaseLiquidity: true,
+          tokenId: 1,
+          liquidityDecrease: 0,
+          amount0Min: 0,
+          amount1Min: 0,
+          burnNFT: false,
+        },
+        {
+          mintNewToken: false,
+          fee: 2000,
+          tickLower: 0,
+          tickUpper: 0,
+          amount0Desired: 0,
+          amount1Desired: 0,
+          amount0Min: 0,
+          amount1Min: 0,
+        }
+      )
     );
 
     const afterDaiBalance = await dai.balanceOf(user1.address);

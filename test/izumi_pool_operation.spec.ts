@@ -580,6 +580,7 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
     const {
       users: [user1],
       configurator,
+      dai,
       weth,
       pool,
     } = testEnv;
@@ -589,24 +590,42 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
     const beforeLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
 
     await expect(
-      pool
-        .connect(user1.signer)
-        .decreaseLiquidity(
-          nftPositionManager.address,
-          0,
-          beforeLiquidity.div(2),
-          0,
-          0,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
+      pool.connect(user1.signer).adjustLpPosition(
+        {
+          asset: nftPositionManager.address,
+          token0: dai.address,
+          token1: weth.address,
+          token0CashAmount: 0,
+          token1CashAmount: 0,
+          token0BorrowAmount: 0,
+          token1BorrowAmount: 0,
+        },
+        {
+          decreaseLiquidity: true,
+          tokenId: 0,
+          liquidityDecrease: beforeLiquidity.div(2),
+          amount0Min: 0,
+          amount1Min: 0,
+          burnNFT: false,
+        },
+        {
+          mintNewToken: false,
+          fee: 2000,
+          tickLower: 0,
+          tickUpper: 0,
+          amount0Desired: 0,
+          amount1Desired: 0,
+          amount0Min: 0,
+          amount1Min: 0,
+        }
+      )
     ).to.be.revertedWith(ProtocolErrors.RESERVE_INACTIVE);
   });
 
   it("decreaseLiquidity success if underlying erc20 was active [ @skip-on-coverage ]", async () => {
     const {
       users: [user1],
+      dai,
       weth,
       pool,
       configurator,
@@ -619,18 +638,35 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
     const beforeLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
 
     await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .decreaseLiquidity(
-          nftPositionManager.address,
-          0,
-          beforeLiquidity.div(2),
-          0,
-          0,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
+      await pool.connect(user1.signer).adjustLpPosition(
+        {
+          asset: nftPositionManager.address,
+          token0: dai.address,
+          token1: weth.address,
+          token0CashAmount: 0,
+          token1CashAmount: 0,
+          token0BorrowAmount: 0,
+          token1BorrowAmount: 0,
+        },
+        {
+          decreaseLiquidity: true,
+          tokenId: 0,
+          liquidityDecrease: beforeLiquidity.div(2),
+          amount0Min: 0,
+          amount1Min: 0,
+          burnNFT: false,
+        },
+        {
+          mintNewToken: false,
+          fee: 2000,
+          tickLower: 0,
+          tickUpper: 0,
+          amount0Desired: 0,
+          amount1Desired: 0,
+          amount0Min: 0,
+          amount1Min: 0,
+        }
+      )
     );
 
     await snapshot.revert(preLiquidationSnapshot);
@@ -640,6 +676,7 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
     const {
       users: [user1],
       configurator,
+      dai,
       weth,
       pool,
     } = testEnv;
@@ -649,24 +686,42 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
     const beforeLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
 
     await expect(
-      pool
-        .connect(user1.signer)
-        .decreaseLiquidity(
-          nftPositionManager.address,
-          0,
-          beforeLiquidity.div(2),
-          0,
-          0,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
+      pool.connect(user1.signer).adjustLpPosition(
+        {
+          asset: nftPositionManager.address,
+          token0: dai.address,
+          token1: weth.address,
+          token0CashAmount: 0,
+          token1CashAmount: 0,
+          token0BorrowAmount: 0,
+          token1BorrowAmount: 0,
+        },
+        {
+          decreaseLiquidity: true,
+          tokenId: 0,
+          liquidityDecrease: beforeLiquidity.div(2),
+          amount0Min: 0,
+          amount1Min: 0,
+          burnNFT: false,
+        },
+        {
+          mintNewToken: false,
+          fee: 2000,
+          tickLower: 0,
+          tickUpper: 0,
+          amount0Desired: 0,
+          amount1Desired: 0,
+          amount0Min: 0,
+          amount1Min: 0,
+        }
+      )
     ).to.be.revertedWith(ProtocolErrors.RESERVE_PAUSED);
   });
 
   it("decreaseLiquidity success if underlying erc20 was not paused [ @skip-on-coverage ]", async () => {
     const {
       users: [user1],
+      dai,
       weth,
       pool,
       configurator,
@@ -679,41 +734,75 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
     const beforeLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
 
     await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .decreaseLiquidity(
-          nftPositionManager.address,
-          0,
-          beforeLiquidity.div(2),
-          0,
-          0,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
+      await pool.connect(user1.signer).adjustLpPosition(
+        {
+          asset: nftPositionManager.address,
+          token0: dai.address,
+          token1: weth.address,
+          token0CashAmount: 0,
+          token1CashAmount: 0,
+          token0BorrowAmount: 0,
+          token1BorrowAmount: 0,
+        },
+        {
+          decreaseLiquidity: true,
+          tokenId: 0,
+          liquidityDecrease: beforeLiquidity.div(2),
+          amount0Min: 0,
+          amount1Min: 0,
+          burnNFT: false,
+        },
+        {
+          mintNewToken: false,
+          fee: 2000,
+          tickLower: 0,
+          tickUpper: 0,
+          amount0Desired: 0,
+          amount1Desired: 0,
+          amount0Min: 0,
+          amount1Min: 0,
+        }
+      )
     );
 
     await snapshot.revert(preLiquidationSnapshot);
   });
 
   it("decreaseLiquidity failed if not owner [ @skip-on-coverage ]", async () => {
-    const {users, pool} = testEnv;
+    const {users, dai, weth, pool} = testEnv;
 
     const beforeLiquidity = (await nftPositionManager.liquidities(0)).liquidity;
 
     await expect(
-      pool
-        .connect(users[1].signer)
-        .decreaseLiquidity(
-          nftPositionManager.address,
-          0,
-          beforeLiquidity.div(2),
-          0,
-          0,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
+      pool.connect(users[1].signer).adjustLpPosition(
+        {
+          asset: nftPositionManager.address,
+          token0: dai.address,
+          token1: weth.address,
+          token0CashAmount: 0,
+          token1CashAmount: 0,
+          token0BorrowAmount: 0,
+          token1BorrowAmount: 0,
+        },
+        {
+          decreaseLiquidity: true,
+          tokenId: 0,
+          liquidityDecrease: beforeLiquidity.div(2),
+          amount0Min: 0,
+          amount1Min: 0,
+          burnNFT: false,
+        },
+        {
+          mintNewToken: false,
+          fee: 2000,
+          tickLower: 0,
+          tickUpper: 0,
+          amount0Desired: 0,
+          amount1Desired: 0,
+          amount0Min: 0,
+          amount1Min: 0,
+        }
+      )
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
   });
 
