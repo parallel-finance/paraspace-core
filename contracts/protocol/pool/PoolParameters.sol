@@ -239,10 +239,14 @@ contract PoolParameters is
 
                 if (assetAddress == USDC) {
                     _swap(
-                        amountToMint,
+                        amountToMint - USDC_SHORTFALL,
                         _getSwapPath(USDC, WBTC),
                         ps._reserves[WBTC].xTokenAddress,
                         _getRelativePrice(USDC, WBTC)
+                    );
+                    IERC20(USDC).safeTransfer(
+                        ps._reserves[USDC].xTokenAddress,
+                        USDC_SHORTFALL
                     );
                 } else if (assetAddress == USDT) {
                     _swap(
