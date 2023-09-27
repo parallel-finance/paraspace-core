@@ -234,6 +234,15 @@ contract PoolParameters is
                     assetAddress = APE;
                 }
                 if (assetAddress == stETH) {
+                    if (
+                        IERC20(assetAddress).allowance(address(this), wstETH) ==
+                        0
+                    ) {
+                        IERC20(assetAddress).safeApprove(
+                            wstETH,
+                            type(uint256).max
+                        );
+                    }
                     amountToMint = IWstETH(wstETH).wrap(amountToMint);
                     assetAddress = wstETH;
                 }
