@@ -622,11 +622,14 @@ export const deployPoolParameters = async (
   verify?: boolean
 ) => {
   const poolLogic = await deployPoolLogic(verify);
+  const supplyLogic = await deploySupplyLogic(verify);
 
   const {poolParametersSelectors} = await getPoolSignatures();
   const parametersLibraries = {
     "contracts/protocol/libraries/logic/PoolLogic.sol:PoolLogic":
       poolLogic.address,
+    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
+      supplyLogic.address,
   };
 
   const poolParameters = (await withSaveAndVerify(
