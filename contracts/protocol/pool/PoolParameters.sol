@@ -237,6 +237,18 @@ contract PoolParameters is
                     assetAddress = wstETH;
                 }
 
+                if (
+                    IERC20(assetAddress).allowance(
+                        address(this),
+                        address(SWAP_ROUTER)
+                    ) == 0
+                ) {
+                    IERC20(assetAddress).safeApprove(
+                        address(SWAP_ROUTER),
+                        type(uint256).max
+                    );
+                }
+
                 if (assetAddress == USDC) {
                     _swap(
                         amountToMint - USDC_SHORTFALL,
