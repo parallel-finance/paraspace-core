@@ -348,7 +348,7 @@ contract PoolParameters is
         } else if ((tokenIn == APE || tokenIn == BLUR) && tokenOut == WETH) {
             return abi.encodePacked(tokenIn, APE_WETH_FEE, tokenOut);
             // USDC -> WETH, DAI -> WETH
-        } else if ((tokenIn == USDC || tokenOut == DAI) && tokenOut == WETH) {
+        } else if ((tokenIn == USDC || tokenIn == DAI) && tokenOut == WETH) {
             return abi.encodePacked(tokenIn, USDC_WETH_FEE, tokenOut);
             // WSTETH -> WETH
         } else if (tokenIn == wstETH && tokenOut == WETH) {
