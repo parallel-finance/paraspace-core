@@ -302,7 +302,10 @@ contract PoolParameters is
         return
             (
                 (tokenInPrice * (10 ** IERC20Detailed(tokenOut).decimals()))
-                    .wadDiv(tokenOutPrice * (10 ** IERC20Detailed(tokenIn).decimals()))
+                    .wadDiv(
+                        tokenOutPrice *
+                            (10 ** IERC20Detailed(tokenIn).decimals())
+                    )
             ).percentMul(
                     PercentageMath.PERCENTAGE_FACTOR - DEFAULT_MAX_SLIPPAGE
                 );
