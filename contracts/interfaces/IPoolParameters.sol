@@ -106,7 +106,12 @@ interface IPoolParameters {
      * @notice Fix shortfalls by sending reserves to xTokens
      * @param assets The list of reserves for which the minting needs to be executed
      **/
-    function fixShortfalls(address[] calldata assets) external;
+    function fixShortfalls(
+        address[] calldata assets,
+        address[] calldata shortfallUsers,
+        address[] calldata shortfallAssets,
+        uint256[] calldata shortfallAmounts
+    ) external;
 
     /**
      * @notice Rescue and transfer tokens locked in this contract

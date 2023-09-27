@@ -35,6 +35,7 @@ import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.
 import {PercentageMath} from "../libraries/math/PercentageMath.sol";
 import "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IPToken} from "../../interfaces/IPToken.sol";
+import {IVariableDebtToken} from "../../interfaces/IVariableDebtToken.sol";
 import {ReserveConfiguration} from "../libraries/configuration/ReserveConfiguration.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 
@@ -92,19 +93,19 @@ contract PoolParameters is
 
     // shortfalls
     // -- 0xbc737139dd8c8d192f4b9aa713ad99036f004007 17    ETH.  28288.1
-    // -- 0x10cda82ea4cd56d32c5a5e6dfcaa7af51d2ba350 0.82  WBTC  21223.6
     // -- 0xa5683dda11c1f1f0143471e0741b5be6d4cb9323 12    ETH   19781
     // -- 0x650915fcd9f4d7c186affba606ca5bae1d05f4a5 11.6  ETH   19189.7
-    // -- 0x5f27e1a81965c8a91f7ec287f0a62067c173045d 18693 USDT  18686.5
     // -- 0x70a93e4d958bf023bf1e2cb7efcfc935e5b2c29d 11.3  ETH   18596
     // -- 0xe541529b40f00a081fcea9be3e3dc00919e6ce1a 10.6  ETH   17505.5
-    // -- 0x0981f0e2b61575ff55074c76a539108bdc354148 0.6   WBTC  15892.3
     // -- 0x7f08a7924d7f09d603cdefa061c3e8914147ead7 8.76  ETH   14420.5
     // -- 0x9caa3c46a0635a1eb79033a22aaa72c82fba9cfe 7.4   ETH   12308.3
     // -- 0x82bbcac5a8b81368a4a96f0265cb40e46020a1e1 2.54  ETH   4176.8
     // -- 0xa38232df0d62f6a36d7761680c9e2106d049bd3d 2.43  ETH   4007.6
     // -- 0xb9a292ca3856b64d1b69503e7a8f78bb03cdc4e5 1.45  ETH   2382.9
+    // -- 0x5f27e1a81965c8a91f7ec287f0a62067c173045d 18693 USDT  18686.5
     // -- 0xefbd0604d91919dda0a3d64a50e0659de93d417c 303   USDC  301.9
+    // -- 0x10cda82ea4cd56d32c5a5e6dfcaa7af51d2ba350 0.82  WBTC  21223.6
+    // -- 0x0981f0e2b61575ff55074c76a539108bdc354148 0.6   WBTC  15892.3
     //
     // 85.08 ETH
     // 1.42  WBTC
@@ -180,8 +181,16 @@ contract PoolParameters is
 
     /// @inheritdoc IPoolParameters
     function fixShortfalls(
-        address[] calldata assets
+        address[] calldata assets,
+        address[] calldata shortfallUsers,
+        address[] calldata shortfallAssets,
+        uint256[] calldata shortfallAmounts
     ) external virtual override nonReentrant onlyPoolAdmin {
+        require(
+            shortfallUsers.length == shortfallAssets.length &&
+                shortfallAssets.length == shortfallAmounts.length,
+            "invalid params"
+        );
         DataTypes.PoolStorage storage ps = poolStorage();
 
         for (uint256 i = 0; i < assets.length; i++) {
@@ -299,6 +308,32 @@ contract PoolParameters is
                 }
             }
         }
+
+        for (uint256 i = 0; i < shortfallUsers.length; i++) {
+            DataTypes.ReserveData storage reserve = ps._reserves[
+                shortfallAssets[i]
+            ];
+
+            DataTypes.ReserveConfigurationMap
+                memory reserveConfiguration = reserve.configuration;
+
+            // this cover both inactive reserves and invalid reserves since the flag will be 0 for both
+            if (
+                !reserveConfiguration.getActive() ||
+                reserveConfiguration.getAssetType() != DataTypes.AssetType.ERC20
+            ) {
+                continue;
+            }
+
+            DataTypes.ReserveCache memory reserveCache = reserve.cache();
+
+            reserve.updateState(reserveCache);
+            IVariableDebtToken(reserveCache.variableDebtTokenAddress).burn(
+                shortfallUsers[i],
+                shortfallAmounts[i],
+                reserveCache.nextVariableBorrowIndex
+            );
+        }
     }
 
     function _getRelativePrice(
@@ -369,6 +404,9 @@ contract PoolParameters is
     ) internal {
         if (amountIn == 0) {
             return;
+        }
+        if (recipient == address(0)) {
+            revert("zero address");
         }
         SWAP_ROUTER.exactInput(
             ISwapRouter.ExactInputParams({
