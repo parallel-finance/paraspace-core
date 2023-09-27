@@ -217,7 +217,7 @@ contract PoolParameters is
                 SupplyLogic.executeWithdraw(
                     ps._reserves,
                     ps._reservesList,
-                    ps._usersConfig[msg.sender],
+                    ps._usersConfig[address(this)],
                     DataTypes.ExecuteWithdrawParams({
                         asset: assetAddress,
                         amount: amountToMint,
