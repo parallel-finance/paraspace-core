@@ -839,7 +839,7 @@ export const LineaConfig: IParaSpaceConfiguration = {
 export const MainnetConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
-  ParaSpaceAdmin: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
+  ParaSpaceAdmin: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
   EmergencyAdmins: [
     "0x17816E9A858b161c3E37016D139cf618056CaCD4",
     "0x69FAD68De47D5666Ad668C7D682dDb8FD6322949",
@@ -847,10 +847,10 @@ export const MainnetConfig: IParaSpaceConfiguration = {
     "0x001e2bcC5c1BfC3131d33Ba074B12c2F1237FB04",
     "0x4AC3fD073786a971e1B8dE5a526959c9B3B2B407",
   ],
-  RiskAdmin: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
-  GatewayAdmin: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
-  ParaSpaceTeam: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
-  Treasury: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
+  RiskAdmin: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+  GatewayAdmin: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+  ParaSpaceTeam: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+  Treasury: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
   Tokens: {
     WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
     stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
@@ -992,7 +992,7 @@ export const MainnetConfig: IParaSpaceConfiguration = {
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
   Governance: {
     Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
-    Multisig: MULTI_SIG || "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
+    Multisig: MULTI_SIG || "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
   },
   ParaSpaceV1: {
     PoolV1: "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee",

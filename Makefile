@@ -464,6 +464,10 @@ zksync-bytecode-hashes:
 redeploy-market:
 	make SCRIPT_PATH=./scripts/dev/15.redeploy-market.ts run
 
+.PHONY: fix-shortfalls
+fix-shortfalls:
+	make SCRIPT_PATH=./scripts/dev/16.fix-shortfalls.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
