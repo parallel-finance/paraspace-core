@@ -83,8 +83,8 @@ contract PoolLpOperation is
         uint256 token1Borrow;
         uint256 token0RefundCash;
         uint256 token1RefundCash;
-        uint256 token0RefundDecreaseLiquidity;
-        uint256 token1RefundDecreaseLiquidity;
+        uint256 token0RefundLiquidity;
+        uint256 token1RefundLiquidity;
     }
 
     /// @inheritdoc IPoolLpOperation
@@ -197,18 +197,39 @@ contract PoolLpOperation is
                 DataTypes.TimeLockParams memory timeLockParams;
                 uint256[] memory tokenIds = new uint256[](1);
                 tokenIds[0] = decreaseLiquidityParam.tokenId;
-                //we don't need care about collateral flag here since we'll set it to true anyway
-                INToken(reserveCache.xTokenAddress).burn(
-                    msg.sender,
-                    reserveCache.xTokenAddress,
-                    tokenIds,
-                    timeLockParams
-                );
+                (
+                    uint256 oldCollateralizedBalance,
+                    uint256 newCollateralizedBalance
+                ) = INToken(reserveCache.xTokenAddress).burn(
+                        msg.sender,
+                        reserveCache.xTokenAddress,
+                        tokenIds,
+                        timeLockParams
+                    );
+                if (!mintParams.mintNewToken) {
+                    if (
+                        oldCollateralizedBalance > 0 &&
+                        newCollateralizedBalance == 0
+                    ) {
+                        ps._usersConfig[msg.sender].setUsingAsCollateral(
+                            reserve.id,
+                            false
+                        );
+                        emit ReserveUsedAsCollateralDisabled(
+                            assetInfo.asset,
+                            msg.sender
+                        );
+                    }
+                }
             }
         }
 
-        //mint new nft
+        //mint and supply new nft
         if (mintParams.mintNewToken) {
+            require(
+                mintParams.amount0Desired > 0 || mintParams.amount1Desired > 0,
+                Errors.INVALID_PARAMETER
+            );
             if (mintParams.amount0Desired > 0) {
                 IERC20(assetInfo.token0).safeApprove(
                     assetInfo.asset,
@@ -314,7 +335,6 @@ contract PoolLpOperation is
             }
         }
 
-        //calculate refund amount
         vars.token0After = IERC20(assetInfo.token0).balanceOf(address(this));
         vars.token1After = IERC20(assetInfo.token1).balanceOf(address(this));
         require(
@@ -337,7 +357,6 @@ contract PoolLpOperation is
 
             //calculate refund cash
             vars.token0Left = vars.token0Left - vars.token0RefundBorrow;
-
             if (vars.token0Left > 0) {
                 vars.token0RefundCash = Math.min(
                     vars.token0Left,
@@ -345,7 +364,7 @@ contract PoolLpOperation is
                 );
 
                 //calculate refund decreaseLiquidity
-                vars.token0RefundDecreaseLiquidity =
+                vars.token0RefundLiquidity =
                     vars.token0Left -
                     vars.token0RefundCash;
             }
@@ -357,13 +376,12 @@ contract PoolLpOperation is
             );
 
             vars.token1Left = vars.token1Left - vars.token1RefundBorrow;
-
             if (vars.token1Left > 0) {
                 vars.token1RefundCash = Math.min(
                     vars.token1Left,
                     assetInfo.token1CashAmount
                 );
-                vars.token1RefundDecreaseLiquidity =
+                vars.token1RefundLiquidity =
                     vars.token1Left -
                     vars.token1RefundCash;
             }
@@ -399,14 +417,14 @@ contract PoolLpOperation is
                 ps._usersConfig[msg.sender],
                 msg.sender,
                 assetInfo.token0,
-                vars.token0RefundDecreaseLiquidity
+                vars.token0RefundLiquidity
             );
             _supplyLiquidity(
                 ps._reserves,
                 ps._usersConfig[msg.sender],
                 msg.sender,
                 assetInfo.token1,
-                vars.token1RefundDecreaseLiquidity
+                vars.token1RefundLiquidity
             );
         }
 

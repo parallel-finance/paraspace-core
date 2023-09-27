@@ -88,7 +88,7 @@ library SupplyLogic {
         mapping(address => DataTypes.ReserveData) storage reservesData,
         DataTypes.UserConfigurationMap storage userConfig,
         DataTypes.ExecuteSupplyParams memory params
-    ) public {
+    ) external {
         DataTypes.ReserveData storage reserve = reservesData[params.asset];
         DataTypes.ReserveCache memory reserveCache = reserve.cache();
 
