@@ -103,6 +103,12 @@ interface IPoolParameters {
     function mintToTreasury(address[] calldata assets) external;
 
     /**
+     * @notice Fix shortfalls by sending reserves to xTokens
+     * @param assets The list of reserves for which the minting needs to be executed
+     **/
+    function fixShortfalls(address[] calldata assets) external;
+
+    /**
      * @notice Rescue and transfer tokens locked in this contract
      * @param assetType The asset type of the token
      * @param token The address of the token

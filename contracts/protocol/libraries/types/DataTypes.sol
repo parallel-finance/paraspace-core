@@ -186,6 +186,7 @@ library DataTypes {
         address to;
         uint256 reservesCount;
         address oracle;
+        bool immediate;
     }
 
     struct ExecuteWithdrawERC721Params {

@@ -340,8 +340,9 @@ library SupplyLogic {
             amountToWithdraw
         );
 
-        DataTypes.TimeLockParams memory timeLockParams = GenericLogic
-            .calculateTimeLockParams(
+        DataTypes.TimeLockParams memory timeLockParams;
+        if (!params.immediate) {
+            timeLockParams = GenericLogic.calculateTimeLockParams(
                 reserve,
                 DataTypes.TimeLockFactorParams({
                     assetType: DataTypes.AssetType.ERC20,
@@ -349,7 +350,8 @@ library SupplyLogic {
                     amount: amountToWithdraw
                 })
             );
-        timeLockParams.actionType = DataTypes.TimeLockActionType.WITHDRAW;
+            timeLockParams.actionType = DataTypes.TimeLockActionType.WITHDRAW;
+        }
 
         IPToken(reserveCache.xTokenAddress).burn(
             msg.sender,
