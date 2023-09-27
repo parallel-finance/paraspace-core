@@ -134,7 +134,8 @@ describe("IZUMI LP NFT position control", () => {
           userDaiAmount,
           userWethAmount,
           0,
-          0
+          0,
+          2659537628
         )
     );
 
@@ -171,6 +172,7 @@ describe("IZUMI LP NFT position control", () => {
           userWethAmount,
           0,
           0,
+          2659537628,
           {
             gasLimit: 12_450_000,
             value: userWethAmount,
@@ -243,6 +245,7 @@ describe("IZUMI LP NFT position control", () => {
           amount1Desired: 0,
           amount0Min: 0,
           amount1Min: 0,
+          deadline: 0,
         }
       )
     );
@@ -330,6 +333,7 @@ describe("IZUMI LP NFT position control", () => {
           amount1Desired: 0,
           amount0Min: 0,
           amount1Min: 0,
+          deadline: 0,
         }
       )
     );

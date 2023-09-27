@@ -56,6 +56,7 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
         uint256,
         uint256,
         uint256,
+        uint256,
         uint256
     ) internal virtual returns (uint256, uint256) {
         return (0, 0);
@@ -135,7 +136,8 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
         uint256 amountAdd0,
         uint256 amountAdd1,
         uint256 amount0Min,
-        uint256 amount1Min
+        uint256 amount1Min,
+        uint256 deadline
     ) external payable onlyPool nonReentrant {
         address positionManager = _ERC721Data.underlyingAsset;
 
@@ -172,7 +174,8 @@ abstract contract NTokenLiquidity is NToken, INTokenLiquidity {
             amountAdd0,
             amountAdd1,
             amount0Min,
-            amount1Min
+            amount1Min,
+            deadline
         );
 
         // refund unused tokens

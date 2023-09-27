@@ -71,7 +71,8 @@ contract NTokenUniswapV3 is NTokenLiquidity {
         uint256 amountAdd0,
         uint256 amountAdd1,
         uint256 amount0Min,
-        uint256 amount1Min
+        uint256 amount1Min,
+        uint256 deadline
     ) internal override returns (uint256 amount0, uint256 amount1) {
         INonfungiblePositionManager.IncreaseLiquidityParams
             memory params = INonfungiblePositionManager
@@ -81,7 +82,7 @@ contract NTokenUniswapV3 is NTokenLiquidity {
                     amount1Desired: amountAdd1,
                     amount0Min: amount0Min,
                     amount1Min: amount1Min,
-                    deadline: block.timestamp
+                    deadline: deadline
                 });
 
         (, amount0, amount1) = INonfungiblePositionManager(positionManager)

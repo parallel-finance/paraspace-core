@@ -94,7 +94,8 @@ contract PoolLpOperation is
         uint256 amountAdd0,
         uint256 amountAdd1,
         uint256 amount0Min,
-        uint256 amount1Min
+        uint256 amount1Min,
+        uint256 deadline
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -109,7 +110,15 @@ contract PoolLpOperation is
 
         INTokenLiquidity(reserveCache.xTokenAddress).increaseLiquidity{
             value: msg.value
-        }(msg.sender, tokenId, amountAdd0, amountAdd1, amount0Min, amount1Min);
+        }(
+            msg.sender,
+            tokenId,
+            amountAdd0,
+            amountAdd1,
+            amount0Min,
+            amount1Min,
+            deadline
+        );
     }
 
     /// @inheritdoc IPoolLpOperation
@@ -256,7 +265,7 @@ contract PoolLpOperation is
                         amount0Min: mintParams.amount0Min,
                         amount1Min: mintParams.amount1Min,
                         recipient: reserveCache.xTokenAddress,
-                        deadline: block.timestamp
+                        deadline: mintParams.deadline
                     });
                 (newTokenId, , , ) = INonfungiblePositionManager(
                     assetInfo.asset
@@ -275,7 +284,7 @@ contract PoolLpOperation is
                         yLim: mintParams.amount1Desired.toUint128(),
                         amountXMin: mintParams.amount0Min.toUint128(),
                         amountYMin: mintParams.amount1Min.toUint128(),
-                        deadline: block.timestamp
+                        deadline: mintParams.deadline
                     });
                 (newTokenId, , , ) = ILiquidityManager(assetInfo.asset).mint(
                     params

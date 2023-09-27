@@ -241,6 +241,7 @@ describe("Pool LP Operation", () => {
             amount1Desired: parseEther("1"),
             amount0Min: 0,
             amount1Min: 0,
+            deadline: 2659537628,
           }
         )
       );
@@ -314,6 +315,7 @@ describe("Pool LP Operation", () => {
             amount1Desired: parseEther("25"),
             amount0Min: 0,
             amount1Min: 0,
+            deadline: 2659537628,
           }
         )
       );
@@ -387,6 +389,7 @@ describe("Pool LP Operation", () => {
             amount1Desired: parseEther("25"),
             amount0Min: 0,
             amount1Min: 0,
+            deadline: 2659537628,
           }
         )
       );
@@ -450,6 +453,7 @@ describe("Pool LP Operation", () => {
             amount1Desired: parseEther("5"),
             amount0Min: 0,
             amount1Min: 0,
+            deadline: 2659537628,
           }
         )
       );
@@ -525,6 +529,7 @@ describe("Pool LP Operation", () => {
             amount1Desired: parseEther("5"),
             amount0Min: 0,
             amount1Min: 0,
+            deadline: 2659537628,
           }
         )
       );
@@ -592,6 +597,7 @@ describe("Pool LP Operation", () => {
             amount1Desired: parseEther("1"),
             amount0Min: 0,
             amount1Min: 0,
+            deadline: 2659537628,
           }
         )
       );
@@ -666,6 +672,7 @@ describe("Pool LP Operation", () => {
             amount1Desired: parseEther("25"),
             amount0Min: 0,
             amount1Min: 0,
+            deadline: 2659537628,
           }
         )
       );
@@ -740,6 +747,7 @@ describe("Pool LP Operation", () => {
             amount1Desired: parseEther("25"),
             amount0Min: 0,
             amount1Min: 0,
+            deadline: 2659537628,
           }
         )
       );
@@ -804,6 +812,7 @@ describe("Pool LP Operation", () => {
             amount1Desired: parseEther("5"),
             amount0Min: 0,
             amount1Min: 0,
+            deadline: 2659537628,
           }
         )
       );
@@ -880,6 +889,7 @@ describe("Pool LP Operation", () => {
             amount1Desired: parseEther("5"),
             amount0Min: 0,
             amount1Min: 0,
+            deadline: 2659537628,
           }
         )
       );

@@ -71,7 +71,8 @@ contract NTokenIzumi is NTokenLiquidity {
         uint256 amountAdd0,
         uint256 amountAdd1,
         uint256 amount0Min,
-        uint256 amount1Min
+        uint256 amount1Min,
+        uint256 deadline
     ) internal override returns (uint256 amount0, uint256 amount1) {
         ILiquidityManager POSITION_MANAGER = ILiquidityManager(positionManager);
 
@@ -82,7 +83,7 @@ contract NTokenIzumi is NTokenLiquidity {
                 yLim: amountAdd1.toUint128(),
                 amountXMin: amount0Min.toUint128(),
                 amountYMin: amount1Min.toUint128(),
-                deadline: block.timestamp
+                deadline: deadline
             });
 
         (, amount0, amount1) = POSITION_MANAGER.addLiquidity{value: msg.value}(

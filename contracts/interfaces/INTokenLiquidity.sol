@@ -42,6 +42,7 @@ interface INTokenLiquidity {
      * @param amountAdd1 The amount to add of token1
      * @param amount0Min The minimum amount to add of token0
      * @param amount1Min The minimum amount to add of token1
+     * @param deadline The time by which the transaction must be included
      */
     function increaseLiquidity(
         address payer,
@@ -49,6 +50,7 @@ interface INTokenLiquidity {
         uint256 amountAdd0,
         uint256 amountAdd1,
         uint256 amount0Min,
-        uint256 amount1Min
+        uint256 amount1Min,
+        uint256 deadline
     ) external payable;
 }

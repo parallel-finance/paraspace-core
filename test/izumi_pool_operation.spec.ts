@@ -448,6 +448,7 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           userWethAmount,
           0,
           0,
+          2659537628,
           {
             gasLimit: 12_450_000,
           }
@@ -487,6 +488,7 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           userWethAmount,
           0,
           0,
+          2659537628,
           {
             gasLimit: 12_450_000,
           }
@@ -524,6 +526,7 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           userWethAmount,
           0,
           0,
+          2659537628,
           {
             gasLimit: 12_450_000,
           }
@@ -563,6 +566,7 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           userWethAmount,
           0,
           0,
+          2659537628,
           {
             gasLimit: 12_450_000,
           }
@@ -617,6 +621,7 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           amount1Desired: 0,
           amount0Min: 0,
           amount1Min: 0,
+          deadline: 0,
         }
       )
     ).to.be.revertedWith(ProtocolErrors.RESERVE_INACTIVE);
@@ -665,6 +670,7 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           amount1Desired: 0,
           amount0Min: 0,
           amount1Min: 0,
+          deadline: 0,
         }
       )
     );
@@ -713,6 +719,7 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           amount1Desired: 0,
           amount0Min: 0,
           amount1Min: 0,
+          deadline: 0,
         }
       )
     ).to.be.revertedWith(ProtocolErrors.RESERVE_PAUSED);
@@ -761,6 +768,7 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           amount1Desired: 0,
           amount0Min: 0,
           amount1Min: 0,
+          deadline: 0,
         }
       )
     );
@@ -801,6 +809,7 @@ describe("IZUMI LP NFT supply, withdraw, setCollateral, liquidation and transfer
           amount1Desired: 0,
           amount0Min: 0,
           amount1Min: 0,
+          deadline: 0,
         }
       )
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);

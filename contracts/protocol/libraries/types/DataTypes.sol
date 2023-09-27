@@ -477,6 +477,7 @@ library DataTypes {
         uint256 amount1Desired;
         uint256 amount0Min;
         uint256 amount1Min;
+        uint256 deadline;
     }
 
     struct AssetInfo {

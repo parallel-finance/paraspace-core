@@ -472,6 +472,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           amount1Desired: 0,
           amount0Min: 0,
           amount1Min: 0,
+          deadline: 0,
         }
       )
     ).to.be.revertedWith(ProtocolErrors.RESERVE_INACTIVE);
@@ -521,6 +522,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           amount1Desired: 0,
           amount0Min: 0,
           amount1Min: 0,
+          deadline: 0,
         }
       )
     );
@@ -570,6 +572,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           amount1Desired: 0,
           amount0Min: 0,
           amount1Min: 0,
+          deadline: 0,
         }
       )
     ).to.be.revertedWith(ProtocolErrors.RESERVE_PAUSED);
@@ -619,6 +622,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           amount1Desired: 0,
           amount0Min: 0,
           amount1Min: 0,
+          deadline: 0,
         }
       )
     );
@@ -659,6 +663,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           amount1Desired: 0,
           amount0Min: 0,
           amount1Min: 0,
+          deadline: 0,
         }
       )
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
