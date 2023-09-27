@@ -221,6 +221,7 @@ contract PoolParameters is
                     DataTypes.ExecuteWithdrawParams({
                         asset: assetAddress,
                         amount: amountToMint,
+                        from: address(this),
                         to: address(this),
                         reservesCount: ps._reservesCount,
                         oracle: ADDRESSES_PROVIDER.getPriceOracle(),

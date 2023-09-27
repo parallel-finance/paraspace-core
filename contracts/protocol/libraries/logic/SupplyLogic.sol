@@ -318,7 +318,7 @@ library SupplyLogic {
         reserve.updateState(reserveCache);
 
         uint256 userBalance = IPToken(reserveCache.xTokenAddress)
-            .scaledBalanceOf(msg.sender)
+            .scaledBalanceOf(params.from)
             .rayMul(reserveCache.nextLiquidityIndex);
 
         uint256 amountToWithdraw = params.amount;
@@ -354,7 +354,7 @@ library SupplyLogic {
         }
 
         IPToken(reserveCache.xTokenAddress).burn(
-            msg.sender,
+            params.from,
             params.to,
             amountToWithdraw,
             reserveCache.nextLiquidityIndex,
@@ -368,7 +368,7 @@ library SupplyLogic {
                     reservesList,
                     userConfig,
                     params.asset,
-                    msg.sender,
+                    params.from,
                     params.reservesCount,
                     params.oracle
                 );
@@ -376,11 +376,11 @@ library SupplyLogic {
 
             if (amountToWithdraw == userBalance) {
                 userConfig.setUsingAsCollateral(reserve.id, false);
-                emit ReserveUsedAsCollateralDisabled(params.asset, msg.sender);
+                emit ReserveUsedAsCollateralDisabled(params.asset, params.from);
             }
         }
 
-        emit Withdraw(params.asset, msg.sender, params.to, amountToWithdraw);
+        emit Withdraw(params.asset, params.from, params.to, amountToWithdraw);
 
         return amountToWithdraw;
     }
