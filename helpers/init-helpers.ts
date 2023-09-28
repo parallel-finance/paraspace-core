@@ -608,8 +608,6 @@ export const initReservesByHelper = async (
             await deployChromieSquiggleNTokenImpl(
               pool.address,
               delegationRegistryAddress,
-              0,
-              20, //set 20 in test environment for easy test. should be 9763 in mainnet
               verify
             )
           ).address;

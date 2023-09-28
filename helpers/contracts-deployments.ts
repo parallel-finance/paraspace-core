@@ -183,7 +183,13 @@ import {
   insertContractAddressInDb,
   withSaveAndVerify,
 } from "./contracts-helpers";
-import {DRE, getDb, getParaSpaceConfig, waitForTx} from "./misc-utils";
+import {
+  DRE,
+  getDb,
+  getParaSpaceConfig,
+  isMainnet,
+  waitForTx,
+} from "./misc-utils";
 import {
   eContractid,
   ERC20TokenContractId,
@@ -3089,8 +3095,6 @@ export const deployOtherdeedNTokenImpl = async (
 export const deployChromieSquiggleNTokenImpl = async (
   poolAddress: tEthereumAddress,
   delegationRegistryAddress: tEthereumAddress,
-  startTokenId: number,
-  endTokenId: number,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -3101,6 +3105,7 @@ export const deployChromieSquiggleNTokenImpl = async (
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
       mintableERC721Logic,
   };
+  const [startTokenId, endTokenId] = isMainnet() ? [0, 9763] : [0, 20];
 
   return withSaveAndVerify(
     await getContractFactory("NTokenChromieSquiggle", libraries),
