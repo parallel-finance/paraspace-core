@@ -240,10 +240,10 @@ contract PoolParameters is
 
                 if (assetAddress == cAPE) {
                     IAutoCompoundApe(assetAddress).withdraw(amountToMint);
+                    assetAddress = APE;
                     amountToMint = IERC20(assetAddress).balanceOf(
                         address(this)
                     );
-                    assetAddress = APE;
                 }
                 if (assetAddress == stETH) {
                     if (
