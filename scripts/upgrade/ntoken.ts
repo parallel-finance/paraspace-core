@@ -184,8 +184,6 @@ export const upgradeNToken = async (verify = false) => {
         await deployChromieSquiggleNTokenImpl(
           poolAddress,
           delegationRegistry,
-          0,
-          9763,
           verify
         )
       ).address;
@@ -212,8 +210,6 @@ export const upgradeNToken = async (verify = false) => {
             await deployChromieSquiggleNTokenImpl(
               poolAddress,
               delegationRegistry,
-              0,
-              9763,
               verify
             )
           ).address;
