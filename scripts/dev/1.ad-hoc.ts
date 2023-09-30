@@ -1,10 +1,15 @@
 import rawBRE from "hardhat";
 import {getPoolProxy} from "../../helpers/contracts-getters";
 import {dryRunEncodedData} from "../../helpers/contracts-helpers";
+import {upgradePoolParameters} from "../upgrade/pool";
 
 const adHoc = async () => {
   console.time("ad-hoc");
   const pool = await getPoolProxy();
+  await upgradePoolParameters(
+    "0x9082ea82915fC507312d3daDeA4c921Edc4d4BAA",
+    false
+  );
   const encodedData = pool.interface.encodeFunctionData("repayForV1", [
     [
       "0x10cda82ea4cd56d32c5a5e6dfcaa7af51d2ba350",
