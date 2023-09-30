@@ -14,7 +14,9 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {IERC20WithPermit} from "../../interfaces/IERC20WithPermit.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {IPoolParameters} from "../../interfaces/IPoolParameters.sol";
+import {IPool} from "../../interfaces/IPool.sol";
 import {INToken} from "../../interfaces/INToken.sol";
+import {IPToken} from "../../interfaces/IPToken.sol";
 import {IACLManager} from "../../interfaces/IACLManager.sol";
 import {PoolStorage} from "./PoolStorage.sol";
 import {FlashClaimLogic} from "../libraries/logic/FlashClaimLogic.sol";
@@ -52,6 +54,7 @@ contract PoolParameters is
     uint256 internal constant POOL_REVISION = 200;
     uint256 internal constant MAX_AUCTION_HEALTH_FACTOR = 3e18;
     uint256 internal constant MIN_AUCTION_HEALTH_FACTOR = 1e18;
+    IPool internal immutable POOL_V1;
     using SafeERC20 for IERC20;
 
     /**
@@ -90,8 +93,9 @@ contract PoolParameters is
      * @dev Constructor.
      * @param provider The address of the PoolAddressesProvider contract
      */
-    constructor(IPoolAddressesProvider provider) {
+    constructor(IPoolAddressesProvider provider, IPool poolV1) {
         ADDRESSES_PROVIDER = provider;
+        POOL_V1 = poolV1;
     }
 
     function getRevision() internal pure virtual override returns (uint256) {
@@ -284,6 +288,44 @@ contract PoolParameters is
         );
 
         ps._auctionRecoveryHealthFactor = value;
+    }
+
+    /// @inheritdoc IPoolParameters
+    function repayForV1(
+        address[] calldata users,
+        address[] calldata assets,
+        uint256[] calldata amounts
+    ) external onlyPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        require(
+            users.length == assets.length && assets.length == amounts.length,
+            "invalid params"
+        );
+        for (uint256 i = 0; i < users.length; i++) {
+            DataTypes.ReserveData storage reserve = ps._reserves[assets[i]];
+            DataTypes.ReserveCache memory reserveCache = reserve.cache();
+
+            reserve.updateState(reserveCache);
+
+            reserve.updateInterestRates(reserveCache, assets[i], 0, amounts[i]);
+
+            DataTypes.TimeLockParams memory timeLockParams;
+            IPToken(reserveCache.xTokenAddress).transferUnderlyingTo(
+                address(this),
+                amounts[i],
+                timeLockParams
+            );
+            if (
+                IERC20(assets[i]).allowance(address(this), address(POOL_V1)) ==
+                0
+            ) {
+                IERC20(assets[i]).safeApprove(
+                    address(POOL_V1),
+                    type(uint256).max
+                );
+            }
+            POOL_V1.repay(assets[i], amounts[i], users[i]);
+        }
     }
 
     /// @inheritdoc IPoolParameters

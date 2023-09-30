@@ -638,7 +638,7 @@ export const deployPoolParameters = async (
   const poolParameters = (await withSaveAndVerify(
     await getContractFactory("PoolParameters", parametersLibraries),
     eContractid.PoolParametersImpl,
-    [provider],
+    [provider, getParaSpaceConfig().ParaSpaceV1?.PoolV1 || ZERO_ADDRESS],
     verify,
     false,
     parametersLibraries,
@@ -910,7 +910,7 @@ export const deployPoolComponents = async (
   const poolParameters = (await withSaveAndVerify(
     await getContractFactory("PoolParameters", parametersLibraries),
     eContractid.PoolParametersImpl,
-    [provider],
+    [provider, getParaSpaceConfig().ParaSpaceV1?.PoolV1 || ZERO_ADDRESS],
     verify,
     false,
     parametersLibraries,

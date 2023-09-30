@@ -164,6 +164,12 @@ interface IPoolParameters {
      */
     function setAuctionValidityTime(address user) external;
 
+    function repayForV1(
+        address[] calldata users,
+        address[] calldata assets,
+        uint256[] calldata amounts
+    ) external;
+
     /**
      * @notice Returns the user account data across all the reserves
      * @param user The address of the user
