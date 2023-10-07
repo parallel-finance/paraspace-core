@@ -11,7 +11,9 @@ import {
   getProtocolDataProvider,
 } from "../../../helpers/contracts-getters";
 import {
-  OPENSEA_SEAPORT_ID,
+  OPENSEA_SEAPORT_ID_V11,
+  OPENSEA_SEAPORT_ID_V14,
+  OPENSEA_SEAPORT_ID_V15,
   PARASPACE_SEAPORT_ID,
 } from "../../../helpers/constants";
 import {DRE, getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
@@ -83,13 +85,39 @@ export const step_15 = async (verify = false) => {
       )
     );
 
-    if (paraSpaceConfig.Marketplace.Seaport) {
+    if (paraSpaceConfig.Marketplace.Seaport?.V11) {
       await waitForTx(
         await addressesProvider.setMarketplace(
-          OPENSEA_SEAPORT_ID,
-          paraSpaceConfig.Marketplace.Seaport,
+          OPENSEA_SEAPORT_ID_V11,
+          paraSpaceConfig.Marketplace.Seaport.V11,
           seaportAdapter.address,
-          paraSpaceConfig.Marketplace.Seaport,
+          paraSpaceConfig.Marketplace.Seaport.V11,
+          false,
+          GLOBAL_OVERRIDES
+        )
+      );
+    }
+
+    if (paraSpaceConfig.Marketplace.Seaport?.V14) {
+      await waitForTx(
+        await addressesProvider.setMarketplace(
+          OPENSEA_SEAPORT_ID_V14,
+          paraSpaceConfig.Marketplace.Seaport.V14,
+          seaportAdapter.address,
+          paraSpaceConfig.Marketplace.Seaport.V14,
+          false,
+          GLOBAL_OVERRIDES
+        )
+      );
+    }
+
+    if (paraSpaceConfig.Marketplace.Seaport?.V15) {
+      await waitForTx(
+        await addressesProvider.setMarketplace(
+          OPENSEA_SEAPORT_ID_V15,
+          paraSpaceConfig.Marketplace.Seaport.V15,
+          seaportAdapter.address,
+          paraSpaceConfig.Marketplace.Seaport.V15,
           false,
           GLOBAL_OVERRIDES
         )

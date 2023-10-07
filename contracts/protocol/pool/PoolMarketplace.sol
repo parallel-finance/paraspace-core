@@ -2,33 +2,13 @@
 pragma solidity ^0.8.0;
 
 import {ParaVersionedInitializable} from "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
-import {Errors} from "../libraries/helpers/Errors.sol";
-import {ReserveConfiguration} from "../libraries/configuration/ReserveConfiguration.sol";
-import {PoolLogic} from "../libraries/logic/PoolLogic.sol";
-import {ReserveLogic} from "../libraries/logic/ReserveLogic.sol";
-import {SupplyLogic} from "../libraries/logic/SupplyLogic.sol";
 import {MarketplaceLogic} from "../libraries/logic/MarketplaceLogic.sol";
-import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
-import {LiquidationLogic} from "../libraries/logic/LiquidationLogic.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
-import {IERC20WithPermit} from "../../interfaces/IERC20WithPermit.sol";
-import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
-import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
-import {IWETH} from "../../misc/interfaces/IWETH.sol";
-import {ItemType} from "../../dependencies/seaport/contracts/lib/ConsiderationEnums.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {IPoolMarketplace} from "../../interfaces/IPoolMarketplace.sol";
-import {INToken} from "../../interfaces/INToken.sol";
-import {IACLManager} from "../../interfaces/IACLManager.sol";
 import {PoolStorage} from "./PoolStorage.sol";
-import {FlashClaimLogic} from "../libraries/logic/FlashClaimLogic.sol";
 import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
-import {IERC721Receiver} from "../../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
-import {IMarketplace} from "../../interfaces/IMarketplace.sol";
-import {Errors} from "../libraries/helpers/Errors.sol";
 import {ParaReentrancyGuard} from "../libraries/paraspace-upgradeability/ParaReentrancyGuard.sol";
-import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
-import {IReserveAuctionStrategy} from "../../interfaces/IReserveAuctionStrategy.sol";
 
 /**
  * @title Pool Marketplace contract
@@ -49,9 +29,6 @@ contract PoolMarketplace is
     PoolStorage,
     IPoolMarketplace
 {
-    using ReserveLogic for DataTypes.ReserveData;
-    using SafeERC20 for IERC20;
-
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     uint256 internal constant POOL_REVISION = 200;
 
@@ -71,8 +48,7 @@ contract PoolMarketplace is
     function buyWithCredit(
         bytes32 marketplaceId,
         bytes calldata payload,
-        DataTypes.Credit calldata credit,
-        uint16 referralCode
+        DataTypes.Credit calldata credit
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -81,8 +57,30 @@ contract PoolMarketplace is
             marketplaceId,
             payload,
             credit,
-            ADDRESSES_PROVIDER,
-            referralCode
+            DataTypes.SwapAdapter(address(0), address(0), false),
+            bytes(""),
+            ADDRESSES_PROVIDER
+        );
+    }
+
+    /// @inheritdoc IPoolMarketplace
+    function buyAnyWithCredit(
+        bytes32 marketplaceId,
+        bytes calldata payload,
+        DataTypes.Credit calldata credit,
+        bytes32 swapAdapterId,
+        bytes calldata swapPayload
+    ) external payable virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        MarketplaceLogic.executeBuyWithCredit(
+            ps,
+            marketplaceId,
+            payload,
+            credit,
+            ps._swapAdapters[swapAdapterId],
+            swapPayload,
+            ADDRESSES_PROVIDER
         );
     }
 
@@ -90,8 +88,7 @@ contract PoolMarketplace is
     function batchBuyWithCredit(
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
-        DataTypes.Credit[] calldata credits,
-        uint16 referralCode
+        DataTypes.Credit[] calldata credits
     ) external payable virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -100,8 +97,30 @@ contract PoolMarketplace is
             marketplaceIds,
             payloads,
             credits,
-            ADDRESSES_PROVIDER,
-            referralCode
+            new DataTypes.SwapAdapter[](credits.length),
+            new bytes[](credits.length),
+            ADDRESSES_PROVIDER
+        );
+    }
+
+    /// @inheritdoc IPoolMarketplace
+    function batchBuyAnyWithCredit(
+        bytes32[] calldata marketplaceIds,
+        bytes[] calldata payloads,
+        DataTypes.Credit[] calldata credits,
+        DataTypes.SwapAdapter[] calldata swapAdapters,
+        bytes[] calldata swapPayloads
+    ) external payable virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        MarketplaceLogic.executeBatchBuyWithCredit(
+            ps,
+            marketplaceIds,
+            payloads,
+            credits,
+            swapAdapters,
+            swapPayloads,
+            ADDRESSES_PROVIDER
         );
     }
 
@@ -110,8 +129,7 @@ contract PoolMarketplace is
         bytes32 marketplaceId,
         bytes calldata payload,
         DataTypes.Credit calldata credit,
-        address onBehalfOf,
-        uint16 referralCode
+        address onBehalfOf
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -121,8 +139,7 @@ contract PoolMarketplace is
             payload,
             credit,
             onBehalfOf,
-            ADDRESSES_PROVIDER,
-            referralCode
+            ADDRESSES_PROVIDER
         );
     }
 
@@ -131,8 +148,7 @@ contract PoolMarketplace is
         bytes32[] calldata marketplaceIds,
         bytes[] calldata payloads,
         DataTypes.Credit[] calldata credits,
-        address onBehalfOf,
-        uint16 referralCode
+        address onBehalfOf
     ) external virtual override nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -142,17 +158,41 @@ contract PoolMarketplace is
             payloads,
             credits,
             onBehalfOf,
-            ADDRESSES_PROVIDER,
-            referralCode
+            ADDRESSES_PROVIDER
         );
     }
 
-    // function movePositionFromBendDAO(uint256[] calldata loanIds) external nonReentrant {
-    //     DataTypes.PoolStorage storage ps = poolStorage();
+    /// @inheritdoc IPoolMarketplace
+    function acceptOpenseaBid(
+        bytes32 marketplaceId,
+        bytes calldata payload,
+        address onBehalfOf
+    ) external virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
 
-    //     PositionMoverLogic.executeMovePositionFromBendDAO(
-    //         ps,
-    //         ADDRESSES_PROVIDER
-    //     );
-    // }
+        MarketplaceLogic.executeAcceptOpenseaBid(
+            ps,
+            marketplaceId,
+            payload,
+            onBehalfOf,
+            ADDRESSES_PROVIDER
+        );
+    }
+
+    /// @inheritdoc IPoolMarketplace
+    function batchAcceptOpenseaBid(
+        bytes32[] calldata marketplaceIds,
+        bytes[] calldata payloads,
+        address onBehalfOf
+    ) external virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        MarketplaceLogic.executeBatchAcceptOpenseaBid(
+            ps,
+            marketplaceIds,
+            payloads,
+            onBehalfOf,
+            ADDRESSES_PROVIDER
+        );
+    }
 }

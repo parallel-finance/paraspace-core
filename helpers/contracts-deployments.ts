@@ -109,50 +109,14 @@ import {
   PoolPositionMover,
   PoolPositionMover__factory,
   PositionMoverLogic,
-  PriceOracle,
-  ProtocolDataProvider,
-  PToken,
-  PTokenAStETH,
-  PTokenAToken,
-  PTokenCApe,
-  PTokenSApe,
-  PTokenStETH,
-  PTokenStKSM,
-  PYieldToken,
-  ReservesSetupHelper,
-  RoyaltyFeeManager,
-  RoyaltyFeeRegistry,
-  Seaport,
-  SeaportAdapter,
-  StakefishNFTManager,
-  StakefishValidatorFactory,
-  StakefishValidatorV1,
-  StandardPolicyERC721,
-  StETHDebtToken,
-  StETHMocked,
-  StKSMDebtToken,
-  StrategyStandardSaleForFixedPrice,
-  SupplyExtendedLogic,
-  SupplyLogic,
+  PositionMoverLogic__factory,
+  UniswapV3SwapAdapter__factory,
+  UniswapV3SwapAdapter,
   TimeLock,
-  TransferManagerERC1155,
-  TransferManagerERC721,
-  TransferSelectorNFT,
-  UiIncentiveDataProvider,
-  UiPoolDataProvider,
-  UniswapV3Factory,
-  UniswapV3OracleWrapper,
-  UniswapV3TwapOracleWrapper,
-  UserFlashclaimRegistry,
-  VariableDebtToken,
-  WalletBalanceProvider,
-  WETH9Mocked,
-  WETHGateway,
-  WPunk,
-  WPunkGateway,
-  WstETHMocked,
-  X2Y2Adapter,
-  X2Y2R1,
+  NTokenChromieSquiggle__factory,
+  CLFixedPriceSynchronicityPriceAdapter,
+  CLFixedPriceSynchronicityPriceAdapter__factory,
+  SwapLogic,
   PoolBorrowAndStake__factory,
   PoolBorrowAndStake,
 } from "../types";
@@ -201,6 +165,10 @@ import {
 import * as nFTDescriptor from "@uniswap/v3-periphery/artifacts/contracts/libraries/NFTDescriptor.sol/NFTDescriptor.json";
 import * as nonfungibleTokenPositionDescriptor from "@uniswap/v3-periphery/artifacts/contracts/NonfungibleTokenPositionDescriptor.sol/NonfungibleTokenPositionDescriptor.json";
 import {Contract} from "ethers";
+import {
+  SwapLogicLibraryAddresses,
+  SwapLogic__factory,
+} from "../types/factories/contracts/protocol/libraries/logic/SwapLogic__factory";
 import {Address, Libraries} from "hardhat-deploy/dist/types";
 
 import {parseEther} from "ethers/lib/utils";
@@ -455,6 +423,15 @@ export const deployPoolCoreLibraries = async (
     verify
   );
   const flashClaimLogic = await deployFlashClaimLogic(verify);
+  const swapLogic = await deploySwapLogic(
+    {
+      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
+        supplyLogic.address,
+      ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
+        borrowLogic.address,
+    },
+    verify
+  );
 
   return {
     ["contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic"]:
@@ -469,6 +446,8 @@ export const deployPoolCoreLibraries = async (
       borrowLogic.address,
     ["contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"]:
       flashClaimLogic.address,
+    ["contracts/protocol/libraries/logic/SwapLogic.sol:SwapLogic"]:
+      swapLogic.address,
   };
 };
 
@@ -1908,6 +1887,22 @@ export const deployMarketplaceLogic = async (
   ) as Promise<MarketplaceLogic>;
 };
 
+export const deploySwapLogic = async (
+  libraries: SwapLogicLibraryAddresses,
+  verify?: boolean
+) => {
+  const swapLogic = new SwapLogic__factory(libraries, await getFirstSigner());
+
+  return withSaveAndVerify(
+    swapLogic,
+    eContractid.SwapLogic,
+    [],
+    verify,
+    false,
+    libraries
+  ) as Promise<SwapLogic>;
+};
+
 export const deployConduitController = async (verify?: boolean) =>
   withSaveAndVerify(
     await getContractFactory("ConduitController"),
@@ -3197,6 +3192,14 @@ export const deployStakefishValidator = async (
     [depositContract],
     verify
   ) as Promise<StakefishValidatorV1>;
+
+export const deployUniswapV3SwapAdapter = async (verify?: boolean) =>
+  withSaveAndVerify(
+    new UniswapV3SwapAdapter__factory(await getFirstSigner()),
+    eContractid.UniswapV3SwapAdapter,
+    [],
+    verify
+  ) as Promise<UniswapV3SwapAdapter>;
 
 export const deployAccount = async (
   entryPoint: tEthereumAddress,

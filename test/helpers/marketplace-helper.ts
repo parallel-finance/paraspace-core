@@ -32,6 +32,7 @@ import {
   MintableERC20,
   MintableERC721,
   NToken,
+  PToken,
   WETH9,
   WETH9Mocked,
 } from "../../types";
@@ -144,7 +145,6 @@ export async function executeLooksrareBuyWithCredit(
       r: constants.HashZero,
       s: constants.HashZero,
     },
-    0,
     {
       gasLimit: 5000000,
     }
@@ -223,7 +223,6 @@ export async function executeBlurBuyWithCredit(
       r: constants.HashZero,
       s: constants.HashZero,
     },
-    0,
     {
       gasLimit: 5000000,
     }
@@ -287,7 +286,6 @@ export async function executeX2Y2BuyWithCredit(
       r: constants.HashZero,
       s: constants.HashZero,
     },
-    0,
     {
       gasLimit: 5000000,
     }
@@ -297,42 +295,42 @@ export async function executeX2Y2BuyWithCredit(
 
 export async function executeSeaportBuyWithCredit(
   tokenToBuy: MintableERC721 | NToken,
-  tokenToPayWith: MintableERC20,
+  tokenToPayWith: MintableERC20 | PToken,
   startAmount: BigNumberish,
   endAmount: BigNumberish,
   payLaterAmount: BigNumberish,
   nftId: number,
   maker: SignerWithAddress,
   taker: SignerWithAddress,
-  _sellOrderStartAmount = 1
+  isCollateralSwap = false
 ) {
+  const pool = await getPoolProxy();
   // approve
   await waitForTx(
     await tokenToBuy
       .connect(maker.signer)
       .approve((await getConduit()).address, nftId)
   );
+  await waitForTx(
+    await tokenToPayWith
+      .connect(taker.signer)
+      .approve((await getConduit()).address, startAmount)
+  );
 
   const seaport = await getSeaport();
   const getSellOrder = async (): Promise<AdvancedOrder> => {
     const offers = [
-      getOfferOrConsiderationItem(
-        2,
-        tokenToBuy.address,
-        nftId,
-        _sellOrderStartAmount,
-        _sellOrderStartAmount
-      ),
+      getOfferOrConsiderationItem(2, tokenToBuy.address, nftId, 1, 1),
     ];
 
     const considerations = [
       getOfferOrConsiderationItem(
         1,
         tokenToPayWith.address,
-        nftId,
+        0,
         startAmount,
         endAmount,
-        maker.address
+        isCollateralSwap ? pool.address : maker.address
       ),
     ];
 
@@ -347,25 +345,64 @@ export async function executeSeaportBuyWithCredit(
     );
   };
 
-  const pool = await getPoolProxy();
+  const getBuyOrder = async (): Promise<AdvancedOrder> => {
+    const offers = [
+      getOfferOrConsiderationItem(
+        1,
+        tokenToPayWith.address,
+        0,
+        startAmount,
+        endAmount
+      ),
+    ];
+
+    const considerations = [
+      getOfferOrConsiderationItem(
+        2,
+        tokenToBuy.address,
+        nftId,
+        1,
+        1,
+        pool.address
+      ),
+    ];
+
+    return createSeaportOrder(
+      seaport,
+      taker,
+      offers,
+      considerations,
+      2,
+      (await getPausableZone()).address,
+      await getConduitKey()
+    );
+  };
+
+  const fulfillment = [
+    [[[0, 0]], [[1, 0]]],
+    [[[1, 0]], [[0, 0]]],
+  ].map(([makerArr, considerationArr]) =>
+    toFulfillment(makerArr, considerationArr)
+  );
 
   const encodedData = seaport.interface.encodeFunctionData(
-    "fulfillAdvancedOrder",
-    [await getSellOrder(), [], await getConduitKey(), pool.address]
+    "matchAdvancedOrders",
+    [[await getSellOrder(), await getBuyOrder()], [], fulfillment]
   );
 
   const tx = (await getPoolProxy()).connect(taker.signer).buyWithCredit(
     PARASPACE_SEAPORT_ID,
     `0x${encodedData.slice(10)}`,
     {
-      token: tokenToPayWith.address,
+      token: isCollateralSwap
+        ? await (tokenToPayWith as PToken).UNDERLYING_ASSET_ADDRESS()
+        : tokenToPayWith.address,
       amount: payLaterAmount,
       orderId: constants.HashZero,
       v: 0,
       r: constants.HashZero,
       s: constants.HashZero,
     },
-    0,
     {
       gasLimit: 5000000,
     }
@@ -376,13 +413,14 @@ export async function executeSeaportBuyWithCredit(
 
 export async function executeAcceptBidWithCredit(
   tokenToBuy: MintableERC721 | NToken,
-  tokenToPayWith: MintableERC20,
+  tokenToPayWith: MintableERC20 | PToken,
   startAmount: BigNumberish,
   endAmount: BigNumberish,
   payLaterAmount: BigNumberish,
   nftId: number,
   maker: SignerWithAddress,
-  taker: SignerWithAddress
+  taker: SignerWithAddress,
+  isCollateralSwap = false
 ) {
   const pool = await getPoolProxy();
   const seaport = await getSeaport();
@@ -451,7 +489,7 @@ export async function executeAcceptBidWithCredit(
         toBN(0),
         startAmount,
         endAmount,
-        taker.address
+        isCollateralSwap ? pool.address : taker.address
       ),
     ];
 
@@ -489,7 +527,9 @@ export async function executeAcceptBidWithCredit(
   };
 
   const payLater = {
-    token: tokenToPayWith.address,
+    token: isCollateralSwap
+      ? await (tokenToPayWith as PToken).UNDERLYING_ASSET_ADDRESS()
+      : tokenToPayWith.address,
     amount: payLaterAmount,
     orderId: DRE.ethers.utils.arrayify(sellOrder.signature),
   };
@@ -510,7 +550,6 @@ export async function executeAcceptBidWithCredit(
       ...vrs,
     },
     taker.address,
-    0,
     {
       gasLimit: 5000000,
     }

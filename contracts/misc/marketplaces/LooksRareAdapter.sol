@@ -32,12 +32,7 @@ contract LooksRareAdapter is IMarketplace {
             OrderTypes.MakerOrder memory makerAsk
         ) = abi.decode(params, (OrderTypes.TakerOrder, OrderTypes.MakerOrder));
         orderInfo.maker = makerAsk.signer;
-        orderInfo.taker = takerBid.taker;
 
-        require(
-            orderInfo.taker == ADDRESSES_PROVIDER.getPool(),
-            Errors.INVALID_ORDER_TAKER
-        );
         require(
             makerAsk.strategy == STRATEGY_ALLOWED, // must be StandardSaleForFixedPrice strategy
             Errors.INVALID_MARKETPLACE_ORDER
@@ -66,16 +61,16 @@ contract LooksRareAdapter is IMarketplace {
             itemType,
             token,
             0,
-            makerAsk.price, // TODO: take minPercentageToAsk into account
-            makerAsk.price,
-            payable(takerBid.taker)
+            takerBid.price, // TODO: take minPercentageToAsk into account
+            takerBid.price,
+            payable(makerAsk.signer)
         );
         orderInfo.id = abi.encodePacked(makerAsk.r, makerAsk.s, makerAsk.v);
         orderInfo.consideration = consideration;
     }
 
     function getBidOrderInfo(
-        bytes memory /*params*/
+        bytes memory
     ) external pure override returns (DataTypes.OrderInfo memory) {
         revert(Errors.CALL_MARKETPLACE_FAILED);
     }

@@ -1072,6 +1072,9 @@ library ValidationLogic {
         DataTypes.ExecuteMarketplaceParams memory params
     ) internal view {
         require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
+        if (params.credit.amount == 0) {
+            return;
+        }
         require(
             keccak256(abi.encodePacked(params.orderInfo.id)) ==
                 keccak256(abi.encodePacked(params.credit.orderId)),
@@ -1087,6 +1090,12 @@ library ValidationLogic {
             ),
             Errors.INVALID_CREDIT_SIGNATURE
         );
+    }
+
+    function validateAcceptOpenseaBid(
+        DataTypes.ExecuteMarketplaceParams memory params
+    ) internal pure {
+        require(!params.marketplace.paused, Errors.MARKETPLACE_PAUSED);
     }
 
     function verifyCreditSignature(
@@ -1208,5 +1217,32 @@ library ValidationLogic {
                 Errors.RESERVE_FROZEN
             );
         }
+    }
+
+    function validateSwap(
+        DataTypes.SwapInfo memory swapInfo,
+        DataTypes.ValidateSwapParams memory params
+    ) internal pure {
+        require(!params.swapAdapter.paused, Errors.SWAP_ADAPTER_PAUSED);
+        require(
+            swapInfo.srcToken != swapInfo.dstToken,
+            Errors.INVALID_SWAP_PAYLOAD
+        );
+        require(
+            (swapInfo.srcToken == params.srcToken &&
+                (params.dstToken == address(0) ||
+                    swapInfo.dstToken == params.dstToken)),
+            Errors.INVALID_SWAP_PAYLOAD
+        );
+        require(
+            (swapInfo.exactInput && swapInfo.maxAmountIn == params.amount) ||
+                (!swapInfo.exactInput &&
+                    swapInfo.minAmountOut == params.amount),
+            Errors.INVALID_SWAP_PAYLOAD
+        );
+        require(
+            swapInfo.dstReceiver == params.dstReceiver,
+            Errors.INVALID_SWAP_PAYLOAD
+        );
     }
 }

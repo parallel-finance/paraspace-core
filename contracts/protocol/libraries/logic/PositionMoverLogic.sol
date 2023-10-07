@@ -178,7 +178,13 @@ library PositionMoverLogic {
                 reservesCount: ps._reservesCount,
                 oracle: poolAddressProvider.getPriceOracle(),
                 priceOracleSentinel: poolAddressProvider
-                    .getPriceOracleSentinel()
+                    .getPriceOracleSentinel(),
+                swapAdapter: DataTypes.SwapAdapter(
+                    address(0),
+                    address(0),
+                    false
+                ),
+                swapPayload: bytes("")
             })
         );
     }
@@ -401,7 +407,13 @@ library PositionMoverLogic {
                     releaseUnderlying: false,
                     reservesCount: params.reservesCount,
                     oracle: params.priceOracle,
-                    priceOracleSentinel: params.priceOracleSentinel
+                    priceOracleSentinel: params.priceOracleSentinel,
+                    swapAdapter: DataTypes.SwapAdapter(
+                        address(0),
+                        address(0),
+                        false
+                    ),
+                    swapPayload: bytes("")
                 })
             );
         }

@@ -29,9 +29,19 @@ export const SAPE_ADDRESS = ONE_ADDRESS;
 // ----------------
 // MARKETPLACE
 // ----------------
-export const OPENSEA_SEAPORT_ID = solidityKeccak256(
+export const OPENSEA_SEAPORT_ID_V11 = solidityKeccak256(
+  ["string"],
+  ["Opensea/seaport/v1.1"]
+);
+
+export const OPENSEA_SEAPORT_ID_V15 = solidityKeccak256(
   ["string"],
   ["Opensea/seaport/v1.5"]
+);
+
+export const OPENSEA_SEAPORT_ID_V14 = solidityKeccak256(
+  ["string"],
+  ["Opensea/seaport/v1.4"]
 );
 
 export const PARASPACE_SEAPORT_ID = solidityKeccak256(
@@ -42,3 +52,8 @@ export const PARASPACE_SEAPORT_ID = solidityKeccak256(
 export const LOOKSRARE_ID = solidityKeccak256(["string"], ["LooksRare/v1.1"]);
 export const X2Y2_ID = solidityKeccak256(["string"], ["X2Y2/v1"]);
 export const BLUR_ID = solidityKeccak256(["string"], ["Blur/v1"]);
+
+export const UNISWAP_V3_SWAP_ADAPTER_ID = solidityKeccak256(
+  ["string"],
+  ["SwapAdapter/Uniswap/v3"]
+);

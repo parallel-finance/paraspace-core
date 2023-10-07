@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
-import {GPv2SafeERC20} from "../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {VersionedInitializable} from "../libraries/paraspace-upgradeability/VersionedInitializable.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
@@ -17,6 +17,10 @@ import {EIP712Base} from "./base/EIP712Base.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {Address} from "../../dependencies/openzeppelin/contracts/Address.sol";
+import {ISwapAdapter} from "../../interfaces/ISwapAdapter.sol";
+import {Helpers} from "../../protocol/libraries/helpers/Helpers.sol";
+import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
 import {ICApe} from "../../interfaces/ICApe.sol";
 import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
 
@@ -33,7 +37,7 @@ contract PToken is
 {
     using WadRayMath for uint256;
     using SafeCast for uint256;
-    using GPv2SafeERC20 for IERC20;
+    using SafeERC20 for IERC20;
 
     bytes32 public constant PERMIT_TYPEHASH =
         keccak256(
@@ -119,23 +123,42 @@ contract PToken is
     ) external virtual override onlyPool {
         _burnScaled(from, receiverOfUnderlying, amount, index);
         if (receiverOfUnderlying != address(this)) {
-            if (timeLockParams.releaseTime != 0) {
-                ITimeLock timeLock = POOL.TIME_LOCK();
-                uint256[] memory amounts = new uint256[](1);
-                amounts[0] = amount;
-
-                timeLock.createAgreement(
-                    DataTypes.AssetType.ERC20,
-                    timeLockParams.actionType,
-                    _underlyingAsset,
-                    amounts,
-                    receiverOfUnderlying,
-                    timeLockParams.releaseTime
-                );
-                receiverOfUnderlying = address(timeLock);
-            }
-            IERC20(_underlyingAsset).safeTransfer(receiverOfUnderlying, amount);
+            _sendToUserOrTimeLock(
+                timeLockParams,
+                POOL.TIME_LOCK(),
+                _underlyingAsset,
+                amount,
+                receiverOfUnderlying
+            );
         }
+    }
+
+    function swapAndBurnFrom(
+        address from,
+        address receiverOfUnderlying,
+        uint256 index,
+        DataTypes.TimeLockParams calldata timeLockParams,
+        DataTypes.SwapAdapter calldata swapAdapter,
+        bytes calldata swapPayload,
+        DataTypes.SwapInfo calldata swapInfo
+    ) external virtual override onlyPool returns (uint256 amount) {
+        require(
+            receiverOfUnderlying != address(this),
+            Errors.INVALID_RECIPIENT
+        );
+        amount = swapAndTransferUnderlyingTo(
+            receiverOfUnderlying,
+            timeLockParams,
+            swapAdapter,
+            swapPayload,
+            swapInfo
+        );
+        _burnScaled(
+            from,
+            receiverOfUnderlying,
+            swapInfo.exactInput ? swapInfo.maxAmountIn : amount,
+            index
+        );
     }
 
     /// @inheritdoc IPToken
@@ -219,31 +242,55 @@ contract PToken is
         address target,
         uint256 amount,
         DataTypes.TimeLockParams calldata timeLockParams
-    ) external virtual override onlyPool {
-        if (timeLockParams.releaseTime != 0) {
-            ITimeLock timeLock = POOL.TIME_LOCK();
-            uint256[] memory amounts = new uint256[](1);
-            amounts[0] = amount;
-
-            timeLock.createAgreement(
-                DataTypes.AssetType.ERC20,
-                timeLockParams.actionType,
-                _underlyingAsset,
-                amounts,
-                target,
-                timeLockParams.releaseTime
-            );
-            target = address(timeLock);
-        }
-        IERC20(_underlyingAsset).safeTransfer(target, amount);
+    ) public virtual override onlyPool {
+        _sendToUserOrTimeLock(
+            timeLockParams,
+            POOL.TIME_LOCK(),
+            _underlyingAsset,
+            amount,
+            target
+        );
     }
 
     /// @inheritdoc IPToken
-    function handleRepayment(
-        address user,
-        uint256 amount
-    ) external virtual override onlyPool {
-        // Intentionally left blank
+    function swapAndTransferUnderlyingTo(
+        address target,
+        DataTypes.TimeLockParams calldata timeLockParams,
+        DataTypes.SwapAdapter calldata swapAdapter,
+        bytes calldata swapPayload,
+        DataTypes.SwapInfo calldata swapInfo
+    ) public virtual override onlyPool returns (uint256 amount) {
+        IERC20(swapInfo.srcToken).safeApprove(
+            swapAdapter.router,
+            swapInfo.maxAmountIn
+        );
+
+        bytes memory returndata = Address.functionDelegateCall(
+            swapAdapter.adapter,
+            abi.encodeWithSelector(
+                ISwapAdapter.swap.selector,
+                swapAdapter.router,
+                swapPayload,
+                swapInfo.exactInput
+            )
+        );
+        amount = abi.decode(returndata, (uint256));
+
+        uint256 amountOut = swapInfo.exactInput
+            ? amount
+            : swapInfo.minAmountOut;
+
+        require(amountOut > 0, Errors.CALL_SWAP_FAILED);
+
+        _sendToUserOrTimeLock(
+            timeLockParams,
+            POOL.TIME_LOCK(),
+            swapInfo.dstToken,
+            amountOut,
+            target
+        );
+
+        IERC20(swapInfo.srcToken).safeApprove(swapAdapter.router, 0);
     }
 
     /// @inheritdoc IPToken
@@ -379,6 +426,31 @@ contract PToken is
         returns (XTokenType)
     {
         return XTokenType.PToken;
+    }
+
+    function _sendToUserOrTimeLock(
+        DataTypes.TimeLockParams calldata timeLockParams,
+        ITimeLock timeLock,
+        address asset,
+        uint256 amount,
+        address target
+    ) internal {
+        if (timeLockParams.releaseTime != 0) {
+            uint256[] memory amounts = new uint256[](1);
+            amounts[0] = amount;
+
+            timeLock.createAgreement(
+                DataTypes.AssetType.ERC20,
+                timeLockParams.actionType,
+                asset,
+                amounts,
+                target,
+                timeLockParams.releaseTime
+            );
+
+            target = address(timeLock);
+        }
+        IERC20(asset).safeTransfer(target, amount);
     }
 
     function claimUnderlying(

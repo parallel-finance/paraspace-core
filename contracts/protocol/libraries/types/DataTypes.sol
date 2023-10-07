@@ -170,6 +170,8 @@ library DataTypes {
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;
+        SwapAdapter swapAdapter;
+        bytes swapPayload;
     }
 
     struct ExecuteRepayParams {
@@ -194,6 +196,7 @@ library DataTypes {
         address to;
         uint256 reservesCount;
         address oracle;
+        bool timeLock;
     }
 
     struct ExecuteDecreaseUniswapV3LiquidityParams {
@@ -247,6 +250,14 @@ library DataTypes {
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;
+    }
+
+    struct ValidateSwapParams {
+        SwapAdapter swapAdapter;
+        uint256 amount;
+        address srcToken;
+        address dstToken;
+        address dstReceiver;
     }
 
     struct ValidateLiquidateERC20Params {
@@ -324,6 +335,18 @@ library DataTypes {
         bytes32 s;
     }
 
+    struct ExecuteSwapParams {
+        address srcAsset;
+        address dstAsset;
+        uint256 amount;
+        address user;
+        uint256 reservesCount;
+        address oracle;
+        address priceOracleSentinel;
+        SwapAdapter swapAdapter;
+        bytes swapPayload;
+    }
+
     struct ExecuteMarketplaceParams {
         bytes32 marketplaceId;
         bytes payload;
@@ -332,10 +355,11 @@ library DataTypes {
         DataTypes.Marketplace marketplace;
         OrderInfo orderInfo;
         address weth;
-        uint16 referralCode;
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;
+        SwapAdapter swapAdapter;
+        bytes swapPayload;
     }
 
     struct OrderInfo {
@@ -344,12 +368,29 @@ library DataTypes {
         bytes id;
         OfferItem[] offer;
         ConsiderationItem[] consideration;
+        bool isSeaport;
+    }
+
+    struct SwapInfo {
+        address srcToken;
+        address dstToken;
+        address srcReceiver;
+        address dstReceiver;
+        uint256 maxAmountIn;
+        uint256 minAmountOut;
+        bool exactInput;
     }
 
     struct Marketplace {
         address marketplace;
         address adapter;
         address operator;
+        bool paused;
+    }
+
+    struct SwapAdapter {
+        address adapter;
+        address router;
         bool paused;
     }
 
@@ -406,6 +447,8 @@ library DataTypes {
         uint16 _apeCompoundFee;
         // Map of user's ape compound strategies
         mapping(address => ApeCompoundStrategy) _apeCompoundStrategies;
+        // Map of swap adapters
+        mapping(bytes32 => DataTypes.SwapAdapter) _swapAdapters;
     }
 
     struct ReserveConfigData {

@@ -82,6 +82,7 @@ import {
   NTokenOtherdeed__factory,
   TimeLock__factory,
   P2PPairStaking__factory,
+  ISwapRouter__factory,
   NFTFloorOracle__factory,
 } from "../types";
 import {
@@ -1074,6 +1075,7 @@ export const decodeInputData = (data: string) => {
     ...NTokenOtherdeed__factory.abi,
     ...TimeLock__factory.abi,
     ...P2PPairStaking__factory.abi,
+    ...ISwapRouter__factory.abi,
     ...NFTFloorOracle__factory.abi,
   ];
 

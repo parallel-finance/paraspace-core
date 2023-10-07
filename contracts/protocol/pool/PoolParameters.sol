@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 import {ParaVersionedInitializable} from "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
@@ -267,6 +267,29 @@ contract PoolParameters is
     ) external view returns (DataTypes.ApeCompoundStrategy memory strategy) {
         DataTypes.PoolStorage storage ps = poolStorage();
         strategy = ps._apeCompoundStrategies[user];
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setSwapAdapter(
+        bytes32 swapAdapterId,
+        DataTypes.SwapAdapter calldata adapter
+    ) external {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        ps._swapAdapters[swapAdapterId] = adapter;
+        emit SwapAdapterUpdated(
+            swapAdapterId,
+            adapter.adapter,
+            adapter.router,
+            adapter.paused
+        );
+    }
+
+    /// @inheritdoc IPoolParameters
+    function getSwapAdapter(
+        bytes32 swapAdapterId
+    ) external view returns (DataTypes.SwapAdapter memory adapter) {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        adapter = ps._swapAdapters[swapAdapterId];
     }
 
     /// @inheritdoc IPoolParameters

@@ -14,6 +14,7 @@ import {DataTypes} from "../types/DataTypes.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {GenericLogic} from "./GenericLogic.sol";
+import {ISwapAdapter} from "../../../interfaces/ISwapAdapter.sol";
 
 /**
  * @title BorrowLogic library
@@ -112,11 +113,34 @@ library BorrowLogic {
                 );
             timeLockParams.actionType = DataTypes.TimeLockActionType.BORROW;
 
-            IPToken(reserveCache.xTokenAddress).transferUnderlyingTo(
-                params.user,
-                params.amount,
-                timeLockParams
-            );
+            if (params.swapAdapter.router == address(0)) {
+                IPToken(reserveCache.xTokenAddress).transferUnderlyingTo(
+                    params.user,
+                    params.amount,
+                    timeLockParams
+                );
+            } else {
+                DataTypes.SwapInfo memory swapInfo = ISwapAdapter(
+                    params.swapAdapter.adapter
+                ).getSwapInfo(params.swapPayload, true);
+                ValidationLogic.validateSwap(
+                    swapInfo,
+                    DataTypes.ValidateSwapParams({
+                        swapAdapter: params.swapAdapter,
+                        amount: params.amount,
+                        srcToken: params.asset,
+                        dstToken: address(0),
+                        dstReceiver: reserveCache.xTokenAddress
+                    })
+                );
+                IPToken(reserveCache.xTokenAddress).swapAndTransferUnderlyingTo(
+                    params.user,
+                    timeLockParams,
+                    params.swapAdapter,
+                    params.swapPayload,
+                    swapInfo
+                );
+            }
         }
 
         emit Borrow(
@@ -207,10 +231,6 @@ library BorrowLogic {
             IERC20(params.asset).safeTransferFrom(
                 params.payer,
                 reserveCache.xTokenAddress,
-                paybackAmount
-            );
-            IPToken(reserveCache.xTokenAddress).handleRepayment(
-                params.payer,
                 paybackAmount
             );
         }

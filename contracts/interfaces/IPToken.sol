@@ -51,6 +51,27 @@ interface IPToken is
     ) external;
 
     /**
+     * @notice Swap some tokens from another address, and then burn them
+     * @param from The address to swap the tokens from
+     * @param receiverOfUnderlying The address that will receive the underlying tokens after redemption
+     * @param index The index of the option that is being exercised
+     * @param timeLockParams The timelock parameters that determine when the tokens will be redeemed
+     * @param swapAdapter The address of the adapter contract that should be used for the swap
+     * @param swapPayload The payload data to pass to the swap adapter contract
+     * @param swapInfo The swap information that includes the details of the expected token swap
+     * @return The number of tokens that have been burned
+     */
+    function swapAndBurnFrom(
+        address from,
+        address receiverOfUnderlying,
+        uint256 index,
+        DataTypes.TimeLockParams calldata timeLockParams,
+        DataTypes.SwapAdapter calldata swapAdapter,
+        bytes calldata swapPayload,
+        DataTypes.SwapInfo calldata swapInfo
+    ) external returns (uint256);
+
+    /**
      * @notice Mints xTokens to the reserve treasury
      * @param amount The amount of tokens getting minted
      * @param index The next liquidity index of the reserve
@@ -74,6 +95,7 @@ interface IPToken is
      * @dev Used by the Pool to transfer assets in borrow(), withdraw() and flashLoan()
      * @param user The recipient of the underlying
      * @param amount The amount getting transferred
+     * @param timeLockParams The timelock parameters determined by timelock strategy
      **/
     function transferUnderlyingTo(
         address user,
@@ -82,14 +104,21 @@ interface IPToken is
     ) external;
 
     /**
-     * @notice Handles the underlying received by the xToken after the transfer has been completed.
-     * @dev The default implementation is empty as with standard ERC20 tokens, nothing needs to be done after the
-     * transfer is concluded. However in the future there may be xTokens that allow for example to stake the underlying
-     * to receive LM rewards. In that case, `handleRepayment()` would perform the staking of the underlying asset.
-     * @param user The user executing the repayment
-     * @param amount The amount getting repaid
+     * @notice Swap the underlying asset to `target`.
+     * @dev Used by the Pool to swap assets in borrow(), buyWithCredit() and acceptBidWithCredit()
+     * @param user The recipient of the swapped assets
+     * @param timeLockParams The timelock parameters determined by timelock strategy
+     * @param swapAdapter The swap adapter used for swapping. By default it'll be UniswapV3SwapAdapter
+     * @param swapPayload The swap payload
+     * @param swapInfo the swap info used for providing context information
      **/
-    function handleRepayment(address user, uint256 amount) external;
+    function swapAndTransferUnderlyingTo(
+        address user,
+        DataTypes.TimeLockParams calldata timeLockParams,
+        DataTypes.SwapAdapter calldata swapAdapter,
+        bytes calldata swapPayload,
+        DataTypes.SwapInfo calldata swapInfo
+    ) external returns (uint256 amount);
 
     /**
      * @notice Allow passing a signed message to approve spending

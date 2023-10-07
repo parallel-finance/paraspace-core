@@ -133,6 +133,9 @@ library Errors {
     string public constant CALLER_NOT_OPERATOR = "138"; // The caller of the function is not operator
     string public constant INVALID_FEE_VALUE = "139"; // invalid fee rate value
     string public constant TOKEN_NOT_ALLOW_RESCUE = "140"; // token is not allow rescue
+    string public constant CALL_SWAP_FAILED = "141"; //call swap failed.
+    string public constant INVALID_SWAP_PAYLOAD = "142"; //invalid swap payload.
+    string public constant SWAP_ADAPTER_PAUSED = "143"; //swap adapter paused.
 
     string public constant INVALID_PARAMETER = "170"; //invalid parameter
 }

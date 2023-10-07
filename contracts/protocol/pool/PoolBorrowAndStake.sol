@@ -263,7 +263,13 @@ contract PoolBorrowAndStake is
                     reservesCount: ps._reservesCount,
                     oracle: ADDRESSES_PROVIDER.getPriceOracle(),
                     priceOracleSentinel: ADDRESSES_PROVIDER
-                        .getPriceOracleSentinel()
+                        .getPriceOracleSentinel(),
+                    swapAdapter: DataTypes.SwapAdapter(
+                        address(0),
+                        address(0),
+                        false
+                    ),
+                    swapPayload: bytes("")
                 })
             );
         }

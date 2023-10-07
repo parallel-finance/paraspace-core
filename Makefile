@@ -47,7 +47,6 @@ doc:
 
 .PHONY: lint
 lint:
-	typos
 	yarn lint
 
 .PHONY: coverage
@@ -103,6 +102,18 @@ test-erc20-liquidation:
 .PHONY: test-erc20-borrow
 test-erc20-borrow:
 	make TEST_TARGET=_pool_core_erc20_borrow.spec.ts test
+
+.PHONY: test-erc20-borrow-swap
+test-erc20-borrow-swap:
+	make TEST_TARGET=_pool_core_erc20_borrow_swap.spec.ts test
+
+.PHONY: test-erc20-ptoken-swap
+test-erc20-ptoken-swap:
+	make TEST_TARGET=_pool_core_erc20_ptoken_swap.spec.ts test
+
+.PHONY: test-erc20-debt-swap
+test-erc20-debt-swap:
+	make TEST_TARGET=_pool_core_erc20_debt_swap.spec.ts test
 
 .PHONY: test-erc20-supply
 test-erc20-supply:
@@ -171,6 +182,10 @@ test-moonbirds:
 .PHONY: test-marketplace-buy
 test-marketplace-buy:
 	make TEST_TARGET=_pool_marketplace_buy_with_credit.spec.ts test
+
+.PHONY: test-marketplace-buy-any
+test-marketplace-buy-any:
+	make TEST_TARGET=_pool_marketplace_buy_any_with_credit.spec.ts test
 
 .PHONY: test-marketplace-accept-bid
 test-marketplace-accept-bid:

@@ -538,9 +538,6 @@ library LiquidationLogic {
         ExecuteLiquidateLocalVars memory vars
     ) internal {
         _depositETH(params, vars);
-        // Handle payment
-        IPToken(vars.liquidationAssetReserveCache.xTokenAddress)
-            .handleRepayment(params.liquidator, vars.actualLiquidationAmount);
         // Burn borrower's debt token
         vars
             .liquidationAssetReserveCache

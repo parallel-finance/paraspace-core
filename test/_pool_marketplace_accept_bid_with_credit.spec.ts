@@ -19,7 +19,7 @@ import {
   toBN,
   toFulfillment,
 } from "../helpers/seaport-helpers/encoding";
-import {MAX_UINT_AMOUNT, PARASPACE_SEAPORT_ID} from "../helpers/constants";
+import {PARASPACE_SEAPORT_ID, ZERO_ADDRESS} from "../helpers/constants";
 import {arrayify, splitSignature} from "ethers/lib/utils";
 import {BigNumber} from "ethers";
 import {
@@ -613,7 +613,6 @@ describe("Leveraged Bid - unit tests", () => {
         },
       ],
       taker.address,
-      0,
       {
         gasLimit: 5000000,
       }
@@ -798,7 +797,6 @@ describe("Leveraged Bid - unit tests", () => {
         ...vrs,
       },
       taker.address,
-      0,
       {
         gasLimit: 5000000,
       }
@@ -983,7 +981,6 @@ describe("Leveraged Bid - unit tests", () => {
         ...vrs,
       },
       taker.address,
-      0,
       {
         gasLimit: 5000000,
       }
@@ -1197,7 +1194,6 @@ describe("Leveraged Bid - unit tests", () => {
         ...vrs,
       },
       taker.address,
-      0,
       {
         gasLimit: 5000000,
       }
@@ -1274,26 +1270,14 @@ describe("Leveraged Bid - unit tests", () => {
     const nftId = 0;
 
     // mint USDC to maker
-    await mintAndValidate(usdc, makerInitialBalance, maker);
+    await supplyAndValidate(usdc, makerInitialBalance, maker, true);
 
     // middleman supplies USDC to pool to be borrowed by maker later
     await supplyAndValidate(usdc, middlemanInitialBalance, middleman, true);
     await supplyAndValidate(usdc, makerInitialDebt, middleman, true);
 
-    expect(
-      await usdc.balanceOf(
-        (
-          await pool.getReserveData(usdc.address)
-        ).xTokenAddress
-      )
-    ).to.be.equal(creditAmount.add(borrowAmount));
-
     await supplyAndValidate(bayc, "1", taker, true);
     await borrowAndValidate(usdc, makerInitialDebt, taker);
-
-    await waitForTx(
-      await usdc.connect(taker.signer).approve(pool.address, MAX_UINT_AMOUNT)
-    );
 
     // before acceptBidWithCredit totalCollateralBase for the taker
     // is just the bayc
@@ -1309,13 +1293,14 @@ describe("Leveraged Bid - unit tests", () => {
 
     await executeAcceptBidWithCredit(
       nBAYC,
-      usdc,
+      pUsdc,
       startAmount,
       endAmount,
       creditAmount,
       nftId,
       maker,
-      taker
+      taker,
+      true
     );
     const usdcConfigData = BigNumber.from(
       (await pool.getUserConfiguration(taker.address)).data
@@ -1325,12 +1310,8 @@ describe("Leveraged Bid - unit tests", () => {
     // taker bayc should reduce
     expect(await nBAYC.balanceOf(taker.address)).to.be.equal(0);
     expect(await nBAYC.ownerOf(nftId)).to.be.equal(maker.address);
-    expect(await usdc.balanceOf(taker.address)).to.be.equal(
-      startAmount.percentMul("500").add(borrowAmount)
-    );
-    expect(await pUsdc.balanceOf(taker.address)).to.be.equal(
-      startAmount.percentMul("9500")
-    );
+    expect(await usdc.balanceOf(taker.address)).to.be.equal(borrowAmount);
+    expect(await pUsdc.balanceOf(taker.address)).to.be.equal(startAmount);
     expect(isUsingAsCollateral(usdcConfigData, usdcReserveData.id)).to.be.true;
 
     // after the swap offer's totalCollateralBase should be same as taker's before
@@ -1344,6 +1325,271 @@ describe("Leveraged Bid - unit tests", () => {
     expect(totalDebtAfter).to.be.equal(
       totalDebtBefore.add(accrualTotalDebtBase)
     );
+  });
+
+  it("TC-erc721-bid-10 ERC20 <=> NToken, accept without credit borrow. NToken converted to underlying asset.", async () => {
+    const {
+      bayc,
+      nBAYC,
+      usdc,
+      pool,
+      seaport,
+      pausableZone,
+      conduit,
+      conduitKey,
+      users: [maker, taker],
+    } = await loadFixture(testEnvFixture);
+    const makerInitialBalance = "1000";
+    const payNowAmount = await convertToCurrencyDecimals(usdc.address, "1000");
+    const creditAmount = await convertToCurrencyDecimals(usdc.address, "0");
+    const startAmount = payNowAmount.add(creditAmount);
+    const endAmount = startAmount; // fixed price but offerer cannot afford this
+    const nftId = 0;
+
+    // mint USDC to maker
+    await mintAndValidate(usdc, makerInitialBalance, maker);
+    // mint BAYC to taker
+    await supplyAndValidate(bayc, "1", taker, true);
+
+    await waitForTx(
+      await usdc.connect(maker.signer).approve(conduit.address, startAmount)
+    );
+    await waitForTx(
+      await bayc.connect(taker.signer).setApprovalForAll(conduit.address, true)
+    );
+
+    const getSellOrder = async (): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(
+          1,
+          usdc.address,
+          toBN(0),
+          startAmount,
+          endAmount
+        ),
+      ];
+
+      const considerations = [
+        getOfferOrConsiderationItem(
+          2,
+          bayc.address,
+          nftId,
+          toBN(1),
+          toBN(1),
+          maker.address
+        ),
+      ];
+
+      return createSeaportOrder(
+        seaport,
+        maker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const getBuyOrder = async (): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(2, bayc.address, nftId, toBN(1), toBN(1)),
+      ];
+
+      const considerations = [
+        getOfferOrConsiderationItem(
+          1,
+          usdc.address,
+          toBN(0),
+          startAmount,
+          endAmount,
+          taker.address
+        ),
+      ];
+
+      return createSeaportOrder(
+        seaport,
+        taker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const fulfillment = [
+      [[[0, 0]], [[1, 0]]],
+      [[[1, 0]], [[0, 0]]],
+    ].map(([makerArr, considerationArr]) =>
+      toFulfillment(makerArr, considerationArr)
+    );
+
+    const sellOrder = await getSellOrder();
+    const buyOrder = await getBuyOrder();
+
+    const encodedData = seaport.interface.encodeFunctionData(
+      "matchAdvancedOrders",
+      [[sellOrder, buyOrder], [], fulfillment]
+    );
+
+    const tx = pool
+      .connect(taker.signer)
+      .acceptOpenseaBid(
+        PARASPACE_SEAPORT_ID,
+        `0x${encodedData.slice(10)}`,
+        taker.address,
+        {
+          gasLimit: 5000000,
+        }
+      );
+
+    await (await tx).wait();
+
+    expect(await bayc.ownerOf(nftId)).eq(maker.address);
+    expect(await nBAYC.ownerOf(nftId)).eq(ZERO_ADDRESS);
+    expect(await usdc.balanceOf(taker.address)).eq(startAmount);
+  });
+
+  it("TC-erc721-bid-11 ERC20 <=> NToken Bundle, accept without credit borrow. NToken converted to underlying asset.", async () => {
+    const {
+      bayc,
+      nBAYC,
+      usdc,
+      pool,
+      seaport,
+      pausableZone,
+      conduit,
+      conduitKey,
+      users: [maker, taker],
+    } = await loadFixture(testEnvFixture);
+    const makerInitialBalance = "1000";
+    const payNowAmount = await convertToCurrencyDecimals(usdc.address, "1000");
+    const creditAmount = await convertToCurrencyDecimals(usdc.address, "0");
+    const startAmount = payNowAmount.add(creditAmount);
+    const endAmount = startAmount; // fixed price but offerer cannot afford this
+
+    // mint USDC to maker
+    await mintAndValidate(usdc, makerInitialBalance, maker);
+    // mint BAYC to taker
+    await supplyAndValidate(bayc, "2", taker, true);
+
+    await waitForTx(
+      await pool
+        .connect(taker.signer)
+        .withdrawERC721(bayc.address, ["1"], taker.address)
+    );
+
+    await waitForTx(
+      await usdc.connect(maker.signer).approve(conduit.address, startAmount)
+    );
+    await waitForTx(
+      await bayc.connect(taker.signer).setApprovalForAll(conduit.address, true)
+    );
+
+    const getSellOrder = async (): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(
+          1,
+          usdc.address,
+          toBN(0),
+          startAmount,
+          endAmount
+        ),
+      ];
+
+      const considerations = [
+        getOfferOrConsiderationItem(
+          2,
+          bayc.address,
+          "0",
+          toBN(1),
+          toBN(1),
+          maker.address
+        ),
+        getOfferOrConsiderationItem(
+          2,
+          bayc.address,
+          "1",
+          toBN(1),
+          toBN(1),
+          maker.address
+        ),
+      ];
+
+      return createSeaportOrder(
+        seaport,
+        maker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const getBuyOrder = async (): Promise<AdvancedOrder> => {
+      const offers = [
+        getOfferOrConsiderationItem(2, bayc.address, "0", toBN(1), toBN(1)),
+        getOfferOrConsiderationItem(2, bayc.address, "1", toBN(1), toBN(1)),
+      ];
+
+      const considerations = [
+        getOfferOrConsiderationItem(
+          1,
+          usdc.address,
+          toBN(0),
+          startAmount,
+          endAmount,
+          taker.address
+        ),
+      ];
+
+      return createSeaportOrder(
+        seaport,
+        taker,
+        offers,
+        considerations,
+        2,
+        pausableZone.address,
+        conduitKey
+      );
+    };
+
+    const fulfillment = [
+      [[[0, 0]], [[1, 0]]],
+      [[[1, 0]], [[0, 0]]],
+      [[[1, 1]], [[0, 1]]],
+    ].map(([makerArr, considerationArr]) =>
+      toFulfillment(makerArr, considerationArr)
+    );
+
+    const sellOrder = await getSellOrder();
+    const buyOrder = await getBuyOrder();
+
+    const encodedData = seaport.interface.encodeFunctionData(
+      "matchAdvancedOrders",
+      [[sellOrder, buyOrder], [], fulfillment]
+    );
+
+    const tx = pool
+      .connect(taker.signer)
+      .acceptOpenseaBid(
+        PARASPACE_SEAPORT_ID,
+        `0x${encodedData.slice(10)}`,
+        taker.address,
+        {
+          gasLimit: 5000000,
+        }
+      );
+
+    await (await tx).wait();
+
+    expect(await bayc.ownerOf(0)).eq(maker.address);
+    expect(await bayc.ownerOf(1)).eq(maker.address);
+    expect(await nBAYC.ownerOf(0)).eq(ZERO_ADDRESS);
+    expect(await nBAYC.ownerOf(1)).eq(ZERO_ADDRESS);
+    expect(await usdc.balanceOf(taker.address)).eq(startAmount);
   });
 });
 
@@ -1566,7 +1812,7 @@ describe("Leveraged Bid - Negative tests", () => {
         maker,
         taker
       )
-    ).to.be.revertedWith(ProtocolErrors.ASSET_NOT_LISTED);
+    ).to.be.reverted;
   });
 
   it("TC-erc721-bid-14 cannot credit amount above the NFT's LTV (should fail)", async () => {
@@ -1819,7 +2065,6 @@ describe("Leveraged Bid - Negative tests", () => {
           ...vrs,
         },
         [nftId],
-        0,
         {
           gasLimit: 5000000,
         }

@@ -29,7 +29,7 @@ contract X2Y2Adapter is IMarketplace {
 
     function getAskOrderInfo(
         bytes memory params
-    ) external pure override returns (DataTypes.OrderInfo memory orderInfo) {
+    ) external view override returns (DataTypes.OrderInfo memory orderInfo) {
         IX2Y2.RunInput memory runInput = abi.decode(params, (IX2Y2.RunInput));
         require(runInput.details.length == 1, Errors.INVALID_MARKETPLACE_ORDER);
 
@@ -50,6 +50,8 @@ contract X2Y2Adapter is IMarketplace {
         ERC721Pair[] memory nfts = abi.decode(item.data, (ERC721Pair[]));
 
         require(nfts.length == 1, Errors.INVALID_MARKETPLACE_ORDER);
+
+        orderInfo.maker = order.user;
 
         OfferItem[] memory offer = new OfferItem[](1);
         offer[0] = OfferItem(
