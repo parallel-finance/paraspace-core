@@ -74,7 +74,7 @@ interface IUiPoolDataProvider {
         uint8 networkBaseTokenPriceDecimals;
     }
 
-    struct UniswapV3LpTokenInfo {
+    struct LiquidityTokenInfo {
         address token0;
         address token1;
         uint24 feeRate;
@@ -143,11 +143,11 @@ interface IUiPoolDataProvider {
         uint256[][] memory tokenIds
     ) external view returns (DataTypes.AuctionData[][] memory);
 
-    function getUniswapV3LpTokenData(
+    function getLiquidityTokenData(
         IPoolAddressesProvider provider,
         address lpTokenAddress,
         uint256 tokenId
-    ) external view returns (UniswapV3LpTokenInfo memory);
+    ) external view returns (LiquidityTokenInfo memory);
 
     function getUserInLiquidationNFTData(
         IPoolAddressesProvider provider,

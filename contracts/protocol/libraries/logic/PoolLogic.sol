@@ -229,11 +229,14 @@ library PoolLogic {
             .getParams();
         XTokenType tokenType = IXTokenType(assetReserve.xTokenAddress)
             .getXTokenType();
-        if (tokenType == XTokenType.NTokenUniswapV3) {
+        if (
+            tokenType == XTokenType.NTokenUniswapV3 ||
+            tokenType == XTokenType.NTokenIZUMILp
+        ) {
             return
-                GenericLogic.getLtvAndLTForUniswapV3(
+                GenericLogic.getLtvAndLTForLiquidityNFT(
                     ps._reserves,
-                    asset,
+                    assetReserve.xTokenAddress,
                     tokenId,
                     collectionLtv,
                     collectionLT

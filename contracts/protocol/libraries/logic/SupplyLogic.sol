@@ -5,7 +5,6 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
-import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {INTokenApeStaking} from "../../../interfaces/INTokenApeStaking.sol";
 import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
@@ -19,12 +18,13 @@ import {PercentageMath} from "../math/PercentageMath.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
 import {XTokenType} from "../../../interfaces/IXTokenType.sol";
-import {INTokenUniswapV3} from "../../../interfaces/INTokenUniswapV3.sol";
+import {INTokenLiquidity} from "../../../interfaces/INTokenLiquidity.sol";
 import {INTokenStakefish} from "../../../interfaces/INTokenStakefish.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {IStakefishNFTManager} from "../../../interfaces/IStakefishNFTManager.sol";
 import {IStakefishValidator} from "../../../interfaces/IStakefishValidator.sol";
 import {Helpers} from "../helpers/Helpers.sol";
+import {IPriceOracleGetter} from "../../../interfaces/IPriceOracleGetter.sol";
 
 /**
  * @title SupplyLogic library
@@ -193,11 +193,14 @@ library SupplyLogic {
 
         XTokenType tokenType = INToken(reserveCache.xTokenAddress)
             .getXTokenType();
-        if (tokenType == XTokenType.NTokenUniswapV3) {
+        if (
+            tokenType == XTokenType.NTokenUniswapV3 ||
+            tokenType == XTokenType.NTokenIZUMILp
+        ) {
             for (uint256 index = 0; index < params.tokenData.length; index++) {
-                ValidationLogic.validateForUniswapV3(
+                ValidationLogic.validateForLiquidityNFT(
                     reservesData,
-                    params.asset,
+                    reserveCache.xTokenAddress,
                     params.tokenData[index].tokenId,
                     true,
                     true,
@@ -398,7 +401,6 @@ library SupplyLogic {
         ValidationLogic.validateWithdrawERC721(
             reservesData,
             reserveCache,
-            params.asset,
             params.tokenIds
         );
         uint256 amountToWithdraw = params.tokenIds.length;
@@ -445,13 +447,30 @@ library SupplyLogic {
         DataTypes.ReserveData storage reserve,
         DataTypes.ExecuteWithdrawERC721Params memory params
     ) internal returns (uint64, uint64) {
+        uint256 amount = 0;
+        INToken nToken = INToken(xTokenAddress);
+        XTokenType tokenType = nToken.getXTokenType();
+        if (
+            tokenType == XTokenType.NTokenUniswapV3 ||
+            tokenType == XTokenType.NTokenIZUMILp
+        ) {
+            uint256 tokenIdLength = params.tokenIds.length;
+            for (uint256 index = 0; index < tokenIdLength; index++) {
+                amount += IPriceOracleGetter(params.oracle).getTokenPrice(
+                    params.asset,
+                    params.tokenIds[index]
+                );
+            }
+        } else {
+            amount = params.tokenIds.length;
+        }
         DataTypes.TimeLockParams memory timeLockParams = GenericLogic
             .calculateTimeLockParams(
                 reserve,
                 DataTypes.TimeLockFactorParams({
                     assetType: DataTypes.AssetType.ERC721,
                     asset: params.asset,
-                    amount: params.tokenIds.length
+                    amount: amount
                 })
             );
         timeLockParams.actionType = DataTypes.TimeLockActionType.WITHDRAW;
@@ -463,59 +482,5 @@ library SupplyLogic {
                 params.tokenIds,
                 timeLockParams
             );
-    }
-
-    function executeDecreaseUniswapV3Liquidity(
-        mapping(address => DataTypes.ReserveData) storage reservesData,
-        mapping(uint256 => address) storage reservesList,
-        DataTypes.UserConfigurationMap storage userConfig,
-        DataTypes.ExecuteDecreaseUniswapV3LiquidityParams memory params
-    ) external {
-        DataTypes.ReserveData storage reserve = reservesData[params.asset];
-        DataTypes.ReserveCache memory reserveCache = reserve.cache();
-
-        //currently don't need to update state for erc721
-        //reserve.updateState(reserveCache);
-        INToken nToken = INToken(reserveCache.xTokenAddress);
-        require(
-            nToken.getXTokenType() == XTokenType.NTokenUniswapV3,
-            Errors.XTOKEN_TYPE_NOT_ALLOWED
-        );
-
-        uint256[] memory tokenIds = new uint256[](1);
-        tokenIds[0] = params.tokenId;
-        ValidationLogic.validateWithdrawERC721(
-            reservesData,
-            reserveCache,
-            params.asset,
-            tokenIds
-        );
-
-        INTokenUniswapV3(reserveCache.xTokenAddress).decreaseUniswapV3Liquidity(
-            params.user,
-            params.tokenId,
-            params.liquidityDecrease,
-            params.amount0Min,
-            params.amount1Min,
-            params.receiveEthAsWeth
-        );
-
-        bool isUsedAsCollateral = ICollateralizableERC721(
-            reserveCache.xTokenAddress
-        ).isUsedAsCollateral(params.tokenId);
-        if (isUsedAsCollateral) {
-            if (userConfig.isBorrowingAny()) {
-                ValidationLogic.validateHFAndLtvERC721(
-                    reservesData,
-                    reservesList,
-                    userConfig,
-                    params.asset,
-                    tokenIds,
-                    params.user,
-                    params.reservesCount,
-                    params.oracle
-                );
-            }
-        }
     }
 }

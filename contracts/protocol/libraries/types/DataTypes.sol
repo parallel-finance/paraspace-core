@@ -170,6 +170,7 @@ library DataTypes {
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;
+        bool verifyCollateral;
     }
 
     struct ExecuteRepayParams {
@@ -196,7 +197,7 @@ library DataTypes {
         address oracle;
     }
 
-    struct ExecuteDecreaseUniswapV3LiquidityParams {
+    struct ExecuteDecreaseLiquidityParams {
         address user;
         address asset;
         uint256 tokenId;
@@ -204,8 +205,6 @@ library DataTypes {
         uint128 liquidityDecrease;
         uint256 amount0Min;
         uint256 amount1Min;
-        bool receiveEthAsWeth;
-        address oracle;
     }
 
     struct FinalizeTransferParams {
@@ -247,6 +246,7 @@ library DataTypes {
         uint256 reservesCount;
         address oracle;
         address priceOracleSentinel;
+        bool verifyCollateral;
     }
 
     struct ValidateLiquidateERC20Params {
@@ -457,5 +457,36 @@ library DataTypes {
         address priceOracle;
         address priceOracleSentinel;
         uint256 reservesCount;
+    }
+
+    struct DecreaseLiquidityParam {
+        bool decreaseLiquidity;
+        uint256 tokenId;
+        uint128 liquidityDecrease;
+        uint256 amount0Min;
+        uint256 amount1Min;
+        bool burnNFT;
+    }
+
+    struct MintParams {
+        bool mintNewToken;
+        uint24 fee;
+        int24 tickLower;
+        int24 tickUpper;
+        uint256 amount0Desired;
+        uint256 amount1Desired;
+        uint256 amount0Min;
+        uint256 amount1Min;
+        uint256 deadline;
+    }
+
+    struct AssetInfo {
+        address asset;
+        address token0;
+        address token1;
+        uint256 token0CashAmount;
+        uint256 token1CashAmount;
+        uint256 token0BorrowAmount;
+        uint256 token1BorrowAmount;
     }
 }

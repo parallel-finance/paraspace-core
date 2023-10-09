@@ -115,7 +115,6 @@ library SupplyExtendedLogic {
         ValidationLogic.validateTransferERC721(
             reservesData,
             reserve,
-            params.asset,
             params.tokenId
         );
 
@@ -235,7 +234,6 @@ library SupplyExtendedLogic {
         ValidationLogic.validateSetUseERC721AsCollateral(
             reservesData,
             reserveCache,
-            asset,
             tokenIds
         );
 
@@ -281,7 +279,6 @@ library SupplyExtendedLogic {
         ValidationLogic.validateSetUseERC721AsCollateral(
             reservesData,
             reserveCache,
-            asset,
             tokenIds
         );
 

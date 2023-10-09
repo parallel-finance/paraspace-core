@@ -342,6 +342,7 @@ export const eContractidToContractName = {
   NTokenImpl: "NToken",
   NTokenMoonBirdsImpl: "NTokenMoonBirds",
   NTokenUniswapV3Impl: "NTokenUniswapV3",
+  NTokenIZUMILpImpl: "NTokenIZUMILpImpl",
   NTokenBAYCImpl: "NTokenBAYC",
   NTokenMAYCImpl: "NTokenMAYC",
   NTokenBAKCImpl: "NTokenBAKC",

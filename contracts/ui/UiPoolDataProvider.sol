@@ -27,8 +27,8 @@ import {IEACAggregatorProxy} from "./interfaces/IEACAggregatorProxy.sol";
 import {IERC20DetailedBytes} from "./interfaces/IERC20DetailedBytes.sol";
 import {ProtocolDataProvider} from "../misc/ProtocolDataProvider.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
-import {IUniswapV3OracleWrapper} from "../interfaces/IUniswapV3OracleWrapper.sol";
-import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
+import {ILiquidityNFTOracleWrapper} from "../interfaces/ILiquidityNFTOracleWrapper.sol";
+import {LiquidityNFTPositionData} from "../interfaces/ILiquidityNFTPositionInfoProvider.sol";
 import {Helpers} from "../protocol/libraries/helpers/Helpers.sol";
 import {IStakefishValidator} from "../interfaces/IStakefishValidator.sol";
 import {INTokenStakefish} from "../interfaces/INTokenStakefish.sol";
@@ -321,14 +321,14 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         return (tokenData);
     }
 
-    function getUniswapV3LpTokenData(
+    function getLiquidityTokenData(
         IPoolAddressesProvider provider,
         address lpTokenAddress,
         uint256 tokenId
-    ) external view override returns (UniswapV3LpTokenInfo memory) {
-        UniswapV3LpTokenInfo memory lpTokenInfo;
+    ) external view override returns (LiquidityTokenInfo memory) {
+        LiquidityTokenInfo memory lpTokenInfo;
 
-        IUniswapV3OracleWrapper source;
+        ILiquidityNFTOracleWrapper source;
         //avoid stack too deep
         {
             IParaSpaceOracle oracle = IParaSpaceOracle(
@@ -338,7 +338,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             if (sourceAddress == address(0)) {
                 return lpTokenInfo;
             }
-            source = IUniswapV3OracleWrapper(sourceAddress);
+            source = ILiquidityNFTOracleWrapper(sourceAddress);
 
             IPool pool = IPool(provider.getPool());
             (
@@ -351,7 +351,7 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         try source.getTokenPrice(tokenId) returns (uint256 tokenPrice) {
             lpTokenInfo.tokenPrice = tokenPrice;
 
-            UinswapV3PositionData memory positionData = source
+            LiquidityNFTPositionData memory positionData = source
                 .getOnchainPositionData(tokenId);
             lpTokenInfo.token0 = positionData.token0;
             lpTokenInfo.token1 = positionData.token1;

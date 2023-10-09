@@ -15,16 +15,16 @@ import {NToken} from "./NToken.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {INonfungiblePositionManager} from "../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
 import {IWETH} from "../../misc/interfaces/IWETH.sol";
-import {XTokenType} from "../../interfaces/IXTokenType.sol";
-import {INTokenUniswapV3} from "../../interfaces/INTokenUniswapV3.sol";
 import {Helpers} from "../../protocol/libraries/helpers/Helpers.sol";
+import {NTokenLiquidity} from "./NTokenLiquidity.sol";
+import {XTokenType} from "../../interfaces/IXTokenType.sol";
 
 /**
  * @title UniswapV3 NToken
  *
  * @notice Implementation of the interest bearing token for the ParaSpace protocol
  */
-contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
+contract NTokenUniswapV3 is NTokenLiquidity {
     using SafeERC20 for IERC20;
 
     /**
@@ -34,125 +34,96 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
     constructor(
         IPool pool,
         address delegateRegistry
-    ) NToken(pool, true, delegateRegistry) {
-        _ERC721Data.balanceLimit = 30;
-    }
+    ) NTokenLiquidity(pool, delegateRegistry) {}
 
     function getXTokenType() external pure override returns (XTokenType) {
         return XTokenType.NTokenUniswapV3;
     }
 
-    /**
-     * @notice A function that decreases the current liquidity.
-     * @param tokenId The id of the erc721 token
-     * @param liquidityDecrease The amount of liquidity to remove of LP
-     * @param amount0Min The minimum amount to remove of token0
-     * @param amount1Min The minimum amount to remove of token1
-     * @param receiveEthAsWeth If convert weth to ETH
-     * @return amount0 The amount received back in token0
-     * @return amount1 The amount returned back in token1
-     */
-    function _decreaseLiquidity(
-        address user,
-        uint256 tokenId,
-        uint128 liquidityDecrease,
-        uint256 amount0Min,
-        uint256 amount1Min,
-        bool receiveEthAsWeth
-    ) internal returns (uint256 amount0, uint256 amount1) {
-        if (liquidityDecrease > 0) {
-            // amount0Min and amount1Min are price slippage checks
-            // if the amount received after burning is not greater than these minimums, transaction will fail
-            INonfungiblePositionManager.DecreaseLiquidityParams
-                memory params = INonfungiblePositionManager
-                    .DecreaseLiquidityParams({
-                        tokenId: tokenId,
-                        liquidity: liquidityDecrease,
-                        amount0Min: amount0Min,
-                        amount1Min: amount1Min,
-                        deadline: block.timestamp
-                    });
+    function _underlyingAsset(
+        address positionManager,
+        uint256 tokenId
+    ) internal view override returns (address token0, address token1) {
+        (, , token0, token1, , , , , , , , ) = INonfungiblePositionManager(
+            positionManager
+        ).positions(tokenId);
+    }
 
-            INonfungiblePositionManager(_ERC721Data.underlyingAsset)
-                .decreaseLiquidity(params);
-        }
-
-        (
-            ,
-            ,
-            address token0,
-            address token1,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-            ,
-
-        ) = INonfungiblePositionManager(_ERC721Data.underlyingAsset).positions(
-                tokenId
-            );
-
-        address weth = _addressesProvider.getWETH();
-        receiveEthAsWeth = (receiveEthAsWeth &&
-            (token0 == weth || token1 == weth));
-
+    function _collect(
+        address positionManager,
+        uint256 tokenId
+    ) internal override returns (uint256 amount0, uint256 amount1) {
         INonfungiblePositionManager.CollectParams
             memory collectParams = INonfungiblePositionManager.CollectParams({
                 tokenId: tokenId,
-                recipient: receiveEthAsWeth ? address(this) : user,
+                recipient: address(POOL),
                 amount0Max: type(uint128).max,
                 amount1Max: type(uint128).max
             });
 
-        (amount0, amount1) = INonfungiblePositionManager(
-            _ERC721Data.underlyingAsset
-        ).collect(collectParams);
-
-        if (receiveEthAsWeth) {
-            uint256 balanceWeth = IERC20(weth).balanceOf(address(this));
-            if (balanceWeth > 0) {
-                IWETH(weth).withdraw(balanceWeth);
-                Helpers.safeTransferETH(user, balanceWeth);
-            }
-
-            address pairToken = (token0 == weth) ? token1 : token0;
-            uint256 balanceToken = IERC20(pairToken).balanceOf(address(this));
-            if (balanceToken > 0) {
-                IERC20(pairToken).safeTransfer(user, balanceToken);
-            }
-        }
+        (amount0, amount1) = INonfungiblePositionManager(positionManager)
+            .collect(collectParams);
     }
 
-    /// @inheritdoc INTokenUniswapV3
-    function decreaseUniswapV3Liquidity(
-        address user,
+    function _increaseLiquidity(
+        address positionManager,
+        uint256 tokenId,
+        uint256 amountAdd0,
+        uint256 amountAdd1,
+        uint256 amount0Min,
+        uint256 amount1Min,
+        uint256 deadline
+    ) internal override returns (uint256 amount0, uint256 amount1) {
+        INonfungiblePositionManager.IncreaseLiquidityParams
+            memory params = INonfungiblePositionManager
+                .IncreaseLiquidityParams({
+                    tokenId: tokenId,
+                    amount0Desired: amountAdd0,
+                    amount1Desired: amountAdd1,
+                    amount0Min: amount0Min,
+                    amount1Min: amount1Min,
+                    deadline: deadline
+                });
+
+        (, amount0, amount1) = INonfungiblePositionManager(positionManager)
+            .increaseLiquidity{value: msg.value}(params);
+    }
+
+    function _liquidity(
+        address positionManager,
+        uint256 tokenId
+    ) internal view override returns (uint256) {
+        (, , , , , , , uint256 liquidity, , , , ) = INonfungiblePositionManager(
+            positionManager
+        ).positions(tokenId);
+        return liquidity;
+    }
+
+    function _burn(address positionManager, uint256 tokenId) internal override {
+        INonfungiblePositionManager(positionManager).burn(tokenId);
+    }
+
+    function _decreaseLiquidity(
+        address positionManager,
         uint256 tokenId,
         uint128 liquidityDecrease,
         uint256 amount0Min,
-        uint256 amount1Min,
-        bool receiveEthAsWeth
-    ) external onlyPool nonReentrant {
-        require(user == ownerOf(tokenId), Errors.NOT_THE_OWNER);
+        uint256 amount1Min
+    ) internal override {
+        INonfungiblePositionManager.DecreaseLiquidityParams
+            memory params = INonfungiblePositionManager
+                .DecreaseLiquidityParams({
+                    tokenId: tokenId,
+                    liquidity: liquidityDecrease,
+                    amount0Min: amount0Min,
+                    amount1Min: amount1Min,
+                    deadline: block.timestamp
+                });
 
-        // interact with Uniswap V3
-        _decreaseLiquidity(
-            user,
-            tokenId,
-            liquidityDecrease,
-            amount0Min,
-            amount1Min,
-            receiveEthAsWeth
-        );
+        INonfungiblePositionManager(positionManager).decreaseLiquidity(params);
     }
 
-    function setTraitsMultipliers(
-        uint256[] calldata,
-        uint256[] calldata
-    ) external override onlyPoolAdmin nonReentrant {
-        revert();
+    function _refundETH(address positionManager) internal override {
+        INonfungiblePositionManager(positionManager).refundETH();
     }
-
-    receive() external payable {}
 }

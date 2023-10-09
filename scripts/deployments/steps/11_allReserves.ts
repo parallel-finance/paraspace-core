@@ -89,6 +89,7 @@ export const step_11 = async (verify = false) => {
         xTokenImpl === eContractid.NTokenMAYCImpl ||
         xTokenImpl === eContractid.NTokenMoonBirdsImpl ||
         xTokenImpl === eContractid.NTokenUniswapV3Impl ||
+        xTokenImpl === eContractid.NTokenIZUMILpImpl ||
         xTokenImpl === eContractid.PTokenStETHImpl ||
         xTokenImpl === eContractid.PTokenStKSMImpl ||
         xTokenImpl === eContractid.PTokenATokenImpl ||

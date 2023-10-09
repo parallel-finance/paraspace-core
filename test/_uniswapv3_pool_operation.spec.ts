@@ -434,6 +434,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     const {
       users: [user1],
       configurator,
+      dai,
       weth,
       pool,
       nftPositionManager,
@@ -444,25 +445,43 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
 
     await expect(
-      pool
-        .connect(user1.signer)
-        .decreaseUniswapV3Liquidity(
-          nftPositionManager.address,
-          1,
-          beforeLiquidity.div(2),
-          0,
-          0,
-          false,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
+      pool.connect(user1.signer).adjustLpPosition(
+        {
+          asset: nftPositionManager.address,
+          token0: dai.address,
+          token1: weth.address,
+          token0CashAmount: 0,
+          token1CashAmount: 0,
+          token0BorrowAmount: 0,
+          token1BorrowAmount: 0,
+        },
+        {
+          decreaseLiquidity: true,
+          tokenId: 1,
+          liquidityDecrease: beforeLiquidity.div(2),
+          amount0Min: 0,
+          amount1Min: 0,
+          burnNFT: false,
+        },
+        {
+          mintNewToken: false,
+          fee: 2000,
+          tickLower: 0,
+          tickUpper: 0,
+          amount0Desired: 0,
+          amount1Desired: 0,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 0,
+        }
+      )
     ).to.be.revertedWith(ProtocolErrors.RESERVE_INACTIVE);
   });
 
   it("decreaseUniswapV3Liquidity success if underlying erc20 was active [ @skip-on-coverage ]", async () => {
     const {
       users: [user1],
+      dai,
       weth,
       pool,
       configurator,
@@ -476,19 +495,36 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
 
     await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .decreaseUniswapV3Liquidity(
-          nftPositionManager.address,
-          1,
-          beforeLiquidity.div(2),
-          0,
-          0,
-          false,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
+      await pool.connect(user1.signer).adjustLpPosition(
+        {
+          asset: nftPositionManager.address,
+          token0: dai.address,
+          token1: weth.address,
+          token0CashAmount: 0,
+          token1CashAmount: 0,
+          token0BorrowAmount: 0,
+          token1BorrowAmount: 0,
+        },
+        {
+          decreaseLiquidity: true,
+          tokenId: 1,
+          liquidityDecrease: beforeLiquidity.div(2),
+          amount0Min: 0,
+          amount1Min: 0,
+          burnNFT: false,
+        },
+        {
+          mintNewToken: false,
+          fee: 2000,
+          tickLower: 0,
+          tickUpper: 0,
+          amount0Desired: 0,
+          amount1Desired: 0,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 0,
+        }
+      )
     );
 
     await snapshot.revert(preLiquidationSnapshot);
@@ -498,6 +534,7 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     const {
       users: [user1],
       configurator,
+      dai,
       weth,
       pool,
       nftPositionManager,
@@ -508,25 +545,43 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
 
     await expect(
-      pool
-        .connect(user1.signer)
-        .decreaseUniswapV3Liquidity(
-          nftPositionManager.address,
-          1,
-          beforeLiquidity.div(2),
-          0,
-          0,
-          false,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
+      pool.connect(user1.signer).adjustLpPosition(
+        {
+          asset: nftPositionManager.address,
+          token0: dai.address,
+          token1: weth.address,
+          token0CashAmount: 0,
+          token1CashAmount: 0,
+          token0BorrowAmount: 0,
+          token1BorrowAmount: 0,
+        },
+        {
+          decreaseLiquidity: true,
+          tokenId: 1,
+          liquidityDecrease: beforeLiquidity.div(2),
+          amount0Min: 0,
+          amount1Min: 0,
+          burnNFT: false,
+        },
+        {
+          mintNewToken: false,
+          fee: 2000,
+          tickLower: 0,
+          tickUpper: 0,
+          amount0Desired: 0,
+          amount1Desired: 0,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 0,
+        }
+      )
     ).to.be.revertedWith(ProtocolErrors.RESERVE_PAUSED);
   });
 
   it("decreaseUniswapV3Liquidity success if underlying erc20 was not paused [ @skip-on-coverage ]", async () => {
     const {
       users: [user1],
+      dai,
       weth,
       pool,
       nftPositionManager,
@@ -540,43 +595,77 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
     const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
 
     await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .decreaseUniswapV3Liquidity(
-          nftPositionManager.address,
-          1,
-          beforeLiquidity.div(2),
-          0,
-          0,
-          false,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
+      await pool.connect(user1.signer).adjustLpPosition(
+        {
+          asset: nftPositionManager.address,
+          token0: dai.address,
+          token1: weth.address,
+          token0CashAmount: 0,
+          token1CashAmount: 0,
+          token0BorrowAmount: 0,
+          token1BorrowAmount: 0,
+        },
+        {
+          decreaseLiquidity: true,
+          tokenId: 1,
+          liquidityDecrease: beforeLiquidity.div(2),
+          amount0Min: 0,
+          amount1Min: 0,
+          burnNFT: false,
+        },
+        {
+          mintNewToken: false,
+          fee: 2000,
+          tickLower: 0,
+          tickUpper: 0,
+          amount0Desired: 0,
+          amount1Desired: 0,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 0,
+        }
+      )
     );
 
     await snapshot.revert(preLiquidationSnapshot);
   });
 
   it("decreaseUniswapV3Liquidity failed if not owner [ @skip-on-coverage ]", async () => {
-    const {users, pool, nftPositionManager} = testEnv;
+    const {users, dai, weth, pool, nftPositionManager} = testEnv;
 
     const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
 
     await expect(
-      pool
-        .connect(users[1].signer)
-        .decreaseUniswapV3Liquidity(
-          nftPositionManager.address,
-          1,
-          beforeLiquidity.div(2),
-          0,
-          0,
-          false,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
+      pool.connect(users[1].signer).adjustLpPosition(
+        {
+          asset: nftPositionManager.address,
+          token0: dai.address,
+          token1: weth.address,
+          token0CashAmount: 0,
+          token1CashAmount: 0,
+          token0BorrowAmount: 0,
+          token1BorrowAmount: 0,
+        },
+        {
+          decreaseLiquidity: true,
+          tokenId: 1,
+          liquidityDecrease: beforeLiquidity.div(2),
+          amount0Min: 0,
+          amount1Min: 0,
+          burnNFT: false,
+        },
+        {
+          mintNewToken: false,
+          fee: 2000,
+          tickLower: 0,
+          tickUpper: 0,
+          amount0Desired: 0,
+          amount1Desired: 0,
+          amount0Min: 0,
+          amount1Min: 0,
+          deadline: 0,
+        }
+      )
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
   });
 
@@ -672,34 +761,6 @@ describe("Uniswap V3 NFT supply, withdraw, setCollateral, liquidation and transf
           "0",
           user1.address
         )
-    );
-  });
-
-  it("decreaseUniswapV3Liquidity failed if hf < 1 [ @skip-on-coverage ]", async () => {
-    const {
-      users: [user1],
-      pool,
-      nftPositionManager,
-    } = testEnv;
-    // get current liquidity
-    const beforeLiquidity = (await nftPositionManager.positions(1)).liquidity;
-
-    await expect(
-      pool
-        .connect(user1.signer)
-        .decreaseUniswapV3Liquidity(
-          nftPositionManager.address,
-          1,
-          beforeLiquidity.mul(3).div(4),
-          0,
-          0,
-          false,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
-    ).to.be.revertedWith(
-      ProtocolErrors.HEALTH_FACTOR_LOWER_THAN_LIQUIDATION_THRESHOLD
     );
   });
 

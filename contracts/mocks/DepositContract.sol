@@ -71,7 +71,7 @@ contract DepositContract is IDepositContract, ERC165 {
 
     bytes32[DEPOSIT_CONTRACT_TREE_DEPTH] zero_hashes;
 
-    constructor() public {
+    constructor() {
         // Compute hashes in empty sparse Merkle tree
         for (
             uint256 height = 0;

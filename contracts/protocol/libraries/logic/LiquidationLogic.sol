@@ -764,9 +764,11 @@ library LiquidationLogic {
         ).collateralizedBalanceOf(params.borrower);
 
         // price of the asset that is used as collateral
+        XTokenType xTokenType = IXTokenType(superVars.collateralXToken)
+            .getXTokenType();
         if (
-            IXTokenType(superVars.collateralXToken).getXTokenType() ==
-            XTokenType.NTokenUniswapV3
+            xTokenType == XTokenType.NTokenUniswapV3 ||
+            xTokenType == XTokenType.NTokenIZUMILp
         ) {
             vars.collateralPrice = IPriceOracleGetter(params.priceOracle)
                 .getTokenPrice(

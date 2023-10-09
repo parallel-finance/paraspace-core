@@ -98,7 +98,15 @@ import {
   MockLendPool__factory,
   NTokenChromieSquiggle__factory,
   Account__factory,
+  NTokenIzumi__factory,
+  IZiSwapFactory__factory,
+  LiquidityManager__factory,
+  Swap__factory,
+  IZUMIOracleWrapper__factory,
   AccountRegistry__factory,
+  UniswapV2Pair__factory,
+  UniswapV2Factory__factory,
+  UniswapV2Router02__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -396,6 +404,31 @@ export const getUiIncentiveDataProviderV3 = async (
       ).address,
     await getFirstSigner()
   );
+
+export const getUniswapV2Factory = async (address?: tEthereumAddress) =>
+  await UniswapV2Factory__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.UniswapV2Factory}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getUniswapV2Router = async (address?: tEthereumAddress) =>
+  await UniswapV2Router02__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.UniswapV2Router02}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getUniswapV2Pair = async (address: tEthereumAddress) =>
+  await UniswapV2Pair__factory.connect(address, await getFirstSigner());
 
 export const getPToken = async (address?: tEthereumAddress) =>
   await PToken__factory.connect(
@@ -780,6 +813,63 @@ export const getNTokenUniswapV3 = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.NTokenUniswapV3Impl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getIZUMIFactory = async (address?: tEthereumAddress) =>
+  await IZiSwapFactory__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.IZUMIPoolFactory}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getIZUMIPositionManager = async (address?: tEthereumAddress) =>
+  await LiquidityManager__factory.connect(
+    address ||
+      (
+        await getDb().get(`${eContractid.IZUMILp}.${DRE.network.name}`).value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getIZUMISwapRouter = async (address?: tEthereumAddress) =>
+  await Swap__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.IZUMISwapRouter}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getIZUMIOracleWrapper = async (address?: tEthereumAddress) =>
+  await IZUMIOracleWrapper__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(
+            `${eContractid.Aggregator.concat(
+              upperFirst(eContractid.IZUMILp)
+            )}.${DRE.network.name}`
+          )
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getNTokenIZUMI = async (address?: tEthereumAddress) =>
+  await NTokenIzumi__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.NTokenIZUMILpImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

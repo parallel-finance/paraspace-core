@@ -1,5 +1,6 @@
 import {BigNumber, BigNumberish, BytesLike} from "ethers";
 import {Libraries} from "hardhat/types";
+import {strategyUniv2DaiWeth} from "../market-config/reservesConfigs";
 
 export enum AssetType {
   ERC20 = 0,
@@ -55,7 +56,7 @@ export enum XTokenType {
   NTokenOtherdeed = 15,
   NTokenStakefish = 16,
   NTokenChromieSquiggle = 17,
-  PhantomData1 = 18,
+  NTokenIZUMILp = 18,
   PhantomData2 = 19,
   PhantomData3 = 20,
   PhantomData4 = 21,
@@ -143,6 +144,7 @@ export enum eContractid {
   NTokenImpl = "NTokenImpl",
   NTokenMoonBirdsImpl = "NTokenMoonBirdsImpl",
   NTokenUniswapV3Impl = "NTokenUniswapV3Impl",
+  NTokenIZUMILpImpl = "NTokenIZUMILpImpl",
   NTokenBAYCImpl = "NTokenBAYCImpl",
   NTokenMAYCImpl = "NTokenMAYCImpl",
   NTokenBAKCImpl = "NTokenBAKCImpl",
@@ -223,9 +225,22 @@ export enum eContractid {
   UniswapV3 = "UniswapV3",
   UniswapV3Factory = "UniswapV3Factory",
   UniswapV3SwapRouter = "UniswapV3SwapRouter",
+  UniswapV2Factory = "UniswapV2Factory",
+  UniswapV2Router02 = "UniswapV2Router02",
+  UNIV2DAIWETH = "UNIV2DAIWETH",
+  UNIV2USDCWETH = "UNIV2USDCWETH",
+  UNIV2WETHUSDT = "UNIV2WETHUSDT",
   NFTDescriptor = "NFTDescriptor",
   NonfungibleTokenPositionDescriptor = "NonfungibleTokenPositionDescriptor",
-  NonfungiblePositionManager = "NonfungiblePositionManager",
+  IZUMILp = "IZUMILp",
+  IZUMISwapX2Y = "IZUMISwapX2Y",
+  IZUMISwapY2X = "IZUMISwapY2X",
+  IZUMILiquidity = "IZUMILiquidity",
+  IZUMILimitOrder = "IZUMILimitOrder",
+  IZUMIFlashModule = "IZUMIFlashModule",
+  IZUMIPoolFactory = "IZUMIPoolFactory",
+  IZUMISwapRouter = "IZUMISwapRouter",
+  IZUMIPositionManager = "IZUMIPositionManager",
   StETH = "stETH",
   WStETH = "wstETH",
   MockAToken = "MockAToken",
@@ -236,6 +251,7 @@ export enum eContractid {
   PoolParametersImpl = "PoolParametersImpl",
   PoolApeStakingImpl = "PoolApeStakingImpl",
   PoolBorrowAndStakeImpl = "PoolBorrowAndStakeImpl",
+  PoolLpOperationImpl = "PoolLpOperationImpl",
   ApeCoinStaking = "ApeCoinStaking",
   ATokenDebtToken = "ATokenDebtToken",
   StETHDebtToken = "StETHDebtToken",
@@ -619,6 +635,9 @@ export enum ERC20TokenContractId {
   stMATIC = "stMATIC",
   CRV = "CRV",
   WMATIC = "WMATIC",
+  UNIV2DAIWETH = "UNIV2DAIWETH",
+  UNIV2USDCWETH = "UNIV2USDCWETH",
+  UNIV2WETHUSDT = "UNIV2WETHUSDT",
 }
 
 export enum ERC721TokenContractId {
@@ -632,6 +651,7 @@ export enum ERC721TokenContractId {
   MEEBITS = "MEEBITS",
   OTHR = "OTHR",
   UniswapV3 = "UniswapV3",
+  IZUMILp = "IZUMILp",
   BAKC = "BAKC",
   SEWER = "SEWER",
   PPG = "PPG",
@@ -653,6 +673,7 @@ export enum NTokenContractId {
   nWPUNKS = "nWPUNKS",
   nMOONBIRD = "nMOONBIRD",
   nUniswapV3 = "nUniswapV3",
+  nIZUMI = "nIZUMI",
   nBAKC = "nBAKC",
   nSEWER = "nSEWER",
   nPPG = "nPPG",

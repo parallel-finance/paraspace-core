@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: agpl-3.0
 pragma solidity ^0.8.0;
 
-struct UinswapV3PositionData {
+struct LiquidityNFTPositionData {
     address token0;
     address token1;
     uint24 fee;
@@ -16,20 +16,37 @@ struct UinswapV3PositionData {
     uint256 tokensOwed1;
 }
 
+struct OnChainFeeParams {
+    uint256 feeGrowthOutside0X128Lower;
+    uint256 feeGrowthOutside1X128Lower;
+    uint256 feeGrowthOutside0X128Upper;
+    uint256 feeGrowthOutside1X128Upper;
+    uint256 feeGrowthGlobal0X128;
+    uint256 feeGrowthGlobal1X128;
+}
+
+struct PairOracleData {
+    uint256 token0Price;
+    uint256 token1Price;
+    uint8 token0Decimal;
+    uint8 token1Decimal;
+    uint160 sqrtPriceX96;
+}
+
 /************
 @title IUniswapV3PositionInfoProvider interface
 @notice Interface for UniswapV3 Lp token position info.*/
 
-interface IUniswapV3PositionInfoProvider {
+interface ILiquidityNFTPositionInfoProvider {
     function getOnchainPositionData(
         uint256 tokenId
-    ) external view returns (UinswapV3PositionData memory);
+    ) external view returns (LiquidityNFTPositionData memory);
 
     function getLiquidityAmountFromPositionData(
-        UinswapV3PositionData memory positionData
+        LiquidityNFTPositionData memory positionData
     ) external view returns (uint256 token0Amount, uint256 token1Amount);
 
     function getLpFeeAmountFromPositionData(
-        UinswapV3PositionData memory positionData
+        LiquidityNFTPositionData memory positionData
     ) external view returns (uint256 token0Amount, uint256 token1Amount);
 }

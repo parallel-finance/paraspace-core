@@ -73,7 +73,8 @@ library BorrowLogic {
                 amount: params.amount,
                 reservesCount: params.reservesCount,
                 oracle: params.oracle,
-                priceOracleSentinel: params.priceOracleSentinel
+                priceOracleSentinel: params.priceOracleSentinel,
+                verifyCollateral: params.verifyCollateral
             })
         );
 
