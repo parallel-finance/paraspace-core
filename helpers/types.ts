@@ -524,9 +524,6 @@ export interface iAssetBase<T> {
   KODA: T;
   BLOCKS: T;
   EXRP: T;
-  UNIV2DAIWETH: T;
-  UNIV2USDCWETH: T;
-  UNIV2WETHUSDT: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, "ETH">;

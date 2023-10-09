@@ -94,7 +94,6 @@ import {
   TimeLock,
   UiPoolDataProvider,
   UniswapV2Factory,
-  UniswapV2Pair,
   UniswapV2Router02,
   WstETHMocked,
   X2Y2Adapter,
