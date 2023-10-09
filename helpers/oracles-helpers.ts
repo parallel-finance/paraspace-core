@@ -15,6 +15,7 @@ import {
   IZUMIOracleWrapper,
   MockAggregator,
   PriceOracle,
+  UniswapV2OracleWrapper,
   UniswapV3OracleWrapper,
 } from "../types";
 import {
@@ -26,6 +27,7 @@ import {
   deployExchangeRateSynchronicityPriceAdapter,
   deployCTokenSynchronicityPriceAdapter,
   deployIZUMIOracleWrapper,
+  deployUniswapV2OracleWrapper,
 } from "./contracts-deployments";
 import {getParaSpaceConfig, waitForTx} from "./misc-utils";
 import {
@@ -69,6 +71,7 @@ export const deployAllAggregators = async (
     [tokenSymbol: string]:
       | MockAggregator
       | UniswapV3OracleWrapper
+      | UniswapV2OracleWrapper
       | IZUMIOracleWrapper
       | CLwstETHSynchronicityPriceAdapter
       | ERC721OracleWrapper
@@ -138,6 +141,27 @@ export const deployAllAggregators = async (
           tokenSymbol,
           verify
         );
+    } else if (tokenSymbol === ERC20TokenContractId.UNIV2DAIWETH) {
+      aggregators[tokenSymbol] = await deployUniswapV2OracleWrapper(
+        tokens[ERC20TokenContractId.UNIV2DAIWETH].address,
+        ERC20TokenContractId.UNIV2DAIWETH,
+        addressesProvider.address,
+        verify
+      );
+    } else if (tokenSymbol === ERC20TokenContractId.UNIV2USDCWETH) {
+      aggregators[tokenSymbol] = await deployUniswapV2OracleWrapper(
+        tokens[ERC20TokenContractId.UNIV2USDCWETH].address,
+        ERC20TokenContractId.UNIV2USDCWETH,
+        addressesProvider.address,
+        verify
+      );
+    } else if (tokenSymbol === ERC20TokenContractId.UNIV2WETHUSDT) {
+      aggregators[tokenSymbol] = await deployUniswapV2OracleWrapper(
+        tokens[ERC20TokenContractId.UNIV2WETHUSDT].address,
+        ERC20TokenContractId.UNIV2WETHUSDT,
+        addressesProvider.address,
+        verify
+      );
     } else if (tokenSymbol === ERC721TokenContractId.UniswapV3) {
       const univ3Factory = await getUniswapV3Factory();
       const univ3Token = tokens[ERC721TokenContractId.UniswapV3];

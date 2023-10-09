@@ -33,6 +33,7 @@ import {
   MintableERC721,
   NToken,
   StETHMocked,
+  UniswapV2Pair,
   WETH9Mocked,
 } from "../../types";
 import {SignerWithAddress} from "./make-suite";
@@ -50,6 +51,7 @@ type SupportedAsset =
   | AutoCompoundApe
   | AutoYieldApe
   | StETHMocked
+  | UniswapV2Pair
   | INonfungiblePositionManager;
 
 function isERC20(token: SupportedAsset): token is MintableERC20 | WETH9Mocked {

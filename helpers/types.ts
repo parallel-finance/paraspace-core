@@ -1,5 +1,6 @@
 import {BigNumber, BigNumberish, BytesLike} from "ethers";
 import {Libraries} from "hardhat/types";
+import {strategyUniv2DaiWeth} from "../market-config/reservesConfigs";
 
 export enum AssetType {
   ERC20 = 0,
@@ -224,6 +225,11 @@ export enum eContractid {
   UniswapV3 = "UniswapV3",
   UniswapV3Factory = "UniswapV3Factory",
   UniswapV3SwapRouter = "UniswapV3SwapRouter",
+  UniswapV2Factory = "UniswapV2Factory",
+  UniswapV2Router02 = "UniswapV2Router02",
+  UNIV2DAIWETH = "UNIV2DAIWETH",
+  UNIV2USDCWETH = "UNIV2USDCWETH",
+  UNIV2WETHUSDT = "UNIV2WETHUSDT",
   NFTDescriptor = "NFTDescriptor",
   NonfungibleTokenPositionDescriptor = "NonfungibleTokenPositionDescriptor",
   IZUMILp = "IZUMILp",
@@ -518,6 +524,9 @@ export interface iAssetBase<T> {
   KODA: T;
   BLOCKS: T;
   EXRP: T;
+  UNIV2DAIWETH: T;
+  UNIV2USDCWETH: T;
+  UNIV2WETHUSDT: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, "ETH">;
@@ -629,6 +638,9 @@ export enum ERC20TokenContractId {
   stMATIC = "stMATIC",
   CRV = "CRV",
   WMATIC = "WMATIC",
+  UNIV2DAIWETH = "UNIV2DAIWETH",
+  UNIV2USDCWETH = "UNIV2USDCWETH",
+  UNIV2WETHUSDT = "UNIV2WETHUSDT",
 }
 
 export enum ERC721TokenContractId {

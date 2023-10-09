@@ -77,6 +77,9 @@ import {
   strategyWBTCWH,
   strategySTDOT,
   strategyEXRP,
+  strategyUniv2DaiWeth,
+  strategyUniv2UsdcWeth,
+  strategyUniv2WethUsdt,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -190,6 +193,9 @@ export const HardhatConfig: IParaSpaceConfiguration = {
     SEWER: strategySEWER,
     PPG: strategyPudgyPenguins,
     SFVLDR: strategyStakefishValidator,
+    UNIV2DAIWETH: strategyUniv2DaiWeth,
+    UNIV2USDCWETH: strategyUniv2UsdcWeth,
+    UNIV2WETHUSDT: strategyUniv2WethUsdt,
   },
 };
 

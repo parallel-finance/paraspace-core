@@ -116,6 +116,54 @@ import {
   timeLockStrategyIZUMI,
 } from "./timeLockStrategies";
 
+export const strategyUniv2DaiWeth: IReserveParams = {
+  strategy: rateStrategyDAI,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyDAI,
+  baseLTVAsCollateral: "7000",
+  liquidationThreshold: "9000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationBonus: "10400",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategyUniv2UsdcWeth: IReserveParams = {
+  strategy: rateStrategyDAI,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyDAI,
+  baseLTVAsCollateral: "7000",
+  liquidationThreshold: "9000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationBonus: "10400",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategyUniv2WethUsdt: IReserveParams = {
+  strategy: rateStrategyDAI,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyDAI,
+  baseLTVAsCollateral: "7000",
+  liquidationThreshold: "9000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationBonus: "10400",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
 export const strategyDAI: IReserveParams = {
   strategy: rateStrategyDAI,
   auctionStrategy: auctionStrategyZero,

@@ -56,6 +56,8 @@ import {
   getStakefishNFTManager,
   getNTokenStakefish,
   getTimeLockProxy,
+  getUniswapV2Factory,
+  getUniswapV2Router,
 } from "../../helpers/contracts-getters";
 import {
   eContractid,
@@ -91,6 +93,9 @@ import {
   StETHDebtToken,
   TimeLock,
   UiPoolDataProvider,
+  UniswapV2Factory,
+  UniswapV2Pair,
+  UniswapV2Router02,
   WstETHMocked,
   X2Y2Adapter,
   X2Y2R1,
@@ -221,6 +226,8 @@ export interface TestEnv {
   blurExchange: BlurExchange;
   blurAdapter: BlurAdapter;
   timeLock: TimeLock;
+  uniswapv2Factory: UniswapV2Factory;
+  uniswapv2Router: UniswapV2Router02;
 }
 
 export async function initializeMakeSuite() {
@@ -294,6 +301,8 @@ export async function initializeMakeSuite() {
     blurExchange: {} as BlurExchange,
     blurAdapter: {} as BlurAdapter,
     timeLock: {} as TimeLock,
+    uniswapv2Factory: {} as UniswapV2Factory,
+    uniswapv2Router: {} as UniswapV2Router02,
   } as TestEnv;
   const paraSpaceConfig = getParaSpaceConfig();
   const signers = await Promise.all(
@@ -571,6 +580,9 @@ export async function initializeMakeSuite() {
   testEnv.blurExchange = await getBlurExchangeProxy();
   testEnv.blurAdapter = await getBlurAdapter();
   testEnv.timeLock = await getTimeLockProxy();
+
+  testEnv.uniswapv2Factory = await getUniswapV2Factory();
+  testEnv.uniswapv2Router = await getUniswapV2Router();
 
   return testEnv;
 }

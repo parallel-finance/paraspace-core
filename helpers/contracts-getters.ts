@@ -104,6 +104,9 @@ import {
   Swap__factory,
   IZUMIOracleWrapper__factory,
   AccountRegistry__factory,
+  UniswapV2Pair__factory,
+  UniswapV2Factory__factory,
+  UniswapV2Router02__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -401,6 +404,31 @@ export const getUiIncentiveDataProviderV3 = async (
       ).address,
     await getFirstSigner()
   );
+
+export const getUniswapV2Factory = async (address?: tEthereumAddress) =>
+  await UniswapV2Factory__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.UniswapV2Factory}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getUniswapV2Router = async (address?: tEthereumAddress) =>
+  await UniswapV2Router02__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.UniswapV2Router02}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getUniswapV2Pair = async (address: tEthereumAddress) =>
+  await UniswapV2Pair__factory.connect(address, await getFirstSigner());
 
 export const getPToken = async (address?: tEthereumAddress) =>
   await PToken__factory.connect(

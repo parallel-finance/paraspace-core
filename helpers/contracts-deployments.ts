@@ -166,6 +166,10 @@ import {
   PoolBorrowAndStake__factory,
   PoolBorrowAndStake,
   PoolLpOperation__factory,
+  UniswapV2Factory,
+  UniswapV2Router02,
+  UniswapV2Pair,
+  UniswapV2OracleWrapper,
 } from "../types";
 import {
   getACLManager,
@@ -182,6 +186,8 @@ import {
   getProtocolDataProvider,
   getPunks,
   getTimeLockProxy,
+  getUniswapV2Factory,
+  getUniswapV2Pair,
   getUniswapV3SwapRouter,
   getWETH,
 } from "./contracts-getters";
@@ -1277,12 +1283,15 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
       | WstETHMocked
       | MockAToken
       | AutoYieldApe
+      | UniswapV2Pair
       | AutoCompoundApe;
   } = {};
 
   const paraSpaceConfig = getParaSpaceConfig();
   const reservesConfig = paraSpaceConfig.ReservesConfig;
   const tokensConfig = paraSpaceConfig.Tokens;
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
 
   for (const tokenSymbol of Object.keys(ERC20TokenContractId)) {
     const db = getDb();
@@ -1395,6 +1404,87 @@ export const deployAllERC20Tokens = async (verify?: boolean) => {
           (
             await deployAutoYieldApeProxy(verify)
           ).address
+        );
+        continue;
+      }
+      if (tokenSymbol === ERC20TokenContractId.UNIV2DAIWETH) {
+        if (!(await getContractAddressInDb(eContractid.UniswapV2Factory))) {
+          const factory = await deployUniswapV2Factory(
+            [deployerAddress],
+            false
+          );
+          await deployUniswapV2Router02(
+            [factory.address, tokens["WETH"].address],
+            false
+          );
+        }
+        const factory = await getUniswapV2Factory();
+        await factory.createPair(tokens["WETH"].address, tokens["DAI"].address);
+        const address = await factory.getPair(
+          tokens["WETH"].address,
+          tokens["DAI"].address
+        );
+        tokens[tokenSymbol] = await getUniswapV2Pair(address);
+        await insertContractAddressInDb(
+          eContractid.UNIV2DAIWETH,
+          address,
+          false
+        );
+        continue;
+      }
+      if (tokenSymbol === ERC20TokenContractId.UNIV2USDCWETH) {
+        if (!(await getContractAddressInDb(eContractid.UniswapV2Factory))) {
+          const factory = await deployUniswapV2Factory(
+            [deployerAddress],
+            false
+          );
+          await deployUniswapV2Router02(
+            [factory.address, tokens["WETH"].address],
+            false
+          );
+        }
+        const factory = await getUniswapV2Factory();
+        await factory.createPair(
+          tokens["WETH"].address,
+          tokens["USDC"].address
+        );
+        const address = await factory.getPair(
+          tokens["WETH"].address,
+          tokens["USDC"].address
+        );
+        tokens[tokenSymbol] = await getUniswapV2Pair(address);
+        await insertContractAddressInDb(
+          eContractid.UNIV2USDCWETH,
+          address,
+          false
+        );
+        continue;
+      }
+      if (tokenSymbol === ERC20TokenContractId.UNIV2WETHUSDT) {
+        if (!(await getContractAddressInDb(eContractid.UniswapV2Factory))) {
+          const factory = await deployUniswapV2Factory(
+            [deployerAddress],
+            false
+          );
+          await deployUniswapV2Router02(
+            [factory.address, tokens["WETH"].address],
+            false
+          );
+        }
+        const factory = await getUniswapV2Factory();
+        await factory.createPair(
+          tokens["WETH"].address,
+          tokens["USDT"].address
+        );
+        const address = await factory.getPair(
+          tokens["WETH"].address,
+          tokens["USDT"].address
+        );
+        tokens[tokenSymbol] = await getUniswapV2Pair(address);
+        await insertContractAddressInDb(
+          eContractid.UNIV2WETHUSDT,
+          address,
+          false
         );
         continue;
       }
@@ -2123,6 +2213,28 @@ export const deployERC721Delegate = async (verify?: boolean) =>
     verify
   ) as Promise<ERC721Delegate>;
 
+export const deployUniswapV2Factory = async (
+  args: [string],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("UniswapV2Factory"),
+    eContractid.UniswapV2Factory,
+    [...args],
+    verify
+  ) as Promise<UniswapV2Factory>;
+
+export const deployUniswapV2Router02 = async (
+  args: [string, string],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("UniswapV2Router02"),
+    eContractid.UniswapV2Router02,
+    [...args],
+    verify
+  ) as Promise<UniswapV2Router02>;
+
 export const deployUniswapV3Factory = async (args: [], verify?: boolean) =>
   withSaveAndVerify(
     await getContractFactory("UniswapV3Factory"),
@@ -2184,6 +2296,19 @@ export const deployUniswapV3OracleWrapper = async (
     [factory, manager, addressProvider],
     verify
   ) as Promise<UniswapV3OracleWrapper>;
+
+export const deployUniswapV2OracleWrapper = async (
+  asset: string,
+  contractId: string,
+  addressProvider: string,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("UniswapV2OracleWrapper"),
+    eContractid.Aggregator.concat(upperFirst(contractId)),
+    [asset, addressProvider],
+    verify
+  ) as Promise<UniswapV2OracleWrapper>;
 
 export const deployUniswapV3TwapOracleWrapper = async (
   pool: string,
