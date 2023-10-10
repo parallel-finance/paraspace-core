@@ -13,7 +13,7 @@ import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IScaledBalanceToken} from "../../interfaces/IScaledBalanceToken.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
-import {ScaledBalanceTokenBaseERC20} from "contracts/protocol/tokenization/base/ScaledBalanceTokenBaseERC20.sol";
+import {ScaledBalanceTokenBaseERC20} from "../../protocol/tokenization/base/ScaledBalanceTokenBaseERC20.sol";
 
 /**
  * @title sApe PToken

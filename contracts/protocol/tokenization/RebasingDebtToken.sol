@@ -7,7 +7,7 @@ import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IScaledBalanceToken} from "../../interfaces/IScaledBalanceToken.sol";
-import {ScaledBalanceTokenBaseERC20} from "contracts/protocol/tokenization/base/ScaledBalanceTokenBaseERC20.sol";
+import {ScaledBalanceTokenBaseERC20} from "../../protocol/tokenization/base/ScaledBalanceTokenBaseERC20.sol";
 
 /**
  * @title Rebasing Debt Token
