@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {AccessControl} from "../../dependencies/openzeppelin/contracts/AccessControl.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
@@ -37,11 +37,10 @@ contract ACLManager is AccessControl, IACLManager {
     }
 
     /// @inheritdoc IACLManager
-    function setRoleAdmin(bytes32 role, bytes32 adminRole)
-        external
-        override
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setRoleAdmin(
+        bytes32 role,
+        bytes32 adminRole
+    ) external override onlyRole(DEFAULT_ADMIN_ROLE) {
         _setRoleAdmin(role, adminRole);
     }
 
@@ -71,12 +70,9 @@ contract ACLManager is AccessControl, IACLManager {
     }
 
     /// @inheritdoc IACLManager
-    function isEmergencyAdmin(address admin)
-        external
-        view
-        override
-        returns (bool)
-    {
+    function isEmergencyAdmin(
+        address admin
+    ) external view override returns (bool) {
         return hasRole(EMERGENCY_ADMIN_ROLE, admin);
     }
 
@@ -106,12 +102,9 @@ contract ACLManager is AccessControl, IACLManager {
     }
 
     /// @inheritdoc IACLManager
-    function isFlashBorrower(address borrower)
-        external
-        view
-        override
-        returns (bool)
-    {
+    function isFlashBorrower(
+        address borrower
+    ) external view override returns (bool) {
         return hasRole(FLASH_BORROWER_ROLE, borrower);
     }
 
@@ -141,12 +134,9 @@ contract ACLManager is AccessControl, IACLManager {
     }
 
     /// @inheritdoc IACLManager
-    function isAssetListingAdmin(address admin)
-        external
-        view
-        override
-        returns (bool)
-    {
+    function isAssetListingAdmin(
+        address admin
+    ) external view override returns (bool) {
         return hasRole(ASSET_LISTING_ADMIN_ROLE, admin);
     }
 }

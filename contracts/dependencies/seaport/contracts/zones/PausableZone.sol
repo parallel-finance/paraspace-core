@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.0;
 
 import { ZoneInterface } from "../interfaces/ZoneInterface.sol";
 import { ZoneInteractionErrors } from "../interfaces/ZoneInteractionErrors.sol";
@@ -100,13 +100,13 @@ contract PausableZone is
      *         zone will not be fulfillable unless the zone is redeployed to the
      *         same address.
      */
-    function pause(address payee) external override isController {
-        // Emit an event signifying that the zone is paused.
-        emit Paused();
-
-        // Destroy the zone, sending any ether to the transaction submitter.
-        selfdestruct(payable(payee));
-    }
+    // function pause(address payee) external override isController {
+    //     // Emit an event signifying that the zone is paused.
+    //     emit Paused();
+    //
+    //     // Destroy the zone, sending any ether to the transaction submitter.
+    //     selfdestruct(payable(payee));
+    // }
 
     /**
      * @notice Assign the given address with the ability to operate the zone.

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IEACAggregatorProxy} from "../interfaces/IEACAggregatorProxy.sol";
 import {Errors} from "../protocol/libraries/helpers/Errors.sol";
@@ -31,20 +31,15 @@ contract ERC721OracleWrapper is IEACAggregatorProxy {
         );
     }
 
-    constructor(
-        address _provider,
-        address _oracleAddress,
-        address _asset
-    ) {
+    constructor(address _provider, address _oracleAddress, address _asset) {
         ADDRESSES_PROVIDER = IPoolAddressesProvider(_provider);
         oracleAddress = INFTFloorOracle(_oracleAddress);
         asset = _asset;
     }
 
-    function setOracle(address _oracleAddress)
-        external
-        onlyAssetListingOrPoolAdmins
-    {
+    function setOracle(
+        address _oracleAddress
+    ) external onlyAssetListingOrPoolAdmins {
         oracleAddress = INFTFloorOracle(_oracleAddress);
     }
 

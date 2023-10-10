@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
@@ -29,11 +29,16 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     uint248 public agreementCount;
     bool public frozen;
 
+    // TimeLock whitelist
+    mapping(address => bool) _whiteList;
+
     IPool private immutable POOL;
     IACLManager private immutable ACL_MANAGER;
     address private immutable weth;
     address private immutable wpunk;
     address private immutable Punk;
+
+    uint48 private constant MIN_WAIT_TIME = 12;
 
     modifier onlyXToken(address asset) {
         require(
@@ -83,7 +88,11 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         uint48 releaseTime
     ) external onlyXToken(asset) returns (uint256) {
         require(beneficiary != address(0), "Beneficiary cant be zero address");
-        require(releaseTime > block.timestamp, "Release time not valid");
+        if (_whiteList[beneficiary]) {
+            releaseTime = uint48(block.timestamp) + MIN_WAIT_TIME;
+        } else {
+            require(releaseTime > block.timestamp, "Release time not valid");
+        }
 
         uint256 agreementId = agreementCount++;
         agreements[agreementId] = Agreement({
@@ -109,10 +118,9 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         return agreementId;
     }
 
-    function _validateAndDeleteAgreement(uint256 agreementId)
-        internal
-        returns (Agreement memory)
-    {
+    function _validateAndDeleteAgreement(
+        uint256 agreementId
+    ) internal returns (Agreement memory) {
         Agreement memory agreement = agreements[agreementId];
         require(msg.sender == agreement.beneficiary, "Not beneficiary");
         require(
@@ -164,10 +172,9 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         }
     }
 
-    function claimMoonBirds(uint256[] calldata agreementIds)
-        external
-        nonReentrant
-    {
+    function claimMoonBirds(
+        uint256[] calldata agreementIds
+    ) external nonReentrant {
         require(!frozen, "TimeLock is frozen");
 
         for (uint256 index = 0; index < agreementIds.length; index++) {
@@ -231,10 +238,9 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
 
     receive() external payable {}
 
-    function freezeAgreement(uint256 agreementId)
-        external
-        onlyEmergencyAdminOrPoolAdmins
-    {
+    function freezeAgreement(
+        uint256 agreementId
+    ) external onlyEmergencyAdminOrPoolAdmins {
         agreements[agreementId].isFrozen = true;
         emit AgreementFrozen(agreementId, true);
     }
@@ -254,11 +260,9 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         emit TimeLockFrozen(false);
     }
 
-    function getAgreement(uint256 agreementId)
-        external
-        view
-        returns (Agreement memory agreement)
-    {
+    function getAgreement(
+        uint256 agreementId
+    ) external view returns (Agreement memory agreement) {
         agreement = agreements[agreementId];
     }
 
@@ -269,5 +273,34 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         bytes memory
     ) external virtual override returns (bytes4) {
         return this.onERC721Received.selector;
+    }
+
+    /// @inheritdoc ITimeLock
+    function updateTimeLockWhiteList(
+        address[] calldata toAdd,
+        address[] calldata toRemove
+    ) external onlyPoolAdmin {
+        for (uint256 i = 0; i < toAdd.length; i++) {
+            if (!_whiteList[toAdd[i]]) {
+                _whiteList[toAdd[i]] = true;
+            }
+        }
+        for (uint256 i = 0; i < toRemove.length; i++) {
+            if (_whiteList[toRemove[i]]) {
+                _whiteList[toRemove[i]] = false;
+            }
+        }
+        emit TimeLockWhitelistUpdated(toAdd, toRemove);
+    }
+
+    /// @inheritdoc ITimeLock
+    function isTimeLockWhiteListed(
+        address[] calldata users
+    ) external view returns (bool[] memory) {
+        bool[] memory res = new bool[](users.length);
+        for (uint256 i = 0; i < users.length; i++) {
+            res[i] = _whiteList[users[i]];
+        }
+        return res;
     }
 }

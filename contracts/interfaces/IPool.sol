@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IPoolCore} from "./IPoolCore.sol";
 import {IPoolMarketplace} from "./IPoolMarketplace.sol";
@@ -7,6 +7,7 @@ import {IPoolParameters} from "./IPoolParameters.sol";
 import {IParaProxyInterfaces} from "./IParaProxyInterfaces.sol";
 import {IPoolPositionMover} from "./IPoolPositionMover.sol";
 import "./IPoolApeStaking.sol";
+import "./IPoolBorrowAndStake.sol";
 
 /**
  * @title IPool
@@ -19,7 +20,8 @@ interface IPool is
     IPoolParameters,
     IPoolApeStaking,
     IParaProxyInterfaces,
-    IPoolPositionMover
+    IPoolPositionMover,
+    IPoolBorrowAndStake
 {
 
 }

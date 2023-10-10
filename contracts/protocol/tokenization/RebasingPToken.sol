@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IPool} from "../../interfaces/IPool.sol";
 import {PToken} from "./PToken.sol";
@@ -9,6 +9,8 @@ import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {GPv2SafeERC20} from "../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
+import {IScaledBalanceToken} from "../../interfaces/IScaledBalanceToken.sol";
+import {ScaledBalanceTokenBaseERC20} from "contracts/protocol/tokenization/base/ScaledBalanceTokenBaseERC20.sol";
 
 /**
  * @title Rebasing PToken
@@ -42,10 +44,12 @@ contract RebasingPToken is PToken {
      * @param user The user whose balance is calculated
      * @return The scaled balance of the user
      **/
-    function scaledBalanceOf(address user)
+    function scaledBalanceOf(
+        address user
+    )
         public
         view
-        override
+        override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
         returns (uint256)
     {
         return _scaledBalanceOf(user, lastRebasingIndex());
@@ -57,10 +61,12 @@ contract RebasingPToken is PToken {
      * @return The scaled balance of the user
      * @return The scaled balance and the scaled total supply
      **/
-    function getScaledUserBalanceAndSupply(address user)
+    function getScaledUserBalanceAndSupply(
+        address user
+    )
         external
         view
-        override
+        override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
         returns (uint256, uint256)
     {
         uint256 rebasingIndex = lastRebasingIndex();
@@ -97,25 +103,22 @@ contract RebasingPToken is PToken {
         public
         view
         virtual
-        override
+        override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
         returns (uint256)
     {
         return _scaledTotalSupply(lastRebasingIndex());
     }
 
-    function _scaledBalanceOf(address user, uint256 rebasingIndex)
-        internal
-        view
-        returns (uint256)
-    {
+    function _scaledBalanceOf(
+        address user,
+        uint256 rebasingIndex
+    ) internal view returns (uint256) {
         return super.scaledBalanceOf(user).rayMul(rebasingIndex);
     }
 
-    function _scaledTotalSupply(uint256 rebasingIndex)
-        internal
-        view
-        returns (uint256)
-    {
+    function _scaledTotalSupply(
+        uint256 rebasingIndex
+    ) internal view returns (uint256) {
         return super.scaledTotalSupply().rayMul(rebasingIndex);
     }
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
@@ -780,30 +780,26 @@ library MintableERC721Logic {
         );
     }
 
-    function _exists(MintableERC721Data storage erc721Data, uint256 tokenId)
-        private
-        view
-        returns (bool)
-    {
+    function _exists(
+        MintableERC721Data storage erc721Data,
+        uint256 tokenId
+    ) private view returns (bool) {
         return erc721Data.owners[tokenId] != address(0);
     }
 
-    function _cache(MintableERC721Data storage erc721Data, address user)
-        private
-        view
-        returns (LocalVars memory vars)
-    {
+    function _cache(
+        MintableERC721Data storage erc721Data,
+        address user
+    ) private view returns (LocalVars memory vars) {
         vars.oldBalance = erc721Data.userState[user].balance;
         vars.oldCollateralizedBalance = erc721Data
             .userState[user]
             .collateralizedBalance;
     }
 
-    function getTraitMultiplier(uint256 multiplier)
-        internal
-        pure
-        returns (uint256)
-    {
+    function getTraitMultiplier(
+        uint256 multiplier
+    ) internal pure returns (uint256) {
         return multiplier != 0 ? multiplier : WadRayMath.WAD;
     }
 

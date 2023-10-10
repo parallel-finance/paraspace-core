@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.5.0) (token/ERC721/presets/ERC721PresetMinterPauserAutoId.sol)
 
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {ERC721Enumerable} from "../../dependencies/openzeppelin/contracts/ERC721Enumerable.sol";
 import {ERC721} from "../../dependencies/openzeppelin/contracts/ERC721.sol";

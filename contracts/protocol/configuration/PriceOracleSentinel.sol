@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
@@ -88,19 +88,17 @@ contract PriceOracleSentinel is IPriceOracleSentinel {
     }
 
     /// @inheritdoc IPriceOracleSentinel
-    function setSequencerOracle(address newSequencerOracle)
-        external
-        onlyPoolAdmin
-    {
+    function setSequencerOracle(
+        address newSequencerOracle
+    ) external onlyPoolAdmin {
         _sequencerOracle = ISequencerOracle(newSequencerOracle);
         emit SequencerOracleUpdated(newSequencerOracle);
     }
 
     /// @inheritdoc IPriceOracleSentinel
-    function setGracePeriod(uint256 newGracePeriod)
-        external
-        onlyRiskOrPoolAdmins
-    {
+    function setGracePeriod(
+        uint256 newGracePeriod
+    ) external onlyRiskOrPoolAdmins {
         _gracePeriod = newGracePeriod;
         emit GracePeriodUpdated(newGracePeriod);
     }

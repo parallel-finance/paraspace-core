@@ -51,6 +51,8 @@ import {
   deployChromieSquiggleNTokenImpl,
   deployAutoYieldApeImplAndAssignItToProxy,
   deployAutoCompoundApeImplAndAssignItToProxy,
+  deployPTokenStKSM,
+  deployStKSMDebtToken,
 } from "./contracts-deployments";
 import {ZERO_ADDRESS} from "./constants";
 
@@ -117,6 +119,7 @@ export const initReservesByHelper = async (
     genericDelegationAwarePTokenImplAddress;
   let pTokenImplementationAddress = genericPTokenImplAddress;
   let pTokenStETHImplementationAddress = "";
+  let pTokenStKSMImplementationAddress = "";
   let pTokenATokenImplementationAddress = "";
   let pTokenAStETHImplementationAddress = "";
   let pTokenSApeImplementationAddress = "";
@@ -129,6 +132,7 @@ export const initReservesByHelper = async (
   let nTokenMAYCImplementationAddress = "";
   let variableDebtTokenImplementationAddress = genericVariableDebtTokenAddress;
   let stETHVariableDebtTokenImplementationAddress = "";
+  let stKSMVariableDebtTokenImplementationAddress = "";
   let astETHVariableDebtTokenImplementationAddress = "";
   let aTokenVariableDebtTokenImplementationAddress = "";
   let psApeVariableDebtTokenImplementationAddress = "";
@@ -324,6 +328,8 @@ export const initReservesByHelper = async (
         eContractid.NTokenMAYCImpl,
         eContractid.NTokenBAKCImpl,
         eContractid.NTokenStakefishImpl,
+        eContractid.NTokenChromieSquiggleImpl,
+        eContractid.NTokenOtherdeedImpl,
       ].includes(xTokenImpl)
     ) {
       xTokenType[symbol] = "nft";
@@ -399,6 +405,19 @@ export const initReservesByHelper = async (
             ).address;
           }
           variableDebtTokenToUse = stETHVariableDebtTokenImplementationAddress;
+        } else if (reserveSymbol === ERC20TokenContractId.stDOT) {
+          if (!pTokenStKSMImplementationAddress) {
+            pTokenStKSMImplementationAddress = (
+              await deployPTokenStKSM(pool.address, verify)
+            ).address;
+          }
+          xTokenToUse = pTokenStKSMImplementationAddress;
+          if (!stKSMVariableDebtTokenImplementationAddress) {
+            stKSMVariableDebtTokenImplementationAddress = (
+              await deployStKSMDebtToken(pool.address, verify)
+            ).address;
+          }
+          variableDebtTokenToUse = stKSMVariableDebtTokenImplementationAddress;
         } else if (
           reserveSymbol === ERC20TokenContractId.aWETH ||
           reserveSymbol === ERC20TokenContractId.awstETH
@@ -589,8 +608,6 @@ export const initReservesByHelper = async (
             await deployChromieSquiggleNTokenImpl(
               pool.address,
               delegationRegistryAddress,
-              0,
-              20, //set 20 in test environment for easy test. should be 9763 in mainnet
               verify
             )
           ).address;
@@ -635,18 +652,22 @@ export const initReservesByHelper = async (
       `  - Reserve ready for: ${chunkedSymbols[chunkIndex].join(", ")}`
     );
 
-    if (DRY_RUN) {
-      const encodedData = configurator.interface.encodeFunctionData(
-        "initReserves",
-        [inputs]
-      );
-      await dryRunEncodedData(configurator.address, encodedData);
-    } else {
-      const tx = await waitForTx(
-        await configurator.initReserves(inputs, GLOBAL_OVERRIDES)
-      );
+    try {
+      if (DRY_RUN) {
+        const encodedData = configurator.interface.encodeFunctionData(
+          "initReserves",
+          [inputs]
+        );
+        await dryRunEncodedData(configurator.address, encodedData);
+      } else {
+        const tx = await waitForTx(
+          await configurator.initReserves(inputs, GLOBAL_OVERRIDES)
+        );
 
-      console.log("    * gasUsed", tx.gasUsed.toString());
+        console.log("    * gasUsed", tx.gasUsed.toString());
+      }
+    } catch (e) {
+      console.error(e);
     }
   }
 
@@ -759,22 +780,26 @@ export const configureReservesByHelper = async (
       chunkIndex < chunkedInputParams.length;
       chunkIndex++
     ) {
-      if (DRY_RUN) {
-        const encodedData = reservesSetupHelper.interface.encodeFunctionData(
-          "configureReserves",
-          [poolConfiguratorAddress, chunkedInputParams[chunkIndex]]
-        );
-        await dryRunEncodedData(reservesSetupHelper.address, encodedData);
-      } else {
-        await waitForTx(
-          await reservesSetupHelper.configureReserves(
-            poolConfiguratorAddress,
-            chunkedInputParams[chunkIndex],
-            GLOBAL_OVERRIDES
-          )
-        );
+      try {
+        if (DRY_RUN) {
+          const encodedData = reservesSetupHelper.interface.encodeFunctionData(
+            "configureReserves",
+            [poolConfiguratorAddress, chunkedInputParams[chunkIndex]]
+          );
+          await dryRunEncodedData(reservesSetupHelper.address, encodedData);
+        } else {
+          await waitForTx(
+            await reservesSetupHelper.configureReserves(
+              poolConfiguratorAddress,
+              chunkedInputParams[chunkIndex],
+              GLOBAL_OVERRIDES
+            )
+          );
+        }
+        console.log(`  - Init for: ${chunkedSymbols[chunkIndex].join(", ")}`);
+      } catch (e) {
+        console.error(e);
       }
-      console.log(`  - Init for: ${chunkedSymbols[chunkIndex].join(", ")}`);
     }
     // Remove reservesSetupHelper as admin
     if (DRY_RUN) {

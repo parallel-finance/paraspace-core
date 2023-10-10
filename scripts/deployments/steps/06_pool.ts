@@ -28,6 +28,7 @@ import {eContractid, ERC20TokenContractId} from "../../../helpers/types";
 export const step_06 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
   const paraSpaceConfig = getParaSpaceConfig();
+  const allTokens = await getAllTokens();
 
   try {
     const {
@@ -35,10 +36,12 @@ export const step_06 = async (verify = false) => {
       poolParameters,
       poolMarketplace,
       poolApeStaking,
+      poolBorrowAndStake,
       poolCoreSelectors,
       poolParametersSelectors,
       poolMarketplaceSelectors,
       poolApeStakingSelectors,
+      poolBorrowAndStakeSelectors,
     } = await deployPoolComponents(addressesProvider.address, verify);
 
     const {poolParaProxyInterfaces, poolParaProxyInterfacesSelectors} =
@@ -74,7 +77,11 @@ export const step_06 = async (verify = false) => {
       )
     );
 
-    if (paraSpaceConfig.BendDAO.LendingPoolLoan || isLocalTestnet()) {
+    if (
+      paraSpaceConfig.BendDAO.LendingPoolLoan ||
+      paraSpaceConfig.ParaSpaceV1 ||
+      isLocalTestnet()
+    ) {
       const bendDaoLendPoolLoan =
         paraSpaceConfig.BendDAO.LendingPoolLoan ||
         (await getContractAddressInDb(eContractid.MockBendDaoLendPool)) ||
@@ -88,6 +95,13 @@ export const step_06 = async (verify = false) => {
           addressesProvider.address,
           bendDaoLendPoolLoan,
           bendDaoLendPool,
+          paraSpaceConfig.ParaSpaceV1?.PoolV1 || ZERO_ADDRESS,
+          paraSpaceConfig.ParaSpaceV1?.ProtocolDataProviderV1 || ZERO_ADDRESS,
+          paraSpaceConfig.ParaSpaceV1?.CApeV1 || ZERO_ADDRESS,
+          allTokens[ERC20TokenContractId.cAPE].address,
+          allTokens[ERC20TokenContractId.APE].address,
+          paraSpaceConfig.ParaSpaceV1?.TimeLockV1 || ZERO_ADDRESS,
+          paraSpaceConfig.ParaSpaceV1?.P2PPairStakingV1 || ZERO_ADDRESS,
           verify
         );
 
@@ -124,7 +138,25 @@ export const step_06 = async (verify = false) => {
       );
     }
 
+    if (poolBorrowAndStake) {
+      await waitForTx(
+        await addressesProvider.updatePoolImpl(
+          [
+            {
+              implAddress: poolBorrowAndStake.address,
+              action: 0,
+              functionSelectors: poolBorrowAndStakeSelectors,
+            },
+          ],
+          ZERO_ADDRESS,
+          "0x",
+          GLOBAL_OVERRIDES
+        )
+      );
+    }
+
     const poolAddress = await addressesProvider.getPool();
+    const poolProxy = await getPoolProxy(poolAddress);
 
     await waitForTx(
       await addressesProvider.updatePoolImpl(
@@ -158,11 +190,11 @@ export const step_06 = async (verify = false) => {
       )
     );
 
-    const poolProxy = await getPoolProxy(poolAddress);
-    const uniswapV3Router = await getUniswapV3SwapRouter();
-    const allTokens = await getAllTokens();
-
-    if (allTokens[ERC20TokenContractId.APE]) {
+    if (
+      allTokens[ERC20TokenContractId.APE] &&
+      (await getContractAddressInDb(eContractid.UniswapV3SwapRouter))
+    ) {
+      const uniswapV3Router = await getUniswapV3SwapRouter();
       const cAPE = await getAutoCompoundApe();
       await waitForTx(
         await poolProxy.unlimitedApproveTo(

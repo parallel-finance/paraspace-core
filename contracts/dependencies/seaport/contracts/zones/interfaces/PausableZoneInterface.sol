@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.0;
 
 import { SeaportInterface } from "../../interfaces/SeaportInterface.sol";
 
@@ -89,7 +89,7 @@ interface PausableZoneInterface {
      *         zone will not be fulfillable unless the zone is redeployed to the
      *         same address.
      */
-    function pause(address payee) external;
+    // function pause(address payee) external;
 
     /**
      * @notice Assign the given address with the ability to operate the zone.

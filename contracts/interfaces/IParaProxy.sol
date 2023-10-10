@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 /******************************************************************************\
 * EIP-2535: https://eips.ethereum.org/EIPS/eip-2535

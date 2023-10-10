@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
@@ -30,14 +30,16 @@ contract VariableDebtToken is
     using WadRayMath for uint256;
     using SafeCast for uint256;
 
-    uint256 public constant DEBT_TOKEN_REVISION = 149;
+    uint256 public constant DEBT_TOKEN_REVISION = 200;
     uint256[50] private __gap;
 
     /**
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(IPool pool)
+    constructor(
+        IPool pool
+    )
         DebtTokenBase()
         ScaledBalanceTokenBaseERC20(
             pool,
@@ -86,7 +88,9 @@ contract VariableDebtToken is
     }
 
     /// @inheritdoc IERC20
-    function balanceOf(address user)
+    function balanceOf(
+        address user
+    )
         public
         view
         virtual
@@ -148,31 +152,24 @@ contract VariableDebtToken is
      * @dev Being non transferrable, the debt token does not implement any of the
      * standard ERC20 functions for transfer and allowance.
      **/
-    function transfer(address, uint256)
-        external
-        virtual
-        override
-        returns (bool)
-    {
+    function transfer(
+        address,
+        uint256
+    ) external virtual override returns (bool) {
         revert(Errors.OPERATION_NOT_SUPPORTED);
     }
 
-    function allowance(address, address)
-        external
-        view
-        virtual
-        override
-        returns (uint256)
-    {
+    function allowance(
+        address,
+        address
+    ) external view virtual override returns (uint256) {
         revert(Errors.OPERATION_NOT_SUPPORTED);
     }
 
-    function approve(address, uint256)
-        external
-        virtual
-        override
-        returns (bool)
-    {
+    function approve(
+        address,
+        uint256
+    ) external virtual override returns (bool) {
         revert(Errors.OPERATION_NOT_SUPPORTED);
     }
 
@@ -184,21 +181,17 @@ contract VariableDebtToken is
         revert(Errors.OPERATION_NOT_SUPPORTED);
     }
 
-    function increaseAllowance(address, uint256)
-        external
-        virtual
-        override
-        returns (bool)
-    {
+    function increaseAllowance(
+        address,
+        uint256
+    ) external virtual override returns (bool) {
         revert(Errors.OPERATION_NOT_SUPPORTED);
     }
 
-    function decreaseAllowance(address, uint256)
-        external
-        virtual
-        override
-        returns (bool)
-    {
+    function decreaseAllowance(
+        address,
+        uint256
+    ) external virtual override returns (bool) {
         revert(Errors.OPERATION_NOT_SUPPORTED);
     }
 

@@ -433,7 +433,7 @@ abstract contract Ownable is Context {
 
 // MIT
 // Copyright (c) 2021 the ethier authors (github.com/divergencetech/ethier)
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity ^0.8.0;
 
 /**
 @notice ERC721 extension that overrides the OpenZeppelin _baseURI() function to
@@ -471,7 +471,7 @@ contract BaseTokenURI is Ownable {
 
 // MIT
 // Copyright (c) 2021 the ethier authors (github.com/divergencetech/ethier)
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity ^0.8.0;
 
 /// @notice A minimal interface describing OpenSea's Wyvern proxy registry.
 contract ProxyRegistry {
@@ -493,7 +493,7 @@ contract OwnableDelegateProxy {
 
 // MIT
 // Copyright (c) 2021 the ethier authors (github.com/divergencetech/ethier)
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity ^0.8.0;
 
 // Inspired by BaseOpenSea by Simon Fremaux (@dievardump) but without the need
 // to pass specific addresses depending on deployment network.
@@ -569,7 +569,7 @@ library OpenSeaGasFreeListing {
 // ERC721A Contracts v4.1.0
 // Creator: Chiru Labs
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.0;
 
 /**
  * @dev Interface of an ERC721A compliant contract.
@@ -872,7 +872,7 @@ interface IERC721A {
 // ERC721A Contracts v4.1.0
 // Creator: Chiru Labs
 
-pragma solidity ^0.8.4;
+pragma solidity ^0.8.0;
 
 /**
  * @dev ERC721 token receiver interface.
@@ -1925,7 +1925,7 @@ contract ERC721A is IERC721A {
 
 // MIT
 // Copyright (c) 2021 the ethier authors (github.com/divergencetech/ethier)
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity ^0.8.0;
 
 /// @notice Pre-approval of OpenSea proxies for gas-less listing
 /// @dev This wrapper allows users to revoke the pre-approval of their
@@ -2108,7 +2108,7 @@ abstract contract Pausable is Context {
 
 // MIT
 // Copyright (c) 2021 the ethier authors (github.com/divergencetech/ethier)
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity ^0.8.0;
 
 /// @notice A Pausable contract that can only be toggled by the Owner.
 contract OwnerPausable is Ownable, Pausable {
@@ -2127,7 +2127,7 @@ contract OwnerPausable is Ownable, Pausable {
 
 // MIT
 // Copyright (c) 2022 the ethier authors (github.com/divergencetech/ethier)
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity ^0.8.0;
 
 /**
 @notice An ERC721A contract with common functionality:
@@ -2246,7 +2246,7 @@ library BitMaps {
 
 // MIT
 // Copyright (c) 2022 the ethier authors (github.com/divergencetech/ethier)
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity ^0.8.0;
 
 /**
 @notice Allows holders of ERC721 tokens to redeem rights to some claim; for
@@ -2451,7 +2451,7 @@ library ERC721Redeemer {
 
 // MIT
 // Copyright (c) 2021 the ethier authors (github.com/divergencetech/ethier)
-pragma solidity >=0.8.0 <0.9.0;
+pragma solidity ^0.8.0;
 
 /**
 @notice Provides monotonic increasing and decreasing values, similar to
@@ -3024,7 +3024,7 @@ abstract contract AccessControlEnumerable is
 // File contracts/mocks/tokens/Moonbirds.sol
 
 // UNLICENSED
-pragma solidity >=0.8.10 <0.9.0;
+pragma solidity ^0.8.0;
 
 /**
  * @dev Interface for the NFT Royalty Standard.

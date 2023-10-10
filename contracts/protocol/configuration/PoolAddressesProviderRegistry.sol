@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {Ownable} from "../../dependencies/openzeppelin/contracts/Ownable.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
@@ -44,11 +44,10 @@ contract PoolAddressesProviderRegistry is
     }
 
     /// @inheritdoc IPoolAddressesProviderRegistry
-    function registerAddressesProvider(address provider, uint256 id)
-        external
-        override
-        onlyOwner
-    {
+    function registerAddressesProvider(
+        address provider,
+        uint256 id
+    ) external override onlyOwner {
         require(id != 0, Errors.INVALID_ADDRESSES_PROVIDER_ID);
         require(provider != address(0x0), Errors.INVALID_ADDRESSES_PROVIDER);
 
@@ -69,11 +68,9 @@ contract PoolAddressesProviderRegistry is
     }
 
     /// @inheritdoc IPoolAddressesProviderRegistry
-    function unregisterAddressesProvider(address provider)
-        external
-        override
-        onlyOwner
-    {
+    function unregisterAddressesProvider(
+        address provider
+    ) external override onlyOwner {
         require(
             _addressesProviderToId[provider] != 0,
             Errors.ADDRESSES_PROVIDER_NOT_REGISTERED
@@ -88,22 +85,16 @@ contract PoolAddressesProviderRegistry is
     }
 
     /// @inheritdoc IPoolAddressesProviderRegistry
-    function getAddressesProviderIdByAddress(address addressesProvider)
-        external
-        view
-        override
-        returns (uint256)
-    {
+    function getAddressesProviderIdByAddress(
+        address addressesProvider
+    ) external view override returns (uint256) {
         return _addressesProviderToId[addressesProvider];
     }
 
     /// @inheritdoc IPoolAddressesProviderRegistry
-    function getAddressesProviderAddressById(uint256 id)
-        external
-        view
-        override
-        returns (address)
-    {
+    function getAddressesProviderAddressById(
+        uint256 id
+    ) external view override returns (address) {
         return _idToAddressesProvider[id];
     }
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 /**
  * @title Errors library
@@ -144,4 +144,6 @@ library Errors {
     string public constant INVALID_LISTING_PRICE = "149"; //the listing price for blur exchange request is invalid
     string public constant CALLER_NOT_KEEPER = "150"; //The caller of the function is not keeper
     string public constant NTOKEN_NOT_OWNS_UNDERLYING = "151"; //The ntoken does not owns the underlying nft
+
+    string public constant INVALID_PARAMETER = "170"; //invalid parameter
 }

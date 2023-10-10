@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {Address} from "../../../dependencies/openzeppelin/contracts/Address.sol";
@@ -14,6 +14,7 @@ import {ReserveLogic} from "./ReserveLogic.sol";
 import {ValidationLogic} from "./ValidationLogic.sol";
 import {GenericLogic} from "./GenericLogic.sol";
 import {IXTokenType, XTokenType} from "../../../interfaces/IXTokenType.sol";
+import {Helpers} from "../../libraries/helpers/Helpers.sol";
 
 /**
  * @title PoolLogic library
@@ -87,7 +88,11 @@ library PoolLogic {
         uint256 amountOrTokenId
     ) external {
         if (assetType == DataTypes.AssetType.ERC20) {
-            IERC20(token).safeTransfer(to, amountOrTokenId);
+            if (token != address(0)) {
+                IERC20(token).safeTransfer(to, amountOrTokenId);
+            } else {
+                Helpers.safeTransferETH(to, amountOrTokenId);
+            }
         } else if (assetType == DataTypes.AssetType.ERC721) {
             IERC721(token).safeTransferFrom(address(this), to, amountOrTokenId);
         }

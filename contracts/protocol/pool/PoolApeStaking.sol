@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import "../libraries/paraspace-upgradeability/ParaReentrancyGuard.sol";
 import "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
@@ -18,13 +18,12 @@ import {UserConfiguration} from "../libraries/configuration/UserConfiguration.so
 import {ApeStakingLogic} from "../tokenization/libraries/ApeStakingLogic.sol";
 import "../libraries/logic/BorrowLogic.sol";
 import "../libraries/logic/SupplyLogic.sol";
-import "../libraries/logic/PoolExtendedLogic.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
 import {PercentageMath} from "../libraries/math/PercentageMath.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
-import {ISwapRouter} from "../../dependencies/univ3/interfaces/ISwapRouter.sol";
+import {ISwapRouter} from "../../dependencies/uniswapv3-periphery/interfaces/ISwapRouter.sol";
 import {IPriceOracleGetter} from "../../interfaces/IPriceOracleGetter.sol";
 import {Helpers} from "../libraries/helpers/Helpers.sol";
 
@@ -45,7 +44,7 @@ contract PoolApeStaking is
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
     IAutoCompoundApe internal immutable APE_COMPOUND;
     IERC20 internal immutable APE_COIN;
-    uint256 internal constant POOL_REVISION = 150;
+    uint256 internal constant POOL_REVISION = 200;
     IERC20 internal immutable USDC;
     ISwapRouter internal immutable SWAP_ROUTER;
 
@@ -54,6 +53,11 @@ contract PoolApeStaking is
     uint24 internal immutable WETH_USDC_FEE;
     address internal immutable WETH;
     address internal immutable APE_COMPOUND_TREASURY;
+
+    event ReserveUsedAsCollateralEnabled(
+        address indexed reserve,
+        address indexed user
+    );
 
     struct ApeStakingLocalVars {
         address xTokenAddress;
@@ -129,10 +133,10 @@ contract PoolApeStaking is
     }
 
     /// @inheritdoc IPoolApeStaking
-    function claimApeCoin(address nftAsset, uint256[] calldata _nfts)
-        external
-        nonReentrant
-    {
+    function claimApeCoin(
+        address nftAsset,
+        uint256[] calldata _nfts
+    ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         _checkSApeIsNotPaused(ps);
 
@@ -178,8 +182,8 @@ contract PoolApeStaking is
                 localVar.bakcNToken
             ) {
                 localVar.transferredTokenOwners[
-                        actualTransferAmount
-                    ] = _validateBAKCOwnerAndTransfer(
+                    actualTransferAmount
+                ] = _validateBAKCOwnerAndTransfer(
                     localVar,
                     _nftPairs[index].bakcTokenId,
                     msg.sender
@@ -337,8 +341,8 @@ contract PoolApeStaking is
                 );
 
                 localVar.transferredTokenOwners[
-                        index
-                    ] = _validateBAKCOwnerAndTransfer(
+                    index
+                ] = _validateBAKCOwnerAndTransfer(
                     localVar,
                     _nftPairs[index].bakcTokenId,
                     msg.sender
@@ -401,10 +405,10 @@ contract PoolApeStaking is
     }
 
     /// @inheritdoc IPoolApeStaking
-    function unstakeApePositionAndRepay(address nftAsset, uint256 tokenId)
-        external
-        nonReentrant
-    {
+    function unstakeApePositionAndRepay(
+        address nftAsset,
+        uint256 tokenId
+    ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
         DataTypes.ReserveData storage nftReserve = ps._reserves[nftAsset];
         address xTokenAddress = nftReserve.xTokenAddress;
@@ -518,8 +522,8 @@ contract PoolApeStaking is
                 );
 
                 localVar.transferredTokenOwners[
-                        j
-                    ] = _validateBAKCOwnerAndTransfer(
+                    j
+                ] = _validateBAKCOwnerAndTransfer(
                     localVar,
                     _nftPairs[i][j].bakcTokenId,
                     users[i]
@@ -545,11 +549,10 @@ contract PoolApeStaking is
         _compoundForUsers(ps, localVar, users);
     }
 
-    function _generalCache(DataTypes.PoolStorage storage ps, address nftAsset)
-        internal
-        view
-        returns (ApeStakingLocalVars memory localVar)
-    {
+    function _generalCache(
+        DataTypes.PoolStorage storage ps,
+        address nftAsset
+    ) internal view returns (ApeStakingLocalVars memory localVar) {
         localVar.xTokenAddress = ps._reserves[nftAsset].xTokenAddress;
         localVar.bakcContract = INTokenApeStaking(localVar.xTokenAddress)
             .getBAKC();
@@ -641,10 +644,9 @@ contract PoolApeStaking is
         }
     }
 
-    function _checkSApeIsNotPaused(DataTypes.PoolStorage storage ps)
-        internal
-        view
-    {
+    function _checkSApeIsNotPaused(
+        DataTypes.PoolStorage storage ps
+    ) internal view {
         DataTypes.ReserveData storage reserve = ps._reserves[
             DataTypes.SApeAddress
         ];
@@ -739,20 +741,13 @@ contract PoolApeStaking is
                 amountOutMinimum: amountIn.wadMul(price)
             })
         );
-        PoolExtendedLogic.supplyForUser(
-            ps,
-            tokenOut,
-            address(this),
-            user,
-            amountOut
-        );
+        _supplyForUser(ps, tokenOut, address(this), user, amountOut);
     }
 
-    function _getApeRelativePrice(address tokenOut, uint256 tokenOutUnit)
-        internal
-        view
-        returns (uint256)
-    {
+    function _getApeRelativePrice(
+        address tokenOut,
+        uint256 tokenOutUnit
+    ) internal view returns (uint256) {
         IPriceOracleGetter oracle = IPriceOracleGetter(
             ADDRESSES_PROVIDER.getPriceOracle()
         );
@@ -772,13 +767,71 @@ contract PoolApeStaking is
         address onBehalfOf,
         uint256 totalAmount
     ) internal {
-        PoolExtendedLogic.repayAndSupplyForUser(
-            ps,
-            asset,
-            payer,
-            onBehalfOf,
+        address variableDebtTokenAddress = ps
+            ._reserves[asset]
+            .variableDebtTokenAddress;
+        uint256 repayAmount = Math.min(
+            IERC20(variableDebtTokenAddress).balanceOf(onBehalfOf),
             totalAmount
         );
+        _repayForUser(ps, asset, payer, onBehalfOf, repayAmount);
+        _supplyForUser(ps, asset, payer, onBehalfOf, totalAmount - repayAmount);
+    }
+
+    function _supplyForUser(
+        DataTypes.PoolStorage storage ps,
+        address asset,
+        address payer,
+        address onBehalfOf,
+        uint256 amount
+    ) internal {
+        if (amount == 0) {
+            return;
+        }
+        DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
+            onBehalfOf
+        ];
+        SupplyLogic.executeSupply(
+            ps._reserves,
+            userConfig,
+            DataTypes.ExecuteSupplyParams({
+                asset: asset,
+                amount: amount,
+                onBehalfOf: onBehalfOf,
+                payer: payer,
+                referralCode: 0
+            })
+        );
+        Helpers.setAssetUsedAsCollateral(
+            userConfig,
+            ps._reserves,
+            asset,
+            onBehalfOf
+        );
+    }
+
+    function _repayForUser(
+        DataTypes.PoolStorage storage ps,
+        address asset,
+        address payer,
+        address onBehalfOf,
+        uint256 amount
+    ) internal returns (uint256) {
+        if (amount == 0) {
+            return 0;
+        }
+        return
+            BorrowLogic.executeRepay(
+                ps._reserves,
+                ps._usersConfig[onBehalfOf],
+                DataTypes.ExecuteRepayParams({
+                    asset: asset,
+                    amount: amount,
+                    onBehalfOf: onBehalfOf,
+                    payer: payer,
+                    usePTokens: false
+                })
+            );
     }
 
     function _validateBAKCOwnerAndTransfer(

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {OfferItem, ConsiderationItem} from "../../../dependencies/seaport/contracts/lib/ConsiderationStructs.sol";
 import {IStakefishValidator} from "../../../interfaces/IStakefishValidator.sol";
@@ -40,6 +40,9 @@ library DataTypes {
         uint128 accruedToTreasury;
         // timelock strategy
         address timeLockStrategyAddress;
+        // use uint128 to be used for crosschain in the future
+        // after position move
+        uint128 unbacked;
     }
 
     struct ReserveConfigurationMap {
@@ -466,5 +469,27 @@ library DataTypes {
         address collection;
         // nft token id for the listing order
         uint256 tokenId;
+    }
+
+    struct ParaSpacePositionMoveInfo {
+        address[] cTokens;
+        DataTypes.AssetType[] cTypes;
+        uint256[][] cAmountsOrTokenIds;
+        address[] dTokens;
+        uint256[] dAmounts;
+        address to;
+    }
+
+    struct ParaSpacePositionMoveParams {
+        address user;
+        address[] cTokens;
+        DataTypes.AssetType[] cTypes;
+        uint256[][] cAmountsOrTokenIds;
+        address[] dTokens;
+        uint256[] dAmounts;
+        address to;
+        address priceOracle;
+        address priceOracleSentinel;
+        uint256 reservesCount;
     }
 }

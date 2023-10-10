@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IPool} from "../../interfaces/IPool.sol";
 import {VariableDebtToken} from "./VariableDebtToken.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import {IScaledBalanceToken} from "../../interfaces/IScaledBalanceToken.sol";
+import {ScaledBalanceTokenBaseERC20} from "contracts/protocol/tokenization/base/ScaledBalanceTokenBaseERC20.sol";
 
 /**
  * @title Rebasing Debt Token
@@ -44,10 +46,12 @@ contract RebasingDebtToken is VariableDebtToken {
      * @param user The user whose balance is calculated
      * @return The scaled balance of the user
      **/
-    function scaledBalanceOf(address user)
+    function scaledBalanceOf(
+        address user
+    )
         public
         view
-        override
+        override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
         returns (uint256)
     {
         return _scaledBalanceOf(user, lastRebasingIndex());
@@ -59,10 +63,12 @@ contract RebasingDebtToken is VariableDebtToken {
      * @return The scaled balance of the user
      * @return The scaled balance and the scaled total supply
      **/
-    function getScaledUserBalanceAndSupply(address user)
+    function getScaledUserBalanceAndSupply(
+        address user
+    )
         external
         view
-        override
+        override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
         returns (uint256, uint256)
     {
         uint256 rebasingIndex = lastRebasingIndex();
@@ -99,17 +105,16 @@ contract RebasingDebtToken is VariableDebtToken {
         public
         view
         virtual
-        override
+        override(IScaledBalanceToken, ScaledBalanceTokenBaseERC20)
         returns (uint256)
     {
         return _scaledTotalSupply(lastRebasingIndex());
     }
 
-    function _scaledBalanceOf(address user, uint256 rebasingIndex)
-        internal
-        view
-        returns (uint256)
-    {
+    function _scaledBalanceOf(
+        address user,
+        uint256 rebasingIndex
+    ) internal view returns (uint256) {
         uint256 scaledBalance = super.scaledBalanceOf(user);
 
         if (scaledBalance == 0) {
@@ -119,11 +124,9 @@ contract RebasingDebtToken is VariableDebtToken {
         return scaledBalance.rayMul(rebasingIndex);
     }
 
-    function _scaledTotalSupply(uint256 rebasingIndex)
-        internal
-        view
-        returns (uint256)
-    {
+    function _scaledTotalSupply(
+        uint256 rebasingIndex
+    ) internal view returns (uint256) {
         uint256 scaledTotalSupply_ = super.scaledTotalSupply();
 
         return scaledTotalSupply_.rayMul(rebasingIndex);

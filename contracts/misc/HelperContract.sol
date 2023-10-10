@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
@@ -13,17 +13,20 @@ contract HelperContract is Initializable, OwnableUpgradeable {
     using SafeERC20 for IERC20;
 
     address internal immutable apeCoin;
+    address internal immutable cApeV1;
     address internal immutable cApe;
     address internal immutable pcApe;
     address internal immutable lendingPool;
 
     constructor(
         address _apeCoin,
+        address _cApeV1,
         address _cApe,
         address _pcApe,
         address _lendingPool
     ) {
         apeCoin = _apeCoin;
+        cApeV1 = _cApeV1;
         cApe = _cApe;
         pcApe = _pcApe;
         lendingPool = _lendingPool;
@@ -56,5 +59,14 @@ contract HelperContract is Initializable, OwnableUpgradeable {
         IPoolCore(lendingPool).withdraw(cApe, amount, address(this));
         IAutoCompoundApe(cApe).withdraw(amount);
         IERC20(apeCoin).safeTransfer(msg.sender, amount);
+    }
+
+    function cApeMigration(uint256 amount, address to) external {
+        if (amount == 0 || amount == type(uint256).max) {
+            amount = IERC20(cApeV1).balanceOf(msg.sender);
+        }
+        IERC20(cApeV1).safeTransferFrom(msg.sender, address(this), amount);
+        IAutoCompoundApe(cApeV1).withdraw(amount);
+        IAutoCompoundApe(cApe).deposit(to, amount);
     }
 }

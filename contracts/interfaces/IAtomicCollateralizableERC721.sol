@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 /**
  * @title IAtomicCollateralizableERC721
@@ -20,8 +20,7 @@ interface IAtomicCollateralizableERC721 {
     /**
      * @dev get the trait multiplier of specific NFT
      */
-    function getTraitMultiplier(uint256 tokenId)
-        external
-        view
-        returns (uint256);
+    function getTraitMultiplier(
+        uint256 tokenId
+    ) external view returns (uint256);
 }

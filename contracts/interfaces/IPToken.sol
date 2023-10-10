@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IScaledBalanceToken} from "./IScaledBalanceToken.sol";
@@ -145,9 +145,13 @@ interface IPToken is
      * @param to The address of the recipient
      * @param amount The amount of token to transfer
      */
-    function rescueTokens(
-        address token,
-        address to,
-        uint256 amount
-    ) external;
+    function rescueTokens(address token, address to, uint256 amount) external;
+
+    function claimUnderlying(
+        address timeLockV1,
+        address cApeV1,
+        address cApeV2,
+        address apeCoin,
+        uint256[] calldata agreementIds
+    ) external returns (uint256);
 }
