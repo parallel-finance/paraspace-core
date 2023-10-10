@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
 
 interface IWETHGateway {
     event EmergencyTokenTransfer(address token, address to, uint256 amount);
 
-    function depositETH(address onBehalfOf, uint16 referralCode)
-        external
-        payable;
+    function depositETH(
+        address onBehalfOf,
+        uint16 referralCode
+    ) external payable;
 
     function withdrawETH(uint256 amount, address onBehalfOf) external;
 

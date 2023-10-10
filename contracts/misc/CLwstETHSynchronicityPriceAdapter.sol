@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 import {IEACAggregatorProxy} from "../interfaces/IEACAggregatorProxy.sol";
 import {ICLSynchronicityPriceAdapter} from "../dependencies/chainlink/ICLSynchronicityPriceAdapter.sol";
@@ -64,7 +64,7 @@ contract CLwstETHSynchronicityPriceAdapter is ICLSynchronicityPriceAdapter {
         // equal to 10 to the power of the sum decimals of feeds
         unchecked {
             DENOMINATOR = int256(
-                10**(PEG_TO_BASE.decimals() + ASSET_TO_PEG.decimals())
+                10 ** (PEG_TO_BASE.decimals() + ASSET_TO_PEG.decimals())
             );
         }
     }
@@ -72,7 +72,7 @@ contract CLwstETHSynchronicityPriceAdapter is ICLSynchronicityPriceAdapter {
     /// @inheritdoc ICLSynchronicityPriceAdapter
     function latestAnswer() public view virtual override returns (int256) {
         int256 assetToPegPrice = ASSET_TO_PEG
-            .getPooledEthByShares(10**ASSET_TO_PEG.decimals())
+            .getPooledEthByShares(10 ** ASSET_TO_PEG.decimals())
             .toInt256();
         int256 pegToBasePrice = PEG_TO_BASE.latestAnswer();
 
@@ -81,7 +81,7 @@ contract CLwstETHSynchronicityPriceAdapter is ICLSynchronicityPriceAdapter {
         }
 
         return
-            (assetToPegPrice * pegToBasePrice * int256(10**DECIMALS)) /
+            (assetToPegPrice * pegToBasePrice * int256(10 ** DECIMALS)) /
             (DENOMINATOR);
     }
 }

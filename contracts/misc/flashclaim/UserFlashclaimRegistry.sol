@@ -1,18 +1,16 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import "./AirdropFlashClaimReceiver.sol";
 import "../interfaces/IUserFlashclaimRegistry.sol";
 import "../../dependencies/openzeppelin/upgradeability/Clones.sol";
 
 contract UserFlashclaimRegistry is IUserFlashclaimRegistry {
-    address public immutable pool;
     mapping(address => address) public userReceivers;
 
     address public immutable receiverImplementation;
 
-    constructor(address pool_, address receiverImplementation_) {
-        pool = pool_;
+    constructor(address receiverImplementation_) {
         receiverImplementation = receiverImplementation_;
     }
 
@@ -32,13 +30,9 @@ contract UserFlashclaimRegistry is IUserFlashclaimRegistry {
      * @notice get receiver contract address for the user
      * @param user The user address
      */
-    function getUserReceivers(address user)
-        external
-        view
-        virtual
-        override
-        returns (address)
-    {
+    function getUserReceivers(
+        address user
+    ) external view virtual override returns (address) {
         return userReceivers[user];
     }
 }

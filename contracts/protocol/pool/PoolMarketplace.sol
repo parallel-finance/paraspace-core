@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {ParaVersionedInitializable} from "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
@@ -54,7 +54,7 @@ contract PoolMarketplace is
     using SafeERC20 for IERC20;
 
     IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
-    uint256 internal constant POOL_REVISION = 150;
+    uint256 internal constant POOL_REVISION = 200;
 
     /**
      * @dev Constructor.

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 
@@ -31,8 +31,7 @@ interface INTokenStakefish {
      * associated with the specified validator NFT token ID. The metadata includes the token's name, symbol, asset address,
      * and maximum supply. This function can be used to retrieve additional details about a particular validator NFT token.
      */
-    function getNFTData(uint256 tokenId)
-        external
-        view
-        returns (DataTypes.StakefishNTokenData memory);
+    function getNFTData(
+        uint256 tokenId
+    ) external view returns (DataTypes.StakefishNTokenData memory);
 }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {ApeCoinStaking} from "../../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {NTokenApeStaking} from "./NTokenApeStaking.sol";
@@ -25,11 +25,9 @@ contract NTokenBAYC is NTokenApeStaking {
      * @dev Commits 1 or more BAYC NFTs, each with an ApeCoin amount to the BAYC pool.\
      * Each BAYC committed must attach an ApeCoin amount >= 1 ApeCoin and <= the BAYC pool cap amount.
      */
-    function depositApeCoin(ApeCoinStaking.SingleNft[] calldata _nfts)
-        external
-        onlyPool
-        nonReentrant
-    {
+    function depositApeCoin(
+        ApeCoinStaking.SingleNft[] calldata _nfts
+    ) external onlyPool nonReentrant {
         uint256 nftLength = _nfts.length;
         for (uint256 index = 0; index < nftLength; index++) {
             ensureOwnsUnderlying(_nfts[index].tokenId);
@@ -42,11 +40,10 @@ contract NTokenBAYC is NTokenApeStaking {
      * @param _nfts Array of NFTs owned and committed by the msg.sender
      * @param _recipient Address to send claim reward to
      */
-    function claimApeCoin(uint256[] calldata _nfts, address _recipient)
-        external
-        onlyPool
-        nonReentrant
-    {
+    function claimApeCoin(
+        uint256[] calldata _nfts,
+        address _recipient
+    ) external onlyPool nonReentrant {
         _apeCoinStaking.claimBAYC(_nfts, _recipient);
     }
 

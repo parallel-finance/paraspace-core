@@ -1,6 +1,7 @@
 import {decodeMulti} from "ethers-multisend";
 import {task} from "hardhat/config";
 import {TIME_LOCK_SIGS} from "../../helpers/hardhat-constants";
+import {eContractid} from "../../helpers/types";
 
 task("decode", "Decode input data")
   .addPositionalParam("data", "hex encoded data")
@@ -9,12 +10,16 @@ task("decode", "Decode input data")
     const {getTimeLockExecutor} = await import(
       "../../helpers/contracts-getters"
     );
-    const timeLock = await getTimeLockExecutor();
-    const {decodeInputData} = await import("../../helpers/contracts-helpers");
-    const sig = TIME_LOCK_SIGS[data.slice(0, 10)];
-    if (sig) {
-      [, , , data] = timeLock.interface.decodeFunctionData(sig, data);
-      return;
+    const {decodeInputData, getContractAddressInDb} = await import(
+      "../../helpers/contracts-helpers"
+    );
+    if (await getContractAddressInDb(eContractid.TimeLockExecutor)) {
+      const timeLock = await getTimeLockExecutor();
+      const sig = TIME_LOCK_SIGS[data.slice(0, 10)];
+      if (sig) {
+        [, , , data] = timeLock.interface.decodeFunctionData(sig, data);
+        return;
+      }
     }
 
     console.log(JSON.stringify(decodeInputData(data), null, 4));

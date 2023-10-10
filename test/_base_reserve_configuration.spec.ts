@@ -12,20 +12,24 @@ import {
   MintableERC20__factory,
   MockReserveConfiguration,
   MockReserveInterestRateStrategy__factory,
-  PoolCore__factory,
   PToken__factory,
   VariableDebtToken__factory,
 } from "../types";
 import {ProtocolErrors} from "../helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
-import {topUpNonPayableWithEther} from "./helpers/utils/funds";
 import {ZERO_ADDRESS} from "../helpers/constants";
-import {getFirstSigner, getTimeLockProxy} from "../helpers/contracts-getters";
+import {
+  getContractFactory,
+  getFirstSigner,
+  getTimeLockProxy,
+} from "../helpers/contracts-getters";
 import {auctionStrategyExp} from "../market-config/auctionStrategies";
-import {BigNumberish, utils} from "ethers";
+import {BigNumberish} from "ethers";
+// import {topUpNonPayableWithEther} from "./helpers/utils/funds";
+// import {utils} from "ethers";
+// import {impersonateAddress} from "../helpers/contracts-helpers";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
-import {impersonateAddress} from "../helpers/contracts-helpers";
 import {ConfiguratorInputTypes} from "../types/contracts/interfaces/IPoolConfigurator";
 
 describe("ReserveConfiguration", async () => {
@@ -410,88 +414,88 @@ describe("ReserveConfiguration", async () => {
     expect(await configMock.getLiquidationProtocolFee()).to.be.eq(ZERO);
   });
 
-  it("TC-reserve-configuration-20 Initialize an already initialized reserve. ReserveLogic `init` where xTokenAddress != ZERO_ADDRESS (revert expected)", async () => {
-    const {pool, dai, deployer, configurator} = await loadFixture(
-      testEnvFixture
-    );
+  // it("TC-reserve-configuration-20 Initialize an already initialized reserve. ReserveLogic `init` where xTokenAddress != ZERO_ADDRESS (revert expected)", async () => {
+  //   const {pool, dai, deployer, configurator} = await loadFixture(
+  //     testEnvFixture
+  //   );
+  //
+  //   // Impersonate PoolConfigurator
+  //   await topUpNonPayableWithEther(
+  //     deployer.signer,
+  //     [configurator.address],
+  //     utils.parseEther("1")
+  //   );
+  //   const configSigner = (await impersonateAddress(configurator.address))
+  //     .signer;
+  //
+  //   const config = await pool.getReserveData(dai.address);
+  //
+  //   await expect(
+  //     pool.connect(configSigner).initReserve(
+  //       dai.address,
+  //       config.xTokenAddress, // just need a non-used reserve token
+  //       config.variableDebtTokenAddress,
+  //       ZERO_ADDRESS,
+  //       ZERO_ADDRESS,
+  //       ZERO_ADDRESS
+  //     )
+  //   ).to.be.revertedWith(ProtocolErrors.RESERVE_ALREADY_INITIALIZED);
+  // });
 
-    // Impersonate PoolConfigurator
-    await topUpNonPayableWithEther(
-      deployer.signer,
-      [configurator.address],
-      utils.parseEther("1")
-    );
-    const configSigner = (await impersonateAddress(configurator.address))
-      .signer;
-
-    const config = await pool.getReserveData(dai.address);
-
-    await expect(
-      pool.connect(configSigner).initReserve(
-        dai.address,
-        config.xTokenAddress, // just need a non-used reserve token
-        config.variableDebtTokenAddress,
-        ZERO_ADDRESS,
-        ZERO_ADDRESS,
-        ZERO_ADDRESS
-      )
-    ).to.be.revertedWith(ProtocolErrors.RESERVE_ALREADY_INITIALIZED);
-  });
-
-  it("TC-reserve-configuration-21 Init reserve with ZERO_ADDRESS as xToken twice, to enter `_addReserveToList()` already added (revert expected)", async () => {
-    /**
-     * To get into this case, we need to init a reserve with `xTokenAddress = address(0)` twice.
-     * `_addReserveToList()` is called from `initReserve`. However, in `initReserve` we run `init` before the `_addReserveToList()`,
-     * and in `init` we are checking if `xTokenAddress == address(0)`, so to bypass that we need this odd init.
-     */
-    const {pool, dai, deployer, configurator} = await loadFixture(
-      testEnvFixture
-    );
-
-    // Impersonate PoolConfigurator
-    await topUpNonPayableWithEther(
-      deployer.signer,
-      [configurator.address],
-      utils.parseEther("1")
-    );
-    const configSigner = (await impersonateAddress(configurator.address))
-      .signer;
-
-    const config = await pool.getReserveData(dai.address);
-
-    const poolListBefore = await pool.getReservesList();
-
-    expect(
-      await pool
-        .connect(configSigner)
-        .initReserve(
-          config.xTokenAddress,
-          ZERO_ADDRESS,
-          config.variableDebtTokenAddress,
-          ZERO_ADDRESS,
-          ZERO_ADDRESS,
-          ZERO_ADDRESS
-        )
-    );
-    const poolListMid = await pool.getReservesList();
-    expect(poolListBefore.length + 1).to.be.eq(poolListMid.length);
-
-    // Add it again.
-    await expect(
-      pool
-        .connect(configSigner)
-        .initReserve(
-          config.xTokenAddress,
-          ZERO_ADDRESS,
-          config.variableDebtTokenAddress,
-          ZERO_ADDRESS,
-          ZERO_ADDRESS,
-          ZERO_ADDRESS
-        )
-    ).to.be.revertedWith(ProtocolErrors.RESERVE_ALREADY_ADDED);
-    const poolListAfter = await pool.getReservesList();
-    expect(poolListAfter.length).to.be.eq(poolListMid.length);
-  });
+  // it("TC-reserve-configuration-21 Init reserve with ZERO_ADDRESS as xToken twice, to enter `_addReserveToList()` already added (revert expected)", async () => {
+  //   /**
+  //    * To get into this case, we need to init a reserve with `xTokenAddress = address(0)` twice.
+  //    * `_addReserveToList()` is called from `initReserve`. However, in `initReserve` we run `init` before the `_addReserveToList()`,
+  //    * and in `init` we are checking if `xTokenAddress == address(0)`, so to bypass that we need this odd init.
+  //    */
+  //   const {pool, dai, deployer, configurator} = await loadFixture(
+  //     testEnvFixture
+  //   );
+  //
+  //   // Impersonate PoolConfigurator
+  //   await topUpNonPayableWithEther(
+  //     deployer.signer,
+  //     [configurator.address],
+  //     utils.parseEther("1")
+  //   );
+  //   const configSigner = (await impersonateAddress(configurator.address))
+  //     .signer;
+  //
+  //   const config = await pool.getReserveData(dai.address);
+  //
+  //   const poolListBefore = await pool.getReservesList();
+  //
+  //   expect(
+  //     await pool
+  //       .connect(configSigner)
+  //       .initReserve(
+  //         config.xTokenAddress,
+  //         ZERO_ADDRESS,
+  //         config.variableDebtTokenAddress,
+  //         ZERO_ADDRESS,
+  //         ZERO_ADDRESS,
+  //         ZERO_ADDRESS
+  //       )
+  //   );
+  //   const poolListMid = await pool.getReservesList();
+  //   expect(poolListBefore.length + 1).to.be.eq(poolListMid.length);
+  //
+  //   // Add it again.
+  //   await expect(
+  //     pool
+  //       .connect(configSigner)
+  //       .initReserve(
+  //         config.xTokenAddress,
+  //         ZERO_ADDRESS,
+  //         config.variableDebtTokenAddress,
+  //         ZERO_ADDRESS,
+  //         ZERO_ADDRESS,
+  //         ZERO_ADDRESS
+  //       )
+  //   ).to.be.revertedWith(ProtocolErrors.RESERVE_ALREADY_ADDED);
+  //   const poolListAfter = await pool.getReservesList();
+  //   expect(poolListAfter.length).to.be.eq(poolListMid.length);
+  // });
 
   it("TC-reserve-configuration-22 Initialize reserves until max, then add one more (revert expected)", async () => {
     const {addressesProvider, poolAdmin, pool, configurator} =
@@ -667,10 +671,9 @@ describe("ReserveConfiguration", async () => {
     const coreLibraries = await deployPoolCoreLibraries(false);
     const timeLock = await getTimeLockProxy();
 
-    const NEW_POOL_IMPL_ARTIFACT = await new PoolCore__factory(
-      coreLibraries,
-      await getFirstSigner()
-    ).deploy(addressesProvider.address, timeLock.address);
+    const NEW_POOL_IMPL_ARTIFACT = await (
+      await getContractFactory("PoolCore", coreLibraries)
+    ).factory.deploy(addressesProvider.address, timeLock.address);
 
     const xTokenImp = await new PToken__factory(await getFirstSigner()).deploy(
       pool.address

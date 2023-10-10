@@ -7,10 +7,13 @@ import {
 } from "../helpers/types";
 import {MocksConfig, MocksUSDConfig} from "./mocks";
 import {
-  ArbitrumOneOracleConfig,
+  ArbitrumOracleConfig,
+  LineaOracleConfig,
   MainnetOracleConfig,
   MoonbeamOracleConfig,
+  PolygonOracleConfig,
   TestnetOracleConfig,
+  ZkSyncOracleConfig,
 } from "./oracle";
 import {
   strategyDAI,
@@ -64,6 +67,15 @@ import {
   strategyAAVE,
   strategyUNI,
   strategyRDNT,
+  strategySTMATIC,
+  strategyCRV,
+  strategyWMATIC,
+  strategyXCUSDT,
+  strategyUSDCWH,
+  strategyWETHWH,
+  strategyWBTCWH,
+  strategySTDOT,
+  strategyEXRP,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -89,6 +101,8 @@ export const CommonConfig: Pick<
   | "DelegationRegistry"
   | "IncentivesController"
   | "Governance"
+  | "ParaSpaceV1"
+  | "AccountAbstraction"
 > = {
   WrappedNativeTokenId: ERC20TokenContractId.WETH,
   MarketId: "ParaSpaceMM",
@@ -119,9 +133,15 @@ export const CommonConfig: Pick<
     Multisend: MULTI_SEND || ZERO_ADDRESS,
     Multisig: MULTI_SIG || ZERO_ADDRESS,
   },
+  // ParaSpaceV1
+  ParaSpaceV1: undefined,
+  AccountAbstraction: {
+    rpcUrl: `https://api.stackup.sh/v1/node/${process.env.STACKUP_KEY}`,
+    paymasterUrl: `https://api.stackup.sh/v1/paymaster/${process.env.STACKUP_KEY}`,
+  },
 };
 
-export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
+export const HardhatConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   ParaSpaceTeam: "0xc783df8a850f42e7F7e57013759C285caa701eB6",
@@ -171,7 +191,67 @@ export const HardhatParaSpaceConfig: IParaSpaceConfiguration = {
   },
 };
 
-export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
+export const MoonbeamConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  WrappedNativeTokenId: ERC20TokenContractId.WGLMR,
+  ParaSpaceAdmin: "0x4a84d250419697440FDCea4826E2421b84af69Fe",
+  EmergencyAdmins: [
+    "0x17816E9A858b161c3E37016D139cf618056CaCD4",
+    "0x69FAD68De47D5666Ad668C7D682dDb8FD6322949",
+    "0x2f2d07d60ea7330DD2314f4413CCbB2dC25276EF",
+    "0x001e2bcC5c1BfC3131d33Ba074B12c2F1237FB04",
+    "0x4a84d250419697440FDCea4826E2421b84af69Fe",
+    "0x4AC3fD073786a971e1B8dE5a526959c9B3B2B407",
+  ],
+  RiskAdmin: "0x4a84d250419697440FDCea4826E2421b84af69Fe",
+  GatewayAdmin: "0x4a84d250419697440FDCea4826E2421b84af69Fe",
+  ParaSpaceTeam: "0x4a84d250419697440FDCea4826E2421b84af69Fe",
+  Treasury: "0x4a84d250419697440FDCea4826E2421b84af69Fe",
+  Tokens: {
+    WGLMR: "0xAcc15dC74880C9944775448304B263D191c6077F",
+    xcDOT: "0xFfFFfFff1FcaCBd218EDc0EbA20Fc2308C778080",
+    xcUSDT: "0xFFFFFFfFea09FB06d082fd1275CD48b191cbCD1d",
+    stDOT: "0xFA36Fe1dA08C89eC72Ea1F0143a35bFd5DAea108",
+    USDC: "0x931715fee2d06333043d11f658c8ce934ac61d0c",
+    WETH: "0xab3f0245b83feb11d15aaffefd7ad465a59817ed",
+    WBTC: "0xe57ebd2d67b462e9926e04a8e33f01cd0d64346d",
+    EXRP: "0x515e20e6275CEeFe19221FC53e77E38cc32b80Fb",
+  },
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {
+    WGLMR: "0x4497B606be93e773bbA5eaCFCb2ac5E2214220Eb",
+    xcDOT: "0x1466b4bD0C4B6B8e1164991909961e0EE6a66d8c",
+    xcUSDT: "0xd925c5bf88bd0ca09312625d429240f811b437c6",
+    stDOT: "0xd925c5bf88bd0ca09312625d429240f811b437c6",
+    USDC: "0xa122591f60115d63421f66f752ef9f6e0bc73abc",
+    WETH: "0x9ce2388a1696e22f870341c3fc1e89710c7569b5",
+    WBTC: "0x8211b991d713ddae32326fd69e1e2510f4a653b0",
+  },
+  // RESERVE ASSETS - CONFIG, ASSETS, BORROW RATES,
+  ReservesConfig: {
+    xcDOT: strategyXCDOT,
+    xcUSDT: strategyXCUSDT,
+    stDOT: strategySTDOT,
+    WGLMR: strategyWGLMR,
+    USDC: strategyUSDCWH,
+    WETH: strategyWETHWH,
+    WBTC: strategyWBTCWH,
+    EXRP: strategyEXRP,
+  },
+  Mocks: undefined,
+  Oracle: MoonbeamOracleConfig,
+  Governance: {
+    Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
+    Multisig: MULTI_SIG || "0x4a84d250419697440FDCea4826E2421b84af69Fe",
+  },
+};
+
+export const MoonbaseConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   WrappedNativeTokenId: ERC20TokenContractId.WGLMR,
@@ -182,30 +262,29 @@ export const MoonbeamParaSpaceConfig: IParaSpaceConfiguration = {
   RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   Tokens: {
-    WGLMR: "0xAcc15dC74880C9944775448304B263D191c6077F",
-    xcDOT: "0xFfFFfFff1FcaCBd218EDc0EbA20Fc2308C778080",
-    USDC: "0x818ec0A7Fe18Ff94269904fCED6AE3DaE6d6dC0b",
+    WGLMR: "0xD909178CC99d318e4D46e7E66a972955859670E1",
   },
   YogaLabs: {},
   Uniswap: {},
   Marketplace: {},
   BendDAO: {},
   Stakefish: {},
-  Chainlink: {
-    WGLMR: "0x4497B606be93e773bbA5eaCFCb2ac5E2214220Eb",
-    xcDOT: "0x1466b4bD0C4B6B8e1164991909961e0EE6a66d8c",
-    USDC: "0xA122591F60115D63421f66F752EF9f6e0bc73abC",
-  },
+  Chainlink: {},
   // RESERVE ASSETS - CONFIG, ASSETS, BORROW RATES,
   ReservesConfig: {
     xcDOT: strategyXCDOT,
+    xcUSDT: strategyXCUSDT,
+    stDOT: strategySTDOT,
     WGLMR: strategyWGLMR,
-    USDC: strategyUSDC,
+    USDC: strategyUSDCWH,
+    WETH: strategyWETHWH,
+    WBTC: strategyWBTCWH,
+    EXRP: strategyEXRP,
   },
+  Mocks: MocksUSDConfig,
   Oracle: MoonbeamOracleConfig,
 };
-
-export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
+export const GoerliConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
@@ -218,6 +297,7 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
     APE: "0x328507DC29C95c170B56a1b3A758eB7a9E73455c",
     BAYC: "0xF40299b626ef6E197F5d9DE9315076CAB788B6Ef",
     MAYC: "0x3f228cBceC3aD130c45D21664f2C7f5b23130d23",
+    BAKC: "0xd60d682764Ee04e54707Bee7B564DC65b31884D0",
     sAPE: "0x0000000000000000000000000000000000000001",
     WETH: "0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6",
     aWETH: "0x7649e0d153752c556b8b23DB1f1D3d42993E83a5",
@@ -305,6 +385,197 @@ export const GoerliParaSpaceConfig: IParaSpaceConfiguration = {
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };
 
+export const PolygonConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  WrappedNativeTokenId: ERC20TokenContractId.WMATIC,
+  ParaSpaceAdmin: "0xeeE8Fd9B887ee57CAf2905851175470c03DE64F6",
+  EmergencyAdmins: [
+    "0x17816E9A858b161c3E37016D139cf618056CaCD4",
+    "0x69FAD68De47D5666Ad668C7D682dDb8FD6322949",
+    "0x2f2d07d60ea7330DD2314f4413CCbB2dC25276EF",
+    "0x001e2bcC5c1BfC3131d33Ba074B12c2F1237FB04",
+    "0xeeE8Fd9B887ee57CAf2905851175470c03DE64F6",
+    "0x4AC3fD073786a971e1B8dE5a526959c9B3B2B407",
+  ],
+  RiskAdmin: "0xeeE8Fd9B887ee57CAf2905851175470c03DE64F6",
+  GatewayAdmin: "0xeeE8Fd9B887ee57CAf2905851175470c03DE64F6",
+  ParaSpaceTeam: "0xeeE8Fd9B887ee57CAf2905851175470c03DE64F6",
+  Treasury: "0xeeE8Fd9B887ee57CAf2905851175470c03DE64F6",
+  Tokens: {
+    WMATIC: "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+    stMATIC: "0x3a58a54c066fdc0f2d55fc9c89f0415c92ebf3c4",
+    WETH: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+    WBTC: "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
+    USDT: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+    USDC: "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+    DAI: "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
+    UNI: "0xb33EaAd8d922B1083446DC23f610c2567fB5180f",
+    LINK: "0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39",
+    AAVE: "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
+    BAL: "0x9a71012B13CA4d3D0Cdc72A177DF3ef03b0E76A3",
+    CRV: "0x172370d5Cd63279eFa6d502DAB29171933a610AF",
+    UniswapV3: "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+  },
+  YogaLabs: {},
+  Uniswap: {
+    V3Factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+    V3NFTPositionManager: "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+    V3Router: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+  },
+  Marketplace: {
+    Seaport: "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC",
+  },
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {
+    DAI: "0x4746dec9e833a82ec7c2c1356372ccf2cfcd2f3d",
+    USDT: "0x0a6513e40db6eb1b165753ad52e80663aea50545",
+    USDC: "0xfe4a8cc5b5b2366c1b58bea3858e81843581b2f7",
+    WETH: "0xf9680d99d6c9589e2a93a78a04a279e509205945",
+    WBTC: "0xc907e116054ad103354f2d350fd2514433d57f6f",
+    WMATIC: "0xab594600376ec9fd91f8e885dadf0ce036862de0",
+    LINK: "0xd9ffdb71ebe7496cc440152d43986aae0ab76665",
+    UNI: "0xdf0fb4e4f928d2dcb76f438575fdd8682386e13c",
+    AAVE: "0x72484b12719e23115761d5da1646945632979bb6",
+    BAL: "0xd106b538f2a868c28ca1ec7e298c3325e0251d66",
+    CRV: "0x336584C8E6Dc19637A5b36206B1c79923111b405",
+    stMATIC: "0xEe96b77129cF54581B5a8FECCcC50A6A067034a1",
+  },
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDT: strategyUSDT,
+    USDC: strategyUSDC,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    WMATIC: strategyWMATIC,
+    stMATIC: strategySTMATIC,
+    AAVE: strategyAAVE,
+    LINK: strategyLINK,
+    BAL: strategyBAL,
+    UNI: strategyUNI,
+    CRV: strategyCRV,
+    UniswapV3: strategyUniswapV3,
+  },
+  Mocks: undefined,
+  Oracle: PolygonOracleConfig,
+  Governance: {
+    Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
+    Multisig: MULTI_SIG || "0xeeE8Fd9B887ee57CAf2905851175470c03DE64F6",
+  },
+};
+
+export const PolygonZkevmConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    stETH: strategySTETH,
+    wstETH: strategyWSTETH,
+    WMATIC: strategyWMATIC,
+    stMATIC: strategySTMATIC,
+    CRV: strategyCRV,
+    UniswapV3: strategyUniswapV3,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: PolygonOracleConfig,
+};
+
+export const PolygonMumbaiConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  WrappedNativeTokenId: ERC20TokenContractId.WMATIC,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {
+    WETH: "0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa",
+    WMATIC: "0x9c3C9283D3e44854697Cd22D3Faa240Cfb032889",
+    UniswapV3: "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+  },
+  YogaLabs: {},
+  Uniswap: {
+    V3Factory: "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+    V3NFTPositionManager: "0xc36442b4a4522e871399cd717abdd847ab11fe88",
+    V3Router: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+  },
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    stETH: strategySTETH,
+    wstETH: strategyWSTETH,
+    stMATIC: strategySTMATIC,
+    WMATIC: strategyWMATIC,
+    CRV: strategyCRV,
+    UniswapV3: strategyUniswapV3,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: PolygonOracleConfig,
+};
+
+export const PolygonZkevmGoerliConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    stETH: strategySTETH,
+    wstETH: strategyWSTETH,
+    WMATIC: strategyWMATIC,
+    stMATIC: strategySTMATIC,
+    CRV: strategyCRV,
+    UniswapV3: strategyUniswapV3,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: PolygonOracleConfig,
+};
+
 export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
@@ -353,22 +624,74 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
     UniswapV3: strategyUniswapV3,
   },
   Mocks: MocksUSDConfig,
-  Oracle: ArbitrumOneOracleConfig,
+  Oracle: ArbitrumOracleConfig,
 };
 
-export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
+export const ZkSyncGoerliConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: ZkSyncOracleConfig,
+};
+
+export const LineaGoerliConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: LineaOracleConfig,
+};
+
+export const ArbitrumConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   ParaSpaceAdmin: "0x1aD5db7e9fcdc6052A8362633E7CEaf80f623741",
   EmergencyAdmins: [
     "0x17816E9A858b161c3E37016D139cf618056CaCD4",
     "0x69FAD68De47D5666Ad668C7D682dDb8FD6322949",
-    "0xD65Fee206a4ea89eBBcF4694E745C597AB6F8325",
-    "0x755C1bd877788739dD002B98B093c4852AbfA6c4",
-    "0x3A6c796edffc057d789F7d4ffAd438B1D48f3075",
     "0x2f2d07d60ea7330DD2314f4413CCbB2dC25276EF",
     "0x001e2bcC5c1BfC3131d33Ba074B12c2F1237FB04",
-    "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
     "0x4AC3fD073786a971e1B8dE5a526959c9B3B2B407",
   ],
   RiskAdmin: "0x1aD5db7e9fcdc6052A8362633E7CEaf80f623741",
@@ -398,7 +721,9 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
     V3Router: "0x4c60051384bd2d3c01bfc845cf5f4b44bcbe9de5",
     V3NFTPositionManager: "0xC36442b4a4522E871399CD717aBDD847Ab11FE88",
   },
-  Marketplace: {},
+  Marketplace: {
+    Seaport: "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC",
+  },
   BendDAO: {},
   Stakefish: {},
   Chainlink: {
@@ -435,32 +760,97 @@ export const ArbitrumOneParaSpaceConfig: IParaSpaceConfiguration = {
     UniswapV3: strategyUniswapV3,
   },
   Mocks: undefined,
-  Oracle: ArbitrumOneOracleConfig,
+  Oracle: ArbitrumOracleConfig,
   Governance: {
     Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
     Multisig: MULTI_SIG || "0x1aD5db7e9fcdc6052A8362633E7CEaf80f623741",
   },
 };
 
-export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
+export const ZkSyncConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
-  ParaSpaceAdmin: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+  ParaSpaceAdmin: "0x3BeD3C25415e4D980954Dc5FDe2e11D7fb22E582",
   EmergencyAdmins: [
     "0x17816E9A858b161c3E37016D139cf618056CaCD4",
     "0x69FAD68De47D5666Ad668C7D682dDb8FD6322949",
-    "0xD65Fee206a4ea89eBBcF4694E745C597AB6F8325",
-    "0x755C1bd877788739dD002B98B093c4852AbfA6c4",
-    "0x3A6c796edffc057d789F7d4ffAd438B1D48f3075",
     "0x2f2d07d60ea7330DD2314f4413CCbB2dC25276EF",
     "0x001e2bcC5c1BfC3131d33Ba074B12c2F1237FB04",
-    "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
     "0x4AC3fD073786a971e1B8dE5a526959c9B3B2B407",
   ],
-  RiskAdmin: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
-  GatewayAdmin: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
-  ParaSpaceTeam: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
-  Treasury: "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+  RiskAdmin: "0x3BeD3C25415e4D980954Dc5FDe2e11D7fb22E582",
+  GatewayAdmin: "0x3BeD3C25415e4D980954Dc5FDe2e11D7fb22E582",
+  ParaSpaceTeam: "0x3BeD3C25415e4D980954Dc5FDe2e11D7fb22E582",
+  Treasury: "0x909e36B512Ed45250fdff513523119d825647695",
+  Tokens: {
+    WETH: "0x5bF39BdE21B95d77fb18F27bBCb07F3648720A2e",
+    USDC: "0x3355df6D4c9C3035724Fd0e3914dE96A5a83aaf4",
+    WBTC: "0xBBeB516fb02a01611cBBE0453Fe3c580D7281011",
+  },
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {
+    WETH: "0x279dBcc7417DC8a73F9154fb640E2467209C8C34",
+    USDC: "0x9Dc7257a0a21Ec3EAf0CbFB02fb01A2825a1e14e",
+    WBTC: "0x1474A19D97A9e84A201d481c2F995513d3380412",
+  },
+  ReservesConfig: {
+    USDC: strategyUSDC,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+  },
+  Mocks: undefined,
+  Oracle: ZkSyncOracleConfig,
+};
+
+export const LineaConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  EmergencyAdmins: ["0x018281853eCC543Aa251732e8FDaa7323247eBeB"],
+  RiskAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  GatewayAdmin: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {},
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  BendDAO: {},
+  Stakefish: {},
+  Chainlink: {},
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    stETH: strategySTETH,
+    wstETH: strategyWSTETH,
+  },
+  Mocks: MocksUSDConfig,
+  Oracle: LineaOracleConfig,
+};
+
+export const MainnetConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceAdmin: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
+  EmergencyAdmins: [
+    "0x17816E9A858b161c3E37016D139cf618056CaCD4",
+    "0x69FAD68De47D5666Ad668C7D682dDb8FD6322949",
+    "0x2f2d07d60ea7330DD2314f4413CCbB2dC25276EF",
+    "0x001e2bcC5c1BfC3131d33Ba074B12c2F1237FB04",
+    "0x4AC3fD073786a971e1B8dE5a526959c9B3B2B407",
+  ],
+  RiskAdmin: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
+  GatewayAdmin: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
+  ParaSpaceTeam: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
+  Treasury: "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
   Tokens: {
     WETH: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
     stETH: "0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84",
@@ -480,6 +870,7 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     BLUR: "0x5283D291DBCF85356A21bA090E6db59121208b44",
     BAYC: "0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D",
     MAYC: "0x60E4d786628Fea6478F785A6d7e704777c86a7c6",
+    BAKC: "0xba30E5F9Bb24caa003E9f2f0497Ad287FDF95623",
     PUNKS: "0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB",
     WPUNKS: "0xb7F7F6C52F2e2fdb1963Eab30438024864c313F6",
     DOODLE: "0x8a90CAb2b38dba80c64b7734e58Ee1dB38B8992e",
@@ -524,6 +915,8 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   },
   Chainlink: {
     WETH: "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419",
+    rETH: "0xFCbf6B66dED63D6a8231dB091c16a3481d2E8890",
+    aWETH: "0x549945De284a8cc102D49cE28683ee9E87edE3E3",
     stETH: "0x86392dC19c0b719886221c78AB11eb8Cf5c52812",
     astETH: "0x86392dC19c0b719886221c78AB11eb8Cf5c52812",
     wstETH: "0x1d05d899c3AC6CfA35D50c063325ccA39727c7c8",
@@ -538,12 +931,18 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     sAPE: "0xc7de7f4d4C9c991fF62a07D18b3E31e349833A18",
     cAPE: "0xc7de7f4d4C9c991fF62a07D18b3E31e349833A18",
     yAPE: "0xc7de7f4d4C9c991fF62a07D18b3E31e349833A18",
+    BLUR: "0x32A880E831814CfD55dC556645Ef06816fE9bE02",
     AZUKI: "0xA8B9A447C73191744D5B79BcE864F343455E1150",
     BAYC: "0x352f2Bc3039429fC2fe62004a1575aE74001CfcE",
+    BAKC: "0x393aecF5EAABB009989D629CB33933A3aE201903",
     CLONEX: "0x021264d59DAbD26E7506Ee7278407891Bb8CDCCc",
     WPUNKS: "0x01B6710B01cF3dd8Ae64243097d91aFb03728Fdd",
     DOODLE: "0x027828052840a43Cc2D0187BcfA6e3D6AcE60336",
     MAYC: "0x1823C89715Fe3fB96A24d11c917aCA918894A090",
+    MOONBIRD: "0x9cd36E0E8D3C27d630D00406ACFC3463154951Af",
+    UniswapV3: "0xAf7508f0ccFffFd0BE5D3EC6304CF6258a852de5",
+    SFVLDR: "0x2d21Da8e041E82253e3cbE2012D4d59d46F3c1f2",
+    SEWER: "0x6D09f55aae5489D664203Fb8aD72A8d520A87470",
   },
   ReservesConfig: {
     DAI: strategyDAI,
@@ -552,14 +951,14 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     FRAX: strategyFRAX,
     WETH: strategyWETH,
     aWETH: strategyAWETH,
-    bendETH: strategyBENDETH,
+    // bendETH: strategyBENDETH,
     stETH: strategySTETH,
     wstETH: strategyWSTETH,
     cbETH: strategyCBETH,
     rETH: strategyRETH,
-    cETH: strategyCETH,
-    astETH: strategyASTETH,
-    awstETH: strategyAWSTETH,
+    // cETH: strategyCETH,
+    // astETH: strategyASTETH,
+    // awstETH: strategyAWSTETH,
     APE: strategyAPE,
     WBTC: strategyWBTC,
     BLUR: strategyBLUR,
@@ -574,7 +973,6 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
     CLONEX: strategyClonex,
     sAPE: strategySAPE,
     cAPE: strategyCAPE,
-    yAPE: strategyYAPE,
     UniswapV3: strategyUniswapV3,
     BAKC: strategyBAKC,
     SEWER: strategySEWER,
@@ -594,19 +992,35 @@ export const MainnetParaSpaceConfig: IParaSpaceConfiguration = {
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
   Governance: {
     Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
-    Multisig: MULTI_SIG || "0xe965198731CDdB2f06e91DD0CDff74b71e4b3714",
+    Multisig: MULTI_SIG || "0x19293FBec52F94165f903708a74513Dd6dFedd0a",
+  },
+  ParaSpaceV1: {
+    PoolV1: "0x638a98BBB92a7582d07C52ff407D49664DC8b3Ee",
+    ProtocolDataProviderV1: "0xbc88150EbEFDa53fb61F4C59E98d0dE5EBbB8CD3",
+    CApeV1: "0xC5c9fB6223A989208Df27dCEE33fC59ff5c26fFF",
+    TimeLockV1: "0x59B72FdB45B3182c8502cC297167FE4f821f332d",
+    P2PPairStakingV1: "0xf090Eb4c2B63e7B26E8Bb09e6Fc0cC3A7586263B",
   },
 };
 
 export const ParaSpaceConfigs: Partial<
   Record<eEthereumNetwork, IParaSpaceConfiguration>
 > = {
-  [eEthereumNetwork.hardhat]: HardhatParaSpaceConfig,
-  [eEthereumNetwork.anvil]: HardhatParaSpaceConfig,
-  [eEthereumNetwork.localhost]: HardhatParaSpaceConfig,
-  [eEthereumNetwork.moonbeam]: MoonbeamParaSpaceConfig,
-  [eEthereumNetwork.goerli]: GoerliParaSpaceConfig,
-  [eEthereumNetwork.mainnet]: MainnetParaSpaceConfig,
+  [eEthereumNetwork.hardhat]: HardhatConfig,
+  [eEthereumNetwork.anvil]: HardhatConfig,
+  [eEthereumNetwork.localhost]: HardhatConfig,
+  [eEthereumNetwork.moonbeam]: MoonbeamConfig,
+  [eEthereumNetwork.moonbase]: MoonbaseConfig,
+  [eEthereumNetwork.goerli]: GoerliConfig,
+  [eEthereumNetwork.mainnet]: MainnetConfig,
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
-  [eEthereumNetwork.arbitrum]: ArbitrumOneParaSpaceConfig,
+  [eEthereumNetwork.arbitrum]: ArbitrumConfig,
+  [eEthereumNetwork.polygon]: PolygonConfig,
+  [eEthereumNetwork.polygonMumbai]: PolygonMumbaiConfig,
+  [eEthereumNetwork.polygonZkevm]: PolygonZkevmConfig,
+  [eEthereumNetwork.polygonZkevmGoerli]: PolygonZkevmGoerliConfig,
+  [eEthereumNetwork.zksync]: ZkSyncConfig,
+  [eEthereumNetwork.zksyncGoerli]: ZkSyncGoerliConfig,
+  [eEthereumNetwork.linea]: LineaConfig,
+  [eEthereumNetwork.lineaGoerli]: LineaGoerliConfig,
 };

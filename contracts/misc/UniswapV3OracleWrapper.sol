@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IUniswapV3OracleWrapper} from "../interfaces/IUniswapV3OracleWrapper.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IPriceOracleGetter} from "../interfaces/IPriceOracleGetter.sol";
-import {IUniswapV3Factory} from "../dependencies/uniswap/IUniswapV3Factory.sol";
-import {IUniswapV3PoolState} from "../dependencies/uniswap/IUniswapV3PoolState.sol";
-import {INonfungiblePositionManager} from "../dependencies/uniswap/INonfungiblePositionManager.sol";
-import {LiquidityAmounts} from "../dependencies/uniswap/LiquidityAmounts.sol";
-import {TickMath} from "../dependencies/uniswap/libraries/TickMath.sol";
+import {IUniswapV3Factory} from "../dependencies/uniswapv3-core/interfaces/IUniswapV3Factory.sol";
+import {IUniswapV3PoolState} from "../dependencies/uniswapv3-core/interfaces/pool/IUniswapV3PoolState.sol";
+import {INonfungiblePositionManager} from "../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
+import {LiquidityAmounts} from "../dependencies/uniswapv3-periphery/libraries/LiquidityAmounts.sol";
+import {TickMath} from "../dependencies/uniswapv3-core/libraries/TickMath.sol";
 import {SqrtLib} from "../dependencies/math/SqrtLib.sol";
-import {FullMath} from "../dependencies/uniswap/libraries/FullMath.sol";
+import {FullMath} from "../dependencies/uniswapv3-core/libraries/FullMath.sol";
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 import {UinswapV3PositionData} from "../interfaces/IUniswapV3PositionInfoProvider.sol";
-import {SafeCast} from "../dependencies/univ3/libraries/SafeCast.sol";
-import {FixedPoint96} from "../dependencies/univ3/libraries/FixedPoint96.sol";
+import {SafeCast} from "../dependencies/uniswapv3-core/libraries/SafeCast.sol";
+import {FixedPoint96} from "../dependencies/uniswapv3-core/libraries/FixedPoint96.sol";
 
 contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
     using SafeCast for uint256;
@@ -24,11 +24,7 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
     IPoolAddressesProvider public immutable ADDRESSES_PROVIDER;
     uint256 internal constant Q128 = 0x100000000000000000000000000000000;
 
-    constructor(
-        address _factory,
-        address _manager,
-        address _addressProvider
-    ) {
+    constructor(address _factory, address _manager, address _addressProvider) {
         UNISWAP_V3_FACTORY = IUniswapV3Factory(_factory);
         UNISWAP_V3_POSITION_MANAGER = INonfungiblePositionManager(_manager);
         ADDRESSES_PROVIDER = IPoolAddressesProvider(_addressProvider);
@@ -52,11 +48,9 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
     /**
      * @notice get onchain position data from uniswap for the specified tokenId.
      */
-    function getOnchainPositionData(uint256 tokenId)
-        public
-        view
-        returns (UinswapV3PositionData memory)
-    {
+    function getOnchainPositionData(
+        uint256 tokenId
+    ) public view returns (UinswapV3PositionData memory) {
         (
             ,
             ,
@@ -97,11 +91,9 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
     /**
      * @notice get onchain liquidity amount for the specified tokenId.
      */
-    function getLiquidityAmount(uint256 tokenId)
-        external
-        view
-        returns (uint256 token0Amount, uint256 token1Amount)
-    {
+    function getLiquidityAmount(
+        uint256 tokenId
+    ) external view returns (uint256 token0Amount, uint256 token1Amount) {
         UinswapV3PositionData memory positionData = getOnchainPositionData(
             tokenId
         );
@@ -128,11 +120,9 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
     /**
      * @notice get liquidity provider fee amount for the specified tokenId.
      */
-    function getLpFeeAmount(uint256 tokenId)
-        external
-        view
-        returns (uint256 token0Amount, uint256 token1Amount)
-    {
+    function getLpFeeAmount(
+        uint256 tokenId
+    ) external view returns (uint256 token0Amount, uint256 token1Amount) {
         UinswapV3PositionData memory positionData = getOnchainPositionData(
             tokenId
         );
@@ -179,16 +169,14 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
 
         return
             (((liquidityAmount0 + feeAmount0) * oracleData.token0Price) /
-                10**oracleData.token0Decimal) +
+                10 ** oracleData.token0Decimal) +
             (((liquidityAmount1 + feeAmount1) * oracleData.token1Price) /
-                10**oracleData.token1Decimal);
+                10 ** oracleData.token1Decimal);
     }
 
-    function _getOracleData(UinswapV3PositionData memory positionData)
-        internal
-        view
-        returns (PairOracleData memory)
-    {
+    function _getOracleData(
+        UinswapV3PositionData memory positionData
+    ) internal view returns (PairOracleData memory) {
         PairOracleData memory oracleData;
         IPriceOracleGetter oracle = IPriceOracleGetter(
             ADDRESSES_PROVIDER.getPriceOracle()
@@ -212,11 +200,9 @@ contract UniswapV3OracleWrapper is IUniswapV3OracleWrapper {
         return oracleData;
     }
 
-    function _getPendingFeeAmounts(UinswapV3PositionData memory positionData)
-        internal
-        view
-        returns (uint256 token0Amount, uint256 token1Amount)
-    {
+    function _getPendingFeeAmounts(
+        UinswapV3PositionData memory positionData
+    ) internal view returns (uint256 token0Amount, uint256 token1Amount) {
         IUniswapV3PoolState pool = IUniswapV3PoolState(
             UNISWAP_V3_FACTORY.getPool(
                 positionData.token0,

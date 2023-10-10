@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.0;
 
 import { PausableZone } from "./PausableZone.sol";
 
@@ -122,18 +122,18 @@ contract PausableZoneController is
      *
      * @return success A boolean indicating the zone has been paused.
      */
-    function pause(address zone)
-        external
-        override
-        isPauser
-        returns (bool success)
-    {
-        // Call pause on the given zone.
-        PausableZone(zone).pause(msg.sender);
-
-        // Return a boolean indicating the pause was successful.
-        success = true;
-    }
+    // function pause(address zone)
+    //     external
+    //     override
+    //     isPauser
+    //     returns (bool success)
+    // {
+    //     // Call pause on the given zone.
+    //     PausableZone(zone).pause(msg.sender);
+    //
+    //     // Return a boolean indicating the pause was successful.
+    //     success = true;
+    // }
 
     /**
      * @notice Cancel Seaport orders on a given zone.

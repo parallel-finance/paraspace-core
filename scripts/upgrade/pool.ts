@@ -1,6 +1,7 @@
 import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
   deployPoolApeStaking,
+  deployPoolBorrowAndStake,
   deployPoolComponents,
   deployPoolCore,
   deployPoolMarketplace,
@@ -9,6 +10,7 @@ import {
   getPoolSignatures,
 } from "../../helpers/contracts-deployments";
 import {
+  getAllTokens,
   getPoolAddressesProvider,
   getPoolParaProxyInterfaces,
   getPoolProxy,
@@ -19,8 +21,13 @@ import {
 } from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
-import {eContractid, tEthereumAddress} from "../../helpers/types";
+import {
+  eContractid,
+  ERC20TokenContractId,
+  tEthereumAddress,
+} from "../../helpers/types";
 import {IParaProxy} from "../../types";
+import {zeroAddress} from "ethereumjs-util";
 
 export const upgradeProxyImplementations = async (
   implementations: [string, string[], string[]][]
@@ -295,6 +302,35 @@ export const upgradePoolApeStaking = async (
   await upgradeProxyImplementations(implementations);
 };
 
+export const upgradeBorrowApeAndStake = async (
+  oldPoolApeStaking: tEthereumAddress,
+  verify = false
+) => {
+  const addressesProvider = await getPoolAddressesProvider();
+  let oldPoolApeStakingSelectors: Array<string> = [];
+  if (oldPoolApeStaking != zeroAddress()) {
+    const pool = await getPoolProxy();
+    oldPoolApeStakingSelectors = await pool.facetFunctionSelectors(
+      oldPoolApeStaking
+    );
+  }
+
+  const {
+    poolBorrowAndStake,
+    poolBorrowAndStakeSelectors: newPoolApeStakingSelectors,
+  } = await deployPoolBorrowAndStake(addressesProvider.address, verify);
+
+  const implementations = [
+    [
+      poolBorrowAndStake.address,
+      newPoolApeStakingSelectors,
+      oldPoolApeStakingSelectors,
+    ],
+  ] as [string, string[], string[]][];
+
+  await upgradeProxyImplementations(implementations);
+};
+
 export const upgradePoolParameters = async (
   oldPoolParameters: tEthereumAddress,
   verify = false
@@ -325,6 +361,7 @@ export const upgradePoolPositionMover = async (
 ) => {
   const addressesProvider = await getPoolAddressesProvider();
   const pool = await getPoolProxy();
+  const allTokens = await getAllTokens();
   const paraSpaceConfig = getParaSpaceConfig();
   const oldPoolPositionMoverSelectors = await pool.facetFunctionSelectors(
     oldPoolPositionMover
@@ -344,6 +381,13 @@ export const upgradePoolPositionMover = async (
     addressesProvider.address,
     bendDaoLendPoolLoan,
     bendDaoLendPool,
+    paraSpaceConfig.ParaSpaceV1?.PoolV1 || ZERO_ADDRESS,
+    paraSpaceConfig.ParaSpaceV1?.ProtocolDataProviderV1 || ZERO_ADDRESS,
+    paraSpaceConfig.ParaSpaceV1?.CApeV1 || ZERO_ADDRESS,
+    allTokens[ERC20TokenContractId.cAPE].address,
+    allTokens[ERC20TokenContractId.APE].address,
+    paraSpaceConfig.ParaSpaceV1?.TimeLockV1 || ZERO_ADDRESS,
+    paraSpaceConfig.ParaSpaceV1?.P2PPairStakingV1 || ZERO_ADDRESS,
     verify
   );
 

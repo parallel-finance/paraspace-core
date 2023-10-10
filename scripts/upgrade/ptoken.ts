@@ -6,6 +6,7 @@ import {
   deployPTokenCApe,
   deployPTokenSApe,
   deployPTokenStETH,
+  deployPTokenStKSM,
 } from "../../helpers/contracts-deployments";
 import {
   getPoolAddressesProvider,
@@ -20,7 +21,11 @@ import {
 } from "../../helpers/types";
 
 import dotenv from "dotenv";
-import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
+import {
+  DRY_RUN,
+  GLOBAL_OVERRIDES,
+  XTOKEN_TYPE_UPGRADE_WHITELIST,
+} from "../../helpers/hardhat-constants";
 import {dryRunEncodedData} from "../../helpers/contracts-helpers";
 
 dotenv.config();
@@ -37,6 +42,7 @@ export const upgradePToken = async (verify = false) => {
   let pTokenImplementationAddress = "";
   let pTokenDelegationAwareImplementationAddress = "";
   let pTokenStETHImplementationAddress = "";
+  let pTokenStKSMImplementationAddress = "";
   let pTokenSApeImplementationAddress = "";
   let pTokenCApeImplementationAddress = "";
   let pTokenATokenImplementationAddress = "";
@@ -49,16 +55,16 @@ export const upgradePToken = async (verify = false) => {
     const symbol = await pToken.symbol();
     const asset = await pToken.UNDERLYING_ASSET_ADDRESS();
     const xTokenType = await pToken.getXTokenType();
-    if (
-      ![
-        XTokenType.PToken,
-        XTokenType.DelegationAwarePToken,
-        XTokenType.PTokenStETH,
-        XTokenType.PTokenSApe,
-        XTokenType.PTokenCApe,
-        XTokenType.PTokenAToken,
-      ].includes(xTokenType)
-    ) {
+    const xTokenTypeUpgradeWhiteList = XTOKEN_TYPE_UPGRADE_WHITELIST || [
+      XTokenType.PToken,
+      XTokenType.DelegationAwarePToken,
+      XTokenType.PTokenStETH,
+      XTokenType.PTokenSApe,
+      XTokenType.PTokenCApe,
+      XTokenType.PTokenAToken,
+      XTokenType.PTokenStKSM,
+    ];
+    if (!xTokenTypeUpgradeWhiteList.includes(xTokenType)) {
       continue;
     }
     const treasury = paraSpaceConfig.Treasury;
@@ -117,6 +123,14 @@ export const upgradePToken = async (verify = false) => {
         ).address;
       }
       newImpl = pTokenStETHImplementationAddress;
+    } else if (xTokenType == XTokenType.PTokenStKSM) {
+      if (!pTokenStKSMImplementationAddress) {
+        console.log("deploy PTokenStKSM implementation");
+        pTokenStKSMImplementationAddress = (
+          await deployPTokenStKSM(poolAddress, verify)
+        ).address;
+      }
+      newImpl = pTokenStKSMImplementationAddress;
     } else if (xTokenType == XTokenType.DelegationAwarePToken) {
       if (!pTokenDelegationAwareImplementationAddress) {
         console.log("deploy PTokenDelegationAware implementation");

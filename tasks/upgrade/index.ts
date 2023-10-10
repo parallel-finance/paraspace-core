@@ -75,6 +75,21 @@ task("upgrade:pool-ape-staking", "upgrade pool ape staking")
     console.timeEnd("upgrade poolApeStaking");
   });
 
+task("upgrade:borrow-ape-and-stake", "upgrade borrow ape and stake")
+  .addPositionalParam("oldPoolBorrowAndStake", "old pool borrow and stake")
+  .setAction(async ({oldPoolBorrowAndStake}, DRE) => {
+    const {upgradeBorrowApeAndStake} = await import(
+      "../../scripts/upgrade/pool"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade borrowApeAndStake");
+    await upgradeBorrowApeAndStake(
+      oldPoolBorrowAndStake,
+      ETHERSCAN_VERIFICATION
+    );
+    console.timeEnd("upgrade borrowApeAndStake");
+  });
+
 task("upgrade:pool-parameters", "upgrade pool parameters")
   .addPositionalParam("oldPoolParameters", "old pool parameters")
   .setAction(async ({oldPoolParameters}, DRE) => {
@@ -141,6 +156,30 @@ task("upgrade:p2p-pair-staking", "upgrade p2p pair staking").setAction(
     console.time("upgrade p2p pair staking");
     await upgradeP2PPairStaking(ETHERSCAN_VERIFICATION);
     console.timeEnd("upgrade p2p pair staking");
+  }
+);
+
+task("upgrade:helper-contract", "upgrade helper contract").setAction(
+  async (_, DRE) => {
+    const {upgradeHelperContract} = await import(
+      "../../scripts/upgrade/helperContract"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade helper contract");
+    await upgradeHelperContract(ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade helper contract");
+  }
+);
+
+task("upgrade:account-abstraction", "upgrade account abstraction").setAction(
+  async (_, DRE) => {
+    const {upgradeAccountAbstraction} = await import(
+      "../../scripts/upgrade/accountAbstraction"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade account abstraction");
+    await upgradeAccountAbstraction(ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade account abstraction");
   }
 );
 

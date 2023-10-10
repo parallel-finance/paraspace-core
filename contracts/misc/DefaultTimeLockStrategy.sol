@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import "../interfaces/ITimeLockStrategy.sol";
 import "../protocol/libraries/helpers/Errors.sol";
@@ -61,10 +61,10 @@ contract DefaultTimeLockStrategy is ITimeLockStrategy {
         PERIOD = period;
     }
 
-    function _updatePeriodLimit(uint48 currentTimestamp, uint128 amount)
-        internal
-        returns (uint48 extraDelay)
-    {
+    function _updatePeriodLimit(
+        uint48 currentTimestamp,
+        uint128 amount
+    ) internal returns (uint48 extraDelay) {
         if (currentTimestamp - lastResetTimestamp >= PERIOD) {
             totalAmountInCurrentPeriod = 0;
             lastResetTimestamp = currentTimestamp;

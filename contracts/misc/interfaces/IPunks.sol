@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: agpl-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 /**
  * @dev Interface for a permittable ERC721 contract
@@ -12,10 +12,9 @@ pragma solidity 0.8.10;
 interface IPunks {
     function balanceOf(address account) external view returns (uint256);
 
-    function punkIndexToAddress(uint256 punkIndex)
-        external
-        view
-        returns (address owner);
+    function punkIndexToAddress(
+        uint256 punkIndex
+    ) external view returns (address owner);
 
     function buyPunk(uint256 punkIndex) external;
 

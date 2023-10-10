@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
@@ -26,7 +26,7 @@ import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.so
 import {IToken} from "../../../interfaces/IToken.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../helpers/Helpers.sol";
-import {INonfungiblePositionManager} from "../../../dependencies/uniswap/INonfungiblePositionManager.sol";
+import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
 import "../../../interfaces/INTokenApeStaking.sol";
 
 /**
@@ -196,7 +196,7 @@ library ValidationLogic {
                         .scaledTotalSupply()
                         .rayMul(reserveCache.nextLiquidityIndex) + amount) <=
                     supplyCap *
-                        (10**reserveCache.reserveConfiguration.getDecimals()),
+                        (10 ** reserveCache.reserveConfiguration.getDecimals()),
                 Errors.SUPPLY_CAP_EXCEEDED
             );
         } else if (assetType == DataTypes.AssetType.ERC721) {
@@ -392,7 +392,7 @@ library ValidationLogic {
             .reserveConfiguration
             .getBorrowCap();
         unchecked {
-            vars.assetUnit = 10**vars.reserveDecimals;
+            vars.assetUnit = 10 ** vars.reserveDecimals;
         }
 
         if (vars.borrowCap != 0) {
@@ -908,7 +908,6 @@ library ValidationLogic {
         DataTypes.ReserveData storage collateralReserve,
         DataTypes.ValidateAuctionParams memory params
     ) internal view {
-        require(tx.origin == msg.sender, Errors.CALLER_NOT_EOA);
         ValidateAuctionLocalVars memory vars;
 
         (
@@ -1037,10 +1036,9 @@ library ValidationLogic {
      * @notice Validates a transfer action.
      * @param reserve The reserve object
      */
-    function validateTransferERC20(DataTypes.ReserveData storage reserve)
-        internal
-        view
-    {
+    function validateTransferERC20(
+        DataTypes.ReserveData storage reserve
+    ) internal view {
         require(!reserve.configuration.getPaused(), Errors.RESERVE_PAUSED);
     }
 
@@ -1147,10 +1145,9 @@ library ValidationLogic {
      * @notice Validates a flashloan action.
      * @param reserve The state of the reserve
      */
-    function validateFlashloanSimple(DataTypes.ReserveData storage reserve)
-        internal
-        view
-    {
+    function validateFlashloanSimple(
+        DataTypes.ReserveData storage reserve
+    ) internal view {
         (
             bool isActive,
             ,
@@ -1211,11 +1208,9 @@ library ValidationLogic {
             );
     }
 
-    function hashCredit(DataTypes.Credit memory credit)
-        private
-        pure
-        returns (bytes32)
-    {
+    function hashCredit(
+        DataTypes.Credit memory credit
+    ) private pure returns (bytes32) {
         bytes32 typeHash = keccak256(
             abi.encodePacked(
                 "Credit(address token,uint256 amount,bytes orderId)"

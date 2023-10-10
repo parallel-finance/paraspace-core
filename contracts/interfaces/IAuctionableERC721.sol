@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 
 /**
@@ -29,8 +29,7 @@ interface IAuctionableERC721 {
      *
      * @dev get auction data
      */
-    function getAuctionData(uint256 tokenId)
-        external
-        view
-        returns (DataTypes.Auction memory);
+    function getAuctionData(
+        uint256 tokenId
+    ) external view returns (DataTypes.Auction memory);
 }

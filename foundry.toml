@@ -2,7 +2,7 @@
 ffi                 = true
 fs_permissions      = [{ access = "read", path = "./" }]
 ignored_error_codes = [2072, 2059, 5574, 2519, 1878, 5667, 2018, 3445]
-libs                = ["lib"]
+libs                = ["node_modules", "lib"]
 out                 = 'out'
 remappings          = ["contracts/=contracts/"]
 src                 = 'contracts/'

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IPoolAddressesProvider} from "./IPoolAddressesProvider.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
@@ -193,10 +193,9 @@ interface IPoolParameters {
      * @notice get user ape compound strategy
      * @param user The user address
      */
-    function getUserApeCompoundStrategy(address user)
-        external
-        view
-        returns (DataTypes.ApeCompoundStrategy memory);
+    function getUserApeCompoundStrategy(
+        address user
+    ) external view returns (DataTypes.ApeCompoundStrategy memory);
 
     /**
      * @notice Set the auction recovery health factor
@@ -220,7 +219,9 @@ interface IPoolParameters {
      * @return ltv The loan to value of The user
      * @return healthFactor The current health factor of the user
      **/
-    function getUserAccountData(address user)
+    function getUserAccountData(
+        address user
+    )
         external
         view
         returns (
@@ -240,10 +241,10 @@ interface IPoolParameters {
      * @return ltv The loan to value of the asset
      * @return lt The liquidation threshold value of the asset
      **/
-    function getAssetLtvAndLT(address asset, uint256 tokenId)
-        external
-        view
-        returns (uint256 ltv, uint256 lt);
+    function getAssetLtvAndLT(
+        address asset,
+        uint256 tokenId
+    ) external view returns (uint256 ltv, uint256 lt);
 
     /**
      * @notice enable blur exchange request, only pool admin call this function

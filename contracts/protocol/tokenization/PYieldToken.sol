@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 import {IPool} from "../../interfaces/IPool.sol";
 import {PToken} from "./PToken.sol";
@@ -91,11 +91,9 @@ contract PYieldToken is PToken {
         super._transfer(from, to, amount, validate);
     }
 
-    function _yieldAmount(address account)
-        internal
-        view
-        returns (uint256, uint256)
-    {
+    function _yieldAmount(
+        address account
+    ) internal view returns (uint256, uint256) {
         uint256 userBalance = balanceOf(account);
         //free_yield = pending_yield + accrued_yield - free_yield
         uint256 freeYield = _userPendingYield[account];

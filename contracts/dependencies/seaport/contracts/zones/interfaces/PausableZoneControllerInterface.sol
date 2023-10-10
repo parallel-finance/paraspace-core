@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.7;
+pragma solidity ^0.8.0;
 
 import { PausableZone } from "../PausableZone.sol";
 
@@ -40,7 +40,7 @@ interface PausableZoneControllerInterface {
      *
      * @return success A boolean indicating the zone has been paused.
      */
-    function pause(address zone) external returns (bool success);
+    // function pause(address zone) external returns (bool success);
 
     /**
      * @notice Cancel Seaport offers on a given zone.

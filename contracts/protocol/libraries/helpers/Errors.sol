@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: BUSL-1.1
-pragma solidity 0.8.10;
+pragma solidity ^0.8.0;
 
 /**
  * @title Errors library
@@ -146,4 +146,6 @@ library Errors {
     string public constant NTOKEN_NOT_OWNS_UNDERLYING = "151"; //The ntoken does not owns the underlying nft
     string public constant EXISTING_APE_STAKING = "152"; // Ape coin staking position existed
     string public constant NOT_SAME_NTOKEN_OWNER = "153"; // ntoken have different owner
+
+    string public constant INVALID_PARAMETER = "170"; //invalid parameter
 }
