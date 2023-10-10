@@ -74,7 +74,8 @@ contract PoolPositionMover is
     }
 
     function movePositionFromBendDAO(
-        uint256[] calldata loanIds
+        uint256[] calldata loanIds,
+        address to
     ) external nonReentrant {
         DataTypes.PoolStorage storage ps = poolStorage();
 
@@ -83,7 +84,8 @@ contract PoolPositionMover is
             ADDRESSES_PROVIDER,
             BENDDAO_LEND_POOL_LOAN,
             BENDDAO_LEND_POOL,
-            loanIds
+            loanIds,
+            to
         );
     }
 
