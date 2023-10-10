@@ -197,4 +197,55 @@ contract PoolMarketplace is
         return
             PoolExtendedLogic.executeGetBlurExchangeRequestStatus(ps, request);
     }
+
+    /// @inheritdoc IPoolMarketplace
+    function initiateAcceptBlurBidsRequest(
+        DataTypes.AcceptBlurBidsRequest[] calldata requests
+    ) external payable override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        PoolExtendedLogic.executeInitiateAcceptBlurBidsRequest(
+            ps,
+            requests,
+            ADDRESSES_PROVIDER.getPriceOracle(),
+            ADDRESSES_PROVIDER.getWETH()
+        );
+    }
+
+    /// @inheritdoc IPoolMarketplace
+    function fulfillAcceptBlurBidsRequest(
+        DataTypes.AcceptBlurBidsRequest[] calldata requests
+    ) external payable override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        PoolExtendedLogic.executeFulfillAcceptBlurBidsRequest(
+            ps,
+            ADDRESSES_PROVIDER,
+            requests
+        );
+    }
+
+    /// @inheritdoc IPoolMarketplace
+    function rejectAcceptBlurBidsRequest(
+        DataTypes.AcceptBlurBidsRequest[] calldata requests
+    ) external override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        PoolExtendedLogic.executeRejectAcceptBlurBidsRequest(ps, requests);
+    }
+
+    /// @inheritdoc IPoolMarketplace
+    function getAcceptBlurBidsRequestStatus(
+        DataTypes.AcceptBlurBidsRequest calldata request
+    )
+        external
+        view
+        virtual
+        override
+        returns (DataTypes.AcceptBlurBidsRequestStatus)
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        return
+            PoolExtendedLogic.executeGetAcceptBlurBidsRequestStatus(
+                ps,
+                request
+            );
+    }
 }

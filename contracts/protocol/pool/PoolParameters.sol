@@ -411,4 +411,56 @@ contract PoolParameters is
         ps._blurExchangeKeeper = keeper;
         emit BlurExchangeKeeperUpdated(keeper);
     }
+
+    /// @inheritdoc IPoolParameters
+    function enableAcceptBlurBids() external onlyPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        if (!ps._acceptBlurBidsEnable) {
+            ps._acceptBlurBidsEnable = true;
+            emit AcceptBlurBidsEnableStatusUpdated(true);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function disableAcceptBlurBids() external onlyEmergencyOrPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        if (ps._acceptBlurBidsEnable) {
+            ps._acceptBlurBidsEnable = false;
+            emit AcceptBlurBidsEnableStatusUpdated(false);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setAcceptBlurBidsOngoingRequestLimit(uint8 limit)
+        external
+        onlyPoolAdmin
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        uint8 oldValue = ps._acceptBlurBidsRequestLimit;
+        if (oldValue != limit) {
+            ps._acceptBlurBidsRequestLimit = limit;
+            emit AcceptBlurBidsOngoingRequestLimitUpdated(oldValue, limit);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setAcceptBlurBidsRequestFeeRate(uint16 feeRate)
+        external
+        onlyPoolAdmin
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        uint16 oldValue = ps._acceptBlurBidsRequestFeeRate;
+        if (oldValue != feeRate) {
+            ps._acceptBlurBidsRequestFeeRate = feeRate;
+            emit AcceptBlurBidsRequestFeeRateUpdated(oldValue, feeRate);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setAcceptBlurBidsKeeper(address keeper) external onlyPoolAdmin {
+        require(keeper != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        DataTypes.PoolStorage storage ps = poolStorage();
+        ps._acceptBlurBidsKeeper = keeper;
+        emit AcceptBlurBidsKeeperUpdated(keeper);
+    }
 }

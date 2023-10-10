@@ -418,6 +418,18 @@ library DataTypes {
         address _blurExchangeKeeper;
         // Map of BuyWithCreditRequest status
         mapping(bytes32 => BlurBuyWithCreditRequestStatus) _blurExchangeRequestStatus;
+        //identified if accept blur bid is enabled
+        bool _acceptBlurBidsEnable;
+        // max amount of accept blur bid request, 0 means no limit.
+        uint8 _acceptBlurBidsRequestLimit;
+        // the amount of ongoing accept blur bid request
+        uint8 _acceptBlurBidsOngoingRequestAmount;
+        // accept blur bid request fee rate
+        uint16 _acceptBlurBidsRequestFeeRate;
+        //accept blur bid keeper
+        address _acceptBlurBidsKeeper;
+        // Map of AcceptBlurBidsRequest status
+        mapping(bytes32 => AcceptBlurBidsRequestStatus) _acceptBlurBidsRequestStatus;
     }
 
     struct ReserveConfigData {
@@ -469,6 +481,30 @@ library DataTypes {
         address collection;
         // nft token id for the listing order
         uint256 tokenId;
+    }
+
+    enum AcceptBlurBidsRequestStatus {
+        //default status for value 0
+        Default,
+        //initiated status
+        Initiated
+    }
+
+    struct AcceptBlurBidsRequest {
+        // request initiator
+        address initiator;
+        // currency token. currently should always be weth
+        address paymentToken;
+        // cash amount from user wallet
+        uint256 bidingPrice;
+        // market place fee, taken from bidingPrice
+        uint256 marketPlaceFee;
+        // nft token address for the listing order
+        address collection;
+        // nft token id for the listing order
+        uint256 tokenId;
+        // bid order hash
+        bytes32 bidOrderHash;
     }
 
     struct ParaSpacePositionMoveInfo {

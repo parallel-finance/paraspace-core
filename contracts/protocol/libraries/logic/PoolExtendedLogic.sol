@@ -18,9 +18,15 @@ import {IWETH} from "../../../misc/interfaces/IWETH.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {PercentageMath} from "../../../protocol/libraries/math/PercentageMath.sol";
+import {ApeCoinStaking} from "../../../dependencies/yoga-labs/ApeCoinStaking.sol";
+import {INTokenApeStaking} from "../../../interfaces/INTokenApeStaking.sol";
+import {NTokenBAKC} from "../../tokenization/NTokenBAKC.sol";
+import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
+import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
 
 library PoolExtendedLogic {
     using Math for uint256;
+    using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using UserConfiguration for DataTypes.UserConfigurationMap;
     using PercentageMath for uint256;
     using SafeCast for uint256;
@@ -57,6 +63,36 @@ library PoolExtendedLogic {
         uint256 tokenId
     );
 
+    event AcceptBlurBidsRequestInitiated(
+        address indexed initiator,
+        address paymentToken,
+        uint256 bidingPrice,
+        uint256 marketPlaceFee,
+        address collection,
+        uint256 tokenId,
+        bytes32 bidOrderHash
+    );
+
+    event AcceptBlurBidsRequestFulfilled(
+        address indexed initiator,
+        address paymentToken,
+        uint256 bidingPrice,
+        uint256 marketPlaceFee,
+        address collection,
+        uint256 tokenId,
+        bytes32 bidOrderHash
+    );
+
+    event AcceptBlurBidsRequestRejected(
+        address indexed initiator,
+        address paymentToken,
+        uint256 bidingPrice,
+        uint256 marketPlaceFee,
+        address collection,
+        uint256 tokenId,
+        bytes32 bidOrderHash
+    );
+
     function executeInitiateBlurExchangeRequest(
         DataTypes.PoolStorage storage ps,
         IPoolAddressesProvider poolAddressProvider,
@@ -67,7 +103,7 @@ library PoolExtendedLogic {
         {
             uint256 ongoingRequestAmount = ps._blurOngoingRequestAmount +
                 requests.length;
-            ValidationLogic.validateStatusForBlurExchangeRequest(
+            ValidationLogic.validateStatusForRequest(
                 ps._blurExchangeEnable,
                 keeper,
                 ongoingRequestAmount,
@@ -105,6 +141,18 @@ library PoolExtendedLogic {
             require(remainingETH == 0, Errors.INVALID_ETH_VALUE);
         }
 
+        //transfer currency to keeper
+        if (totalBorrow > 0) {
+            DataTypes.TimeLockParams memory timeLockParams;
+            IPToken(ps._reserves[weth].xTokenAddress).transferUnderlyingTo(
+                address(this),
+                totalBorrow,
+                timeLockParams
+            );
+            IWETH(weth).withdraw(totalBorrow);
+        }
+        Helpers.safeTransferETH(keeper, msg.value + totalBorrow);
+
         //mint debt token
         if (totalBorrow > 0) {
             BorrowLogic.executeBorrow(
@@ -125,18 +173,6 @@ library PoolExtendedLogic {
                 })
             );
         }
-
-        //transfer currency to keeper
-        if (totalBorrow > 0) {
-            DataTypes.TimeLockParams memory timeLockParams;
-            IPToken(ps._reserves[weth].xTokenAddress).transferUnderlyingTo(
-                address(this),
-                totalBorrow,
-                timeLockParams
-            );
-            IWETH(weth).withdraw(totalBorrow);
-        }
-        Helpers.safeTransferETH(keeper, msg.value + totalBorrow);
     }
 
     function initiateBlurExchangeRequest(
@@ -149,14 +185,15 @@ library PoolExtendedLogic {
     ) internal returns (uint256) {
         bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
         uint256 requestFee = request.listingPrice.percentMul(requestFeeRate);
-        ValidationLogic.validateInitiateBlurExchangeRequest(
-            ps._reserves[request.collection],
-            request,
-            ps._blurExchangeRequestStatus[requestHash],
-            remainingETH,
-            requestFee,
-            oracle
-        );
+        uint256 needCashETH = ValidationLogic
+            .validateInitiateBlurExchangeRequest(
+                ps._reserves[request.collection],
+                request,
+                ps._blurExchangeRequestStatus[requestHash],
+                remainingETH,
+                requestFee,
+                oracle
+            );
 
         //mint nToken to release credit value
         DataTypes.ERC721SupplyParams[]
@@ -189,7 +226,7 @@ library PoolExtendedLogic {
             request.tokenId
         );
 
-        return request.listingPrice + requestFee - request.borrowAmount;
+        return needCashETH;
     }
 
     function executeFulfillBlurExchangeRequest(
@@ -247,7 +284,8 @@ library PoolExtendedLogic {
         uint256 requestLength = requests.length;
         address weth = poolAddressProvider.getWETH();
         IWETH(weth).deposit{value: msg.value}();
-        uint256 remainingETH = msg.value;
+        address currentOwner;
+        uint256 totalListingPrice;
         for (uint256 index = 0; index < requestLength; index++) {
             DataTypes.BlurBuyWithCreditRequest calldata request = requests[
                 index
@@ -259,11 +297,6 @@ library PoolExtendedLogic {
                     DataTypes.BlurBuyWithCreditRequestStatus.Initiated,
                 Errors.INVALID_REQUEST_STATUS
             );
-            require(
-                remainingETH >= request.listingPrice,
-                Errors.INVALID_ETH_VALUE
-            );
-            remainingETH -= request.listingPrice;
 
             delete ps._blurExchangeRequestStatus[requestHash];
 
@@ -271,17 +304,21 @@ library PoolExtendedLogic {
                 request.collection
             ];
             address nTokenAddress = nftReserve.xTokenAddress;
-            address currentOwner = INToken(nTokenAddress).ownerOf(
+
+            // check if have the same owner
+            address nTokenOwner = INToken(nTokenAddress).ownerOf(
                 request.tokenId
             );
-            //here we repay and supply weth for currentOwner in case nToken has been liquidated from request initiator
-            repayAndSupplyForUser(
-                ps,
-                weth,
-                address(this),
-                currentOwner,
-                request.listingPrice
-            );
+            if (currentOwner == address(0)) {
+                currentOwner = nTokenOwner;
+            } else {
+                require(
+                    currentOwner == nTokenOwner,
+                    Errors.NOT_SAME_NTOKEN_OWNER
+                );
+            }
+
+            totalListingPrice += request.listingPrice;
 
             //burn nToken.
             burnUserNToken(
@@ -304,7 +341,16 @@ library PoolExtendedLogic {
                 request.tokenId
             );
         }
-        require(remainingETH == 0, Errors.INVALID_ETH_VALUE);
+        require(msg.value == totalListingPrice, Errors.INVALID_ETH_VALUE);
+
+        //here we repay and supply weth for currentOwner in case nToken has been liquidated from request initiator
+        repayAndSupplyForUser(
+            ps,
+            weth,
+            address(this),
+            currentOwner,
+            totalListingPrice
+        );
 
         ps._blurOngoingRequestAmount -= requestLength.toUint8();
     }
@@ -315,6 +361,272 @@ library PoolExtendedLogic {
     ) external view returns (DataTypes.BlurBuyWithCreditRequestStatus) {
         bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
         return ps._blurExchangeRequestStatus[requestHash];
+    }
+
+    function executeInitiateAcceptBlurBidsRequest(
+        DataTypes.PoolStorage storage ps,
+        DataTypes.AcceptBlurBidsRequest[] calldata requests,
+        address oracle,
+        address weth
+    ) external {
+        address keeper = ps._acceptBlurBidsKeeper;
+        //check and update overall status
+        {
+            uint256 ongoingRequestAmount = ps
+                ._acceptBlurBidsOngoingRequestAmount + requests.length;
+            ValidationLogic.validateStatusForRequest(
+                ps._acceptBlurBidsEnable,
+                keeper,
+                ongoingRequestAmount,
+                ps._acceptBlurBidsRequestLimit
+            );
+            ps._acceptBlurBidsOngoingRequestAmount = ongoingRequestAmount
+                .toUint8();
+        }
+
+        // validate user's health factor, if HF drops below 1 before keeper finalize the request, nToken can be liquidated.
+        ValidationLogic.validateHealthFactor(
+            ps._reserves,
+            ps._reservesList,
+            ps._usersConfig[msg.sender],
+            msg.sender,
+            ps._reservesCount,
+            oracle
+        );
+
+        //validate and handle every single request
+        uint256 requestFeeRate = ps._acceptBlurBidsRequestFeeRate;
+        uint256 wethLiquidationThreshold = _getWETHLiquidationThreashold(
+            ps,
+            weth
+        );
+        uint256 totalFee = 0;
+        for (uint256 index = 0; index < requests.length; index++) {
+            DataTypes.AcceptBlurBidsRequest calldata request = requests[index];
+            bytes32 requestHash = _calculateAcceptBlurBidsRequestHash(request);
+            totalFee += request.bidingPrice.percentMul(requestFeeRate);
+
+            address nTokenAddress = ps
+                ._reserves[request.collection]
+                .xTokenAddress;
+
+            //validate request
+            ValidationLogic.validateInitiateAcceptBlurBidsRequest(
+                ps,
+                nTokenAddress,
+                request,
+                requestHash,
+                weth,
+                oracle,
+                wethLiquidationThreshold
+            );
+
+            //check if any ape coin position exist on the Ape
+            {
+                XTokenType tokenType = INToken(nTokenAddress).getXTokenType();
+                if (tokenType == XTokenType.NTokenBAYC) {
+                    ApeCoinStaking apeCoinStaking = INTokenApeStaking(
+                        nTokenAddress
+                    ).getApeStaking();
+                    _ensureApeCoinPositionNotExistedOn(
+                        apeCoinStaking,
+                        1,
+                        request.tokenId
+                    );
+                    _ensureApeIsNotPairedStaking(
+                        apeCoinStaking,
+                        1,
+                        request.tokenId
+                    );
+                } else if (tokenType == XTokenType.NTokenMAYC) {
+                    ApeCoinStaking apeCoinStaking = INTokenApeStaking(
+                        nTokenAddress
+                    ).getApeStaking();
+                    _ensureApeCoinPositionNotExistedOn(
+                        apeCoinStaking,
+                        2,
+                        request.tokenId
+                    );
+                    _ensureApeIsNotPairedStaking(
+                        apeCoinStaking,
+                        2,
+                        request.tokenId
+                    );
+                } else if (tokenType == XTokenType.NTokenBAKC) {
+                    _ensureApeCoinPositionNotExistedOn(
+                        NTokenBAKC(nTokenAddress).getApeStaking(),
+                        3,
+                        request.tokenId
+                    );
+                }
+            }
+
+            // transfer underlying nft from nToken to keeper
+            DataTypes.TimeLockParams memory timeLockParams;
+            INToken(nTokenAddress).transferUnderlyingTo(
+                keeper,
+                request.tokenId,
+                timeLockParams
+            );
+
+            // update request status
+            ps._acceptBlurBidsRequestStatus[requestHash] = DataTypes
+                .AcceptBlurBidsRequestStatus
+                .Initiated;
+
+            //emit event
+            emit AcceptBlurBidsRequestInitiated(
+                request.initiator,
+                request.paymentToken,
+                request.bidingPrice,
+                request.marketPlaceFee,
+                request.collection,
+                request.tokenId,
+                request.bidOrderHash
+            );
+        }
+
+        require(totalFee == msg.value, Errors.INVALID_ETH_VALUE);
+        //transfer fee to keeper
+        if (totalFee > 0) {
+            Helpers.safeTransferETH(keeper, totalFee);
+        }
+    }
+
+    function executeFulfillAcceptBlurBidsRequest(
+        DataTypes.PoolStorage storage ps,
+        IPoolAddressesProvider poolAddressProvider,
+        DataTypes.AcceptBlurBidsRequest[] calldata requests
+    ) external {
+        address keeper = ps._acceptBlurBidsKeeper;
+        require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
+
+        uint256 requestLength = requests.length;
+        uint256 totalETH = 0;
+        address currentOwner;
+        for (uint256 index = 0; index < requestLength; index++) {
+            DataTypes.AcceptBlurBidsRequest calldata request = requests[index];
+            // check request status
+            bytes32 requestHash = _calculateAcceptBlurBidsRequestHash(request);
+            require(
+                ps._acceptBlurBidsRequestStatus[requestHash] ==
+                    DataTypes.AcceptBlurBidsRequestStatus.Initiated,
+                Errors.INVALID_REQUEST_STATUS
+            );
+
+            DataTypes.ReserveData storage nftReserve = ps._reserves[
+                request.collection
+            ];
+            address nTokenAddress = nftReserve.xTokenAddress;
+
+            // check if have the same owner
+            address nTokenOwner = INToken(nTokenAddress).ownerOf(
+                request.tokenId
+            );
+            if (currentOwner == address(0)) {
+                currentOwner = nTokenOwner;
+            } else {
+                require(
+                    currentOwner == nTokenOwner,
+                    Errors.NOT_SAME_NTOKEN_OWNER
+                );
+            }
+
+            // calculate and accumulate weth
+            totalETH += (request.bidingPrice - request.marketPlaceFee);
+
+            // update request status
+            delete ps._acceptBlurBidsRequestStatus[requestHash];
+
+            //burn ntoken
+            burnUserNToken(
+                ps._usersConfig[currentOwner],
+                request.collection,
+                nftReserve.id,
+                nTokenAddress,
+                request.tokenId,
+                false,
+                true,
+                currentOwner
+            );
+
+            //emit event
+            emit AcceptBlurBidsRequestFulfilled(
+                request.initiator,
+                request.paymentToken,
+                request.bidingPrice,
+                request.marketPlaceFee,
+                request.collection,
+                request.tokenId,
+                request.bidOrderHash
+            );
+        }
+        require(msg.value == totalETH, Errors.INVALID_ETH_VALUE);
+
+        //supply eth for current ntoken owner
+        if (totalETH > 0) {
+            address weth = poolAddressProvider.getWETH();
+            IWETH(weth).deposit{value: msg.value}();
+            supplyForUser(ps, weth, address(this), currentOwner, totalETH);
+        }
+
+        // update ongoing request amount
+        ps._acceptBlurBidsOngoingRequestAmount -= requestLength.toUint8();
+    }
+
+    function executeRejectAcceptBlurBidsRequest(
+        DataTypes.PoolStorage storage ps,
+        DataTypes.AcceptBlurBidsRequest[] calldata requests
+    ) external {
+        address keeper = ps._acceptBlurBidsKeeper;
+        require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
+
+        uint256 requestLength = requests.length;
+        for (uint256 index = 0; index < requestLength; index++) {
+            DataTypes.AcceptBlurBidsRequest calldata request = requests[index];
+            // check request status
+            bytes32 requestHash = _calculateAcceptBlurBidsRequestHash(request);
+            require(
+                ps._acceptBlurBidsRequestStatus[requestHash] ==
+                    DataTypes.AcceptBlurBidsRequestStatus.Initiated,
+                Errors.INVALID_REQUEST_STATUS
+            );
+
+            // update request status
+            delete ps._acceptBlurBidsRequestStatus[requestHash];
+
+            //transfer underlying nft back to nToken
+            DataTypes.ReserveData storage nftReserve = ps._reserves[
+                request.collection
+            ];
+            IERC721(request.collection).safeTransferFrom(
+                keeper,
+                nftReserve.xTokenAddress,
+                request.tokenId
+            );
+
+            //emit event
+            emit AcceptBlurBidsRequestRejected(
+                request.initiator,
+                request.paymentToken,
+                request.bidingPrice,
+                request.marketPlaceFee,
+                request.collection,
+                request.tokenId,
+                request.bidOrderHash
+            );
+        }
+
+        // update ongoing request amount
+        ps._acceptBlurBidsOngoingRequestAmount -= requestLength.toUint8();
+    }
+
+    function executeGetAcceptBlurBidsRequestStatus(
+        DataTypes.PoolStorage storage ps,
+        DataTypes.AcceptBlurBidsRequest calldata request
+    ) external view returns (DataTypes.AcceptBlurBidsRequestStatus) {
+        bytes32 requestHash = _calculateAcceptBlurBidsRequestHash(request);
+        return ps._acceptBlurBidsRequestStatus[requestHash];
     }
 
     function _calculateBlurExchangeRequestHash(
@@ -329,6 +641,23 @@ library PoolExtendedLogic {
                     request.borrowAmount,
                     request.collection,
                     request.tokenId
+                )
+            );
+    }
+
+    function _calculateAcceptBlurBidsRequestHash(
+        DataTypes.AcceptBlurBidsRequest calldata request
+    ) internal pure returns (bytes32) {
+        return
+            keccak256(
+                abi.encode(
+                    request.initiator,
+                    request.paymentToken,
+                    request.bidingPrice,
+                    request.marketPlaceFee,
+                    request.collection,
+                    request.tokenId,
+                    request.bidOrderHash
                 )
             );
     }
@@ -428,15 +757,48 @@ library PoolExtendedLogic {
         tokenIds[0] = tokenId;
         // no time lock needed here
         DataTypes.TimeLockParams memory timeLockParams;
-        (, uint64 collateralizedBalance) = INToken(nTokenAddress).burn(
-            user,
-            releaseUnderlying ? user : nTokenAddress,
-            tokenIds,
-            timeLockParams
-        );
-        if (collateralizedBalance == 0) {
+        (
+            uint64 oldCollateralizedBalance,
+            uint64 collateralizedBalance
+        ) = INToken(nTokenAddress).burn(
+                user,
+                releaseUnderlying ? user : nTokenAddress,
+                tokenIds,
+                timeLockParams
+            );
+        if (oldCollateralizedBalance > 0 && collateralizedBalance == 0) {
             userConfig.setUsingAsCollateral(reserveIndex, false);
             emit ReserveUsedAsCollateralDisabled(asset, user);
         }
+    }
+
+    function _ensureApeCoinPositionNotExistedOn(
+        ApeCoinStaking apeStaking,
+        uint256 poolId,
+        uint256 tokenId
+    ) internal view {
+        (uint256 stakedAmount, ) = apeStaking.nftPosition(poolId, tokenId);
+        require(stakedAmount == 0, Errors.EXISTING_APE_STAKING);
+    }
+
+    function _ensureApeIsNotPairedStaking(
+        ApeCoinStaking apeStaking,
+        uint256 mainPoolId,
+        uint256 tokenId
+    ) internal view {
+        (, bool isPaired) = apeStaking.mainToBakc(mainPoolId, tokenId);
+        require(!isPaired, Errors.EXISTING_APE_STAKING);
+    }
+
+    function _getWETHLiquidationThreashold(
+        DataTypes.PoolStorage storage ps,
+        address weth
+    ) internal view returns (uint256) {
+        DataTypes.ReserveConfigurationMap memory wethReserveConfiguration = ps
+            ._reserves[weth]
+            .configuration;
+        (, uint256 wethLiquidationThreshold, , , ) = wethReserveConfiguration
+            .getParams();
+        return wethLiquidationThreshold;
     }
 }
