@@ -454,68 +454,6 @@ export const deployPositionMoverLogic = async (
     libraries
   ) as Promise<PositionMoverLogic>;
 
-interface PoolLibraryAddresses {
-  ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]: string;
-  ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]: string;
-  ["contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic"]: string;
-  ["contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic"]: string;
-  ["contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic"]: string;
-  ["contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"]: string;
-  ["contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic"]: string;
-}
-
-export const deployPoolLibraries = async (
-  verify?: boolean
-): Promise<PoolLibraryAddresses> => {
-  const supplyLogic = await deploySupplyLogic(verify);
-  const borrowLogic = await deployBorrowLogic(verify);
-  const poolExtendedLogic = await deployPoolExtendedLogic(
-    {
-      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
-        supplyLogic.address,
-      ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
-        borrowLogic.address,
-    },
-    verify
-  );
-  const auctionLogic = await deployAuctionLogic(verify);
-  const liquidationLogic = await deployLiquidationLogic(
-    {
-      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
-        supplyLogic.address,
-    },
-    verify
-  );
-  const flashClaimLogic = await deployFlashClaimLogic(verify);
-
-  const marketplaceLogic = await deployMarketplaceLogic(
-    {
-      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
-        supplyLogic.address,
-      ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
-        borrowLogic.address,
-    },
-    verify
-  );
-
-  return {
-    ["contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic"]:
-      auctionLogic.address,
-    ["contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic"]:
-      liquidationLogic.address,
-    ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
-      supplyLogic.address,
-    ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
-      borrowLogic.address,
-    ["contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic"]:
-      poolExtendedLogic.address,
-    ["contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic"]:
-      flashClaimLogic.address,
-    ["contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic"]:
-      marketplaceLogic.address,
-  };
-};
-
 export const deployPoolCoreLibraries = async (
   verify?: boolean
 ): Promise<Libraries> => {
@@ -829,7 +767,15 @@ export const deployPoolMarketplaceLibraries = async (
   const marketplaceLogic = await deployMarketplaceLogic(
     pick(coreLibraries, [
       "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
+      "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
       "contracts/protocol/libraries/logic/SupplyExtendedLogic.sol:SupplyExtendedLogic",
+    ]),
+    verify
+  );
+
+  const poolExtendedLogic = await deployPoolExtendedLogic(
+    pick(coreLibraries, [
+      "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
       "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
     ]),
     verify
@@ -837,6 +783,8 @@ export const deployPoolMarketplaceLibraries = async (
   return {
     ["contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic"]:
       marketplaceLogic.address,
+    ["contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic"]:
+      poolExtendedLogic.address,
   };
 };
 
@@ -952,19 +900,11 @@ export const deployPoolComponents = async (
   provider: string,
   verify?: boolean
 ) => {
-  const poolLibraries = await deployPoolLibraries(verify);
-  const coreLibraries = pick(poolLibraries, [
-    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
-    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
-    "contracts/protocol/libraries/logic/LiquidationLogic.sol:LiquidationLogic",
-    "contracts/protocol/libraries/logic/AuctionLogic.sol:AuctionLogic",
-    "contracts/protocol/libraries/logic/FlashClaimLogic.sol:FlashClaimLogic",
-  ]);
-  const marketplaceLibraries = pick(poolLibraries, [
-    "contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic",
-    "contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic",
-  ]);
-
+  const coreLibraries = await deployPoolCoreLibraries(verify);
+  const marketplaceLibraries = await deployPoolMarketplaceLibraries(
+    coreLibraries,
+    verify
+  );
   const parametersLibraries = await deployPoolParametersLibraries(verify);
 
   const apeStakingLibraries = pick(coreLibraries, [
