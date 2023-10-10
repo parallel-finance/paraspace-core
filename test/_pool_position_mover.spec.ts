@@ -67,8 +67,9 @@ describe("Pool: rescue tokens", () => {
       2
     );
 
-    await expect(pool.connect(user1.signer).movePositionFromBendDAO([1])).to.be
-      .reverted;
+    await expect(
+      pool.connect(user1.signer).movePositionFromBendDAO([1], user1.address)
+    ).to.be.reverted;
   });
 
   it("moving position should succeed for an active loan", async () => {
@@ -81,7 +82,11 @@ describe("Pool: rescue tokens", () => {
     } = testEnv;
     await supplyAndValidate(weth, "20000000000", user1, true);
 
-    await expect(await pool.connect(user1.signer).movePositionFromBendDAO([1]));
+    await expect(
+      await pool
+        .connect(user1.signer)
+        .movePositionFromBendDAO([1], user1.address)
+    );
 
     await expect(await variableDebtWeth.balanceOf(user1.address)).to.be.eq(
       "200000"
@@ -96,7 +101,7 @@ describe("Pool: rescue tokens", () => {
     } = testEnv;
 
     await expect(
-      pool.connect(user1.signer).movePositionFromBendDAO([1])
+      pool.connect(user1.signer).movePositionFromBendDAO([1], user1.address)
     ).to.be.revertedWith("Loan not active");
   });
 
@@ -119,8 +124,9 @@ describe("Pool: rescue tokens", () => {
     const agg = await getAggregator(undefined, await bayc.symbol());
     await agg.updateLatestAnswer("100000");
 
-    await expect(pool.connect(user2.signer).movePositionFromBendDAO([2])).to.be
-      .reverted;
+    await expect(
+      pool.connect(user2.signer).movePositionFromBendDAO([2], user2.address)
+    ).to.be.reverted;
 
     await changePriceAndValidate(bayc, "50");
   });
@@ -141,8 +147,9 @@ describe("Pool: rescue tokens", () => {
       2
     );
 
-    await expect(pool.connect(user2.signer).movePositionFromBendDAO([3])).to.be
-      .reverted;
+    await expect(
+      pool.connect(user2.signer).movePositionFromBendDAO([3], user2.address)
+    ).to.be.reverted;
   });
 
   it("moving position should fail if the asset is not supported", async () => {
@@ -174,8 +181,9 @@ describe("Pool: rescue tokens", () => {
       2
     );
 
-    await expect(pool.connect(user1.signer).movePositionFromBendDAO([4])).to.be
-      .reverted;
+    await expect(
+      pool.connect(user1.signer).movePositionFromBendDAO([4], user1.address)
+    ).to.be.reverted;
   });
 
   it("moving multiple positions should succeed for active loans", async () => {
@@ -196,7 +204,9 @@ describe("Pool: rescue tokens", () => {
     );
 
     await expect(
-      await pool.connect(user1.signer).movePositionFromBendDAO([3, 4])
+      await pool
+        .connect(user1.signer)
+        .movePositionFromBendDAO([3, 4], user1.address)
     );
 
     await expect(await variableDebtWeth.balanceOf(user1.address)).to.be.eq(
