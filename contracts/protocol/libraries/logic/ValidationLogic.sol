@@ -129,6 +129,7 @@ library ValidationLogic {
         XTokenType tokenType = INToken(nTokenAddress).getXTokenType();
         require(
             tokenType != XTokenType.NTokenUniswapV3 &&
+                tokenType != XTokenType.NTokenIZUMILp &&
                 tokenType != XTokenType.NTokenStakefish,
             Errors.XTOKEN_TYPE_NOT_ALLOWED
         );

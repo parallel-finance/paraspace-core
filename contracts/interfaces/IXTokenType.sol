@@ -25,7 +25,7 @@ enum XTokenType {
     NTokenOtherdeed,
     NTokenStakefish,
     NTokenChromieSquiggle,
-    PhantomData1,
+    NTokenIZUMILp,
     PhantomData2,
     PhantomData3,
     PhantomData4,
