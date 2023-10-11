@@ -71,13 +71,6 @@ contract NTokenBAKC is NToken {
         IERC721(underlyingAsset).setApprovalForAll(address(POOL), true);
     }
 
-    /**
-     * @notice Returns the address of ApeCoinStaking contract address.
-     **/
-    function getApeStaking() external view returns (ApeCoinStaking) {
-        return _apeCoinStaking;
-    }
-
     function _transfer(
         address from,
         address to,

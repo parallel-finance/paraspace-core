@@ -1,30 +1,40 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import {DataTypes} from "../types/DataTypes.sol";
-import {Errors} from "../helpers/Errors.sol";
-import {SupplyLogic} from "./SupplyLogic.sol";
-import {BorrowLogic} from "./BorrowLogic.sol";
-import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
-import {INToken} from "../../../interfaces/INToken.sol";
-import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
-import {UserConfiguration} from "../configuration/UserConfiguration.sol";
-import {Math} from "../../../dependencies/openzeppelin/contracts/Math.sol";
-import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
-import {Helpers} from "../helpers/Helpers.sol";
-import {IPoolAddressesProvider} from "../../../interfaces/IPoolAddressesProvider.sol";
-import {ValidationLogic} from "./ValidationLogic.sol";
-import {IWETH} from "../../../misc/interfaces/IWETH.sol";
-import {IPToken} from "../../../interfaces/IPToken.sol";
-import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
-import {PercentageMath} from "../../../protocol/libraries/math/PercentageMath.sol";
-import {ApeCoinStaking} from "../../../dependencies/yoga-labs/ApeCoinStaking.sol";
-import {INTokenApeStaking} from "../../../interfaces/INTokenApeStaking.sol";
-import {NTokenBAKC} from "../../tokenization/NTokenBAKC.sol";
-import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
-import {ReserveConfiguration} from "../configuration/ReserveConfiguration.sol";
+import {ParaVersionedInitializable} from "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
+import {Errors} from "../libraries/helpers/Errors.sol";
+import {ReserveConfiguration} from "../libraries/configuration/ReserveConfiguration.sol";
+import {SupplyLogic} from "../libraries/logic/SupplyLogic.sol";
+import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
+import {ValidationLogic} from "../libraries/logic/ValidationLogic.sol";
+import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
+import {IWETH} from "../../misc/interfaces/IWETH.sol";
+import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
+import {IPoolBlurIntegration} from "../../interfaces/IPoolBlurIntegration.sol";
+import {INToken} from "../../interfaces/INToken.sol";
+import {IPToken} from "../../interfaces/IPToken.sol";
+import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
+import {PoolStorage} from "./PoolStorage.sol";
+import {Errors} from "../libraries/helpers/Errors.sol";
+import {ParaReentrancyGuard} from "../libraries/paraspace-upgradeability/ParaReentrancyGuard.sol";
+import {IAuctionableERC721} from "../../interfaces/IAuctionableERC721.sol";
+import {UserConfiguration} from "../libraries/configuration/UserConfiguration.sol";
+import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
+import {SafeCast} from "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import {PercentageMath} from "../libraries/math/PercentageMath.sol";
+import {Helpers} from "../libraries/helpers/Helpers.sol";
 
-library PoolExtendedLogic {
+/**
+ * @title Pool Blur Integration contract
+ **/
+contract PoolBlurIntegration is
+    ParaVersionedInitializable,
+    ParaReentrancyGuard,
+    PoolStorage,
+    IPoolBlurIntegration
+{
     using Math for uint256;
     using ReserveConfiguration for DataTypes.ReserveConfigurationMap;
     using UserConfiguration for DataTypes.UserConfigurationMap;
@@ -36,68 +46,27 @@ library PoolExtendedLogic {
         address indexed user
     );
 
-    event BlurExchangeRequestInitiated(
-        address indexed initiator,
-        address paymentToken,
-        uint256 listingPrice,
-        uint256 borrowAmount,
-        address collection,
-        uint256 tokenId
-    );
+    IPoolAddressesProvider internal immutable ADDRESSES_PROVIDER;
+    uint256 internal constant POOL_REVISION = 200;
 
-    event BlurExchangeRequestFulfilled(
-        address indexed initiator,
-        address paymentToken,
-        uint256 listingPrice,
-        uint256 borrowAmount,
-        address collection,
-        uint256 tokenId
-    );
+    /**
+     * @dev Constructor.
+     * @param provider The address of the PoolAddressesProvider contract
+     */
+    constructor(IPoolAddressesProvider provider) {
+        ADDRESSES_PROVIDER = provider;
+    }
 
-    event BlurExchangeRequestRejected(
-        address indexed initiator,
-        address paymentToken,
-        uint256 listingPrice,
-        uint256 borrowAmount,
-        address collection,
-        uint256 tokenId
-    );
+    function getRevision() internal pure virtual override returns (uint256) {
+        return POOL_REVISION;
+    }
 
-    event AcceptBlurBidsRequestInitiated(
-        address indexed initiator,
-        address paymentToken,
-        uint256 bidingPrice,
-        uint256 marketPlaceFee,
-        address collection,
-        uint256 tokenId,
-        bytes32 bidOrderHash
-    );
-
-    event AcceptBlurBidsRequestFulfilled(
-        address indexed initiator,
-        address paymentToken,
-        uint256 bidingPrice,
-        uint256 marketPlaceFee,
-        address collection,
-        uint256 tokenId,
-        bytes32 bidOrderHash
-    );
-
-    event AcceptBlurBidsRequestRejected(
-        address indexed initiator,
-        address paymentToken,
-        uint256 bidingPrice,
-        uint256 marketPlaceFee,
-        address collection,
-        uint256 tokenId,
-        bytes32 bidOrderHash
-    );
-
-    function executeInitiateBlurExchangeRequest(
-        DataTypes.PoolStorage storage ps,
-        IPoolAddressesProvider poolAddressProvider,
+    /// @inheritdoc IPoolBlurIntegration
+    function initiateBlurExchangeRequest(
         DataTypes.BlurBuyWithCreditRequest[] calldata requests
-    ) external {
+    ) external payable virtual override nonReentrant {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         address keeper = ps._blurExchangeKeeper;
         //check and update overall status
         {
@@ -113,8 +82,8 @@ library PoolExtendedLogic {
         }
 
         uint256 totalBorrow = 0;
-        address weth = poolAddressProvider.getWETH();
-        address oracle = poolAddressProvider.getPriceOracle();
+        address weth = ADDRESSES_PROVIDER.getWETH();
+        address oracle = ADDRESSES_PROVIDER.getPriceOracle();
         DataTypes.UserConfigurationMap storage userConfig = ps._usersConfig[
             msg.sender
         ];
@@ -168,7 +137,7 @@ library PoolExtendedLogic {
                     releaseUnderlying: false,
                     reservesCount: ps._reservesCount,
                     oracle: oracle,
-                    priceOracleSentinel: poolAddressProvider
+                    priceOracleSentinel: ADDRESSES_PROVIDER
                         .getPriceOracleSentinel()
                 })
             );
@@ -229,10 +198,12 @@ library PoolExtendedLogic {
         return needCashETH;
     }
 
-    function executeFulfillBlurExchangeRequest(
-        DataTypes.PoolStorage storage ps,
+    /// @inheritdoc IPoolBlurIntegration
+    function fulfillBlurExchangeRequest(
         DataTypes.BlurBuyWithCreditRequest[] calldata requests
-    ) external {
+    ) external virtual override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         address keeper = ps._blurExchangeKeeper;
         require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
 
@@ -273,16 +244,17 @@ library PoolExtendedLogic {
         ps._blurOngoingRequestAmount -= requestLength.toUint8();
     }
 
-    function executeRejectBlurExchangeRequest(
-        DataTypes.PoolStorage storage ps,
-        IPoolAddressesProvider poolAddressProvider,
+    /// @inheritdoc IPoolBlurIntegration
+    function rejectBlurExchangeRequest(
         DataTypes.BlurBuyWithCreditRequest[] calldata requests
-    ) external {
+    ) external payable virtual override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         address keeper = ps._blurExchangeKeeper;
         require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
 
         uint256 requestLength = requests.length;
-        address weth = poolAddressProvider.getWETH();
+        address weth = ADDRESSES_PROVIDER.getWETH();
         IWETH(weth).deposit{value: msg.value}();
         address currentOwner;
         uint256 totalListingPrice;
@@ -355,20 +327,23 @@ library PoolExtendedLogic {
         ps._blurOngoingRequestAmount -= requestLength.toUint8();
     }
 
-    function executeGetBlurExchangeRequestStatus(
-        DataTypes.PoolStorage storage ps,
+    /// @inheritdoc IPoolBlurIntegration
+    function getBlurExchangeRequestStatus(
         DataTypes.BlurBuyWithCreditRequest calldata request
     ) external view returns (DataTypes.BlurBuyWithCreditRequestStatus) {
+        DataTypes.PoolStorage storage ps = poolStorage();
         bytes32 requestHash = _calculateBlurExchangeRequestHash(request);
         return ps._blurExchangeRequestStatus[requestHash];
     }
 
-    function executeInitiateAcceptBlurBidsRequest(
-        DataTypes.PoolStorage storage ps,
-        DataTypes.AcceptBlurBidsRequest[] calldata requests,
-        address oracle,
-        address weth
-    ) external {
+    /// @inheritdoc IPoolBlurIntegration
+    function initiateAcceptBlurBidsRequest(
+        DataTypes.AcceptBlurBidsRequest[] calldata requests
+    ) external payable override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
+        address oracle = ADDRESSES_PROVIDER.getPriceOracle();
+        address weth = ADDRESSES_PROVIDER.getWETH();
         address keeper = ps._acceptBlurBidsKeeper;
         //check and update overall status
         {
@@ -421,46 +396,6 @@ library PoolExtendedLogic {
                 wethLiquidationThreshold
             );
 
-            //check if any ape coin position exist on the Ape
-            {
-                XTokenType tokenType = INToken(nTokenAddress).getXTokenType();
-                if (tokenType == XTokenType.NTokenBAYC) {
-                    ApeCoinStaking apeCoinStaking = INTokenApeStaking(
-                        nTokenAddress
-                    ).getApeStaking();
-                    _ensureApeCoinPositionNotExistedOn(
-                        apeCoinStaking,
-                        1,
-                        request.tokenId
-                    );
-                    _ensureApeIsNotPairedStaking(
-                        apeCoinStaking,
-                        1,
-                        request.tokenId
-                    );
-                } else if (tokenType == XTokenType.NTokenMAYC) {
-                    ApeCoinStaking apeCoinStaking = INTokenApeStaking(
-                        nTokenAddress
-                    ).getApeStaking();
-                    _ensureApeCoinPositionNotExistedOn(
-                        apeCoinStaking,
-                        2,
-                        request.tokenId
-                    );
-                    _ensureApeIsNotPairedStaking(
-                        apeCoinStaking,
-                        2,
-                        request.tokenId
-                    );
-                } else if (tokenType == XTokenType.NTokenBAKC) {
-                    _ensureApeCoinPositionNotExistedOn(
-                        NTokenBAKC(nTokenAddress).getApeStaking(),
-                        3,
-                        request.tokenId
-                    );
-                }
-            }
-
             // transfer underlying nft from nToken to keeper
             DataTypes.TimeLockParams memory timeLockParams;
             INToken(nTokenAddress).transferUnderlyingTo(
@@ -493,11 +428,12 @@ library PoolExtendedLogic {
         }
     }
 
-    function executeFulfillAcceptBlurBidsRequest(
-        DataTypes.PoolStorage storage ps,
-        IPoolAddressesProvider poolAddressProvider,
+    /// @inheritdoc IPoolBlurIntegration
+    function fulfillAcceptBlurBidsRequest(
         DataTypes.AcceptBlurBidsRequest[] calldata requests
-    ) external {
+    ) external payable override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         address keeper = ps._acceptBlurBidsKeeper;
         require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
 
@@ -565,7 +501,7 @@ library PoolExtendedLogic {
 
         //supply eth for current ntoken owner
         if (totalETH > 0) {
-            address weth = poolAddressProvider.getWETH();
+            address weth = ADDRESSES_PROVIDER.getWETH();
             IWETH(weth).deposit{value: msg.value}();
             supplyForUser(ps, weth, address(this), currentOwner, totalETH);
         }
@@ -574,10 +510,12 @@ library PoolExtendedLogic {
         ps._acceptBlurBidsOngoingRequestAmount -= requestLength.toUint8();
     }
 
-    function executeRejectAcceptBlurBidsRequest(
-        DataTypes.PoolStorage storage ps,
+    /// @inheritdoc IPoolBlurIntegration
+    function rejectAcceptBlurBidsRequest(
         DataTypes.AcceptBlurBidsRequest[] calldata requests
-    ) external {
+    ) external override {
+        DataTypes.PoolStorage storage ps = poolStorage();
+
         address keeper = ps._acceptBlurBidsKeeper;
         require(msg.sender == keeper, Errors.CALLER_NOT_KEEPER);
 
@@ -621,10 +559,17 @@ library PoolExtendedLogic {
         ps._acceptBlurBidsOngoingRequestAmount -= requestLength.toUint8();
     }
 
-    function executeGetAcceptBlurBidsRequestStatus(
-        DataTypes.PoolStorage storage ps,
+    /// @inheritdoc IPoolBlurIntegration
+    function getAcceptBlurBidsRequestStatus(
         DataTypes.AcceptBlurBidsRequest calldata request
-    ) external view returns (DataTypes.AcceptBlurBidsRequestStatus) {
+    )
+        external
+        view
+        virtual
+        override
+        returns (DataTypes.AcceptBlurBidsRequestStatus)
+    {
+        DataTypes.PoolStorage storage ps = poolStorage();
         bytes32 requestHash = _calculateAcceptBlurBidsRequestHash(request);
         return ps._acceptBlurBidsRequestStatus[requestHash];
     }
@@ -668,7 +613,7 @@ library PoolExtendedLogic {
         address payer,
         address onBehalfOf,
         uint256 totalAmount
-    ) public {
+    ) internal {
         address variableDebtTokenAddress = ps
             ._reserves[asset]
             .variableDebtTokenAddress;
@@ -686,7 +631,7 @@ library PoolExtendedLogic {
         address payer,
         address onBehalfOf,
         uint256 amount
-    ) public {
+    ) internal {
         if (amount == 0) {
             return;
         }
@@ -718,7 +663,7 @@ library PoolExtendedLogic {
         address payer,
         address onBehalfOf,
         uint256 amount
-    ) public returns (uint256) {
+    ) internal returns (uint256) {
         if (amount == 0) {
             return 0;
         }
@@ -745,7 +690,7 @@ library PoolExtendedLogic {
         bool releaseUnderlying,
         bool endStartedAuction,
         address user
-    ) public {
+    ) internal {
         if (
             endStartedAuction &&
             IAuctionableERC721(nTokenAddress).isAuctioned(tokenId)
@@ -770,24 +715,6 @@ library PoolExtendedLogic {
             userConfig.setUsingAsCollateral(reserveIndex, false);
             emit ReserveUsedAsCollateralDisabled(asset, user);
         }
-    }
-
-    function _ensureApeCoinPositionNotExistedOn(
-        ApeCoinStaking apeStaking,
-        uint256 poolId,
-        uint256 tokenId
-    ) internal view {
-        (uint256 stakedAmount, ) = apeStaking.nftPosition(poolId, tokenId);
-        require(stakedAmount == 0, Errors.EXISTING_APE_STAKING);
-    }
-
-    function _ensureApeIsNotPairedStaking(
-        ApeCoinStaking apeStaking,
-        uint256 mainPoolId,
-        uint256 tokenId
-    ) internal view {
-        (, bool isPaired) = apeStaking.mainToBakc(mainPoolId, tokenId);
-        require(!isPaired, Errors.EXISTING_APE_STAKING);
     }
 
     function _getWETHLiquidationThreashold(

@@ -153,9 +153,10 @@ import {
   WstETHMocked,
   X2Y2Adapter,
   X2Y2R1,
-  PoolExtendedLogic,
   PoolBorrowAndStake__factory,
   PoolBorrowAndStake,
+  PoolBlurIntegration__factory,
+  PoolBlurIntegration,
 } from "../types";
 import {
   getACLManager,
@@ -412,19 +413,6 @@ export const deployLiquidationLogic = async (
     libraries
   ) as Promise<LiquidationLogic>;
 
-export const deployPoolExtendedLogic = async (
-  libraries: Libraries,
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await getContractFactory("PoolExtendedLogic", libraries),
-    eContractid.PoolExtendedLogic,
-    [],
-    verify,
-    false,
-    libraries
-  ) as Promise<PoolExtendedLogic>;
-
 export const deployAuctionLogic = async (verify?: boolean) =>
   withSaveAndVerify(
     await getContractFactory("AuctionLogic"),
@@ -530,20 +518,9 @@ export const deployPoolMarketplace = async (
     },
     verify
   );
-  const poolExtendedLogic = await deployPoolExtendedLogic(
-    {
-      ["contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic"]:
-        supplyLogic.address,
-      ["contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic"]:
-        borrowLogic.address,
-    },
-    verify
-  );
   const marketplaceLibraries = {
     "contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic":
       marketplaceLogic.address,
-    "contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic":
-      poolExtendedLogic.address,
   };
 
   const {poolMarketplaceSelectors} = getPoolSignatures();
@@ -773,18 +750,9 @@ export const deployPoolMarketplaceLibraries = async (
     verify
   );
 
-  const poolExtendedLogic = await deployPoolExtendedLogic(
-    pick(coreLibraries, [
-      "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
-      "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
-    ]),
-    verify
-  );
   return {
     ["contracts/protocol/libraries/logic/MarketplaceLogic.sol:MarketplaceLogic"]:
       marketplaceLogic.address,
-    ["contracts/protocol/libraries/logic/PoolExtendedLogic.sol:PoolExtendedLogic"]:
-      poolExtendedLogic.address,
   };
 };
 
@@ -821,6 +789,10 @@ export const getPoolSignatures = () => {
     PoolPositionMover__factory.abi
   );
 
+  const poolBlurIntegrationSelectors = getFunctionSignatures(
+    PoolBlurIntegration__factory.abi
+  );
+
   const poolProxySelectors = getFunctionSignatures(ParaProxy__factory.abi);
 
   const poolParaProxyInterfacesSelectors = getFunctionSignatures(
@@ -834,6 +806,7 @@ export const getPoolSignatures = () => {
     ...poolMarketplaceSelectors,
     ...poolApeStakingSelectors,
     ...poolBorrowAndStakeSelectors,
+    ...poolBlurIntegrationSelectors,
     ...poolProxySelectors,
     ...poolParaProxyInterfacesSelectors,
     ...poolPositionMoverSelectors,
@@ -858,6 +831,7 @@ export const getPoolSignatures = () => {
     poolBorrowAndStakeSelectors,
     poolParaProxyInterfacesSelectors,
     poolPositionMoverSelectors,
+    poolBlurIntegrationSelectors,
   };
 };
 
@@ -911,6 +885,10 @@ export const deployPoolComponents = async (
     "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
     "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
   ]);
+  const blurIntegrationLibraries = pick(coreLibraries, [
+    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
+    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
+  ]);
 
   const allTokens = await getAllTokens();
 
@@ -923,6 +901,7 @@ export const deployPoolComponents = async (
     poolMarketplaceSelectors,
     poolApeStakingSelectors,
     poolBorrowAndStakeSelectors,
+    poolBlurIntegrationSelectors,
   } = getPoolSignatures();
 
   const poolCore = (await withSaveAndVerify(
@@ -960,6 +939,16 @@ export const deployPoolComponents = async (
     marketplaceLibraries,
     poolMarketplaceSelectors
   )) as PoolMarketplace;
+
+  const poolBlurIntegration = (await withSaveAndVerify(
+    await getContractFactory("PoolBlurIntegration", blurIntegrationLibraries),
+    eContractid.PoolBlurIntegrationImpl,
+    [provider],
+    verify,
+    false,
+    blurIntegrationLibraries,
+    poolBlurIntegrationSelectors
+  )) as PoolBlurIntegration;
 
   const config = getParaSpaceConfig();
   const treasuryAddress = config.Treasury;
@@ -1007,11 +996,15 @@ export const deployPoolComponents = async (
     poolMarketplace,
     poolApeStaking,
     poolBorrowAndStake,
+    poolBlurIntegration,
     poolCoreSelectors: poolCoreSelectors.map((s) => s.signature),
     poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
     poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
     poolApeStakingSelectors: poolApeStakingSelectors.map((s) => s.signature),
     poolBorrowAndStakeSelectors: poolBorrowAndStakeSelectors.map(
+      (s) => s.signature
+    ),
+    poolBlurIntegrationSelectors: poolBlurIntegrationSelectors.map(
       (s) => s.signature
     ),
   };

@@ -8,7 +8,6 @@ import {PoolLogic} from "../libraries/logic/PoolLogic.sol";
 import {ReserveLogic} from "../libraries/logic/ReserveLogic.sol";
 import {SupplyLogic} from "../libraries/logic/SupplyLogic.sol";
 import {MarketplaceLogic} from "../libraries/logic/MarketplaceLogic.sol";
-import {PoolExtendedLogic} from "../libraries/logic/PoolExtendedLogic.sol";
 import {BorrowLogic} from "../libraries/logic/BorrowLogic.sol";
 import {LiquidationLogic} from "../libraries/logic/LiquidationLogic.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
@@ -146,106 +145,5 @@ contract PoolMarketplace is
             ADDRESSES_PROVIDER,
             referralCode
         );
-    }
-
-    // function movePositionFromBendDAO(uint256[] calldata loanIds) external nonReentrant {
-    //     DataTypes.PoolStorage storage ps = poolStorage();
-
-    //     PositionMoverLogic.executeMovePositionFromBendDAO(
-    //         ps,
-    //         ADDRESSES_PROVIDER
-    //     );
-    // }
-
-    /// @inheritdoc IPoolMarketplace
-    function initiateBlurExchangeRequest(
-        DataTypes.BlurBuyWithCreditRequest[] calldata requests
-    ) external payable virtual override nonReentrant {
-        DataTypes.PoolStorage storage ps = poolStorage();
-        PoolExtendedLogic.executeInitiateBlurExchangeRequest(
-            ps,
-            ADDRESSES_PROVIDER,
-            requests
-        );
-    }
-
-    /// @inheritdoc IPoolMarketplace
-    function fulfillBlurExchangeRequest(
-        DataTypes.BlurBuyWithCreditRequest[] calldata requests
-    ) external virtual override {
-        DataTypes.PoolStorage storage ps = poolStorage();
-        PoolExtendedLogic.executeFulfillBlurExchangeRequest(ps, requests);
-    }
-
-    /// @inheritdoc IPoolMarketplace
-    function rejectBlurExchangeRequest(
-        DataTypes.BlurBuyWithCreditRequest[] calldata requests
-    ) external payable virtual override {
-        DataTypes.PoolStorage storage ps = poolStorage();
-        PoolExtendedLogic.executeRejectBlurExchangeRequest(
-            ps,
-            ADDRESSES_PROVIDER,
-            requests
-        );
-    }
-
-    /// @inheritdoc IPoolMarketplace
-    function getBlurExchangeRequestStatus(
-        DataTypes.BlurBuyWithCreditRequest calldata request
-    ) external view returns (DataTypes.BlurBuyWithCreditRequestStatus) {
-        DataTypes.PoolStorage storage ps = poolStorage();
-        return
-            PoolExtendedLogic.executeGetBlurExchangeRequestStatus(ps, request);
-    }
-
-    /// @inheritdoc IPoolMarketplace
-    function initiateAcceptBlurBidsRequest(
-        DataTypes.AcceptBlurBidsRequest[] calldata requests
-    ) external payable override {
-        DataTypes.PoolStorage storage ps = poolStorage();
-        PoolExtendedLogic.executeInitiateAcceptBlurBidsRequest(
-            ps,
-            requests,
-            ADDRESSES_PROVIDER.getPriceOracle(),
-            ADDRESSES_PROVIDER.getWETH()
-        );
-    }
-
-    /// @inheritdoc IPoolMarketplace
-    function fulfillAcceptBlurBidsRequest(
-        DataTypes.AcceptBlurBidsRequest[] calldata requests
-    ) external payable override {
-        DataTypes.PoolStorage storage ps = poolStorage();
-        PoolExtendedLogic.executeFulfillAcceptBlurBidsRequest(
-            ps,
-            ADDRESSES_PROVIDER,
-            requests
-        );
-    }
-
-    /// @inheritdoc IPoolMarketplace
-    function rejectAcceptBlurBidsRequest(
-        DataTypes.AcceptBlurBidsRequest[] calldata requests
-    ) external override {
-        DataTypes.PoolStorage storage ps = poolStorage();
-        PoolExtendedLogic.executeRejectAcceptBlurBidsRequest(ps, requests);
-    }
-
-    /// @inheritdoc IPoolMarketplace
-    function getAcceptBlurBidsRequestStatus(
-        DataTypes.AcceptBlurBidsRequest calldata request
-    )
-        external
-        view
-        virtual
-        override
-        returns (DataTypes.AcceptBlurBidsRequestStatus)
-    {
-        DataTypes.PoolStorage storage ps = poolStorage();
-        return
-            PoolExtendedLogic.executeGetAcceptBlurBidsRequestStatus(
-                ps,
-                request
-            );
     }
 }
