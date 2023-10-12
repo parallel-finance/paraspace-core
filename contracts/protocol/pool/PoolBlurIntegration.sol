@@ -371,7 +371,7 @@ contract PoolBlurIntegration is
 
         //validate and handle every single request
         uint256 requestFeeRate = ps._acceptBlurBidsRequestFeeRate;
-        uint256 wethLiquidationThreshold = _getWETHLiquidationThreashold(
+        uint256 wethLiquidationThreshold = _getWETHLiquidationThreshold(
             ps,
             weth
         );
@@ -717,7 +717,7 @@ contract PoolBlurIntegration is
         }
     }
 
-    function _getWETHLiquidationThreashold(
+    function _getWETHLiquidationThreshold(
         DataTypes.PoolStorage storage ps,
         address weth
     ) internal view returns (uint256) {
