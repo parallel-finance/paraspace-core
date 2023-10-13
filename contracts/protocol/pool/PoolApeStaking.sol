@@ -261,11 +261,21 @@ contract PoolApeStaking is
                 DataTypes.ReserveData storage nftReserve = ps._reserves[
                     unstakingInfo.nftAsset
                 ];
-                INTokenApeStaking nToken = INTokenApeStaking(
-                    nftReserve.xTokenAddress
-                );
-                if (unstakingInfo._nfts.length > 0) {
-                    nToken.withdrawApeCoin(unstakingInfo._nfts, address(this));
+                address nToken = nftReserve.xTokenAddress;
+                uint256 singleLength = unstakingInfo._nfts.length;
+                if (singleLength > 0) {
+                    for (uint256 j = 0; j < singleLength; j++) {
+                        require(
+                            IERC721(nToken).ownerOf(
+                                unstakingInfo._nfts[j].tokenId
+                            ) == onBehalf,
+                            Errors.NOT_THE_OWNER
+                        );
+                    }
+                    INTokenApeStaking(nToken).withdrawApeCoin(
+                        unstakingInfo._nfts,
+                        address(this)
+                    );
                 }
                 uint256 pairLength = unstakingInfo._nftPairs.length;
                 if (pairLength > 0) {
@@ -274,20 +284,29 @@ contract PoolApeStaking is
                     }
                     //transfer bakc from nBakc to nApe
                     for (uint256 j = 0; j < pairLength; j++) {
+                        require(
+                            IERC721(nBakc).ownerOf(
+                                unstakingInfo._nftPairs[j].bakcTokenId
+                            ) == onBehalf,
+                            Errors.NOT_THE_BAKC_OWNER
+                        );
                         IERC721(BAKC).safeTransferFrom(
                             nBakc,
-                            address(nToken),
+                            nToken,
                             unstakingInfo._nftPairs[j].bakcTokenId
                         );
                     }
 
                     //unstake
-                    nToken.withdrawBAKC(unstakingInfo._nftPairs, address(this));
+                    INTokenApeStaking(nToken).withdrawBAKC(
+                        unstakingInfo._nftPairs,
+                        address(this)
+                    );
 
                     //transfer bakc back to nBakc
                     for (uint256 j = 0; j < pairLength; j++) {
                         IERC721(BAKC).safeTransferFrom(
-                            address(nToken),
+                            nToken,
                             nBakc,
                             unstakingInfo._nftPairs[j].bakcTokenId
                         );

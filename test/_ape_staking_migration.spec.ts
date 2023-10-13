@@ -25,8 +25,9 @@ import {
 import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {parseEther} from "ethers/lib/utils";
+import {ProtocolErrors} from "../helpers/types";
 
-describe("Para Ape Staking Test", () => {
+describe("Para Ape Staking Migration Test", () => {
   let testEnv: TestEnv;
   let variableDebtCApeCoin: VariableDebtToken;
   let paraApeStaking: ParaApeStaking;
@@ -1080,6 +1081,37 @@ describe("Para Ape Staking Test", () => {
       parseEther("100")
     );
     expect(await pSApeCoin.balanceOf(user1.address)).to.be.eq(0);
+  });
+
+  it("should revert when msgsender is not ntoken owner", async () => {
+    const {
+      users: [user1, user2],
+      bayc,
+      bakc,
+      ape,
+      pool,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "1", user1, true);
+    await supplyAndValidate(bakc, "1", user1, true);
+    await mintAndValidate(ape, "250000", user2);
+    await waitForTx(
+        await ape.connect(user2.signer).approve(pool.address, MAX_UINT_AMOUNT)
+    );
+
+    await expect(
+      pool.connect(user2.signer).borrowApeAndStakeV2(
+        {
+          nftAsset: bayc.address,
+          borrowAsset: ape.address,
+          borrowAmount: 0,
+          cashAsset: ape.address,
+          cashAmount: parseEther("250000"),
+        },
+        [{tokenId: 0, amount: parseEther("200000")}],
+        [{mainTokenId: 0, bakcTokenId: 0, amount: parseEther("50000")}]
+      )
+    ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
   });
 
   /*
