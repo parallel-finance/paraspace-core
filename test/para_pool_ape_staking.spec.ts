@@ -1883,19 +1883,29 @@ describe("Para Ape staking ape coin pool test", () => {
     await supplyAndValidate(bakc, "3", user1, true);
 
     await waitForTx(
-      await paraApeStaking.connect(user1.signer).depositPairNFT(true, [0], [0])
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositPairNFT(user1.address, true, [0], [0])
     );
     await waitForTx(
-      await paraApeStaking.connect(user1.signer).depositPairNFT(false, [0], [1])
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositPairNFT(user1.address, false, [0], [1])
     );
     await waitForTx(
-      await paraApeStaking.connect(user1.signer).depositNFT(bayc.address, [1])
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(user1.address, bayc.address, [1])
     );
     await waitForTx(
-      await paraApeStaking.connect(user1.signer).depositNFT(mayc.address, [1])
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(user1.address, mayc.address, [1])
     );
     await waitForTx(
-      await paraApeStaking.connect(user1.signer).depositNFT(bakc.address, [2])
+      await paraApeStaking
+        .connect(user1.signer)
+        .depositNFT(user1.address, bakc.address, [2])
     );
 
     await waitForTx(

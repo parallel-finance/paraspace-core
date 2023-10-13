@@ -1096,7 +1096,7 @@ describe("Para Ape Staking Migration Test", () => {
     await supplyAndValidate(bakc, "1", user1, true);
     await mintAndValidate(ape, "250000", user2);
     await waitForTx(
-        await ape.connect(user2.signer).approve(pool.address, MAX_UINT_AMOUNT)
+      await ape.connect(user2.signer).approve(pool.address, MAX_UINT_AMOUNT)
     );
 
     await expect(

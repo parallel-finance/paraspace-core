@@ -6,7 +6,6 @@ import {testEnvFixture} from "./helpers/setup-env";
 import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
 import {
   getAutoCompoundApe,
-  getFirstSigner,
   getInitializableAdminUpgradeabilityProxy,
   getP2PPairStaking,
   getParaApeStaking,
@@ -18,7 +17,7 @@ import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
 import {deployParaApeStakingImpl} from "../helpers/contracts-deployments";
 import {GLOBAL_OVERRIDES} from "../helpers/hardhat-constants";
-import {getEthersSigners, getProxyAdmin} from "../helpers/contracts-helpers";
+import {getEthersSigners} from "../helpers/contracts-helpers";
 
 describe("P2P Pair Staking Migration Test", () => {
   let testEnv: TestEnv;

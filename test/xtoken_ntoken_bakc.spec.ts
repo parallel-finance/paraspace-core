@@ -87,11 +87,12 @@ describe("APE Coin Staking Test", () => {
     const halfAmount = await convertToCurrencyDecimals(ape.address, "5000");
 
     await waitForTx(
-      await pool.connect(user1.signer).borrowApeAndStake(
+      await pool.connect(user1.signer).borrowApeAndStakeV2(
         {
           nftAsset: mayc.address,
           borrowAsset: ape.address,
           borrowAmount: 0,
+          cashAsset: ape.address,
           cashAmount: amount,
         },
         [],
@@ -173,11 +174,12 @@ describe("APE Coin Staking Test", () => {
     const amount = await convertToCurrencyDecimals(ape.address, "10000");
 
     expect(
-      await pool.connect(user1.signer).borrowApeAndStake(
+      await pool.connect(user1.signer).borrowApeAndStakeV2(
         {
           nftAsset: mayc.address,
           borrowAsset: ape.address,
           borrowAmount: 0,
+          cashAsset: ape.address,
           cashAmount: amount,
         },
         [],
@@ -213,11 +215,12 @@ describe("APE Coin Staking Test", () => {
     const amount = await convertToCurrencyDecimals(ape.address, "10000");
 
     expect(
-      await pool.connect(user1.signer).borrowApeAndStake(
+      await pool.connect(user1.signer).borrowApeAndStakeV2(
         {
           nftAsset: mayc.address,
           borrowAsset: ape.address,
           borrowAmount: 0,
+          cashAsset: ape.address,
           cashAmount: amount,
         },
         [],
@@ -259,11 +262,12 @@ describe("APE Coin Staking Test", () => {
 
     const amount = parseEther("10000");
     expect(
-      await pool.connect(user1.signer).borrowApeAndStake(
+      await pool.connect(user1.signer).borrowApeAndStakeV2(
         {
           nftAsset: mayc.address,
           borrowAsset: ape.address,
           borrowAmount: amount,
+          cashAsset: ape.address,
           cashAmount: 0,
         },
         [],
@@ -326,11 +330,12 @@ describe("APE Coin Staking Test", () => {
 
     const amount = parseEther("10000");
     expect(
-      await pool.connect(user1.signer).borrowApeAndStake(
+      await pool.connect(user1.signer).borrowApeAndStakeV2(
         {
           nftAsset: mayc.address,
           borrowAsset: ape.address,
           borrowAmount: 0,
+          cashAsset: ape.address,
           cashAmount: amount,
         },
         [],
@@ -376,11 +381,12 @@ describe("APE Coin Staking Test", () => {
 
     const amount = parseEther("10000");
     expect(
-      await pool.connect(user1.signer).borrowApeAndStake(
+      await pool.connect(user1.signer).borrowApeAndStakeV2(
         {
           nftAsset: mayc.address,
           borrowAsset: ape.address,
           borrowAmount: amount,
+          cashAsset: ape.address,
           cashAmount: 0,
         },
         [],
