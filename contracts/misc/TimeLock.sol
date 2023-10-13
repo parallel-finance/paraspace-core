@@ -29,12 +29,17 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     uint248 public agreementCount;
     bool public frozen;
 
+    // TimeLock whitelist
+    mapping(address => bool) _whiteList;
+
     IPool private immutable POOL;
     IACLManager private immutable ACL_MANAGER;
     address private immutable weth;
     address private immutable wpunk;
     address private immutable Punk;
     address private immutable PARA_APE_STAKING;
+
+    uint48 private constant MIN_WAIT_TIME = 12;
 
     /**
      * @dev Only POOL or callerTag asset's xToken can call functions marked by this modifier.
@@ -91,7 +96,11 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         uint48 releaseTime
     ) external onlyValidCaller(sourceAsset) returns (uint256) {
         require(beneficiary != address(0), "Beneficiary cant be zero address");
-        require(releaseTime > block.timestamp, "Release time not valid");
+        if (_whiteList[beneficiary]) {
+            releaseTime = uint48(block.timestamp) + MIN_WAIT_TIME;
+        } else {
+            require(releaseTime > block.timestamp, "Release time not valid");
+        }
 
         uint256 agreementId = agreementCount++;
         agreements[agreementId] = Agreement({
@@ -272,5 +281,34 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         bytes memory
     ) external virtual override returns (bytes4) {
         return this.onERC721Received.selector;
+    }
+
+    /// @inheritdoc ITimeLock
+    function updateTimeLockWhiteList(
+        address[] calldata toAdd,
+        address[] calldata toRemove
+    ) external onlyPoolAdmin {
+        for (uint256 i = 0; i < toAdd.length; i++) {
+            if (!_whiteList[toAdd[i]]) {
+                _whiteList[toAdd[i]] = true;
+            }
+        }
+        for (uint256 i = 0; i < toRemove.length; i++) {
+            if (_whiteList[toRemove[i]]) {
+                _whiteList[toRemove[i]] = false;
+            }
+        }
+        emit TimeLockWhitelistUpdated(toAdd, toRemove);
+    }
+
+    /// @inheritdoc ITimeLock
+    function isTimeLockWhiteListed(
+        address[] calldata users
+    ) external view returns (bool[] memory) {
+        bool[] memory res = new bool[](users.length);
+        for (uint256 i = 0; i < users.length; i++) {
+            res[i] = _whiteList[users[i]];
+        }
+        return res;
     }
 }
