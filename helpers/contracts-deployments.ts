@@ -3233,8 +3233,8 @@ export const deployAccountFactory = async (
   entryPoint: tEthereumAddress,
   verify?: boolean
 ) => {
-  const accountImpl = await deployAccount(entryPoint);
-  const accountRegistry = await deployAccountRegistry(accountImpl.address);
+  const accountImpl = await deployAccount(entryPoint, verify);
+  const accountRegistry = await deployAccountRegistry(accountImpl.address, verify);
   return withSaveAndVerify(
     await getContractFactory("AccountFactory"),
     eContractid.AccountFactory,

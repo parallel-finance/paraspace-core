@@ -265,6 +265,9 @@ export const ZK_LIBRARIES = fs.existsSync(ZK_LIBRARIES_PATH)
       "contracts/protocol/libraries/logic/SupplyLogic.sol": {
         SupplyLogic: ZERO_ADDRESS,
       },
+      "contracts/protocol/libraries/logic/SupplyExtendedLogic.sol": {
+        SupplyExtendedLogic: ZERO_ADDRESS,
+      },
       "contracts/protocol/libraries/logic/LiquidationLogic.sol": {
         LiquidationLogic: ZERO_ADDRESS,
       },
