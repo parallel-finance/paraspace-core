@@ -10,7 +10,6 @@ import {
   deployAAPoolPositionMover,
 } from "../../helpers/contracts-deployments";
 import {
-  getAccountFactory,
   getAllTokens,
   getPoolAddressesProvider,
   getPoolProxy,
@@ -397,16 +396,10 @@ export const upgradePoolAAPositionMover = async (
     oldAAPoolPositionMover
   );
 
-  const accountFactory = await getAccountFactory();
   const {
     poolAAPositionMover,
-
     poolAAPositionMoverSelectors: newPoolPositionMoverSelectors,
-  } = await deployAAPoolPositionMover(
-    accountFactory.address,
-    process.env.AA_MOVER || "0xE5904695748fe4A84b40b3fc79De2277660BD1D3", //user2 address for test env
-    verify
-  );
+  } = await deployAAPoolPositionMover(verify);
 
   const implementations = [
     [

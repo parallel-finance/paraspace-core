@@ -1,7 +1,6 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
   deployAAPoolPositionMover,
-  deployAccountFactory,
   deployMockBendDaoLendPool,
   deployPoolComponents,
   deployPoolParaProxyInterfaces,
@@ -14,7 +13,6 @@ import {
   getAllTokens,
   getUniswapV3SwapRouter,
   getWETH,
-  getAccountFactory,
 } from "../../../helpers/contracts-getters";
 import {
   getContractAddressInDb,
@@ -27,8 +25,6 @@ import {
   waitForTx,
 } from "../../../helpers/misc-utils";
 import {eContractid, ERC20TokenContractId} from "../../../helpers/types";
-import {zeroAddress} from "ethereumjs-util";
-import {Client} from "userop";
 
 export const step_06 = async (verify = false) => {
   const addressesProvider = await getPoolAddressesProvider();
@@ -126,27 +122,8 @@ export const step_06 = async (verify = false) => {
       );
     }
 
-    if (!(await getContractAddressInDb(eContractid.AccountFactory))) {
-      try {
-        let entryPoint = zeroAddress();
-        if (!isLocalTestnet()) {
-          const paraSpaceConfig = getParaSpaceConfig();
-          const client = Client.init(paraSpaceConfig.AccountAbstraction.rpcUrl);
-          entryPoint = (await client).entryPoint.address;
-        }
-        await deployAccountFactory(entryPoint, verify);
-      } catch (error) {
-        console.error(error);
-        process.exit(1);
-      }
-    }
-    const accountFactory = await getAccountFactory();
     const {poolAAPositionMover, poolAAPositionMoverSelectors} =
-      await deployAAPoolPositionMover(
-        accountFactory.address,
-        process.env.AA_MOVER || "0xE5904695748fe4A84b40b3fc79De2277660BD1D3", //user2 address for test env
-        verify
-      );
+      await deployAAPoolPositionMover(verify);
 
     await waitForTx(
       await addressesProvider.updatePoolImpl(

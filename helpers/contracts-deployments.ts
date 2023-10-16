@@ -666,17 +666,13 @@ export const deployPoolParaProxyInterfaces = async (verify?: boolean) => {
   };
 };
 
-export const deployAAPoolPositionMover = async (
-  accountFactory: tEthereumAddress,
-  aaMover: tEthereumAddress,
-  verify?: boolean
-) => {
+export const deployAAPoolPositionMover = async (verify?: boolean) => {
   const {poolAAPositionMoverSelectors} = await getPoolSignatures();
 
   const poolAAPositionMover = (await withSaveAndVerify(
     await getContractFactory("PoolAAPositionMover"),
     eContractid.PoolAAPositionMoverImpl,
-    [accountFactory, aaMover],
+    [],
     verify,
     false,
     undefined,

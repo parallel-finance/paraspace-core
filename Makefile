@@ -456,18 +456,6 @@ zksync-bytecode-hashes:
 redeploy-market:
 	make SCRIPT_PATH=./scripts/dev/15.redeploy-market.ts run
 
-.PHONY: query-zksync-user
-query-zksync-user:
-	make SCRIPT_PATH=./scripts/dev/16.query_zksync_user.ts run
-
-.PHONY: filter-zksync-user-by-value
-filter-zksync-user-by-value:
-	make SCRIPT_PATH=./scripts/dev/17.filter_zksync_user_by_value.ts run
-
-.PHONY: migrate-zksync-user-to-aa
-migrate-zksync-user-to-aa:
-	make SCRIPT_PATH=./scripts/dev/18.migrate_zksync_user_to_aa.ts run
-
 .PHONY: upgrade-pool-aa-position-mover
 upgrade-pool-aa-position-mover:
 	make TASK_NAME=upgrade:pool-aa-position-mover run-task
