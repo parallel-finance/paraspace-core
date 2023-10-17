@@ -35,14 +35,14 @@ describe("BLUR Buy Integration Tests", () => {
       poolAdmin,
     } = testEnv;
 
+    await waitForTx(
+      await pool.connect(poolAdmin.signer).setBlurExchangeKeeper(user2.address)
+    );
+
     await waitForTx(await pool.connect(poolAdmin.signer).enableBlurExchange());
 
     await waitForTx(
       await pool.connect(poolAdmin.signer).setBlurOngoingRequestLimit(2)
-    );
-
-    await waitForTx(
-      await pool.connect(poolAdmin.signer).setBlurExchangeKeeper(user2.address)
     );
 
     await mintAndValidate(weth, parseEther("100").toString(), user1);

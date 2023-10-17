@@ -100,12 +100,10 @@ library ValidationLogic {
 
     function validateStatusForRequest(
         bool isEnable,
-        address keeper,
         uint256 ongoingRequestAmount,
         uint256 ongoingRequestLimit
     ) internal pure {
         require(isEnable, Errors.REQUEST_DISABLED);
-        require(keeper != address(0), Errors.INVALID_KEEPER_ADDRESS);
         require(
             ongoingRequestAmount <= ongoingRequestLimit,
             Errors.ONGOING_REQUEST_AMOUNT_EXCEEDED

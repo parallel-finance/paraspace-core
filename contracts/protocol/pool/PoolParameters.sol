@@ -368,6 +368,10 @@ contract PoolParameters is
     function enableBlurExchange() external onlyPoolAdmin {
         DataTypes.PoolStorage storage ps = poolStorage();
         if (!ps._blurExchangeEnable) {
+            require(
+                ps._blurExchangeKeeper != address(0),
+                Errors.INVALID_KEEPER_ADDRESS
+            );
             ps._blurExchangeEnable = true;
             emit BlurExchangeEnableStatusUpdated(true);
         }
@@ -396,6 +400,8 @@ contract PoolParameters is
     function setBlurExchangeRequestFeeRate(
         uint16 feeRate
     ) external onlyPoolAdmin {
+        //20%
+        require(feeRate <= 0.2e4, Errors.INVALID_PARAMETER);
         DataTypes.PoolStorage storage ps = poolStorage();
         uint16 oldValue = ps._blurExchangeRequestFeeRate;
         if (oldValue != feeRate) {
@@ -416,6 +422,10 @@ contract PoolParameters is
     function enableAcceptBlurBids() external onlyPoolAdmin {
         DataTypes.PoolStorage storage ps = poolStorage();
         if (!ps._acceptBlurBidsEnable) {
+            require(
+                ps._acceptBlurBidsKeeper != address(0),
+                Errors.INVALID_KEEPER_ADDRESS
+            );
             ps._acceptBlurBidsEnable = true;
             emit AcceptBlurBidsEnableStatusUpdated(true);
         }
@@ -446,6 +456,8 @@ contract PoolParameters is
     function setAcceptBlurBidsRequestFeeRate(
         uint16 feeRate
     ) external onlyPoolAdmin {
+        //20%
+        require(feeRate <= 0.2e4, Errors.INVALID_PARAMETER);
         DataTypes.PoolStorage storage ps = poolStorage();
         uint16 oldValue = ps._acceptBlurBidsRequestFeeRate;
         if (oldValue != feeRate) {

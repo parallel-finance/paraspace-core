@@ -74,7 +74,6 @@ contract PoolBlurIntegration is
                 requests.length;
             ValidationLogic.validateStatusForRequest(
                 ps._blurExchangeEnable,
-                keeper,
                 ongoingRequestAmount,
                 ps._blurOngoingRequestLimit
             );
@@ -351,7 +350,6 @@ contract PoolBlurIntegration is
                 ._acceptBlurBidsOngoingRequestAmount + requests.length;
             ValidationLogic.validateStatusForRequest(
                 ps._acceptBlurBidsEnable,
-                keeper,
                 ongoingRequestAmount,
                 ps._acceptBlurBidsRequestLimit
             );

@@ -30,6 +30,12 @@ describe("BLUR Sell Integration Tests", () => {
     } = testEnv;
 
     await waitForTx(
+      await pool
+        .connect(poolAdmin.signer)
+        .setAcceptBlurBidsKeeper(user2.address)
+    );
+
+    await waitForTx(
       await pool.connect(poolAdmin.signer).enableAcceptBlurBids()
     );
 
@@ -37,12 +43,6 @@ describe("BLUR Sell Integration Tests", () => {
       await pool
         .connect(poolAdmin.signer)
         .setAcceptBlurBidsOngoingRequestLimit(2)
-    );
-
-    await waitForTx(
-      await pool
-        .connect(poolAdmin.signer)
-        .setAcceptBlurBidsKeeper(user2.address)
     );
 
     await supplyAndValidate(bayc, "1", user1, true);
