@@ -234,6 +234,7 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
         address to,
         uint256 tokenId
     ) internal override {
+        ensureOwnsUnderlying(tokenId);
         _transfer(from, to, tokenId, true);
     }
 

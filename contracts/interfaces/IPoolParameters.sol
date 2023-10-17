@@ -32,6 +32,51 @@ interface IPoolParameters {
     event ClaimApeForYieldIncentiveUpdated(uint256 oldValue, uint256 newValue);
 
     /**
+     * @dev Emitted when the status of blur exchange enable status update
+     **/
+    event BlurExchangeEnableStatusUpdated(bool isEnable);
+
+    /**
+     * @dev Emitted when the limit amount of blur ongoing request update
+     **/
+    event BlurOngoingRequestLimitUpdated(uint256 oldValue, uint256 newValue);
+
+    /**
+     * @dev Emitted when the fee rate of blur exchange request update
+     **/
+    event BlurExchangeRequestFeeRateUpdated(uint256 oldValue, uint256 newValue);
+
+    /**
+     * @dev Emitted when the blur exchange keeper address update
+     **/
+    event BlurExchangeKeeperUpdated(address keeper);
+    /**
+     * @dev Emitted when the status of accept blur bids enable status update
+     **/
+    event AcceptBlurBidsEnableStatusUpdated(bool isEnable);
+
+    /**
+     * @dev Emitted when the limit amount of accept blur bids ongoing request update
+     **/
+    event AcceptBlurBidsOngoingRequestLimitUpdated(
+        uint256 oldValue,
+        uint256 newValue
+    );
+
+    /**
+     * @dev Emitted when the fee rate of accept blur bids request update
+     **/
+    event AcceptBlurBidsRequestFeeRateUpdated(
+        uint256 oldValue,
+        uint256 newValue
+    );
+
+    /**
+     * @dev Emitted when the accept blur bids keeper address update
+     **/
+    event AcceptBlurBidsKeeperUpdated(address keeper);
+
+    /**
      * @notice Initializes a reserve, activating it, assigning an xToken and debt tokens and an
      * interest rate strategy
      * @dev Only callable by the PoolConfigurator contract
@@ -200,4 +245,60 @@ interface IPoolParameters {
         address asset,
         uint256 tokenId
     ) external view returns (uint256 ltv, uint256 lt);
+
+    /**
+     * @notice enable blur exchange request, only pool admin call this function
+     **/
+    function enableBlurExchange() external;
+
+    /**
+     * @notice disable blur exchange request, only pool admin or emergency admin call this function
+     **/
+    function disableBlurExchange() external;
+
+    /**
+     * @notice update blur ongoing request limit amount
+     * @param limit The new limit amount
+     **/
+    function setBlurOngoingRequestLimit(uint8 limit) external;
+
+    /**
+     * @notice update blur exchange request fee rate
+     * @param feeRate The new fee rate
+     **/
+    function setBlurExchangeRequestFeeRate(uint16 feeRate) external;
+
+    /**
+     * @notice update blur exchange keeper, only pool admin call this function
+     * @param keeper The new keeper address
+     **/
+    function setBlurExchangeKeeper(address keeper) external;
+
+    /**
+     * @notice enable accept blur bids request, only pool admin call this function
+     **/
+    function enableAcceptBlurBids() external;
+
+    /**
+     * @notice disable accept blur bids request, only pool admin or emergency admin call this function
+     **/
+    function disableAcceptBlurBids() external;
+
+    /**
+     * @notice update accept blur bids ongoing request limit amount
+     * @param limit The new limit amount
+     **/
+    function setAcceptBlurBidsOngoingRequestLimit(uint8 limit) external;
+
+    /**
+     * @notice update accept blur bids request fee rate
+     * @param feeRate The new fee rate
+     **/
+    function setAcceptBlurBidsRequestFeeRate(uint16 feeRate) external;
+
+    /**
+     * @notice update accept blur bids keeper, only pool admin call this function
+     * @param keeper The new keeper address
+     **/
+    function setAcceptBlurBidsKeeper(address keeper) external;
 }

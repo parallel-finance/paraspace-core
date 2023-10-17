@@ -55,6 +55,106 @@ library ValidationLogic {
      */
     uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
 
+    function validateInitiateAcceptBlurBidsRequest(
+        DataTypes.PoolStorage storage ps,
+        address nTokenAddress,
+        DataTypes.AcceptBlurBidsRequest calldata request,
+        bytes32 requestHash,
+        address weth,
+        address oracle,
+        uint256 wethLiquidationThreshold
+    ) internal view {
+        require(
+            ps._acceptBlurBidsRequestStatus[requestHash] ==
+                DataTypes.AcceptBlurBidsRequestStatus.Default,
+            Errors.INVALID_REQUEST_STATUS
+        );
+        require(msg.sender == request.initiator, Errors.CALLER_NOT_INITIATOR);
+        require(
+            INToken(nTokenAddress).ownerOf(request.tokenId) ==
+                request.initiator,
+            Errors.NOT_THE_OWNER
+        );
+        require(request.paymentToken == weth, Errors.INVALID_PAYMENT_TOKEN);
+        uint256 floorPrice = IPriceOracleGetter(oracle).getAssetPrice(
+            request.collection
+        );
+        uint256 collateralPrice = Helpers.getTraitBoostedTokenPrice(
+            nTokenAddress,
+            floorPrice,
+            request.tokenId
+        );
+        DataTypes.ReserveConfigurationMap memory nftReserveConfiguration = ps
+            ._reserves[request.collection]
+            .configuration;
+        (, uint256 nftLiquidationThreshold, , , ) = nftReserveConfiguration
+            .getParams();
+        uint256 userReceivedCurrency = request.bidingPrice -
+            request.marketPlaceFee;
+        require(
+            userReceivedCurrency.percentMul(wethLiquidationThreshold) >=
+                collateralPrice.percentMul(nftLiquidationThreshold),
+            Errors.INVALID_REQUEST_PRICE
+        );
+    }
+
+    function validateStatusForRequest(
+        bool isEnable,
+        uint256 ongoingRequestAmount,
+        uint256 ongoingRequestLimit
+    ) internal pure {
+        require(isEnable, Errors.REQUEST_DISABLED);
+        require(
+            ongoingRequestAmount <= ongoingRequestLimit,
+            Errors.ONGOING_REQUEST_AMOUNT_EXCEEDED
+        );
+    }
+
+    function validateInitiateBlurExchangeRequest(
+        DataTypes.ReserveData storage nftReserve,
+        DataTypes.BlurBuyWithCreditRequest calldata request,
+        DataTypes.BlurBuyWithCreditRequestStatus requestStatus,
+        uint256 remainingETH,
+        uint256 requestFee,
+        address oracle
+    ) internal view returns (uint256) {
+        require(
+            requestStatus == DataTypes.BlurBuyWithCreditRequestStatus.Default,
+            Errors.INVALID_REQUEST_STATUS
+        );
+        require(msg.sender == request.initiator, Errors.CALLER_NOT_INITIATOR);
+        address nTokenAddress = nftReserve.xTokenAddress;
+        XTokenType tokenType = INToken(nTokenAddress).getXTokenType();
+        require(
+            tokenType != XTokenType.NTokenUniswapV3 &&
+                tokenType != XTokenType.NTokenIZUMILp &&
+                tokenType != XTokenType.NTokenStakefish,
+            Errors.XTOKEN_TYPE_NOT_ALLOWED
+        );
+        uint256 needCashETH = request.listingPrice +
+            requestFee -
+            request.borrowAmount;
+        require(remainingETH >= needCashETH, Errors.INVALID_ETH_VALUE);
+        require(
+            request.paymentToken == address(0),
+            Errors.INVALID_PAYMENT_TOKEN
+        );
+        uint256 floorPrice = IPriceOracleGetter(oracle).getAssetPrice(
+            request.collection
+        );
+        uint256 collateralPrice = Helpers.getTraitBoostedTokenPrice(
+            nTokenAddress,
+            floorPrice,
+            request.tokenId
+        );
+        // ensure user can't borrow/withdraw with the new mint nToken
+        require(
+            request.listingPrice >= collateralPrice,
+            Errors.INVALID_REQUEST_PRICE
+        );
+        return needCashETH;
+    }
+
     /**
      * @notice Validates a supply action.
      * @param reserveCache The cached data of the reserve

@@ -357,3 +357,81 @@ task("set-cAPE-pause", "Set cAPE pause")
       await waitForTx(await cAPE.unpause());
     }
   });
+
+task("set-blur-integration-enable", "Set blur integration enable")
+  .addPositionalParam("isEnable", "isEnable", "false")
+  .setAction(async ({isEnable}, DRE) => {
+    await DRE.run("set-DRE");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
+    const {getPoolProxy} = await import("../../helpers/contracts-getters");
+    const pool = await getPoolProxy();
+    isEnable = isEnable != "false";
+
+    if (DRY_RUN) {
+      const encodedData = isEnable
+        ? pool.interface.encodeFunctionData("enableBlurExchange")
+        : pool.interface.encodeFunctionData("disableBlurExchange");
+      await dryRunEncodedData(pool.address, encodedData);
+    } else if (isEnable) {
+      await waitForTx(await pool.enableBlurExchange());
+    } else {
+      await waitForTx(await pool.disableBlurExchange());
+    }
+  });
+
+task("set-blur-ongoing-request-limit", "Set blur ongoing request limit")
+  .addPositionalParam("limit", "request limit")
+  .setAction(async ({limit}, DRE) => {
+    await DRE.run("set-DRE");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
+    const {getPoolProxy} = await import("../../helpers/contracts-getters");
+    const pool = await getPoolProxy();
+
+    if (DRY_RUN) {
+      const encodedData = pool.interface.encodeFunctionData(
+        "setBlurOngoingRequestLimit",
+        [limit]
+      );
+      await dryRunEncodedData(pool.address, encodedData);
+    } else {
+      await waitForTx(await pool.setBlurOngoingRequestLimit(limit));
+    }
+  });
+
+task("set-blur-request-fee-rate", "Set blur request fee rate")
+  .addPositionalParam("feeRate", "fee rate")
+  .setAction(async ({feeRate}, DRE) => {
+    await DRE.run("set-DRE");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
+    const {getPoolProxy} = await import("../../helpers/contracts-getters");
+    const pool = await getPoolProxy();
+
+    if (DRY_RUN) {
+      const encodedData = pool.interface.encodeFunctionData(
+        "setBlurExchangeRequestFeeRate",
+        [feeRate]
+      );
+      await dryRunEncodedData(pool.address, encodedData);
+    } else {
+      await waitForTx(await pool.setBlurExchangeRequestFeeRate(feeRate));
+    }
+  });
+
+task("set-blur-exchange-keeper", "Set blur exchange keeper")
+  .addPositionalParam("keeper", "keeper address")
+  .setAction(async ({keeper}, DRE) => {
+    await DRE.run("set-DRE");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
+    const {getPoolProxy} = await import("../../helpers/contracts-getters");
+    const pool = await getPoolProxy();
+
+    if (DRY_RUN) {
+      const encodedData = pool.interface.encodeFunctionData(
+        "setBlurExchangeKeeper",
+        [keeper]
+      );
+      await dryRunEncodedData(pool.address, encodedData);
+    } else {
+      await waitForTx(await pool.setBlurExchangeKeeper(keeper));
+    }
+  });

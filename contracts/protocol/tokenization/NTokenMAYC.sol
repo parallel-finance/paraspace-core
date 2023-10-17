@@ -28,6 +28,10 @@ contract NTokenMAYC is NTokenApeStaking {
     function depositApeCoin(
         ApeCoinStaking.SingleNft[] calldata _nfts
     ) external onlyPool nonReentrant {
+        uint256 nftLength = _nfts.length;
+        for (uint256 index = 0; index < nftLength; index++) {
+            ensureOwnsUnderlying(_nfts[index].tokenId);
+        }
         _apeCoinStaking.depositMAYC(_nfts);
     }
 
@@ -65,6 +69,10 @@ contract NTokenMAYC is NTokenApeStaking {
     function depositBAKC(
         ApeCoinStaking.PairNftDepositWithAmount[] calldata _nftPairs
     ) external onlyPool nonReentrant {
+        uint256 nftLength = _nftPairs.length;
+        for (uint256 index = 0; index < nftLength; index++) {
+            ensureOwnsUnderlying(_nftPairs[index].mainTokenId);
+        }
         _apeCoinStaking.depositBAKC(
             new ApeCoinStaking.PairNftDepositWithAmount[](0),
             _nftPairs

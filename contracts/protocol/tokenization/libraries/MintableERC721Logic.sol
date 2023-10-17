@@ -165,6 +165,16 @@ library MintableERC721Logic {
 
     using SafeERC20 for IERC20;
 
+    function ensureOwnsUnderlying(
+        MintableERC721Data storage erc721Data,
+        uint256 tokenId
+    ) external view {
+        address tokenOwner = IERC721(erc721Data.underlyingAsset).ownerOf(
+            tokenId
+        );
+        require(tokenOwner == address(this), Errors.NTOKEN_NOT_OWNS_UNDERLYING);
+    }
+
     function executeTransfer(
         MintableERC721Data storage erc721Data,
         IPool POOL,

@@ -119,6 +119,7 @@ export enum eContractid {
   SupplyLogic = "SupplyLogic",
   SupplyExtendedLogic = "SupplyExtendedLogic",
   BorrowLogic = "BorrowLogic",
+  PoolExtendedLogic = "PoolExtendedLogic",
   LiquidationLogic = "LiquidationLogic",
   AuctionLogic = "AuctionLogic",
   PoolLogic = "PoolLogic",
@@ -233,6 +234,7 @@ export enum eContractid {
   MockAirdropProject = "MockAirdropProject",
   PoolCoreImpl = "PoolCoreImpl",
   PoolMarketplaceImpl = "PoolMarketplaceImpl",
+  PoolBlurIntegrationImpl = "PoolBlurIntegrationImpl",
   PoolParametersImpl = "PoolParametersImpl",
   PoolApeStakingImpl = "PoolApeStakingImpl",
   PoolBorrowAndStakeImpl = "PoolBorrowAndStakeImpl",
@@ -434,6 +436,19 @@ export enum ProtocolErrors {
   EMEGENCY_DISABLE_CALL = "emergency disable call",
 
   MAKER_SAME_AS_TAKER = "132",
+
+  CALLER_NOT_INITIATOR = "141", //The caller of the function is not the request initiator
+  ONGOING_REQUEST_AMOUNT_EXCEEDED = "143", //ongoing request amount exceeds limit
+  REQUEST_DISABLED = "144", //blur exchange request disabled
+  INVALID_ASSET = "145", // invalid asset.
+  INVALID_ETH_VALUE = "146", //The status of the request is invalid for this function
+  INVALID_REQUEST_STATUS = "147", //the eth value with the transaction is invalid
+  INVALID_PAYMENT_TOKEN = "148", //the invalid payment token for blur exchange request
+  INVALID_REQUEST_PRICE = "149", //the listing price for blur exchange request is invalid
+  CALLER_NOT_KEEPER = "150", //The caller of the function is not keeper
+  NTOKEN_NOT_OWNS_UNDERLYING = "151", //The ntoken does not owns the underlying nft
+  EXISTING_APE_STAKING = "152", // Ape coin staking position existed
+  NOT_SAME_NTOKEN_OWNER = "153", // ntoken have different owner
 }
 
 export type tEthereumAddress = string;

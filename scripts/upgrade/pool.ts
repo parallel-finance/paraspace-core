@@ -7,10 +7,12 @@ import {
   deployPoolMarketplace,
   deployPoolParameters,
   deployPoolPositionMover,
+  getPoolSignatures,
 } from "../../helpers/contracts-deployments";
 import {
   getAllTokens,
   getPoolAddressesProvider,
+  getPoolParaProxyInterfaces,
   getPoolProxy,
 } from "../../helpers/contracts-getters";
 import {
@@ -116,6 +118,20 @@ const resetSelectors = async () => {
       )
     );
   }
+};
+
+export const addParaProxyInterfacesSelectors = async () => {
+  const {poolParaProxyInterfacesSelectors} = getPoolSignatures();
+
+  const selectors = poolParaProxyInterfacesSelectors.map((s) => s.signature);
+
+  const poolParaProxyInterfaces = await getPoolParaProxyInterfaces();
+
+  const implementations = [
+    [poolParaProxyInterfaces.address, selectors, []],
+  ] as [string, string[], string[]][];
+
+  await upgradeProxyImplementations(implementations);
 };
 
 export const resetPool = async (verify = false) => {

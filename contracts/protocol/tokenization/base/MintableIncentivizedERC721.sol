@@ -431,6 +431,10 @@ abstract contract MintableIncentivizedERC721 is
         return DELEGATE_REGISTRY_ADDRESS;
     }
 
+    function ensureOwnsUnderlying(uint256 tokenId) internal view {
+        MintableERC721Logic.ensureOwnsUnderlying(_ERC721Data, tokenId);
+    }
+
     /**
      * @dev Transfers `tokenId` from `from` to `to`.
      *  As opposed to {transferFrom}, this imposes no restrictions on msg.sender.
@@ -447,6 +451,8 @@ abstract contract MintableIncentivizedERC721 is
         address to,
         uint256 tokenId
     ) internal virtual {
+        //ensure nToken owns the underlying asset
+        ensureOwnsUnderlying(tokenId);
         MintableERC721Logic.executeTransfer(
             _ERC721Data,
             POOL,

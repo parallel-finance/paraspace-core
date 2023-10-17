@@ -5,7 +5,7 @@ import {IPoolAddressesProvider} from "./IPoolAddressesProvider.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 
 /**
- * @title IPool
+ * @title IPoolMarketplace
  *
  * @notice Defines the basic interface for an ParaSpace Pool.
  **/

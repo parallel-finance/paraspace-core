@@ -70,6 +70,14 @@ contract PoolParameters is
         _;
     }
 
+    /**
+     * @dev Only emergency or pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyEmergencyOrPoolAdmin() {
+        _onlyPoolOrEmergencyAdmin();
+        _;
+    }
+
     function _onlyPoolConfigurator() internal view virtual {
         require(
             ADDRESSES_PROVIDER.getPoolConfigurator() == msg.sender,
@@ -83,6 +91,17 @@ contract PoolParameters is
                 msg.sender
             ),
             Errors.CALLER_NOT_POOL_ADMIN
+        );
+    }
+
+    function _onlyPoolOrEmergencyAdmin() internal view {
+        IACLManager aclManager = IACLManager(
+            ADDRESSES_PROVIDER.getACLManager()
+        );
+        require(
+            aclManager.isPoolAdmin(msg.sender) ||
+                aclManager.isEmergencyAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
         );
     }
 
@@ -343,5 +362,115 @@ contract PoolParameters is
             Errors.ERC721_HEALTH_FACTOR_NOT_ABOVE_THRESHOLD
         );
         userConfig.auctionValidityTime = block.timestamp;
+    }
+
+    /// @inheritdoc IPoolParameters
+    function enableBlurExchange() external onlyPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        if (!ps._blurExchangeEnable) {
+            require(
+                ps._blurExchangeKeeper != address(0),
+                Errors.INVALID_KEEPER_ADDRESS
+            );
+            ps._blurExchangeEnable = true;
+            emit BlurExchangeEnableStatusUpdated(true);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function disableBlurExchange() external onlyEmergencyOrPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        if (ps._blurExchangeEnable) {
+            ps._blurExchangeEnable = false;
+            emit BlurExchangeEnableStatusUpdated(false);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setBlurOngoingRequestLimit(uint8 limit) external onlyPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        uint8 oldValue = ps._blurOngoingRequestLimit;
+        if (oldValue != limit) {
+            ps._blurOngoingRequestLimit = limit;
+            emit BlurOngoingRequestLimitUpdated(oldValue, limit);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setBlurExchangeRequestFeeRate(
+        uint16 feeRate
+    ) external onlyPoolAdmin {
+        //20%
+        require(feeRate <= 0.2e4, Errors.INVALID_PARAMETER);
+        DataTypes.PoolStorage storage ps = poolStorage();
+        uint16 oldValue = ps._blurExchangeRequestFeeRate;
+        if (oldValue != feeRate) {
+            ps._blurExchangeRequestFeeRate = feeRate;
+            emit BlurExchangeRequestFeeRateUpdated(oldValue, feeRate);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setBlurExchangeKeeper(address keeper) external onlyPoolAdmin {
+        require(keeper != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        DataTypes.PoolStorage storage ps = poolStorage();
+        ps._blurExchangeKeeper = keeper;
+        emit BlurExchangeKeeperUpdated(keeper);
+    }
+
+    /// @inheritdoc IPoolParameters
+    function enableAcceptBlurBids() external onlyPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        if (!ps._acceptBlurBidsEnable) {
+            require(
+                ps._acceptBlurBidsKeeper != address(0),
+                Errors.INVALID_KEEPER_ADDRESS
+            );
+            ps._acceptBlurBidsEnable = true;
+            emit AcceptBlurBidsEnableStatusUpdated(true);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function disableAcceptBlurBids() external onlyEmergencyOrPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        if (ps._acceptBlurBidsEnable) {
+            ps._acceptBlurBidsEnable = false;
+            emit AcceptBlurBidsEnableStatusUpdated(false);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setAcceptBlurBidsOngoingRequestLimit(
+        uint8 limit
+    ) external onlyPoolAdmin {
+        DataTypes.PoolStorage storage ps = poolStorage();
+        uint8 oldValue = ps._acceptBlurBidsRequestLimit;
+        if (oldValue != limit) {
+            ps._acceptBlurBidsRequestLimit = limit;
+            emit AcceptBlurBidsOngoingRequestLimitUpdated(oldValue, limit);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setAcceptBlurBidsRequestFeeRate(
+        uint16 feeRate
+    ) external onlyPoolAdmin {
+        //20%
+        require(feeRate <= 0.2e4, Errors.INVALID_PARAMETER);
+        DataTypes.PoolStorage storage ps = poolStorage();
+        uint16 oldValue = ps._acceptBlurBidsRequestFeeRate;
+        if (oldValue != feeRate) {
+            ps._acceptBlurBidsRequestFeeRate = feeRate;
+            emit AcceptBlurBidsRequestFeeRateUpdated(oldValue, feeRate);
+        }
+    }
+
+    /// @inheritdoc IPoolParameters
+    function setAcceptBlurBidsKeeper(address keeper) external onlyPoolAdmin {
+        require(keeper != address(0), Errors.ZERO_ADDRESS_NOT_VALID);
+        DataTypes.PoolStorage storage ps = poolStorage();
+        ps._acceptBlurBidsKeeper = keeper;
+        emit AcceptBlurBidsKeeperUpdated(keeper);
     }
 }

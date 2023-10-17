@@ -588,6 +588,22 @@ set-reserve-pause:
 set-cAPE-pause:
 	make TASK_NAME=set-cAPE-pause run-task
 
+.PHONY: set-blur-integration-enable
+set-blur-integration-enable:
+	make TASK_NAME=set-blur-integration-enable run-task
+
+.PHONY: set-blur-ongoing-request-limit
+set-blur-ongoing-request-limit:
+	make TASK_NAME=set-blur-ongoing-request-limit run-task
+
+.PHONY: set-blur-request-fee-rate
+set-blur-request-fee-rate:
+	make TASK_NAME=set-blur-request-fee-rate run-task
+
+.PHONY: set-blur-exchange-keeper
+set-blur-exchange-keeper:
+	make TASK_NAME=set-blur-exchange-keeper run-task
+
 .PHONY: list-facets
 list-facets:
 	make TASK_NAME=list-facets run-task
@@ -619,6 +635,10 @@ upgrade:
 .PHONY: upgrade-pool
 upgrade-pool:
 	make TASK_NAME=upgrade:pool run-task
+
+.PHONY: add-para-proxy-interfaces
+add-para-proxy-interfaces:
+	make TASK_NAME=upgrade:add-para-proxy-interfaces run-task
 
 .PHONY: upgrade-pool-core
 upgrade-pool-core:
