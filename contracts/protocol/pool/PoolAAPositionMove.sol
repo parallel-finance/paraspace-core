@@ -48,6 +48,13 @@ contract PoolAAPositionMover is
     using SafeCast for uint256;
     using WadRayMath for uint256;
 
+    struct MigrationCacheVars {
+        uint256 reservesCount;
+        bool isTokenCollateral;
+        bool isCollectionCollateral;
+        DataTypes.TimeLockParams timeLockParams;
+    }
+
     function positionMoveToAA(address aaAccount) external nonReentrant {
         require(
             IAccount(aaAccount).owner() == msg.sender,
@@ -62,8 +69,9 @@ contract PoolAAPositionMover is
             aaAccount
         ];
 
-        uint256 reservesCount = ps._reservesCount;
-        for (uint256 j = 0; j < reservesCount; j++) {
+        MigrationCacheVars memory cacheVars;
+        cacheVars.reservesCount = ps._reservesCount;
+        for (uint256 j = 0; j < cacheVars.reservesCount; j++) {
             address currentReserveAddress = ps._reservesList[j];
             if (currentReserveAddress == address(0)) {
                 continue;
@@ -84,13 +92,12 @@ contract PoolAAPositionMover is
                         uint256 nextLiquidityIndex = _calculateLiquidityIndex(
                             reserveCache
                         );
-                        DataTypes.TimeLockParams memory timeLockParams;
                         pToken.burn(
                             msg.sender,
                             reserveCache.xTokenAddress,
                             balance,
                             nextLiquidityIndex,
-                            timeLockParams
+                            cacheVars.timeLockParams
                         );
                         pToken.mint(
                             aaAccount,
@@ -137,18 +144,23 @@ contract PoolAAPositionMover is
             } else {
                 INToken nToken = INToken(reserveCache.xTokenAddress);
                 uint256 balance = nToken.balanceOf(msg.sender);
+                cacheVars.isCollectionCollateral = false;
                 for (uint256 k = 0; k < balance; k++) {
                     uint256 tokenId = nToken.tokenOfOwnerByIndex(msg.sender, k);
+                    cacheVars.isTokenCollateral = nToken.isUsedAsCollateral(
+                        tokenId
+                    );
                     nToken.transferOnLiquidation(
                         msg.sender,
                         aaAccount,
                         tokenId
                     );
-                    if (nToken.isUsedAsCollateral(tokenId)) {
+                    if (cacheVars.isTokenCollateral) {
                         nToken.setIsUsedAsCollateral(tokenId, true, aaAccount);
+                        cacheVars.isCollectionCollateral = true;
                     }
                 }
-                if (balance > 0 && userConfig.isUsingAsCollateral(j)) {
+                if (cacheVars.isCollectionCollateral) {
                     aaConfig.setUsingAsCollateral(j, true);
                     emit ReserveUsedAsCollateralEnabled(
                         currentReserveAddress,
