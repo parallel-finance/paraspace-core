@@ -3234,7 +3234,10 @@ export const deployAccountFactory = async (
   verify?: boolean
 ) => {
   const accountImpl = await deployAccount(entryPoint, verify);
-  const accountRegistry = await deployAccountRegistry(accountImpl.address, verify);
+  const accountRegistry = await deployAccountRegistry(
+    accountImpl.address,
+    verify
+  );
   return withSaveAndVerify(
     await getContractFactory("AccountFactory"),
     eContractid.AccountFactory,
