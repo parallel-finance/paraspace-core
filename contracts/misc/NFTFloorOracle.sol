@@ -3,13 +3,14 @@ pragma solidity ^0.8.0;
 
 import "../dependencies/openzeppelin/contracts/AccessControl.sol";
 import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
+import "../dependencies/openzeppelin/contracts/SafeCast.sol";
 import "./interfaces/INFTFloorOracle.sol";
 
 //we need to deploy 3 oracles at least
 uint8 constant MIN_ORACLES_NUM = 3;
-//expirationPeriod at least the interval of client to feed data(currently 6h=21600s/12=1800 in mainnet)
+//expirationPeriod at least the interval of client to feed data(currently 6h=21600s)
 //we do not accept price lags behind to much
-uint128 constant EXPIRATION_PERIOD = 1800;
+uint128 constant EXPIRATION_PERIOD = 21600;
 //reject when price increase/decrease 3 times more than original value
 uint128 constant MAX_DEVIATION_RATE = 300;
 
@@ -22,11 +23,9 @@ struct OracleConfig {
 
 struct PriceInformation {
     // last reported floor price(offchain twap)
-    uint256 twap;
-    // last updated blocknumber
-    uint256 updatedAt;
+    uint128 twap;
     // last updated timestamp
-    uint256 updatedTimestamp;
+    uint128 updatedTimestamp;
 }
 
 struct FeederRegistrar {
@@ -50,9 +49,11 @@ struct FeederPosition {
 /// @title A simple on-chain price oracle mechanism
 /// @author github.com/drbh,github.com/yrong
 /// @notice Offchain clients can update the prices in this contract. The public can read prices
-/// aggeregate prices which are not expired from different feeders, if number of valid/unexpired prices
-/// not enough, we do not aggeregate and just use previous price
+/// aggregate prices which are not expired from different feeders, if number of valid/unexpired prices
+/// not enough, we do not aggregate and just use previous price
 contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
+    using SafeCast for uint256;
+
     event AssetAdded(address indexed asset);
     event AssetRemoved(address indexed asset);
     event AssetPaused(address indexed asset, bool paused);
@@ -64,7 +65,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     event AssetDataSet(
         address indexed asset,
         uint256 twap,
-        uint256 lastUpdatedBlock
+        uint256 lastUpdatedTimestamp
     );
 
     bytes32 public constant UPDATER_ROLE = keccak256("UPDATER_ROLE");
@@ -195,10 +196,14 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     function getPrice(
         address _asset
     ) external view override returns (uint256 price) {
-        PriceInformation storage priceInfo = assetPriceMap[_asset];
-        require(priceInfo.updatedAt != 0, "NFTOracle: asset price not ready");
+        PriceInformation memory priceInfo = assetPriceMap[_asset];
         require(
-            (block.number - priceInfo.updatedAt) <= config.expirationPeriod,
+            priceInfo.updatedTimestamp != 0,
+            "NFTOracle: asset price not ready"
+        );
+        require(
+            (block.timestamp - priceInfo.updatedTimestamp) <=
+                config.expirationPeriod,
             "NFTOracle: asset price expired"
         );
         return priceInfo.twap;
@@ -324,7 +329,7 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         require(_twap > 0, "NFTOracle: price should be more than 0");
 
         uint256 _priorTwap = _priceInfo.twap;
-        uint256 _updatedAt = _priceInfo.updatedAt;
+        uint256 _updatedAt = _priceInfo.updatedTimestamp;
         uint256 priceDeviation;
         //first price is always valid
         if (_priorTwap == 0 || _updatedAt == 0) {
@@ -342,11 +347,11 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
     }
 
     function _finalizePrice(address _asset, uint256 _twap) internal {
+        uint256 currentTimestamp = block.timestamp;
         PriceInformation storage priceInfo = assetPriceMap[_asset];
-        priceInfo.twap = _twap;
-        priceInfo.updatedAt = block.number;
-        priceInfo.updatedTimestamp = block.timestamp;
-        emit AssetDataSet(_asset, priceInfo.twap, priceInfo.updatedAt);
+        priceInfo.twap = _twap.toUint128();
+        priceInfo.updatedTimestamp = currentTimestamp.toUint128();
+        emit AssetDataSet(_asset, _twap, currentTimestamp);
     }
 
     function _addValue(
@@ -355,11 +360,13 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         PriceInformation memory _priceInfo,
         uint256 _twap
     ) internal returns (bool, uint256) {
-        uint256 currentBlock = block.number;
+        uint256 currentTimestamp = block.timestamp;
         uint256 currentTwap = _priceInfo.twap;
 
-        _feederRegistrar.feederPrice[msg.sender].twap = _twap;
-        _feederRegistrar.feederPrice[msg.sender].updatedAt = currentBlock;
+        _feederRegistrar.feederPrice[msg.sender].twap = _twap.toUint128();
+        _feederRegistrar
+            .feederPrice[msg.sender]
+            .updatedTimestamp = currentTimestamp.toUint128();
 
         //first time just use the feeding value
         if (currentTwap == 0) {
@@ -369,14 +376,16 @@ contract NFTFloorOracle is Initializable, AccessControl, INFTFloorOracle {
         address[] memory _feeders = feeders;
         uint256[] memory validPriceList = new uint256[](_feeders.length);
         uint256 validNum = 0;
-        //aggeregate with price from all feeders
+        //aggregate with price from all feeders
         for (uint256 i = 0; i < _feeders.length; i++) {
             PriceInformation memory priceInfo = _feederRegistrar.feederPrice[
                 _feeders[i]
             ];
-            uint256 diffBlock = currentBlock - priceInfo.updatedAt;
+            uint256 diffTimeStamp = currentTimestamp -
+                priceInfo.updatedTimestamp;
             if (
-                priceInfo.updatedAt > 0 && diffBlock <= _config.expirationPeriod
+                priceInfo.updatedTimestamp > 0 &&
+                diffTimeStamp <= _config.expirationPeriod
             ) {
                 validPriceList[validNum] = priceInfo.twap;
                 validNum++;

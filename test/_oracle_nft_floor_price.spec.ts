@@ -361,8 +361,8 @@ describe("NFT Oracle Tests", () => {
       users: [user1, user2, user3, , user4, user5],
     } = testEnv;
 
-    //120 blocks as expiration and 20 times as deviation
-    await waitForTx(await nftFloorOracle.setConfig(120, 2000));
+    //1440 s(120 blocks) as expiration and 20 times as deviation
+    await waitForTx(await nftFloorOracle.setConfig(1440, 2000));
 
     // set initial price to 10 ETH
     const initialPrice = parseEther("10");
