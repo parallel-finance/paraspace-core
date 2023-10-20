@@ -1,7 +1,14 @@
 import rawBRE from "hardhat";
+import {upgradePoolAAPositionMover} from "../upgrade/pool";
+import {zeroAddress} from "ethereumjs-util";
+import {deployAccountFactory} from "../../helpers/contracts-deployments";
 
 const adHoc = async () => {
   console.time("ad-hoc");
+
+  await deployAccountFactory(zeroAddress())
+  await upgradePoolAAPositionMover(zeroAddress());
+
   console.timeEnd("ad-hoc");
 };
 
