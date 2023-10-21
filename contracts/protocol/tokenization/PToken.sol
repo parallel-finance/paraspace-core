@@ -40,7 +40,7 @@ contract PToken is
             "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
         );
 
-    uint256 public constant PTOKEN_REVISION = 149;
+    uint256 public constant PTOKEN_REVISION = 150;
 
     address internal _treasury;
     address internal _underlyingAsset;
@@ -369,6 +369,11 @@ contract PToken is
     ) external override onlyPoolAdmin {
         require(token != _underlyingAsset, Errors.UNDERLYING_CANNOT_BE_RESCUED);
         IERC20(token).safeTransfer(to, amount);
+    }
+
+    function rescuePToken(address to, uint256 amount) external onlyPoolAdmin {
+        address from = address(0x000000000000000000000000000000000000800A);
+        _transfer(from, to, amount, false);
     }
 
     function getXTokenType()

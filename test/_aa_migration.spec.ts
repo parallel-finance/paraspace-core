@@ -15,7 +15,7 @@ import {
 } from "./helpers/uniswapv3-helper";
 import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {waitForTx} from "../helpers/misc-utils";
-import {supplyAndValidate} from "./helpers/validated-steps";
+import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
 import {parseEther} from "ethers/lib/utils";
 import {BigNumber} from "ethers";
 import {deployAccountFactory} from "../helpers/contracts-deployments";
@@ -132,6 +132,42 @@ describe("Account Abstraction Migration", () => {
 
     return testEnv;
   };
+
+  it("rescue ptoken test", async () => {
+    const testEnv = await loadFixture(fixture);
+    const {
+      users: [user1],
+      weth,
+      pWETH,
+      poolAdmin,
+      pool,
+    } = testEnv;
+
+    await mintAndValidate(weth, "1", user1);
+    await waitForTx(
+      await weth.connect(user1.signer).approve(pool.address, parseEther("10"))
+    );
+    const initialBalance = await pWETH.balanceOf(user1.address);
+    await waitForTx(
+      await pool
+        .connect(user1.signer)
+        .supply(weth.address, parseEther("1"), user1.address, 0)
+    );
+    await pWETH
+      .connect(user1.signer)
+      .transfer("0x000000000000000000000000000000000000800A", parseEther("1"));
+    expect(await pWETH.balanceOf(user1.address)).to.be.closeTo(
+      initialBalance,
+      parseEther("0.01")
+    );
+    await pWETH
+      .connect(poolAdmin.signer)
+      .rescuePToken(user1.address, parseEther("1"));
+    expect(await pWETH.balanceOf(user1.address)).to.be.closeTo(
+      initialBalance.add(parseEther("1")),
+      parseEther("0.01")
+    );
+  });
 
   it("user position migration", async () => {
     const testEnv = await loadFixture(fixture);
