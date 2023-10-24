@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: BUSL-1.1
 pragma solidity ^0.8.0;
 
-import "../../contracts/misc/NFTFloorOracle.sol";
+import "../../contracts/misc/NFTFloorOracleProvider.sol";
 import "ds-test/test.sol";
 
 interface CheatCodes {

@@ -6,7 +6,7 @@ import {
   getConduitController,
   getHelperContract,
   getInitializableAdminUpgradeabilityProxy,
-  getNFTFloorOracle,
+  getNFTFloorOracleProvider,
   getP2PPairStaking,
   getPausableZoneController,
   getPoolAddressesProvider,
@@ -482,9 +482,9 @@ export const step_23 = async (
     ////////////////////////////////////////////////////////////////////////////////
     // NFTFloorOracle
     ////////////////////////////////////////////////////////////////////////////////
-    if (await getContractAddressInDb(eContractid.NFTFloorOracle)) {
+    if (await getContractAddressInDb(eContractid.NFTFloorOracleProvider)) {
       console.time("transferring nftFloorOracle ownership...");
-      const nftFloorOracle = await getNFTFloorOracle();
+      const nftFloorOracle = await getNFTFloorOracleProvider();
       if (DRY_RUN) {
         const encodedData1 = nftFloorOracle.interface.encodeFunctionData(
           "grantRole",

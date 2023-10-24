@@ -155,6 +155,7 @@ import {
   X2Y2R1,
   PoolBorrowAndStake__factory,
   PoolBorrowAndStake,
+  NFTFloorOracleProvider,
 } from "../types";
 import {
   getACLManager,
@@ -1021,13 +1022,46 @@ export const deployParaSpaceOracle = async (
     verify
   ) as Promise<ParaSpaceOracle>;
 
-export const deployNFTFloorPriceOracle = async (verify?: boolean) =>
+export const deployNFTFloorPriceOracle = async (
+  args: [string, string, string, string],
+  verify?: boolean
+) =>
   withSaveAndVerify(
     await getContractFactory("NFTFloorOracle"),
     eContractid.NFTFloorOracle,
-    [],
+    [...args],
     verify
   ) as Promise<NFTFloorOracle>;
+
+export const deployNFTFloorOracleProvider = async (
+  args: [string, string, string, string],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("NFTFloorOracleProvider"),
+    eContractid.NFTFloorOracleProvider,
+    [...args],
+    verify
+  ) as Promise<NFTFloorOracleProvider>;
+
+export const deployNFTFloorOracleProviderProxy = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("InitializableAdminUpgradeabilityProxy"),
+    eContractid.NFTFloorOracleProvider,
+    [],
+    verify
+  ) as Promise<NFTFloorOracleProvider>;
+
+export const deployNFTFloorOracleProviderImpl = async (
+  args: [string, string, string, string],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("NFTFloorOracleProvider"),
+    eContractid.NFTFloorOracleProviderImpl,
+    [...args],
+    verify
+  ) as Promise<NFTFloorOracleProvider>;
 
 export const deployProtocolDataProvider = async (
   addressesProvider: tEthereumAddress,

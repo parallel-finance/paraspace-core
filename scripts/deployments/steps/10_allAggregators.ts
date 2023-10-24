@@ -1,6 +1,6 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
-  deployNFTFloorPriceOracle,
+  deployNFTFloorOracleProvider,
   deployParaSpaceOracle,
   deployProtocolDataProvider,
   deployUiPoolDataProvider,
@@ -24,6 +24,7 @@ import {
   ERC20TokenContractId,
   ERC721TokenContractId,
 } from "../../../helpers/types";
+import {zeroAddress} from "ethereumjs-util";
 
 export const deployNftOracle = async (verify = false) => {
   const erc721Tokens = await getAllERC721Tokens();
@@ -43,7 +44,10 @@ export const deployNftOracle = async (verify = false) => {
     .filter(([symbol]) => !Object.keys(chainlinkConfig).includes(symbol))
     .map(([, nft]) => nft.address)
     .filter((x) => x);
-  const nftFloorOracle = await deployNFTFloorPriceOracle(verify);
+  const nftFloorOracle = await deployNFTFloorOracleProvider(
+    [zeroAddress(), zeroAddress(), "0", zeroAddress()],
+    verify
+  );
   try {
     await waitForTx(
       await nftFloorOracle.initialize(

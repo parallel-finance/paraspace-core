@@ -51,7 +51,6 @@ import {
   PTokenStETH__factory,
   MockAToken__factory,
   PTokenAToken__factory,
-  NFTFloorOracle__factory,
   UserFlashclaimRegistry__factory,
   MockAirdropProject__factory,
   MockMultiAssetAirdropProject__factory,
@@ -99,6 +98,8 @@ import {
   NTokenChromieSquiggle__factory,
   Account__factory,
   AccountRegistry__factory,
+  NFTFloorOracleProvider__factory,
+  NFTFloorOracle__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -968,6 +969,17 @@ export const getNFTFloorOracle = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.NFTFloorOracle}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getNFTFloorOracleProvider = async (address?: tEthereumAddress) =>
+  await NFTFloorOracleProvider__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.NFTFloorOracleProvider}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
