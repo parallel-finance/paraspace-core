@@ -103,11 +103,7 @@ task("upgrade:pool-position-mover", "upgrade pool position mover")
   });
 
 task("upgrade:pool-aa-position-mover", "upgrade pool aa position mover")
-  .addPositionalParam(
-    "oldPoolAAPositionMover",
-    "old pool aa position mover",
-    "0xc32d1B150E12eFc4e2b3C3AF7A60800133f20485"
-  )
+  .addPositionalParam("oldPoolAAPositionMover", "old pool aa position mover")
   .setAction(async ({oldPoolAAPositionMover}, DRE) => {
     const {upgradePoolAAPositionMover} = await import(
       "../../scripts/upgrade/pool"
