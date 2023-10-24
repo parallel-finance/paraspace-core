@@ -367,7 +367,11 @@ describe("NFT Oracle Tests", () => {
     // set initial price to 10 ETH
     const initialPrice = parseEther("10");
     await waitForTx(
-      await nftFloorOracle.setEmergencyPrice(mockToken.address, initialPrice)
+      await nftFloorOracle.setEmergencyPrice([
+        {
+          nft: mockToken.address,
+          price: initialPrice,
+        }])
     );
 
     let twapPrice = await nftFloorOracle.getPrice(mockToken.address);

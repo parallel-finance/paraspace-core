@@ -464,6 +464,10 @@ zksync-bytecode-hashes:
 redeploy-market:
 	make SCRIPT_PATH=./scripts/dev/15.redeploy-market.ts run
 
+.PHONY: deploy-cross-chain-nft-oracle
+deploy-cross-chain-nft-oracle:
+	make SCRIPT_PATH=./scripts/dev/16.deploy_cross_chain_nft_oracle.ts run
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run

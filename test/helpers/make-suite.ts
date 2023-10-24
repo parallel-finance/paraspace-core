@@ -33,7 +33,7 @@ import {
   getNonfungiblePositionManager,
   getNTokenUniswapV3,
   getUiPoolDataProvider,
-  getNFTFloorOracle,
+  getNFTFloorOracleProvider,
   getStETH,
   getMockAToken,
   getPTokenAToken,
@@ -76,7 +76,7 @@ import {
   IPool,
   LooksRareAdapter,
   MockCToken,
-  NFTFloorOracle,
+  NFTFloorOracleProvider,
   NTokenBAKC,
   NTokenBAYC,
   NTokenMAYC,
@@ -215,7 +215,7 @@ export interface TestEnv {
   uniswapV3Factory: UniswapV3Factory;
   nftPositionManager: INonfungiblePositionManager;
   nUniswapV3: NTokenUniswapV3;
-  nftFloorOracle: NFTFloorOracle;
+  nftFloorOracle: NFTFloorOracleProvider;
   apeCoinStaking: ApeCoinStaking;
   executionDelegate: ExecutionDelegate;
   blurExchange: BlurExchange;
@@ -289,7 +289,7 @@ export async function initializeMakeSuite() {
     x2y2Adapter: {} as X2Y2Adapter,
     erc721Delegate: {} as ERC721Delegate,
     moonbirds: {} as Moonbirds,
-    nftFloorOracle: {} as NFTFloorOracle,
+    nftFloorOracle: {} as NFTFloorOracleProvider,
     executionDelegate: {} as ExecutionDelegate,
     blurExchange: {} as BlurExchange,
     blurAdapter: {} as BlurAdapter,
@@ -564,7 +564,7 @@ export async function initializeMakeSuite() {
   testEnv.nUniswapV3 = (await getNTokenUniswapV3(nUniwapV3Address)).connect(
     testEnv.poolAdmin.signer
   );
-  testEnv.nftFloorOracle = (await getNFTFloorOracle()).connect(
+  testEnv.nftFloorOracle = (await getNFTFloorOracleProvider()).connect(
     testEnv.poolAdmin.signer
   );
   testEnv.executionDelegate = await getExecutionDelegate();

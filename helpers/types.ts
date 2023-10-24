@@ -182,6 +182,8 @@ export enum eContractid {
   WPunkGatewayProxy = "WPunkGatewayProxy",
   FlashClaimLogic = "FlashClaimLogic",
   NFTFloorOracle = "NFTFloorOracle",
+  NFTFloorOracleProvider = "NFTFloorOracleProvider",
+  NFTFloorOracleProviderImpl = "NFTFloorOracleProviderImpl",
   ParaSpace = "ParaSpace",
   sParaSpace = "sParaSpace",
   RewardsController = "RewardsController",
