@@ -135,4 +135,5 @@ library Errors {
     string public constant TOKEN_NOT_ALLOW_RESCUE = "140"; // token is not allow rescue
 
     string public constant INVALID_PARAMETER = "170"; //invalid parameter
+    string public constant INVALID_CALLER = "171"; //invalid callser
 }

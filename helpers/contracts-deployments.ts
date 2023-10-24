@@ -153,6 +153,7 @@ import {
   WstETHMocked,
   X2Y2Adapter,
   X2Y2R1,
+  PoolAAPositionMover__factory,
   PoolBorrowAndStake__factory,
   PoolBorrowAndStake,
 } from "../types";
@@ -671,6 +672,27 @@ export const deployPoolParaProxyInterfaces = async (verify?: boolean) => {
   };
 };
 
+export const deployAAPoolPositionMover = async (verify?: boolean) => {
+  const {poolAAPositionMoverSelectors} = await getPoolSignatures();
+
+  const poolAAPositionMover = (await withSaveAndVerify(
+    await getContractFactory("PoolAAPositionMover"),
+    eContractid.PoolAAPositionMoverImpl,
+    [],
+    verify,
+    false,
+    undefined,
+    poolAAPositionMoverSelectors
+  )) as PoolPositionMover;
+
+  return {
+    poolAAPositionMover,
+    poolAAPositionMoverSelectors: poolAAPositionMoverSelectors.map(
+      (s) => s.signature
+    ),
+  };
+};
+
 export const deployPoolPositionMover = async (
   provider: tEthereumAddress,
   bendDaoLendPoolLoan: tEthereumAddress,
@@ -786,6 +808,10 @@ export const getPoolSignatures = () => {
     PoolPositionMover__factory.abi
   );
 
+  const poolAAPositionMoverSelectors = getFunctionSignatures(
+    PoolAAPositionMover__factory.abi
+  );
+
   const poolProxySelectors = getFunctionSignatures(ParaProxy__factory.abi);
 
   const poolParaProxyInterfacesSelectors = getFunctionSignatures(
@@ -802,6 +828,7 @@ export const getPoolSignatures = () => {
     ...poolProxySelectors,
     ...poolParaProxyInterfacesSelectors,
     ...poolPositionMoverSelectors,
+    ...poolAAPositionMoverSelectors,
   ];
   for (const selector of poolSelectors) {
     if (!allSelectors[selector.signature]) {
@@ -823,6 +850,7 @@ export const getPoolSignatures = () => {
     poolBorrowAndStakeSelectors,
     poolParaProxyInterfacesSelectors,
     poolPositionMoverSelectors,
+    poolAAPositionMoverSelectors,
   };
 };
 
@@ -3210,15 +3238,21 @@ export const deployAccount = async (
   ) as Promise<Account>;
 
 export const deployAccountFactory = async (
-  accountRegistry: tEthereumAddress,
+  entryPoint: tEthereumAddress,
   verify?: boolean
-) =>
-  withSaveAndVerify(
+) => {
+  const accountImpl = await deployAccount(entryPoint, verify);
+  const accountRegistry = await deployAccountRegistry(
+    accountImpl.address,
+    verify
+  );
+  return withSaveAndVerify(
     await getContractFactory("AccountFactory"),
     eContractid.AccountFactory,
-    [accountRegistry],
+    [accountRegistry.address],
     verify
   ) as Promise<AccountFactory>;
+};
 
 export const deployAccountRegistry = async (
   impl: tEthereumAddress,

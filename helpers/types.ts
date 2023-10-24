@@ -233,6 +233,7 @@ export enum eContractid {
   MockAirdropProject = "MockAirdropProject",
   PoolCoreImpl = "PoolCoreImpl",
   PoolMarketplaceImpl = "PoolMarketplaceImpl",
+  PoolAAPositionMoverImpl = "PoolAAPositionMoverImpl",
   PoolParametersImpl = "PoolParametersImpl",
   PoolApeStakingImpl = "PoolApeStakingImpl",
   PoolBorrowAndStakeImpl = "PoolBorrowAndStakeImpl",

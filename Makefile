@@ -464,6 +464,10 @@ zksync-bytecode-hashes:
 redeploy-market:
 	make SCRIPT_PATH=./scripts/dev/15.redeploy-market.ts run
 
+.PHONY: upgrade-pool-aa-position-mover
+upgrade-pool-aa-position-mover:
+	make TASK_NAME=upgrade:pool-aa-position-mover run-task
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
