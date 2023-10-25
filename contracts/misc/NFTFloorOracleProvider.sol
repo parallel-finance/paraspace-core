@@ -25,6 +25,11 @@ struct OracleConfig {
     uint128 maxPriceDeviation;
 }
 
+struct CrossChainGasConfig {
+    uint128 basGas;
+    uint128 gasPerAsset;
+}
+
 struct PriceInformation {
     // last reported floor price(offchain twap)
     uint128 twap;
@@ -136,6 +141,8 @@ contract NFTFloorOracleProvider is
 
     uint256 public sentMessageId;
 
+    CrossChainGasConfig internal gasConfig;
+
     /**
      * @dev Constructor.
      */
@@ -167,6 +174,9 @@ contract NFTFloorOracleProvider is
         //still need to grant update_role to admin for emergency call
         _setupRole(UPDATER_ROLE, _admin);
         _setConfig(EXPIRATION_PERIOD, MAX_DEVIATION_RATE);
+
+        gasConfig.basGas = 50000;
+        gasConfig.gasPerAsset = 6000;
     }
 
     /// @notice Allows owner to add assets.
@@ -211,6 +221,16 @@ contract NFTFloorOracleProvider is
         uint128 maxPriceDeviation
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _setConfig(expirationPeriod, maxPriceDeviation);
+    }
+
+    function setGasConfig(
+        uint128 basGas,
+        uint128 gasPerAsset
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        CrossChainGasConfig memory currentConfig = gasConfig;
+        currentConfig.basGas = basGas;
+        currentConfig.gasPerAsset = gasPerAsset;
+        gasConfig = currentConfig;
     }
 
     /// @notice Allows owner to pause asset
@@ -317,7 +337,10 @@ contract NFTFloorOracleProvider is
         message.prices = finalized;
         bytes memory data = abi.encode(message);
 
-        uint256 gasLimit = 55000 + 6000 * finalized.length;
+        CrossChainGasConfig memory currentConfig = gasConfig;
+        uint256 gasLimit = currentConfig.basGas +
+            currentConfig.gasPerAsset *
+            finalized.length;
         Client.EVMTokenAmount[]
             memory tokenAmounts = new Client.EVMTokenAmount[](0);
         Client.EVM2AnyMessage memory evm2AnyMessage = Client.EVM2AnyMessage({

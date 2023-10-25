@@ -371,7 +371,8 @@ describe("NFT Oracle Tests", () => {
         {
           nft: mockToken.address,
           price: initialPrice,
-        }])
+        },
+      ])
     );
 
     let twapPrice = await nftFloorOracle.getPrice(mockToken.address);

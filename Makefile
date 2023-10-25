@@ -466,7 +466,7 @@ redeploy-market:
 
 .PHONY: deploy-cross-chain-nft-oracle
 deploy-cross-chain-nft-oracle:
-	make SCRIPT_PATH=./scripts/dev/16.deploy_cross_chain_nft_oracle.ts run
+	make SCRIPT_PATH=./scripts/dev/17.test.ts run
 
 .PHONY: transfer-tokens
 transfer-tokens:
