@@ -10,7 +10,10 @@ import {ApeCoinStaking} from "../dependencies/yoga-labs/ApeCoinStaking.sol";
  * @notice Defines the basic interface for an ParaSpace Pool.
  **/
 interface IPoolPositionMover {
-    function movePositionFromBendDAO(uint256[] calldata loanIds) external;
+    function movePositionFromBendDAO(
+        uint256[] calldata loanIds,
+        address to
+    ) external;
 
     //# Migration step
     //

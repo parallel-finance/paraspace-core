@@ -76,7 +76,8 @@ library PositionMoverLogic {
         IPoolAddressesProvider poolAddressProvider,
         ILendPoolLoan lendPoolLoan,
         ILendPool lendPool,
-        uint256[] calldata loandIds
+        uint256[] calldata loandIds,
+        address to
     ) external {
         BendDAOPositionMoverVars memory tmpVar;
 
@@ -97,7 +98,7 @@ library PositionMoverLogic {
                 loandIds[index]
             );
 
-            supplyNFTandBorrowWETH(ps, poolAddressProvider, tmpVar);
+            supplyNFTandBorrowWETH(ps, poolAddressProvider, tmpVar, to);
 
             emit PositionMovedFromBendDAO(
                 tmpVar.nftAsset,
@@ -143,8 +144,14 @@ library PositionMoverLogic {
     function supplyNFTandBorrowWETH(
         DataTypes.PoolStorage storage ps,
         IPoolAddressesProvider poolAddressProvider,
-        BendDAOPositionMoverVars memory tmpVar
+        BendDAOPositionMoverVars memory tmpVar,
+        address to
     ) internal {
+        require(
+            to == msg.sender || IAccount(to).owner() == msg.sender,
+            Errors.NOT_THE_OWNER
+        );
+
         DataTypes.ERC721SupplyParams[]
             memory tokenData = new DataTypes.ERC721SupplyParams[](1);
         tokenData[0] = DataTypes.ERC721SupplyParams({
@@ -154,11 +161,11 @@ library PositionMoverLogic {
 
         SupplyLogic.executeSupplyERC721(
             ps._reserves,
-            ps._usersConfig[msg.sender],
+            ps._usersConfig[to],
             DataTypes.ExecuteSupplyERC721Params({
                 asset: tmpVar.nftAsset,
                 tokenData: tokenData,
-                onBehalfOf: msg.sender,
+                onBehalfOf: to,
                 payer: msg.sender,
                 referralCode: 0x0
             })
@@ -167,11 +174,11 @@ library PositionMoverLogic {
         BorrowLogic.executeBorrow(
             ps._reserves,
             ps._reservesList,
-            ps._usersConfig[msg.sender],
+            ps._usersConfig[to],
             DataTypes.ExecuteBorrowParams({
                 asset: tmpVar.weth,
-                user: msg.sender,
-                onBehalfOf: msg.sender,
+                user: to,
+                onBehalfOf: to,
                 amount: tmpVar.borrowAmount,
                 referralCode: 0x0,
                 releaseUnderlying: false,

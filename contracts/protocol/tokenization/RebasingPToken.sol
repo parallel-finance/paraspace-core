@@ -10,7 +10,7 @@ import {Errors} from "../libraries/helpers/Errors.sol";
 import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {GPv2SafeERC20} from "../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {IScaledBalanceToken} from "../../interfaces/IScaledBalanceToken.sol";
-import {ScaledBalanceTokenBaseERC20} from "contracts/protocol/tokenization/base/ScaledBalanceTokenBaseERC20.sol";
+import {ScaledBalanceTokenBaseERC20} from "../../protocol/tokenization/base/ScaledBalanceTokenBaseERC20.sol";
 
 /**
  * @title Rebasing PToken
