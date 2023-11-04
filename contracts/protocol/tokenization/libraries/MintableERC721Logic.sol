@@ -54,6 +54,7 @@ struct MintableERC721Data {
     //replace old token delegation data
     uint256 _placeHolder;
     mapping(uint256 => address) tokenDelegations;
+    uint256[50] __gap;
 }
 
 struct LocalVars {
