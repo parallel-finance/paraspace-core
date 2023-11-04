@@ -572,9 +572,10 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
                 IDelegateRegistry.Delegation memory delegation = delegations[j];
                 if (
                     delegation.contract_ == contract_ &&
-                    delegation.tokenId == tokenIds[j]
+                    delegation.tokenId == tokenIds[index]
                 ) {
                     ret[index] = delegation;
+                    break;
                 }
             }
         }

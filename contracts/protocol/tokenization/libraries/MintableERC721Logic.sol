@@ -51,6 +51,8 @@ struct MintableERC721Data {
     address underlyingAsset;
     bool isTraitBoosted;
     mapping(uint256 => uint256) traitsMultipliers;
+    //replace old token delegation data
+    uint256 _placeHolder;
     mapping(uint256 => address) tokenDelegations;
 }
 
