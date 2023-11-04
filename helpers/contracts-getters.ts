@@ -89,7 +89,7 @@ import {
   TimeLock__factory,
   HotWalletProxy__factory,
   NTokenOtherdeed__factory,
-  DelegationRegistry__factory,
+  DelegateRegistry__factory,
   DepositContract__factory,
   StakefishNFTManager__factory,
   StakefishValidatorV1__factory,
@@ -1252,7 +1252,7 @@ export const getHotWalletProxy = async (address?: tEthereumAddress) =>
   );
 
 export const getDelegationRegistry = async (address?: tEthereumAddress) =>
-  await DelegationRegistry__factory.connect(
+  await DelegateRegistry__factory.connect(
     address ||
       (
         await getDb()

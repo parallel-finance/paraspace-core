@@ -15,6 +15,7 @@ import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC7
 import {IAtomicCollateralizableERC721} from "../../../interfaces/IAtomicCollateralizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {ITokenDelegation} from "../../../interfaces/ITokenDelegation.sol";
+import {IDelegateRegistry} from "../../../dependencies/delegation/IDelegateRegistry.sol";
 import {IDelegationRegistry} from "../../../dependencies/delegation/IDelegationRegistry.sol";
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
@@ -398,6 +399,10 @@ abstract contract MintableIncentivizedERC721 is
                 user,
                 tokenIds
             );
+    }
+
+    function revokeDelegation(address v1Registry) external onlyPoolAdmin {
+        IDelegationRegistry(v1Registry).revokeAllDelegates();
     }
 
     function delegateForToken(
