@@ -64,6 +64,8 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   KODA: parseEther("9.5").toString(),
   BLOCKS: parseEther("9.54").toString(),
   EXRP: parseEther("0.2").toString(),
+  uBAYC: parseEther("0.000002768").toString(),
+  uPPG: parseEther("0.000000477").toString(),
 };
 
 export const MOCK_CHAINLINK_AGGREGATORS_USD_PRICES = {

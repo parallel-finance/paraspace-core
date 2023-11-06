@@ -76,6 +76,8 @@ import {
   strategyWBTCWH,
   strategySTDOT,
   strategyEXRP,
+  strategyuBAYC,
+  strategyuPPG,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -381,6 +383,8 @@ export const GoerliConfig: IParaSpaceConfiguration = {
     VSL: strategyVSL,
     KODA: strategyKODA,
     BLOCKS: strategyBLOCKS,
+    uBAYC: strategyuBAYC,
+    uPPG: strategyuPPG
   },
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };

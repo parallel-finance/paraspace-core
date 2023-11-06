@@ -1077,3 +1077,36 @@ export const strategyEXRP: IReserveParams = {
   borrowCap: "0",
   supplyCap: "1000",
 };
+
+// TODO need update
+export const strategyuBAYC: IReserveParams = {
+  strategy: rateStrategyWETH,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyWETH,
+  baseLTVAsCollateral: "7920",
+  liquidationThreshold: "8000",
+  liquidationProtocolFeePercentage: "50",
+  liquidationBonus: "10500",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategyuPPG: IReserveParams = {
+  strategy: rateStrategyWETH,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyWETH,
+  baseLTVAsCollateral: "6435",
+  liquidationThreshold: "6500",
+  liquidationProtocolFeePercentage: "50",
+  liquidationBonus: "10500",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};

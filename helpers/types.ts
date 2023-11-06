@@ -620,6 +620,9 @@ export enum ERC20TokenContractId {
   stMATIC = "stMATIC",
   CRV = "CRV",
   WMATIC = "WMATIC",
+
+  uBAYC = "uBAYC",
+  uPPG = "uPPG"
 }
 
 export enum ERC721TokenContractId {
