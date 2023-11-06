@@ -40,7 +40,7 @@ contract PToken is
             "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
         );
 
-    uint256 public constant PTOKEN_REVISION = 150;
+    uint256 public constant PTOKEN_REVISION = 151;
 
     address internal _treasury;
     address internal _underlyingAsset;
@@ -371,8 +371,7 @@ contract PToken is
         IERC20(token).safeTransfer(to, amount);
     }
 
-    function rescuePToken(address to, uint256 amount) external onlyPoolAdmin {
-        address from = address(0x000000000000000000000000000000000000800A);
+    function rescuePToken(address from, address to, uint256 amount) external onlyPoolAdmin {
         _transfer(from, to, amount, false);
     }
 

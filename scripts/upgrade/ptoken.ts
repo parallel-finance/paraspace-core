@@ -63,6 +63,10 @@ export const upgradePToken = async (verify = false) => {
     ) {
       continue;
     }
+    if (symbol != PTokenContractId.pWETH) {
+      console.log(symbol + " filtered. only upgrade pweth.")
+      continue;
+    }
     const treasury = paraSpaceConfig.Treasury;
     const incentivesController = paraSpaceConfig.IncentivesController;
 
