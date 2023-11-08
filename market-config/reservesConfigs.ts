@@ -1079,7 +1079,7 @@ export const strategyEXRP: IReserveParams = {
 };
 
 // TODO need update
-export const strategyuBAYC: IReserveParams = {
+export const strategyµBAYC: IReserveParams = {
   strategy: rateStrategyWETH,
   auctionStrategy: auctionStrategyZero,
   timeLockStrategy: timeLockStrategyWETH,
@@ -1095,7 +1095,7 @@ export const strategyuBAYC: IReserveParams = {
   supplyCap: "0",
 };
 
-export const strategyuPPG: IReserveParams = {
+export const strategyµPPG: IReserveParams = {
   strategy: rateStrategyWETH,
   auctionStrategy: auctionStrategyZero,
   timeLockStrategy: timeLockStrategyWETH,
