@@ -112,6 +112,8 @@ import {
   timeLockStrategyWBTCWH,
   timeLockStrategySTDOT,
   timeLockStrategyEXRP,
+  timeLockStrategyuPPG,
+  timeLockStrategyuBAYC,
 } from "./timeLockStrategies";
 
 export const strategyDAI: IReserveParams = {
@@ -1078,14 +1080,13 @@ export const strategyEXRP: IReserveParams = {
   supplyCap: "1000",
 };
 
-// TODO need update
-export const strategyµBAYC: IReserveParams = {
-  strategy: rateStrategyWETH,
+export const strategyuBAYC: IReserveParams = {
+  strategy: rateStrategyBLUR,
   auctionStrategy: auctionStrategyZero,
-  timeLockStrategy: timeLockStrategyWETH,
-  baseLTVAsCollateral: "7920",
+  timeLockStrategy: timeLockStrategyuBAYC,
+  baseLTVAsCollateral: "4000",
   liquidationThreshold: "8000",
-  liquidationProtocolFeePercentage: "50",
+  liquidationProtocolFeePercentage: "0",
   liquidationBonus: "10500",
   borrowingEnabled: true,
   reserveDecimals: "18",
@@ -1095,13 +1096,13 @@ export const strategyµBAYC: IReserveParams = {
   supplyCap: "0",
 };
 
-export const strategyµPPG: IReserveParams = {
-  strategy: rateStrategyWETH,
+export const strategyuPPG: IReserveParams = {
+  strategy: rateStrategyBLUR,
   auctionStrategy: auctionStrategyZero,
-  timeLockStrategy: timeLockStrategyWETH,
-  baseLTVAsCollateral: "6435",
+  timeLockStrategy: timeLockStrategyuPPG,
+  baseLTVAsCollateral: "3000",
   liquidationThreshold: "6500",
-  liquidationProtocolFeePercentage: "50",
+  liquidationProtocolFeePercentage: "0",
   liquidationBonus: "10500",
   borrowingEnabled: true,
   reserveDecimals: "18",
