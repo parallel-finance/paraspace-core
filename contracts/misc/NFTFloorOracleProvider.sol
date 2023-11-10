@@ -433,7 +433,9 @@ contract NFTFloorOracleProvider is
         // Get the fee required to send the message. Fee paid in LINK.
         uint256 fees = router.getFee(destinationChainSelector, evm2AnyMessage);
         require(fees > 0, "invalid message");
-        require(fees < currentConfig.maxFeePerBridge, "fee exceed limit");
+        if (currentConfig.maxFeePerBridge != 0) {
+            require(fees < currentConfig.maxFeePerBridge, "fee exceed limit");
+        }
 
         // Approve the Router to pay fees in LINK tokens on contract's behalf.
         linkToken.approve(address(router), fees);
