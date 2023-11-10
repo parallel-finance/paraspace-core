@@ -1,9 +1,9 @@
 import {expect} from "chai";
-import {getParaSpaceConfig, waitForTx} from "../helpers/misc-utils";
+import {DRE, getParaSpaceConfig, waitForTx} from "../helpers/misc-utils";
 import {TestEnv} from "./helpers/make-suite";
 import {parseEther} from "ethers/lib/utils";
 import {snapshot} from "./helpers/snapshot-manager";
-import {utils} from "ethers";
+import {BigNumberish, BytesLike, Signer, utils} from "ethers";
 import {
   deployAggregator,
   deployERC721OracleWrapper,
@@ -11,7 +11,49 @@ import {
 } from "../helpers/contracts-deployments";
 import {loadFixture, mine} from "@nomicfoundation/hardhat-network-helpers";
 import {testEnvFixture} from "./helpers/setup-env";
-import {MintableERC721} from "../types";
+import {MintableERC721, NFTFloorOracleProvider} from "../types";
+import {convertSignatureToEIP2098} from "../helpers/seaport-helpers/encoding";
+import {getFirstSigner} from "../helpers/contracts-getters";
+
+export async function getSignedMessageId(
+  oracleProvider: NFTFloorOracleProvider,
+  signer: Signer
+): Promise<{
+  v: BigNumberish;
+  r: BytesLike;
+  s: BytesLike;
+}> {
+  const domainData = {
+    name: "ParaSpace",
+    version: "1",
+    chainId: (await DRE.ethers.provider.getNetwork()).chainId,
+    verifyingContract: oracleProvider.address,
+  };
+
+  const signMessageType = {
+    //"MessageId(uint256 id)"
+    MessageId: [{name: "id", type: "uint256"}],
+  };
+
+  const messageId = await oracleProvider.sentMessageId();
+  const nextMessageId = messageId.add(1);
+
+  const message = {
+    id: nextMessageId,
+  };
+
+  const signature = await DRE.ethers.provider
+    .getSigner(await signer.getAddress())
+    ._signTypedData(domainData, signMessageType, message);
+
+  const vrs = DRE.ethers.utils.splitSignature(
+    convertSignatureToEIP2098(signature)
+  );
+
+  return {
+    ...vrs,
+  };
+}
 
 describe("NFT Oracle Tests", () => {
   let snapthotId: string;
@@ -79,7 +121,10 @@ describe("NFT Oracle Tests", () => {
   it("TC-oracle-nft-floor-price-03:Update NFT price in NFTOracle then can get the new price from ParaSpaceOracle", async () => {
     const {paraspaceOracle, nftFloorOracle} = testEnv;
 
-    await nftFloorOracle.setMultiplePrices([mockToken.address], ["5"]);
+    const deployer = await getFirstSigner();
+    const sig = await getSignedMessageId(nftFloorOracle, deployer);
+
+    await nftFloorOracle.setMultiplePrices([mockToken.address], ["5"], sig);
 
     const twapFromNftOracle = await nftFloorOracle.getPrice(mockToken.address);
     expect(twapFromNftOracle).to.equal("5");
@@ -98,11 +143,18 @@ describe("NFT Oracle Tests", () => {
     // pause the oracle for bayc contract
     await nftFloorOracle.setPause(mockToken.address, true);
 
+    const deployer = await getFirstSigner();
+    let sig = await getSignedMessageId(nftFloorOracle, deployer);
+
     // try to feed a new price
     await expect(
       nftFloorOracle
         .connect(updater.signer)
-        .setMultiplePrices([mockToken.address], [parseEther("8").toString()])
+        .setMultiplePrices(
+          [mockToken.address],
+          [parseEther("8").toString()],
+          sig
+        )
     ).to.be.revertedWith("NFTOracle: nft price feed paused");
 
     // unpause the oracle
@@ -112,13 +164,15 @@ describe("NFT Oracle Tests", () => {
     const newPrice = parseEther("8");
     await nftFloorOracle.setMultiplePrices(
       [mockToken.address],
-      [newPrice.toString()]
+      [newPrice.toString()],
+      sig
     );
 
+    sig = await getSignedMessageId(nftFloorOracle, deployer);
     // updater also can feed price
     await nftFloorOracle
       .connect(updater.signer)
-      .setMultiplePrices([mockToken.address], [newPrice.toString()]);
+      .setMultiplePrices([mockToken.address], [newPrice.toString()], sig);
 
     // price should've been updated
     const postPrice = await nftFloorOracle.getPrice(mockToken.address);
@@ -140,11 +194,14 @@ describe("NFT Oracle Tests", () => {
       //just ignore
     }
 
+    const deployer = await getFirstSigner();
+    const sig = await getSignedMessageId(nftFloorOracle, deployer);
+
     // set price for new asset
     const price = parseEther("5");
     await nftFloorOracle
       .connect(updater.signer)
-      .setMultiplePrices([dai.address], [price.toString()]);
+      .setMultiplePrices([dai.address], [price.toString()], sig);
 
     // price set should be fetch successfully
     expect(await nftFloorOracle.getPrice(dai.address)).to.equal(price);
@@ -173,11 +230,14 @@ describe("NFT Oracle Tests", () => {
     // grant feeder rights to a new user 7 or a existed will be reverted
     await nftFloorOracle.addFeeders([users[7].address]);
 
+    const deployer = await getFirstSigner();
+    const sig = await getSignedMessageId(nftFloorOracle, deployer);
+
     // feed new price with user7
     const price = parseEther("2");
     await nftFloorOracle
       .connect(user7.signer)
-      .setMultiplePrices([mockToken.address], [price.toString()]);
+      .setMultiplePrices([mockToken.address], [price.toString()], sig);
 
     // verify new price was successfully set
     expect(await nftFloorOracle.getPrice(mockToken.address)).to.equal(price);
@@ -278,21 +338,26 @@ describe("NFT Oracle Tests", () => {
       users: [updater],
     } = testEnv;
 
+    const deployer = await getFirstSigner();
+    let sig = await getSignedMessageId(nftFloorOracle, deployer);
+
     // feed with admin
     const price = parseEther("1");
     expect(
       await nftFloorOracle.setMultiplePrices(
         [mockToken.address],
-        [price.toString()]
+        [price.toString()],
+        sig
       )
     );
 
     // feed with updater
+    sig = await getSignedMessageId(nftFloorOracle, deployer);
     const price2 = parseEther("1.2");
     expect(
       await nftFloorOracle
         .connect(updater.signer)
-        .setMultiplePrices([mockToken.address], [price2.toString()])
+        .setMultiplePrices([mockToken.address], [price2.toString()], sig)
     );
   });
 
@@ -345,12 +410,15 @@ describe("NFT Oracle Tests", () => {
       user3.address
     );
 
+    const deployer = await getFirstSigner();
+    const sig = await getSignedMessageId(nftFloorOracle, deployer);
+
     const price = parseEther("3");
     // try to feed new price with user3
     await expect(
       nftFloorOracle
         .connect(user3.signer)
-        .setMultiplePrices([mockToken.address], [price.toString()])
+        .setMultiplePrices([mockToken.address], [price.toString()], sig)
     ).to.be.reverted;
   });
 
@@ -361,18 +429,20 @@ describe("NFT Oracle Tests", () => {
       users: [user1, user2, user3, , user4, user5],
     } = testEnv;
 
+    const deployer = await getFirstSigner();
+    let sig = await getSignedMessageId(nftFloorOracle, deployer);
+
     //1440 s(120 blocks) as expiration and 20 times as deviation
     await waitForTx(await nftFloorOracle.setConfig(1440, 2000));
 
     // set initial price to 10 ETH
     const initialPrice = parseEther("10");
     await waitForTx(
-      await nftFloorOracle.setEmergencyPrice([
-        {
-          nft: mockToken.address,
-          price: initialPrice,
-        },
-      ])
+      await nftFloorOracle.setEmergencyPrice(
+        [mockToken.address],
+        [initialPrice],
+        sig
+      )
     );
 
     let twapPrice = await nftFloorOracle.getPrice(mockToken.address);
@@ -385,50 +455,55 @@ describe("NFT Oracle Tests", () => {
     const price4 = parseEther("4");
     const price5 = parseEther("5");
 
+    sig = await getSignedMessageId(nftFloorOracle, deployer);
     // set first price,not enough price so still initial
     await waitForTx(
       await nftFloorOracle
         .connect(user1.signer)
-        .setMultiplePrices([mockToken.address], [price1.toString()])
+        .setMultiplePrices([mockToken.address], [price1.toString()], sig)
     );
 
     twapPrice = await nftFloorOracle.getPrice(mockToken.address);
     expect(twapPrice).to.equal(initialPrice);
 
     //set second price, not enough, so still initial
+    sig = await getSignedMessageId(nftFloorOracle, deployer);
     await waitForTx(
       await nftFloorOracle
         .connect(user2.signer)
-        .setMultiplePrices([mockToken.address], [price2.toString()])
+        .setMultiplePrices([mockToken.address], [price2.toString()], sig)
     );
 
     twapPrice = await nftFloorOracle.getPrice(mockToken.address);
     expect(twapPrice).to.equal(initialPrice);
 
     // set third price,should be enough and aggregate with [1,2,3]=2
+    sig = await getSignedMessageId(nftFloorOracle, deployer);
     await waitForTx(
       await nftFloorOracle
         .connect(user3.signer)
-        .setMultiplePrices([mockToken.address], [price3.toString()])
+        .setMultiplePrices([mockToken.address], [price3.toString()], sig)
     );
     twapPrice = await nftFloorOracle.getPrice(mockToken.address);
     expect(twapPrice).to.equal(price2);
 
     // set fourth price,since threshold=4,enough so aggregate with [1,2,3,4]=3
+    sig = await getSignedMessageId(nftFloorOracle, deployer);
     await waitForTx(
       await nftFloorOracle
         .connect(user4.signer)
-        .setMultiplePrices([mockToken.address], [price4.toString()])
+        .setMultiplePrices([mockToken.address], [price4.toString()], sig)
     );
 
     twapPrice = await nftFloorOracle.getPrice(mockToken.address);
     expect(twapPrice).to.equal(price3);
 
     // set fifth price, aggregate [1,2,3,4,5]=3
+    sig = await getSignedMessageId(nftFloorOracle, deployer);
     await waitForTx(
       await nftFloorOracle
         .connect(user5.signer)
-        .setMultiplePrices([mockToken.address], [price5.toString()])
+        .setMultiplePrices([mockToken.address], [price5.toString()], sig)
     );
 
     twapPrice = await nftFloorOracle.getPrice(mockToken.address);
@@ -443,21 +518,33 @@ describe("NFT Oracle Tests", () => {
     // set expiration period to 5 block and deviation as 20
     await nftFloorOracle.setConfig(5, 2000);
 
+    const deployer = await getFirstSigner();
+    let sig = await getSignedMessageId(nftFloorOracle, deployer);
+
     //user1 set price as 1,block:1
     expect(
       await nftFloorOracle
         .connect(user1.signer)
-        .setMultiplePrices([mockToken.address], [parseEther("1").toString()])
+        .setMultiplePrices(
+          [mockToken.address],
+          [parseEther("1").toString()],
+          sig
+        )
     );
 
     const twapPrice = await nftFloorOracle.getPrice(mockToken.address);
     expect(twapPrice).to.equal(parseEther("1"));
 
     //user2 set price as 2,block:2
+    sig = await getSignedMessageId(nftFloorOracle, deployer);
     expect(
       await nftFloorOracle
         .connect(user2.signer)
-        .setMultiplePrices([mockToken.address], [parseEther("2").toString()])
+        .setMultiplePrices(
+          [mockToken.address],
+          [parseEther("2").toString()],
+          sig
+        )
     );
 
     // prices user1:1 and user2:2 not enough so still use previous
@@ -467,10 +554,15 @@ describe("NFT Oracle Tests", () => {
 
     // set price so block=3 now,user1:1 and user2:2 and user3:3
     // now reach threshold and can be aggregated [1,2,3]=2
+    sig = await getSignedMessageId(nftFloorOracle, deployer);
     expect(
       await nftFloorOracle
         .connect(user3.signer)
-        .setMultiplePrices([mockToken.address], [parseEther("3").toString()])
+        .setMultiplePrices(
+          [mockToken.address],
+          [parseEther("3").toString()],
+          sig
+        )
     );
     expect(await nftFloorOracle.getPrice(mockToken.address)).to.equal(
       parseEther("2")
@@ -478,10 +570,15 @@ describe("NFT Oracle Tests", () => {
 
     // set price so block=4 now,user1:1 and user2:2 and user3:4,user4:4
     // can be aggregated [1,2,3,4]=3
+    sig = await getSignedMessageId(nftFloorOracle, deployer);
     expect(
       await nftFloorOracle
         .connect(user4.signer)
-        .setMultiplePrices([mockToken.address], [parseEther("4").toString()])
+        .setMultiplePrices(
+          [mockToken.address],
+          [parseEther("4").toString()],
+          sig
+        )
     );
     expect(await nftFloorOracle.getPrice(mockToken.address)).to.equal(
       parseEther("3")
@@ -493,10 +590,15 @@ describe("NFT Oracle Tests", () => {
     );
 
     //set price as 2 with user 4 at block 6, and 6-1>=5 so price from user1 expired
+    sig = await getSignedMessageId(nftFloorOracle, deployer);
     expect(
       await nftFloorOracle
         .connect(user4.signer)
-        .setMultiplePrices([mockToken.address], [parseEther("2").toString()])
+        .setMultiplePrices(
+          [mockToken.address],
+          [parseEther("2").toString()],
+          sig
+        )
     );
     //so now price are: user2:2,user3:3,user4:2
     //which aggregated to [2,3,2] and 2 will be finalized
@@ -521,10 +623,14 @@ describe("NFT Oracle Tests", () => {
     // set maxPriceDeviation to 200%
     await nftFloorOracle.setConfig(60, 200);
 
+    const deployer = await getFirstSigner();
+    const sig = await getSignedMessageId(nftFloorOracle, deployer);
+
     // set initial price to 1 ETH
     await nftFloorOracle.setMultiplePrices(
       [mockToken.address],
-      [parseEther("1")]
+      [parseEther("1")],
+      sig
     );
 
     const twapFromNftOracle = await nftFloorOracle.getPrice(mockToken.address);
@@ -534,14 +640,14 @@ describe("NFT Oracle Tests", () => {
     await expect(
       nftFloorOracle
         .connect(user1.signer)
-        .setMultiplePrices([mockToken.address], [parseEther("1").div(4)])
+        .setMultiplePrices([mockToken.address], [parseEther("1").div(4)], sig)
     ).to.be.revertedWith("NFTOracle: invalid price data");
 
     // try to set price to 3 ETH (should be reverted)
     await expect(
       nftFloorOracle
         .connect(user2.signer)
-        .setMultiplePrices([mockToken.address], [parseEther("3")])
+        .setMultiplePrices([mockToken.address], [parseEther("3")], sig)
     ).to.be.revertedWith("NFTOracle: invalid price data");
   });
 });

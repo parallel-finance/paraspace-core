@@ -45,7 +45,13 @@ export const deployNftOracle = async (verify = false) => {
     .map(([, nft]) => nft.address)
     .filter((x) => x);
   const nftFloorOracle = await deployNFTFloorOracleProvider(
-    [zeroAddress(), zeroAddress(), "0", zeroAddress()],
+    [
+      zeroAddress(),
+      zeroAddress(),
+      "0",
+      zeroAddress(),
+      await deployer.getAddress(),
+    ],
     verify
   );
   try {

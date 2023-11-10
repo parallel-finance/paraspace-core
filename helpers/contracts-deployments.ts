@@ -1034,7 +1034,7 @@ export const deployNFTFloorPriceOracle = async (
   ) as Promise<NFTFloorOracle>;
 
 export const deployNFTFloorOracleProvider = async (
-  args: [string, string, string, string],
+  args: [string, string, string, string, string],
   verify?: boolean
 ) =>
   withSaveAndVerify(

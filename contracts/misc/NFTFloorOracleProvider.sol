@@ -9,6 +9,7 @@ import "../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../dependencies/chainlink/ccip/interfaces/IRouterClient.sol";
 import "../dependencies/chainlink/ccip/libraries/Client.sol";
 import "./interfaces/INFTFloorOracle.sol";
+import "../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
 
 //we need to deploy 3 oracles at least
 uint8 constant MIN_ORACLES_NUM = 3;
@@ -26,8 +27,9 @@ struct OracleConfig {
 }
 
 struct CrossChainGasConfig {
-    uint128 basGas;
-    uint128 gasPerAsset;
+    uint64 basGas;
+    uint64 gasPerAsset;
+    uint128 maxFeePerBridge;
 }
 
 struct PriceInformation {
@@ -56,13 +58,21 @@ struct FeederPosition {
 }
 
 struct FinalizedPrice {
+    uint64 finalizedTimestamp;
     address nft;
     uint256 price;
 }
 
 struct CrossChainPriceMessage {
     uint256 messageId;
+    MessageIdSignature signature;
     FinalizedPrice[] prices;
+}
+
+struct MessageIdSignature {
+    uint8 v;
+    bytes32 r;
+    bytes32 s;
 }
 
 /// @title A simple on-chain price oracle mechanism
@@ -81,10 +91,8 @@ contract NFTFloorOracleProvider is
     event AssetAdded(address indexed asset);
     event AssetRemoved(address indexed asset);
     event AssetPaused(address indexed asset, bool paused);
-
     event FeederAdded(address indexed feeder);
     event FeederRemoved(address indexed feeder);
-
     event OracleConfigSet(uint128 expirationPeriod, uint128 maxPriceDeviation);
     event AssetDataSet(
         address indexed asset,
@@ -115,6 +123,16 @@ contract NFTFloorOracleProvider is
     IERC20 private immutable linkToken;
     uint64 private immutable destinationChainSelector;
     address private immutable destinationChainReceiver;
+    address private immutable messageIdSigner;
+    bytes32 internal DOMAIN_SEPARATOR;
+
+    //keccak256("MessageId(uint256 id)");
+    bytes32 internal constant MESSAGE_ID_HASH =
+        0xf6f72a0dc8b4c22dd443bd4da15f9a873dbab2521e5b3a9a65f678248a96f0b2;
+
+    //keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+    bytes32 internal constant EIP712_DOMAIN =
+        0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f;
 
     bytes32 public constant UPDATER_ROLE = keccak256("UPDATER_ROLE");
 
@@ -150,12 +168,14 @@ contract NFTFloorOracleProvider is
         address _router,
         address _linkToken,
         uint64 _destinationChainSelector,
-        address _destinationChainReceiver
+        address _destinationChainReceiver,
+        address _messageIdSigner
     ) {
         router = IRouterClient(_router);
         linkToken = IERC20(_linkToken);
         destinationChainSelector = _destinationChainSelector;
         destinationChainReceiver = _destinationChainReceiver;
+        messageIdSigner = _messageIdSigner;
     }
 
     /// @notice Allow contract creator to set admin and updaters
@@ -177,6 +197,18 @@ contract NFTFloorOracleProvider is
 
         gasConfig.basGas = 50000;
         gasConfig.gasPerAsset = 6000;
+
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                EIP712_DOMAIN,
+                //keccak256("ParaSpace"),
+                0x88d989289235fb06c18e3c2f7ea914f41f773e86fb0073d632539f566f4df353,
+                //keccak256(bytes("1")),
+                0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6,
+                block.chainid,
+                address(this)
+            )
+        );
     }
 
     /// @notice Allows owner to add assets.
@@ -224,12 +256,14 @@ contract NFTFloorOracleProvider is
     }
 
     function setGasConfig(
-        uint128 basGas,
-        uint128 gasPerAsset
+        uint64 basGas,
+        uint64 gasPerAsset,
+        uint128 maxFeePerBridge
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         CrossChainGasConfig memory currentConfig = gasConfig;
         currentConfig.basGas = basGas;
         currentConfig.gasPerAsset = gasPerAsset;
+        currentConfig.maxFeePerBridge = maxFeePerBridge;
         gasConfig = currentConfig;
     }
 
@@ -244,16 +278,25 @@ contract NFTFloorOracleProvider is
 
     /// @notice Allows admin to set emergency price on PriceInformation and updates the
     /// internal Median cumulativePrice.
-    /// @param finalizedPrice Finalized price info
     function setEmergencyPrice(
-        FinalizedPrice[] calldata finalizedPrice
+        address[] calldata nfts,
+        uint256[] calldata prices,
+        MessageIdSignature calldata signature
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 assetLength = finalizedPrice.length;
-        for (uint256 index = 0; index < assetLength; index++) {
-            FinalizedPrice calldata price = finalizedPrice[index];
-            _finalizePrice(price.nft, price.price);
+        uint256 nftLength = nfts.length;
+        require(nftLength == prices.length, "invalid parameters");
+        FinalizedPrice[] memory finalizedPrice = new FinalizedPrice[](
+            nftLength
+        );
+        uint64 curTimeStamp = block.timestamp.toUint64();
+        for (uint256 index = 0; index < nftLength; index++) {
+            FinalizedPrice memory price = finalizedPrice[index];
+            price.nft = nfts[index];
+            price.price = prices[index];
+            price.finalizedTimestamp = curTimeStamp;
+            _finalizePrice(price.nft, price.price, curTimeStamp);
         }
-        _updatePriceToBridge(finalizedPrice);
+        _updatePriceToBridge(finalizedPrice, signature);
     }
 
     function rescueERC20(
@@ -271,7 +314,8 @@ contract NFTFloorOracleProvider is
     /// @param _twaps The nft floor twaps
     function setMultiplePrices(
         address[] calldata _assets,
-        uint256[] calldata _twaps
+        uint256[] calldata _twaps,
+        MessageIdSignature calldata signature
     ) external onlyRole(UPDATER_ROLE) onlyWhenFeederExisted(msg.sender) {
         uint256 assetLength = _assets.length;
         require(
@@ -290,12 +334,16 @@ contract NFTFloorOracleProvider is
             if (aggregate) {
                 finalized[finalizedCount] = FinalizedPrice({
                     nft: _assets[i],
-                    price: price
+                    price: price,
+                    finalizedTimestamp: block.timestamp.toUint64()
                 });
                 finalizedCount++;
             }
         }
-        _updatePriceToBridge(finalized);
+        assembly {
+            mstore(finalized, finalizedCount)
+        }
+        _updatePriceToBridge(finalized, signature);
     }
 
     /// @param _asset The nft contract
@@ -328,13 +376,42 @@ contract NFTFloorOracleProvider is
         return feeders.length;
     }
 
-    function _updatePriceToBridge(FinalizedPrice[] memory finalized) internal {
-        if (address(router) == address(0)) {
+    function getMessageIdHash(uint256 messageId) public pure returns (bytes32) {
+        return keccak256(abi.encode(MESSAGE_ID_HASH, messageId));
+    }
+
+    function validateMessageIdSignature(
+        uint256 messageId,
+        MessageIdSignature memory signature
+    ) public view returns (bool) {
+        return
+            SignatureChecker.verify(
+                getMessageIdHash(messageId),
+                messageIdSigner,
+                signature.v,
+                signature.r,
+                signature.s,
+                DOMAIN_SEPARATOR
+            );
+    }
+
+    function _updatePriceToBridge(
+        FinalizedPrice[] memory finalized,
+        MessageIdSignature calldata signature
+    ) internal {
+        if (address(router) == address(0) || finalized.length == 0) {
             return;
         }
+        uint256 nextMessageId = ++sentMessageId;
+        require(
+            validateMessageIdSignature(nextMessageId, signature),
+            "invalid message id signature"
+        );
+
         CrossChainPriceMessage memory message;
-        message.messageId = ++sentMessageId;
+        message.messageId = nextMessageId;
         message.prices = finalized;
+        message.signature = signature;
         bytes memory data = abi.encode(message);
 
         CrossChainGasConfig memory currentConfig = gasConfig;
@@ -355,6 +432,8 @@ contract NFTFloorOracleProvider is
 
         // Get the fee required to send the message. Fee paid in LINK.
         uint256 fees = router.getFee(destinationChainSelector, evm2AnyMessage);
+        require(fees > 0, "invalid message");
+        require(fees < currentConfig.maxFeePerBridge, "fee exceed limit");
 
         // Approve the Router to pay fees in LINK tokens on contract's behalf.
         linkToken.approve(address(router), fees);
@@ -389,7 +468,7 @@ contract NFTFloorOracleProvider is
             _priceInfo,
             _twap
         );
-        if (aggregate) _finalizePrice(_asset, medianPrice);
+        if (aggregate) _finalizePrice(_asset, medianPrice, block.timestamp);
 
         return (aggregate, medianPrice);
     }
@@ -496,12 +575,15 @@ contract NFTFloorOracleProvider is
         return true;
     }
 
-    function _finalizePrice(address _asset, uint256 _twap) internal {
-        uint256 currentTimestamp = block.timestamp;
+    function _finalizePrice(
+        address _asset,
+        uint256 _twap,
+        uint256 _timestamp
+    ) internal {
         PriceInformation storage priceInfo = assetPriceMap[_asset];
         priceInfo.twap = _twap.toUint128();
-        priceInfo.updatedTimestamp = currentTimestamp.toUint128();
-        emit AssetDataSet(_asset, _twap, currentTimestamp);
+        priceInfo.updatedTimestamp = _timestamp.toUint128();
+        emit AssetDataSet(_asset, _twap, _timestamp);
     }
 
     function _addValue(

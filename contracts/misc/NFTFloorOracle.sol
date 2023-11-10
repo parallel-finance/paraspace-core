@@ -8,12 +8,14 @@ import "../dependencies/chainlink/ccip/interfaces/IRouterClient.sol";
 import "../dependencies/chainlink/ccip/libraries/Client.sol";
 import "../dependencies/chainlink/ccip/CCIPReceiver.sol";
 import "./interfaces/INFTFloorOracle.sol";
+import "../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
 
 //we do not accept price lags behind to much(10h=36000s))
 uint128 constant EXPIRATION_PERIOD = 36000;
 
 struct CrossChainPriceMessage {
     uint256 messageId;
+    MessageIdSignature signature;
     FinalizedPrice[] prices;
 }
 
@@ -25,8 +27,15 @@ struct PriceInformation {
 }
 
 struct FinalizedPrice {
+    uint64 finalizedTimestamp;
     address nft;
     uint256 price;
+}
+
+struct MessageIdSignature {
+    uint8 v;
+    bytes32 r;
+    bytes32 s;
 }
 
 /// @title A simple on-chain price oracle
@@ -41,8 +50,19 @@ contract NFTFloorOracle is CCIPReceiver, AccessControl, INFTFloorOracle {
 
     uint64 private immutable sourceChainSelector;
     address private immutable sourceChainSender;
+    address private immutable messageIdSigner;
+    bytes32 internal immutable DOMAIN_SEPARATOR;
+
+    //keccak256("MessageId(uint256 id)");
+    bytes32 internal constant MESSAGE_ID_HASH =
+        0xf6f72a0dc8b4c22dd443bd4da15f9a873dbab2521e5b3a9a65f678248a96f0b2;
+
+    //keccak256("MessageId(uint256 id)");
+    bytes32 internal constant EIP712_DOMAIN =
+        0x8b73c3c69bb8fe3d512ecc4cf759cc79239f7b179b0ffacaa9a75d522b39400f;
 
     uint256 public receivedMessageId;
+
     /// @dev Aggregated price with address
     // the NFT contract -> latest price information
     mapping(address => PriceInformation) public assetPriceMap;
@@ -54,12 +74,46 @@ contract NFTFloorOracle is CCIPReceiver, AccessControl, INFTFloorOracle {
         address _router,
         address _admin,
         uint64 _sourceChainSelector,
-        address _sourceChainSender
+        address _sourceChainSender,
+        uint256 _sourceChainId,
+        address _messageIdSigner
     ) CCIPReceiver(_router) {
         require(_admin != address(0), "Address cannot be zero");
         _setupRole(DEFAULT_ADMIN_ROLE, _admin);
         sourceChainSelector = _sourceChainSelector;
         sourceChainSender = _sourceChainSender;
+        messageIdSigner = _messageIdSigner;
+
+        DOMAIN_SEPARATOR = keccak256(
+            abi.encode(
+                EIP712_DOMAIN,
+                //keccak256("ParaSpace"),
+                0x88d989289235fb06c18e3c2f7ea914f41f773e86fb0073d632539f566f4df353,
+                //keccak256(bytes("1")),
+                0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6,
+                _sourceChainId,
+                sourceChainSender
+            )
+        );
+    }
+
+    function getMessageIdHash(uint256 messageId) public pure returns (bytes32) {
+        return keccak256(abi.encode(MESSAGE_ID_HASH, messageId));
+    }
+
+    function validateMessageIdSignature(
+        uint256 messageId,
+        MessageIdSignature memory signature
+    ) public view returns (bool) {
+        return
+            SignatureChecker.verify(
+                getMessageIdHash(messageId),
+                messageIdSigner,
+                signature.v,
+                signature.r,
+                signature.s,
+                DOMAIN_SEPARATOR
+            );
     }
 
     /// handle a received message
@@ -79,11 +133,19 @@ contract NFTFloorOracle is CCIPReceiver, AccessControl, INFTFloorOracle {
             (CrossChainPriceMessage)
         );
         require(message.messageId > receivedMessageId, "invalid message");
+        require(
+            validateMessageIdSignature(message.messageId, message.signature),
+            "invalid message id signature"
+        );
         receivedMessageId = message.messageId;
         uint256 priceLength = message.prices.length;
         for (uint256 index = 0; index < priceLength; index++) {
             FinalizedPrice memory priceInfo = message.prices[index];
-            _updatePrice(priceInfo.nft, priceInfo.price);
+            _updatePrice(
+                priceInfo.nft,
+                priceInfo.price,
+                priceInfo.finalizedTimestamp
+            );
         }
     }
 
@@ -95,7 +157,7 @@ contract NFTFloorOracle is CCIPReceiver, AccessControl, INFTFloorOracle {
         address _asset,
         uint256 _twap
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _updatePrice(_asset, _twap);
+        _updatePrice(_asset, _twap, block.timestamp);
     }
 
     /// @param _asset The nft contract
@@ -130,6 +192,7 @@ contract NFTFloorOracle is CCIPReceiver, AccessControl, INFTFloorOracle {
             "NFTOracle: asset price is initialized"
         );
         priceInfo.twap == 1;
+        assetPriceMap[_asset] = priceInfo;
     }
 
     /// @param _asset The nft contract address
@@ -150,12 +213,15 @@ contract NFTFloorOracle is CCIPReceiver, AccessControl, INFTFloorOracle {
             interfaceId == type(IERC165).interfaceId;
     }
 
-    function _updatePrice(address _asset, uint256 _twap) internal {
-        uint256 currentTimestamp = block.timestamp;
+    function _updatePrice(
+        address _asset,
+        uint256 _twap,
+        uint256 _timestamp
+    ) internal {
         PriceInformation memory priceInfo = assetPriceMap[_asset];
         priceInfo.twap = _twap.toUint128();
-        priceInfo.updatedTimestamp = currentTimestamp.toUint128();
+        priceInfo.updatedTimestamp = _timestamp.toUint128();
         assetPriceMap[_asset] = priceInfo;
-        emit AssetPriceUpdated(_asset, _twap, currentTimestamp);
+        emit AssetPriceUpdated(_asset, _twap, _timestamp);
     }
 }
