@@ -2,8 +2,6 @@ import {ethers} from "hardhat";
 import {providers, Wallet} from "ethers";
 import {InitializableAdminUpgradeabilityProxy} from "../../types";
 import {ALCHEMY_KEY} from "../../helpers/hardhat-constants";
-import {getERC20} from "../../helpers/contracts-getters";
-import {parseEther} from "ethers/lib/utils";
 
 const SourceChainProviderURL = `https://avalanche-fuji.infura.io/v3/865c34dcc8214c72bdd7f771f57c3821`;
 const SourceChainRouter = "0x554472a2720E5E7D5D3C817529aBA05EEd5F82D8";
