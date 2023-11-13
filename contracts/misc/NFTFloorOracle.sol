@@ -191,7 +191,7 @@ contract NFTFloorOracle is CCIPReceiver, AccessControl, INFTFloorOracle {
             priceInfo.updatedTimestamp == 0 && priceInfo.twap == 0,
             "NFTOracle: asset price is initialized"
         );
-        priceInfo.twap == 1;
+        priceInfo.twap = 1;
         assetPriceMap[_asset] = priceInfo;
     }
 
