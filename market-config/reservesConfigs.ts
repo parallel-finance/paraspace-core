@@ -112,6 +112,8 @@ import {
   timeLockStrategyWBTCWH,
   timeLockStrategySTDOT,
   timeLockStrategyEXRP,
+  timeLockStrategyuPPG,
+  timeLockStrategyuBAYC,
 } from "./timeLockStrategies";
 
 export const strategyDAI: IReserveParams = {
@@ -1076,4 +1078,36 @@ export const strategyEXRP: IReserveParams = {
   reserveFactor: "0",
   borrowCap: "0",
   supplyCap: "1000",
+};
+
+export const strategyuBAYC: IReserveParams = {
+  strategy: rateStrategyBLUR,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyuBAYC,
+  baseLTVAsCollateral: "4000",
+  liquidationThreshold: "8000",
+  liquidationProtocolFeePercentage: "0",
+  liquidationBonus: "10500",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategyuPPG: IReserveParams = {
+  strategy: rateStrategyBLUR,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyuPPG,
+  baseLTVAsCollateral: "3000",
+  liquidationThreshold: "6500",
+  liquidationProtocolFeePercentage: "0",
+  liquidationBonus: "10500",
+  borrowingEnabled: true,
+  reserveDecimals: "18",
+  xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
 };

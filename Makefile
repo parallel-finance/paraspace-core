@@ -354,7 +354,7 @@ deploy-allAggregators:
 
 .PHONY: deploy-allReserves
 deploy-allReserves:
-	make TASK_NAME=deploy:all-allReserves run-task
+	make TASK_NAME=deploy:all-reserves run-task
 
 .PHONY: deploy-uiIncentiveDataProvider
 deploy-uiIncentiveDataProvider:
