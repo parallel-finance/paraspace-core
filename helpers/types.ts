@@ -576,8 +576,8 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "KODA"
   | "BLOCKS"
   | "EXRP"
-    | "uBAYC"
-    | "uPPG"
+  | "uBAYC"
+  | "uPPG"
 >;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iParaSpacePoolAssets<T>;

@@ -130,6 +130,8 @@ export const MOCK_CHAINLINK_AGGREGATORS_USD_PRICES = {
   KODA: parseUnits("14154", 8).toString(),
   BLOCKS: parseUnits("10800", 8).toString(),
   EXRP: parseUnits("170", 8).toString(),
+  uBAYC: parseUnits("0.005", 8).toString(),
+  uPPG: parseUnits("0.004", 8).toString(),
 };
 
 export const MOCK_TOKEN_MINT_VALUE = {
