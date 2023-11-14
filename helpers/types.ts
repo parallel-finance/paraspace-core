@@ -628,7 +628,6 @@ export enum ERC20TokenContractId {
   WMATIC = "WMATIC",
   uBAYC = "uBAYC",
   uPPG = "uPPG",
-  GHOST = "GHOST",
 }
 
 export enum ERC721TokenContractId {
@@ -654,6 +653,7 @@ export enum ERC721TokenContractId {
   KODA = "KODA",
   BLOCKS = "BLOCKS",
   EXRP = "EXRP",
+  GHOST = "GHOST",
 }
 
 export enum NTokenContractId {

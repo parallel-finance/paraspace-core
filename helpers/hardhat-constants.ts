@@ -491,6 +491,7 @@ export const eContractidToContractName = {
   MockBendDaoLendPool: "MockLendPool",
   PositionMoverLogic: "PositionMoverLogic",
   PoolPositionMoverImpl: "PoolPositionMover",
+  GHOST: "MintableERC721",
 };
 
 export const XTOKEN_TYPE_UPGRADE_WHITELIST =
@@ -498,5 +499,4 @@ export const XTOKEN_TYPE_UPGRADE_WHITELIST =
     .split(/\s?,\s?/)
     .map((x) => +x);
 export const XTOKEN_SYMBOL_UPGRADE_WHITELIST =
-    process.env.XTOKEN_SYMBOL_UPGRADE_WHITELIST?.trim()
-        .split(/\s?,\s?/);
+  process.env.XTOKEN_SYMBOL_UPGRADE_WHITELIST?.trim().split(/\s?,\s?/);
