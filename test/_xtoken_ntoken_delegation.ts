@@ -123,7 +123,7 @@ describe("NToken general", async () => {
     expect(delegatesAfter).to.be.empty;
   });
 
-  it("TC-ntoken-delegation-06: UI Provider can retrive delegation data for multiple tokens", async () => {
+  it("TC-ntoken-delegation-06: UI Provider can retrieve delegation data for multiple tokens", async () => {
     const {
       nBAYC,
       users: [user1, user2],

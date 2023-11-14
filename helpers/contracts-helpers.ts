@@ -277,6 +277,17 @@ export const getTimeLockDataInDb = async (): Promise<
   );
 };
 
+export const clearTimeLockDataInDb = async () => {
+  const key = `${eContractid.TimeLockExecutor}.${DRE.network.name}`;
+  const oldValue = (await getDb().get(key).value()) || {};
+  const queue = [];
+  const newValue = {
+    ...oldValue,
+    queue,
+  };
+  await getDb().set(key, newValue).write();
+};
+
 export const getContractAddressInDb = async (id: eContractid | string) => {
   return ((await getDb().get(`${id}.${DRE.network.name}`).value()) || {})
     .address;

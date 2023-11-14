@@ -524,6 +524,10 @@ decode-queued-txs:
 list-buffered-txs:
 	make TASK_NAME=list-buffered-txs run-task
 
+.PHONY: renew-buffered-txs
+renew-buffered-txs:
+	make TASK_NAME=renew-buffered-txs run-task
+
 .PHONY: decode-buffered-txs
 decode-buffered-txs:
 	make TASK_NAME=decode-buffered-txs run-task
