@@ -386,7 +386,7 @@ export const GoerliConfig: IParaSpaceConfiguration = {
     uBAYC: strategyuBAYC,
     uPPG: strategyuPPG,
   },
-  DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
+  DelegationRegistry: "0x00000000000000447e69651d841bD8D104Bed493",
 };
 
 export const PolygonConfig: IParaSpaceConfiguration = {
@@ -997,7 +997,7 @@ export const MainnetConfig: IParaSpaceConfiguration = {
   Mocks: undefined,
   Oracle: MainnetOracleConfig,
   HotWallet: "0xC3AA9bc72Bd623168860a1e5c6a4530d3D80456c",
-  DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
+  DelegationRegistry: "0x00000000000000447e69651d841bD8D104Bed493",
   Governance: {
     Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
     Multisig: MULTI_SIG || "0x19293FBec52F94165f903708a74513Dd6dFedd0a",

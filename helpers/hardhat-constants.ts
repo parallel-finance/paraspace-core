@@ -223,7 +223,7 @@ export const MULTI_SEND_CHUNK_SIZE = parseInt(
 export const VERSION = version;
 export const COMMIT = git.short();
 export const COMPILER_OPTIMIZER_RUNS = 200;
-export const COMPILER_VERSION = "0.8.17+commit.8df45f5f";
+export const COMPILER_VERSION = "0.8.21";
 export const PKG_DATA = {
   version: VERSION,
   git: {
@@ -497,3 +497,6 @@ export const XTOKEN_TYPE_UPGRADE_WHITELIST =
   process.env.XTOKEN_TYPE_UPGRADE_WHITELIST?.trim()
     .split(/\s?,\s?/)
     .map((x) => +x);
+export const XTOKEN_SYMBOL_UPGRADE_WHITELIST =
+    process.env.XTOKEN_SYMBOL_UPGRADE_WHITELIST?.trim()
+        .split(/\s?,\s?/);

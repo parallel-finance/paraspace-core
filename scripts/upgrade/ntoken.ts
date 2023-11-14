@@ -24,6 +24,7 @@ import dotenv from "dotenv";
 import {
   DRY_RUN,
   GLOBAL_OVERRIDES,
+  XTOKEN_SYMBOL_UPGRADE_WHITELIST,
   XTOKEN_TYPE_UPGRADE_WHITELIST,
 } from "../../helpers/hardhat-constants";
 import {dryRunEncodedData} from "../../helpers/contracts-helpers";
@@ -74,6 +75,12 @@ export const upgradeNToken = async (verify = false) => {
     if (!xTokenTypeUpgradeWhiteList.includes(xTokenType)) {
       continue;
     }
+
+    if (XTOKEN_SYMBOL_UPGRADE_WHITELIST && !XTOKEN_SYMBOL_UPGRADE_WHITELIST.includes(symbol)) {
+      console.log(symbol + "not in XTOKEN_SYMBOL_UPGRADE_WHITELIST, skip...");
+      continue;
+    }
+
 
     if (xTokenType == XTokenType.NTokenBAYC) {
       if (!nTokenBAYCImplementationAddress) {

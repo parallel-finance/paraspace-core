@@ -31,42 +31,32 @@ describe("NToken general", async () => {
       .connect(user1.signer)
       .delegateForToken(user2.address, ["0"], true);
 
-    await expect(
-      (
-        await delegationRegistry.getDelegatesForToken(
-          nBAYC.address,
-          bayc.address,
-          "0"
-        )
-      )[0]
-    ).to.be.eq(user2.address);
+    const delegation = await delegationRegistry.getOutgoingDelegations(
+      nBAYC.address
+    );
+    expect(delegation[0].to).to.be.eq(user2.address);
+    expect(delegation[0].tokenId).to.be.eq(0);
   });
 
   it("TC-ntoken-delegation-02: Non-Owner of NToken can not delegate to a given address", async () => {
     const {
       nBAYC,
-      bayc,
       users: [user1, user2],
     } = testEnv;
 
     await expect(
       nBAYC.connect(user2.signer).delegateForToken(user1.address, ["0"], true)
     ).to.be.revertedWith(ProtocolErrors.NOT_THE_OWNER);
-    await expect(
-      (
-        await delegationRegistry.getDelegatesForToken(
-          nBAYC.address,
-          bayc.address,
-          "0"
-        )
-      )[0]
-    ).to.be.eq(user2.address);
+    const delegation = await delegationRegistry.getOutgoingDelegations(
+      nBAYC.address
+    );
+    expect(delegation[0].to).to.be.eq(user2.address);
+    expect(delegation[0].tokenId).to.be.eq(0);
   });
 
   it("TC-ntoken-delegation-03: Owner of NToken can revoke delegation of a given address", async () => {
     const {
       nBAYC,
-      bayc,
       users: [user1, user2],
     } = testEnv;
 
@@ -74,13 +64,8 @@ describe("NToken general", async () => {
       .connect(user1.signer)
       .delegateForToken(user2.address, ["0"], false);
 
-    await expect(
-      await delegationRegistry.getDelegatesForToken(
-        nBAYC.address,
-        bayc.address,
-        "0"
-      )
-    ).to.be.empty;
+    expect(await delegationRegistry.getOutgoingDelegations(nBAYC.address)).to.be
+      .empty;
   });
 
   it("TC-ntoken-delegation-04: Delegation status after resupplying the same token by different user", async () => {
@@ -108,19 +93,15 @@ describe("NToken general", async () => {
         "0x0"
       );
 
-    const delegatesAfter = await delegationRegistry.getDelegatesForToken(
-      nBAYC.address,
-      bayc.address,
-      "0"
+    const delegatesAfter = await delegationRegistry.getOutgoingDelegations(
+      nBAYC.address
     );
-
-    await expect(delegatesAfter).to.be.empty;
+    expect(delegatesAfter).to.be.empty;
   });
 
   it("TC-ntoken-delegation-05: Delegation status after transferring the ntoken", async () => {
     const {
       nBAYC,
-      bayc,
       users: [user1, user2, user3],
     } = testEnv;
 
@@ -136,19 +117,15 @@ describe("NToken general", async () => {
         "0"
       );
 
-    const delegatesAfter = await delegationRegistry.getDelegatesForToken(
-      nBAYC.address,
-      bayc.address,
-      "0"
+    const delegatesAfter = await delegationRegistry.getOutgoingDelegations(
+      nBAYC.address
     );
-
-    await expect(delegatesAfter).to.be.empty;
+    expect(delegatesAfter).to.be.empty;
   });
 
-  it("TC-ntoken-delegation-06: UI Provider can reterive delegation data for multiple tokens", async () => {
+  it("TC-ntoken-delegation-06: UI Provider can retrieve delegation data for multiple tokens", async () => {
     const {
       nBAYC,
-      bayc,
       users: [user1, user2],
     } = testEnv;
 
@@ -158,16 +135,14 @@ describe("NToken general", async () => {
 
     const uiProvider = await getUiPoolDataProvider();
 
-    const delegatesForToken = await delegationRegistry.getDelegatesForToken(
-      nBAYC.address,
-      bayc.address,
-      "0"
+    const delegatesForToken = await delegationRegistry.getOutgoingDelegations(
+      nBAYC.address
     );
 
     const delegations = await uiProvider.getDelegatesForTokens(nBAYC.address, [
       "0",
     ]);
 
-    await expect(delegatesForToken).to.be.eql(delegations[0].delegations);
+    expect(delegatesForToken[0]).to.be.eql(delegations[0]);
   });
 });
