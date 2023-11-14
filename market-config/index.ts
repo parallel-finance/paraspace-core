@@ -78,6 +78,7 @@ import {
   strategyEXRP,
   strategyuBAYC,
   strategyuPPG,
+  strategyGHOST,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -385,6 +386,7 @@ export const GoerliConfig: IParaSpaceConfiguration = {
     BLOCKS: strategyBLOCKS,
     uBAYC: strategyuBAYC,
     uPPG: strategyuPPG,
+    GHOST: strategyGHOST,
   },
   DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
 };
@@ -898,6 +900,7 @@ export const MainnetConfig: IParaSpaceConfiguration = {
     BLOCKS: "0x059EDD72Cd353dF5106D2B9cC5ab83a52287aC3a",
     uBAYC: "0x1e610de0d7acfa1d820024948a91d96c5c9ce6b9",
     uPPG: "0x30F7c830e0C2f4bEC871DF809D73E27eF19EB151",
+    GHOST: "0x9401518f4ebba857baa879d9f76e1cc8b31ed197",
   },
   YogaLabs: {
     ApeCoinStaking: "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9",
@@ -993,6 +996,7 @@ export const MainnetConfig: IParaSpaceConfiguration = {
     BLOCKS: strategyBLOCKS,
     uBAYC: strategyuBAYC,
     uPPG: strategyuPPG,
+    GHOST: strategyGHOST,
   },
   Mocks: undefined,
   Oracle: MainnetOracleConfig,

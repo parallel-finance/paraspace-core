@@ -511,6 +511,7 @@ export interface iAssetBase<T> {
   EXRP: T;
   uBAYC: T;
   uPPG: T;
+  GHOST: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, "ETH">;
@@ -578,6 +579,7 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "EXRP"
   | "uBAYC"
   | "uPPG"
+  | "GHOST"
 >;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iParaSpacePoolAssets<T>;
@@ -626,6 +628,7 @@ export enum ERC20TokenContractId {
   WMATIC = "WMATIC",
   uBAYC = "uBAYC",
   uPPG = "uPPG",
+  GHOST = "GHOST",
 }
 
 export enum ERC721TokenContractId {
