@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import {IPoolAddressesProvider} from "../../interfaces/IPoolAddressesProvider.sol";
 import {ITimeLockStrategy} from "../../interfaces/ITimeLockStrategy.sol";
 import {DataTypes} from "../../protocol/libraries/types/DataTypes.sol";
+import {IDelegateRegistry} from "../../dependencies/delegation/IDelegateRegistry.sol";
 
 interface IUiPoolDataProvider {
     struct InterestRates {
@@ -112,10 +113,6 @@ interface IUiPoolDataProvider {
         uint256 traitMultiplier;
     }
 
-    struct DelegationData {
-        address[] delegations;
-    }
-
     function getReservesList(
         IPoolAddressesProvider provider
     ) external view returns (address[] memory);
@@ -162,5 +159,5 @@ interface IUiPoolDataProvider {
     function getDelegatesForTokens(
         address vault,
         uint256[] calldata tokenIds
-    ) external view returns (DelegationData[] memory);
+    ) external view returns (IDelegateRegistry.Delegation[] memory);
 }

@@ -31,7 +31,7 @@ import {
   DefaultReserveInterestRateStrategy,
   DefaultTimeLockStrategy,
   DelegationAwarePToken,
-  DelegationRegistry,
+  DelegateRegistry,
   DepositContract,
   Doodles,
   ERC20OracleWrapper,
@@ -3178,11 +3178,11 @@ export const deployHotWalletProxy = async (verify?: boolean) =>
 
 export const deployDelegationRegistry = async (verify?: boolean) =>
   withSaveAndVerify(
-    await getContractFactory("DelegationRegistry"),
+    await getContractFactory("DelegateRegistry"),
     eContractid.DelegationRegistry,
     [],
     verify
-  ) as Promise<DelegationRegistry>;
+  ) as Promise<DelegateRegistry>;
 
 export const deployStakefishValidatorFactory = async (
   genesisImplementation: tEthereumAddress,

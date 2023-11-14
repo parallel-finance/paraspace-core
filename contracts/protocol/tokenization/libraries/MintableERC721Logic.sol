@@ -12,7 +12,7 @@ import {SafeERC20} from "../../../dependencies/openzeppelin/contracts/SafeERC20.
 import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC1155} from "../../../dependencies/openzeppelin/contracts/IERC1155.sol";
-import {IDelegationRegistry} from "../../../dependencies/delegation/IDelegationRegistry.sol";
+import {IDelegateRegistry} from "../../../dependencies/delegation/IDelegateRegistry.sol";
 
 struct UserState {
     uint64 balance;
@@ -51,7 +51,10 @@ struct MintableERC721Data {
     address underlyingAsset;
     bool isTraitBoosted;
     mapping(uint256 => uint256) traitsMultipliers;
+    //replace old token delegation data
+    uint256 _placeHolder;
     mapping(uint256 => address) tokenDelegations;
+    uint256[50] __gap;
 }
 
 struct LocalVars {
@@ -566,10 +569,11 @@ library MintableERC721Logic {
             delete erc721Data.tokenDelegations[tokenId];
         }
 
-        IDelegationRegistry(delegationRegistry).delegateForToken(
+        IDelegateRegistry(delegationRegistry).delegateERC721(
             delegate,
             erc721Data.underlyingAsset,
             tokenId,
+            "",
             value
         );
     }

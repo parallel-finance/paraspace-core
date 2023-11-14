@@ -20,7 +20,6 @@ import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol"
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 import {ITokenDelegation} from "../../interfaces/ITokenDelegation.sol";
-import {IDelegationRegistry} from "../../dependencies/delegation/IDelegationRegistry.sol";
 
 /**
  * @title ParaSpace ERC721 NToken
