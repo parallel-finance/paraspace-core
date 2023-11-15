@@ -156,6 +156,7 @@ import {
   PoolAAPositionMover__factory,
   PoolBorrowAndStake__factory,
   PoolBorrowAndStake,
+  ParaXApeCoinStakingVoting,
 } from "../types";
 import {
   getACLManager,
@@ -3344,6 +3345,23 @@ export const deployDelegationAwarePToken = async (
   );
 
   return instance;
+};
+
+export const deployApeCoinStakingVoting = async (
+  apeCoinStaking: tEthereumAddress,
+  cApe: tEthereumAddress,
+  nBAYC: tEthereumAddress,
+  nMAYC: tEthereumAddress,
+  nBAKC: tEthereumAddress,
+  verify?: boolean
+) => {
+  return withSaveAndVerify(
+    await getContractFactory("ParaXApeCoinStakingVoting"),
+    eContractid.ParaXApeCoinStakingVoting,
+    [apeCoinStaking, cApe, nBAYC, nMAYC, nBAKC],
+    verify,
+    false
+  ) as Promise<ParaXApeCoinStakingVoting>;
 };
 
 export const deployMockVariableDebtToken = async (

@@ -100,6 +100,7 @@ import {
   Account__factory,
   AccountFactory__factory,
   AccountRegistry__factory,
+  ParaXApeCoinStakingVoting__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1343,6 +1344,17 @@ export const getAccountFactory = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.AccountFactory}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getApeCoinStakingVoting = async (address?: tEthereumAddress) =>
+  await ParaXApeCoinStakingVoting__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.ParaXApeCoinStakingVoting}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
