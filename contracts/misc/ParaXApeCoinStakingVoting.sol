@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 import {INToken} from "../interfaces/INToken.sol";
 import "../dependencies/openzeppelin/contracts//IERC20.sol";
+import "../dependencies/openzeppelin/contracts//IERC721.sol";
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
 
 contract ParaXApeCoinStakingVoting {
@@ -62,8 +63,13 @@ contract ParaXApeCoinStakingVoting {
             return 0;
         }
 
+        IERC721 underlyingNFT = IERC721(ntoken.UNDERLYING_ASSET_ADDRESS());
         for (uint256 i = 0; i < balance; i++) {
             uint256 tokenId = ntoken.tokenOfOwnerByIndex(userAddress, i);
+            //ensure nToken owns the underlying asset(to exclude P2P case)
+            if (underlyingNFT.ownerOf(tokenId) != address(ntoken)) {
+                continue;
+            }
 
             (uint256 stakedAmount, ) = apeCoinStaking.nftPosition(
                 poolId,
