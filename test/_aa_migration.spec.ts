@@ -84,7 +84,29 @@ describe("Account Abstraction Migration", () => {
       token0Amount: userDaiAmount,
       token1Amount: userWethAmount,
     });
-    expect(await nftPositionManager.balanceOf(user1.address)).to.eq(1);
+    //mint second nft
+    await fund({token: dai, user: user1, amount: userDaiAmount});
+    await fund({token: weth, user: user1, amount: userWethAmount});
+    await createNewPool({
+      positionManager: nft,
+      token0: dai,
+      token1: weth,
+      fee: 500,
+      initialSqrtPrice: initialPrice.toString(),
+    });
+    await mintNewPosition({
+      nft: nft,
+      token0: dai,
+      token1: weth,
+      fee: 500,
+      user: user1,
+      tickSpacing: tickSpacing,
+      lowerPrice,
+      upperPrice,
+      token0Amount: userDaiAmount,
+      token1Amount: userWethAmount,
+    });
+    expect(await nftPositionManager.balanceOf(user1.address)).to.eq(2);
 
     await nft.setApprovalForAll(pool.address, true);
 
@@ -99,17 +121,18 @@ describe("Account Abstraction Migration", () => {
         .borrow(dai.address, borrowDaiAmount, 0, user1.address)
     );
     await waitForTx(
-      await pool
-        .connect(user1.signer)
-        .supplyERC721(
-          nftPositionManager.address,
-          [{tokenId: 1, useAsCollateral: true}],
-          user1.address,
-          0,
-          {
-            gasLimit: 12_450_000,
-          }
-        )
+      await pool.connect(user1.signer).supplyERC721(
+        nftPositionManager.address,
+        [
+          {tokenId: 1, useAsCollateral: true},
+          {tokenId: 2, useAsCollateral: true},
+        ],
+        user1.address,
+        0,
+        {
+          gasLimit: 12_450_000,
+        }
+      )
     );
 
     expect(await pDai.balanceOf(user2.address)).to.be.closeTo(
@@ -120,7 +143,7 @@ describe("Account Abstraction Migration", () => {
       wethAmount,
       parseEther("0.01")
     );
-    expect(await nUniswapV3.balanceOf(user1.address)).to.eq(1);
+    expect(await nUniswapV3.balanceOf(user1.address)).to.eq(2);
 
     const {variableDebtTokenAddress: variableDebtTokenAddress} =
       await protocolDataProvider.getReserveTokensAddresses(dai.address);
@@ -162,7 +185,7 @@ describe("Account Abstraction Migration", () => {
       wethAmount,
       parseEther("0.01")
     );
-    expect(await nUniswapV3.balanceOf(aaAccount)).to.eq(1);
+    expect(await nUniswapV3.balanceOf(aaAccount)).to.eq(2);
     expect(await variableDebt.balanceOf(aaAccount)).to.be.closeTo(
       borrowDaiAmount,
       parseEther("1")
@@ -201,6 +224,6 @@ describe("Account Abstraction Migration", () => {
       wethAmount,
       parseEther("0.01")
     );
-    expect(await nftPositionManager.balanceOf(nUniswapV3.address)).to.be.eq(1);
+    expect(await nftPositionManager.balanceOf(nUniswapV3.address)).to.be.eq(2);
   });
 });

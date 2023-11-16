@@ -146,7 +146,7 @@ contract PoolAAPositionMover is
                 uint256 balance = nToken.balanceOf(msg.sender);
                 cacheVars.isCollectionCollateral = false;
                 for (uint256 k = 0; k < balance; k++) {
-                    uint256 tokenId = nToken.tokenOfOwnerByIndex(msg.sender, k);
+                    uint256 tokenId = nToken.tokenOfOwnerByIndex(msg.sender, 0);
                     cacheVars.isTokenCollateral = nToken.isUsedAsCollateral(
                         tokenId
                     );
