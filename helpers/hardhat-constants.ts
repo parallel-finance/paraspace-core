@@ -104,6 +104,7 @@ export const ETHERSCAN_NETWORKS = [
   "mainnet",
   "goerli",
   "arbitrum",
+  "arbitrumGoerli",
   "polygon",
   "matic",
   "polygonMumbai",
@@ -491,6 +492,7 @@ export const eContractidToContractName = {
   MockBendDaoLendPool: "MockLendPool",
   PositionMoverLogic: "PositionMoverLogic",
   PoolPositionMoverImpl: "PoolPositionMover",
+  PoolAAPositionMoverImpl: "PoolAAPositionMover",
 };
 
 export const XTOKEN_TYPE_UPGRADE_WHITELIST =
