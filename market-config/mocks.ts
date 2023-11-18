@@ -66,6 +66,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   EXRP: parseEther("0.2").toString(),
   uBAYC: parseEther("0.000002768").toString(),
   uPPG: parseEther("0.000000477").toString(),
+  GHOST: parseEther("0.5").toString(),
 };
 
 export const MOCK_CHAINLINK_AGGREGATORS_USD_PRICES = {
@@ -132,6 +133,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_USD_PRICES = {
   EXRP: parseUnits("170", 8).toString(),
   uBAYC: parseUnits("0.005", 8).toString(),
   uPPG: parseUnits("0.004", 8).toString(),
+  GHOST: parseUnits("1000", 8).toString(),
 };
 
 export const MOCK_TOKEN_MINT_VALUE = {
