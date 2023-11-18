@@ -489,6 +489,7 @@ export const eContractidToContractName = {
   EXRP: "MintableERC721",
   WGLMR: "MintableERC721",
   MockBendDaoLendPool: "MockLendPool",
+  AggregatorGHOST:"ERC721OracleWrapper",
   PositionMoverLogic: "PositionMoverLogic",
   PoolPositionMoverImpl: "PoolPositionMover",
   GHOST: "MintableERC721",

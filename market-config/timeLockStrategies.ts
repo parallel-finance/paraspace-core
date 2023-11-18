@@ -689,6 +689,18 @@ export const timeLockStrategyBEANZ: ITimeLockStrategyParams = {
   period: "86400",
 };
 
+export const timeLockStrategyGHOST: ITimeLockStrategyParams = {
+  name: "timeLockStrategyGHOST",
+  minThreshold: "5",
+  midThreshold: "20",
+  minWaitTime: "12",
+  midWaitTime: "7200",
+  maxWaitTime: "21600",
+  poolPeriodWaitTime: "600",
+  poolPeriodLimit: "40",
+  period: "86400",
+};
+
 export const timeLockStrategyDEGODS: ITimeLockStrategyParams = {
   name: "timeLockStrategyDEGODS",
   minThreshold: "4",
@@ -751,18 +763,6 @@ export const timeLockStrategyBLOCKS: ITimeLockStrategyParams = {
 
 export const timeLockStrategyEXRP: ITimeLockStrategyParams = {
   name: "timeLockStrategyEXRP",
-  minThreshold: "20",
-  midThreshold: "50",
-  minWaitTime: "12",
-  midWaitTime: "7200",
-  maxWaitTime: "21600",
-  poolPeriodWaitTime: "600",
-  poolPeriodLimit: "100",
-  period: "86400",
-};
-
-export const timeLockStrategyGHOST: ITimeLockStrategyParams = {
-  name: "timeLockStrategyGHOST",
   minThreshold: "20",
   midThreshold: "50",
   minWaitTime: "12",

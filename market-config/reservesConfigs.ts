@@ -1116,11 +1116,11 @@ export const strategyuPPG: IReserveParams = {
 
 export const strategyGHOST: IReserveParams = {
   strategy: rateStrategyNFT,
-  auctionStrategy: auctionStrategyGHOST,
+  auctionStrategy: auctionStrategyBEANZ,
   timeLockStrategy: timeLockStrategyGHOST,
-  baseLTVAsCollateral: "2000",
+  baseLTVAsCollateral: "3000",
   liquidationProtocolFeePercentage: "0",
-  liquidationThreshold: "3500",
+  liquidationThreshold: "6500",
   liquidationBonus: "10500",
   borrowingEnabled: false,
   reserveDecimals: "0",
