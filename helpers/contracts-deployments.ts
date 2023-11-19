@@ -957,14 +957,13 @@ export const deployPoolComponents = async (
 
   const config = getParaSpaceConfig();
   const treasuryAddress = config.Treasury;
-  const cApe = await getAutoCompoundApe();
   const poolApeStaking = allTokens.APE
     ? ((await withSaveAndVerify(
         await getContractFactory("PoolApeStaking", apeStakingLibraries),
         eContractid.PoolApeStakingImpl,
         [
           provider,
-          cApe.address,
+          (await getAutoCompoundApe()).address,
           allTokens.APE.address,
           allTokens.USDC.address,
           (await getUniswapV3SwapRouter()).address,
@@ -987,7 +986,7 @@ export const deployPoolComponents = async (
     ? ((await withSaveAndVerify(
         await getContractFactory("PoolBorrowAndStake", BorrowAndStakeLibraries),
         eContractid.PoolBorrowAndStakeImpl,
-        [provider, cApe.address, allTokens.APE.address],
+        [provider, (await getAutoCompoundApe()).address, allTokens.APE.address],
         verify,
         false,
         BorrowAndStakeLibraries,

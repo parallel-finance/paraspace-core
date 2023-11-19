@@ -630,6 +630,44 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
   Mocks: MocksUSDConfig,
   Oracle: ArbitrumOracleConfig,
 };
+export const ArbitrumSepoliaConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Tokens: {
+    sAPE: "0x0000000000000000000000000000000000000001",
+  },
+  YogaLabs: {},
+  Uniswap: {},
+  Marketplace: {},
+  Chainlink: {},
+  BendDAO: {},
+  Stakefish: {},
+  // RESERVE ASSETS - CONFIG, ASSETS, BORROW RATES,
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    aWETH: strategyAWETH,
+    cETH: strategyCETH,
+    PUNK: strategyPUNK,
+    BLUR: strategyBLUR,
+    DOODLE: strategyDoodles,
+    WPUNKS: strategyWPunks,
+    MOONBIRD: strategyMoonbird,
+    MEEBITS: strategyMeebits,
+    AZUKI: strategyAzuki,
+    OTHR: strategyOthr,
+    CLONEX: strategyClonex,
+    BLOCKS: strategyBLOCKS,
+    SEWER: strategySEWER,
+    PPG: strategyPudgyPenguins,
+  },
+};
 
 export const ZkSyncGoerliConfig: IParaSpaceConfiguration = {
   // BASIC INFO
@@ -1022,6 +1060,7 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.goerli]: GoerliConfig,
   [eEthereumNetwork.mainnet]: MainnetConfig,
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
+  [eEthereumNetwork.arbitrumSepolia]: ArbitrumSepoliaConfig,
   [eEthereumNetwork.arbitrum]: ArbitrumConfig,
   [eEthereumNetwork.polygon]: PolygonConfig,
   [eEthereumNetwork.polygonMumbai]: PolygonMumbaiConfig,

@@ -27,6 +27,8 @@ import {
   MOONBASE_ETHERSCAN_KEY,
   LINEA_ETHERSCAN_KEY,
   LINEA_GOERLI_ETHERSCAN_KEY,
+  SEPOLIA_ETHERSCAN_KEY,
+  ARBITRUM_SEPOLIA_ETHERSCAN_KEY,
 } from "./helpers/hardhat-constants";
 import {accounts} from "./wallets";
 import {accounts as evmAccounts} from "./evm-wallets";
@@ -190,6 +192,11 @@ const hardhatConfig: HardhatUserConfig = {
       url: NETWORKS_RPC_URL[eEthereumNetwork.goerli],
       accounts: DEPLOYER,
     },
+    sepolia: {
+      chainId: CHAINS_ID[eEthereumNetwork.sepolia],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.sepolia],
+      accounts: DEPLOYER,
+    },
     arbitrum: {
       chainId: CHAINS_ID[eEthereumNetwork.arbitrum],
       url: NETWORKS_RPC_URL[eEthereumNetwork.arbitrum],
@@ -198,6 +205,11 @@ const hardhatConfig: HardhatUserConfig = {
     arbitrumGoerli: {
       chainId: CHAINS_ID[eEthereumNetwork.arbitrumGoerli],
       url: NETWORKS_RPC_URL[eEthereumNetwork.arbitrumGoerli],
+      accounts: DEPLOYER,
+    },
+    arbitrumSepolia: {
+      chainId: CHAINS_ID[eEthereumNetwork.arbitrumSepolia],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.arbitrumSepolia],
       accounts: DEPLOYER,
     },
     polygon: {
@@ -257,8 +269,10 @@ const hardhatConfig: HardhatUserConfig = {
       localhost: ETHERSCAN_KEY,
       mainnet: ETHERSCAN_KEY,
       goerli: GOERLI_ETHERSCAN_KEY,
+      sepolia: SEPOLIA_ETHERSCAN_KEY,
       arbitrum: ARBITRUM_ETHERSCAN_KEY,
       arbitrumGoerli: ARBITRUM_GOERLI_ETHERSCAN_KEY,
+      arbitrumSepolia: ARBITRUM_SEPOLIA_ETHERSCAN_KEY,
       polygon: POLYGON_ETHERSCAN_KEY,
       polygonMumbai: POLYGON_MUMBAI_ETHERSCAN_KEY,
       polygonZkevm: POLYGON_ZKEVM_ETHERSCAN_KEY,
@@ -271,8 +285,10 @@ const hardhatConfig: HardhatUserConfig = {
     customChains: [
       eEthereumNetwork.localhost,
       eEthereumNetwork.goerli,
+      eEthereumNetwork.sepolia,
       eEthereumNetwork.arbitrum,
       eEthereumNetwork.arbitrumGoerli,
+      eEthereumNetwork.arbitrumSepolia,
       eEthereumNetwork.polygon,
       eEthereumNetwork.polygonZkevm,
       eEthereumNetwork.polygonMumbai,

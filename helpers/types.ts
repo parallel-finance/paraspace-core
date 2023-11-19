@@ -84,6 +84,7 @@ export type ParaSpaceLibraryAddresses = Libraries;
 export enum eEthereumNetwork {
   ropsten = "ropsten",
   goerli = "goerli",
+  sepolia = "sepolia",
   mainnet = "mainnet",
   hardhat = "hardhat",
   tenderlyMain = "tenderlyMain",
@@ -95,6 +96,7 @@ export enum eEthereumNetwork {
   moonbase = "moonbase",
   arbitrum = "arbitrum",
   arbitrumGoerli = "arbitrumGoerli",
+  arbitrumSepolia = "arbitrumSepolia",
   polygon = "polygon",
   polygonMumbai = "polygonMumbai",
   polygonZkevm = "polygonZkevm",
@@ -745,6 +747,7 @@ export type iParamsPerNetworkAll<T> = iEthereumParamsPerNetwork<T>;
 
 export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.goerli]: T;
+  [eEthereumNetwork.sepolia]: T;
   [eEthereumNetwork.mainnet]: T;
   [eEthereumNetwork.hardhat]: T;
   [eEthereumNetwork.anvil]: T;
@@ -755,6 +758,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.moonbase]: T;
   [eEthereumNetwork.arbitrum]: T;
   [eEthereumNetwork.arbitrumGoerli]: T;
+  [eEthereumNetwork.arbitrumSepolia]: T;
   [eEthereumNetwork.polygon]: T;
   [eEthereumNetwork.polygonMumbai]: T;
   [eEthereumNetwork.polygonZkevm]: T;

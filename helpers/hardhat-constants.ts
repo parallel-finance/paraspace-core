@@ -22,6 +22,7 @@ const getPrivateKeyfromEncryptedJson = (
 
 export const HARDHAT_CHAINID = 31337;
 export const GOERLI_CHAINID = 5;
+export const SEPOLIA_CHAINID = 11155111;
 export const FORK_CHAINID = 522;
 export const MAINNET_CHAINID = 1;
 export const PARALLEL_CHAINID = 1592;
@@ -29,6 +30,7 @@ export const MOONBEAM_CHAINID = 1284;
 export const MOONBASE_CHAINID = 1287;
 export const ARBITRUM_ONE_CHAINID = 42161;
 export const ARBITRUM_GOERLI_CHAINID = 421613;
+export const ARBITRUM_SEPOLIA_CHAINID = 421613;
 export const POLYGON_CHAINID = 137;
 export const POLYGON_ZKEVM_CHAINID = 1101;
 export const POLYGON_ZKEVM_GOERLI_CHAINID = 1442;
@@ -67,10 +69,14 @@ export const DB_PATH = process.env.DB_PATH ?? ":memory:";
 export const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";
 export const GOERLI_ETHERSCAN_KEY =
   process.env.GOERLI_ETHERSCAN_KEY || ETHERSCAN_KEY;
+export const SEPOLIA_ETHERSCAN_KEY =
+  process.env.SEPOLIA_ETHERSCAN_KEY || ETHERSCAN_KEY;
 export const ARBITRUM_ETHERSCAN_KEY =
   process.env.ARBITRUM_ETHERSCAN_KEY || ETHERSCAN_KEY;
 export const ARBITRUM_GOERLI_ETHERSCAN_KEY =
   process.env.ARBITRUM_GOERLI_ETHERSCAN_KEY || ARBITRUM_ETHERSCAN_KEY;
+export const ARBITRUM_SEPOLIA_ETHERSCAN_KEY =
+  process.env.ARBITRUM_SEPOLIA_ETHERSCAN_KEY || ARBITRUM_ETHERSCAN_KEY;
 export const POLYGON_ETHERSCAN_KEY =
   process.env.POLYGON_ETHERSCAN_KEY || ETHERSCAN_KEY;
 export const POLYGON_MUMBAI_ETHERSCAN_KEY =
@@ -498,5 +504,4 @@ export const XTOKEN_TYPE_UPGRADE_WHITELIST =
     .split(/\s?,\s?/)
     .map((x) => +x);
 export const XTOKEN_SYMBOL_UPGRADE_WHITELIST =
-    process.env.XTOKEN_SYMBOL_UPGRADE_WHITELIST?.trim()
-        .split(/\s?,\s?/);
+  process.env.XTOKEN_SYMBOL_UPGRADE_WHITELIST?.trim().split(/\s?,\s?/);
