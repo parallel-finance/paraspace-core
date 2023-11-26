@@ -4,9 +4,9 @@ import {DRY_RUN} from "../../helpers/hardhat-constants";
 import {waitForTx} from "../../helpers/misc-utils";
 
 task("set-ltv", "Set LTV")
-  .addPositionalParam("asset", "asset")
+  .addPositionalParam("assets", "assets")
   .addPositionalParam("ltv", "ltv")
-  .setAction(async ({asset, ltv}, DRE) => {
+  .setAction(async ({assets, ltv}, DRE) => {
     await DRE.run("set-DRE");
     const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
     const {
@@ -19,40 +19,42 @@ task("set-ltv", "Set LTV")
     const configurator = await getPoolConfiguratorProxy();
     const [reservesData] = await ui.getReservesData(provider.address);
 
-    const reserveData = reservesData.find(
-      (x) => x.underlyingAsset === utils.getAddress(asset)
-    );
-    if (!reserveData) {
-      return;
-    }
+    for (const asset of assets.split(",")) {
+      const reserveData = reservesData.find(
+        (x) => x.underlyingAsset === utils.getAddress(asset)
+      );
+      if (!reserveData) {
+        return;
+      }
 
-    const encodedData = configurator.interface.encodeFunctionData(
-      "configureReserveAsCollateral",
-      [
-        reserveData.underlyingAsset,
-        ltv,
-        reserveData.reserveLiquidationThreshold,
-        reserveData.reserveLiquidationBonus,
-      ]
-    );
-    if (DRY_RUN) {
-      await dryRunEncodedData(configurator.address, encodedData);
-    } else {
-      await waitForTx(
-        await configurator.configureReserveAsCollateral(
+      const encodedData = configurator.interface.encodeFunctionData(
+        "configureReserveAsCollateral",
+        [
           reserveData.underlyingAsset,
           ltv,
           reserveData.reserveLiquidationThreshold,
-          reserveData.reserveLiquidationBonus
-        )
+          reserveData.reserveLiquidationBonus,
+        ]
       );
+      if (DRY_RUN) {
+        await dryRunEncodedData(configurator.address, encodedData);
+      } else {
+        await waitForTx(
+          await configurator.configureReserveAsCollateral(
+            reserveData.underlyingAsset,
+            ltv,
+            reserveData.reserveLiquidationThreshold,
+            reserveData.reserveLiquidationBonus
+          )
+        );
+      }
     }
   });
 
 task("set-liquidation-threshold", "Set liquidation threshold")
-  .addPositionalParam("asset", "asset")
+  .addPositionalParam("assets", "assets")
   .addPositionalParam("liquidationThreshold", "liquidation threshold")
-  .setAction(async ({asset, liquidationThreshold}, DRE) => {
+  .setAction(async ({assets, liquidationThreshold}, DRE) => {
     await DRE.run("set-DRE");
     const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
     const {
@@ -65,40 +67,42 @@ task("set-liquidation-threshold", "Set liquidation threshold")
     const configurator = await getPoolConfiguratorProxy();
     const [reservesData] = await ui.getReservesData(provider.address);
 
-    const reserveData = reservesData.find(
-      (x) => x.underlyingAsset === utils.getAddress(asset)
-    );
-    if (!reserveData) {
-      return;
-    }
+    for (const asset of assets.split(",")) {
+      const reserveData = reservesData.find(
+        (x) => x.underlyingAsset === utils.getAddress(asset)
+      );
+      if (!reserveData) {
+        return;
+      }
 
-    const encodedData = configurator.interface.encodeFunctionData(
-      "configureReserveAsCollateral",
-      [
-        reserveData.underlyingAsset,
-        reserveData.baseLTVasCollateral,
-        liquidationThreshold,
-        reserveData.reserveLiquidationBonus,
-      ]
-    );
-    if (DRY_RUN) {
-      await dryRunEncodedData(configurator.address, encodedData);
-    } else {
-      await waitForTx(
-        await configurator.configureReserveAsCollateral(
+      const encodedData = configurator.interface.encodeFunctionData(
+        "configureReserveAsCollateral",
+        [
           reserveData.underlyingAsset,
           reserveData.baseLTVasCollateral,
           liquidationThreshold,
-          reserveData.reserveLiquidationBonus
-        )
+          reserveData.reserveLiquidationBonus,
+        ]
       );
+      if (DRY_RUN) {
+        await dryRunEncodedData(configurator.address, encodedData);
+      } else {
+        await waitForTx(
+          await configurator.configureReserveAsCollateral(
+            reserveData.underlyingAsset,
+            reserveData.baseLTVasCollateral,
+            liquidationThreshold,
+            reserveData.reserveLiquidationBonus
+          )
+        );
+      }
     }
   });
 
 task("set-reserve-factor", "Set reserve factor")
-  .addPositionalParam("asset", "asset")
+  .addPositionalParam("assets", "assets")
   .addPositionalParam("reserveFactor", "reserve factor")
-  .setAction(async ({asset, reserveFactor}, DRE) => {
+  .setAction(async ({assets, reserveFactor}, DRE) => {
     await DRE.run("set-DRE");
     const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
     const {
@@ -111,26 +115,28 @@ task("set-reserve-factor", "Set reserve factor")
     const configurator = await getPoolConfiguratorProxy();
     const [reservesData] = await ui.getReservesData(provider.address);
 
-    const reserveData = reservesData.find(
-      (x) => x.underlyingAsset === utils.getAddress(asset)
-    );
-    if (!reserveData) {
-      return;
-    }
-
-    const encodedData = configurator.interface.encodeFunctionData(
-      "setReserveFactor",
-      [reserveData.underlyingAsset, reserveFactor]
-    );
-    if (DRY_RUN) {
-      await dryRunEncodedData(configurator.address, encodedData);
-    } else {
-      await waitForTx(
-        await configurator.setReserveFactor(
-          reserveData.underlyingAsset,
-          reserveFactor
-        )
+    for (const asset of assets.split(",")) {
+      const reserveData = reservesData.find(
+        (x) => x.underlyingAsset === utils.getAddress(asset)
       );
+      if (!reserveData) {
+        return;
+      }
+
+      const encodedData = configurator.interface.encodeFunctionData(
+        "setReserveFactor",
+        [reserveData.underlyingAsset, reserveFactor]
+      );
+      if (DRY_RUN) {
+        await dryRunEncodedData(configurator.address, encodedData);
+      } else {
+        await waitForTx(
+          await configurator.setReserveFactor(
+            reserveData.underlyingAsset,
+            reserveFactor
+          )
+        );
+      }
     }
   });
 
