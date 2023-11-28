@@ -576,6 +576,10 @@ set-interest-rate-strategy:
 set-auction-strategy:
 	make TASK_NAME=set-auction-strategy run-task
 
+.PHONY: set-timelock-strategy
+set-timelock-strategy:
+	make TASK_NAME=set-timelock-strategy run-task
+
 .PHONY: set-supply-cap
 set-supply-cap:
 	make TASK_NAME=set-supply-cap run-task

@@ -222,6 +222,46 @@ task("set-auction-strategy", "Set auction strategy")
     }
   });
 
+task("set-timelock-strategy", "Set timelock strategy")
+  .addPositionalParam("assets", "assets")
+  .addPositionalParam("timeLockStrategyAddress", "time lock strategy address")
+  .setAction(async ({assets, timeLockStrategyAddress}, DRE) => {
+    await DRE.run("set-DRE");
+    const {dryRunEncodedData} = await import("../../helpers/contracts-helpers");
+    const {
+      getPoolConfiguratorProxy,
+      getPoolAddressesProvider,
+      getUiPoolDataProvider,
+    } = await import("../../helpers/contracts-getters");
+    const ui = await getUiPoolDataProvider();
+    const provider = await getPoolAddressesProvider();
+    const configurator = await getPoolConfiguratorProxy();
+    const [reservesData] = await ui.getReservesData(provider.address);
+
+    for (const asset of assets.split(",")) {
+      const reserveData = reservesData.find(
+        (x) => x.underlyingAsset === utils.getAddress(asset)
+      );
+      if (!reserveData) {
+        continue;
+      }
+      const encodedData = configurator.interface.encodeFunctionData(
+        "setReserveTimeLockStrategyAddress",
+        [reserveData.underlyingAsset, timeLockStrategyAddress]
+      );
+      if (DRY_RUN) {
+        await dryRunEncodedData(configurator.address, encodedData);
+      } else {
+        await waitForTx(
+          await configurator.setReserveTimeLockStrategyAddress(
+            reserveData.underlyingAsset,
+            timeLockStrategyAddress
+          )
+        );
+      }
+    }
+  });
+
 task("set-supply-cap", "Set supply cap")
   .addPositionalParam("asset", "asset")
   .addPositionalParam("supplyCap", "new supply cap")
