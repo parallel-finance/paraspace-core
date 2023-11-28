@@ -29,6 +29,7 @@ import {
   ZKSYNC_CHAINID,
   ZKSYNC_GOERLI_CHAINID,
   ARBITRUM_SEPOLIA_CHAINID,
+  PARAX_DEV_CHAINID,
 } from "./helpers/hardhat-constants";
 
 dotenv.config();
@@ -89,6 +90,10 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
     L2_RPC_URL ||
     RPC_URL ||
     `https://arb-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+  [eEthereumNetwork.paraxDev]:
+    L2_RPC_URL ||
+    RPC_URL ||
+    `https://nitrorpc-widespread-brown-mosquito-de4v5k1jm5.t.conduit.xyz`,
   [eEthereumNetwork.polygon]:
     RPC_URL || `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eEthereumNetwork.polygonMumbai]:
@@ -133,6 +138,7 @@ export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.arbitrum]: ARBITRUM_ONE_CHAINID,
   [eEthereumNetwork.arbitrumGoerli]: ARBITRUM_GOERLI_CHAINID,
   [eEthereumNetwork.arbitrumSepolia]: ARBITRUM_SEPOLIA_CHAINID,
+  [eEthereumNetwork.paraxDev]: PARAX_DEV_CHAINID,
   [eEthereumNetwork.polygon]: POLYGON_CHAINID,
   [eEthereumNetwork.polygonMumbai]: POLYGON_MUMBAI_CHAINID,
   [eEthereumNetwork.polygonZkevm]: POLYGON_ZKEVM_CHAINID,
@@ -157,6 +163,7 @@ export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.arbitrum]: undefined,
   [eEthereumNetwork.arbitrumGoerli]: undefined,
   [eEthereumNetwork.arbitrumSepolia]: undefined,
+  [eEthereumNetwork.paraxDev]: undefined,
   [eEthereumNetwork.polygon]: undefined,
   [eEthereumNetwork.polygonMumbai]: undefined,
   [eEthereumNetwork.polygonZkevm]: undefined,

@@ -97,6 +97,7 @@ export enum eEthereumNetwork {
   arbitrum = "arbitrum",
   arbitrumGoerli = "arbitrumGoerli",
   arbitrumSepolia = "arbitrumSepolia",
+  paraxDev = "paraxDev",
   polygon = "polygon",
   polygonMumbai = "polygonMumbai",
   polygonZkevm = "polygonZkevm",
@@ -759,6 +760,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.arbitrum]: T;
   [eEthereumNetwork.arbitrumGoerli]: T;
   [eEthereumNetwork.arbitrumSepolia]: T;
+  [eEthereumNetwork.paraxDev]: T;
   [eEthereumNetwork.polygon]: T;
   [eEthereumNetwork.polygonMumbai]: T;
   [eEthereumNetwork.polygonZkevm]: T;

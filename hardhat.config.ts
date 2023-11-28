@@ -29,6 +29,7 @@ import {
   LINEA_GOERLI_ETHERSCAN_KEY,
   SEPOLIA_ETHERSCAN_KEY,
   ARBITRUM_SEPOLIA_ETHERSCAN_KEY,
+  PARAX_DEV_ETHERSCAN_KEY,
 } from "./helpers/hardhat-constants";
 import {accounts} from "./wallets";
 import {accounts as evmAccounts} from "./evm-wallets";
@@ -212,6 +213,11 @@ const hardhatConfig: HardhatUserConfig = {
       url: NETWORKS_RPC_URL[eEthereumNetwork.arbitrumSepolia],
       accounts: DEPLOYER,
     },
+    paraxDev: {
+      chainId: CHAINS_ID[eEthereumNetwork.paraxDev],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.paraxDev],
+      accounts: DEPLOYER,
+    },
     polygon: {
       chainId: CHAINS_ID[eEthereumNetwork.polygon],
       url: NETWORKS_RPC_URL[eEthereumNetwork.polygon],
@@ -273,6 +279,7 @@ const hardhatConfig: HardhatUserConfig = {
       arbitrum: ARBITRUM_ETHERSCAN_KEY,
       arbitrumGoerli: ARBITRUM_GOERLI_ETHERSCAN_KEY,
       arbitrumSepolia: ARBITRUM_SEPOLIA_ETHERSCAN_KEY,
+      paraxDev: PARAX_DEV_ETHERSCAN_KEY,
       polygon: POLYGON_ETHERSCAN_KEY,
       polygonMumbai: POLYGON_MUMBAI_ETHERSCAN_KEY,
       polygonZkevm: POLYGON_ZKEVM_ETHERSCAN_KEY,
@@ -289,6 +296,7 @@ const hardhatConfig: HardhatUserConfig = {
       eEthereumNetwork.arbitrum,
       eEthereumNetwork.arbitrumGoerli,
       eEthereumNetwork.arbitrumSepolia,
+      eEthereumNetwork.paraxDev,
       eEthereumNetwork.polygon,
       eEthereumNetwork.polygonZkevm,
       eEthereumNetwork.polygonMumbai,
