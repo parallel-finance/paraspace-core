@@ -448,8 +448,8 @@ send-eth:
 set-traits-multipliers:
 	make SCRIPT_PATH=./scripts/dev/11.set-traits-multipliers.ts run
 
-.PHONY: set-timelock-strategy
-set-timelock-strategy:
+.PHONY: update-timelock-strategy
+update-timelock-strategy:
 	make SCRIPT_PATH=./scripts/dev/12.set-timelock-strategy.ts run
 
 .PHONY: acl

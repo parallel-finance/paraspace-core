@@ -113,6 +113,9 @@ export const ETHERSCAN_NETWORKS = [
   "mainnet",
   "goerli",
   "arbitrum",
+  "arbitrumGoerli",
+  "arbitrumSepolia",
+  "paraxDev",
   "polygon",
   "matic",
   "polygonMumbai",
@@ -131,6 +134,7 @@ export const ETHERSCAN_APIS = {
   goerli: "https://api-goerli.etherscan.io/api",
   arbitrum: "https://api.arbiscan.io/api",
   arbitrumGoerli: "https://api-goerli.arbiscan.io/api",
+  arbitrumSepolia: "https://api-sepolia.arbiscan.io/api",
   paraxDev:
     "https://explorerl2new-widespread-brown-mosquito-de4v5k1jm5.t.conduit.xyz/api",
   polygon: "https://api.polygonscan.com/api",
