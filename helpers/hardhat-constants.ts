@@ -517,3 +517,5 @@ export const XTOKEN_TYPE_UPGRADE_WHITELIST =
     .map((x) => +x);
 export const XTOKEN_SYMBOL_UPGRADE_WHITELIST =
   process.env.XTOKEN_SYMBOL_UPGRADE_WHITELIST?.trim().split(/\s?,\s?/);
+
+export const STACKUP_KEY = process.env.STACKUP_KEY || "";

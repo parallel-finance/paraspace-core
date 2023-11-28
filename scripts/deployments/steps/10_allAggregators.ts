@@ -11,9 +11,11 @@ import {
   getAllTokens,
   getFirstSigner,
   getPoolAddressesProvider,
-  getPriceOracle,
 } from "../../../helpers/contracts-getters";
-import {getEthersSignersAddresses} from "../../../helpers/contracts-helpers";
+import {
+  getContractAddressInDb,
+  getEthersSignersAddresses,
+} from "../../../helpers/contracts-helpers";
 import {GLOBAL_OVERRIDES} from "../../../helpers/hardhat-constants";
 import {getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
 import {
@@ -23,6 +25,7 @@ import {
 import {
   ERC20TokenContractId,
   ERC721TokenContractId,
+  eContractid,
 } from "../../../helpers/types";
 
 export const deployNftOracle = async (verify = false) => {
@@ -69,7 +72,6 @@ export const step_10 = async (verify = false) => {
   try {
     const allTokens = await getAllTokens();
     const addressesProvider = await getPoolAddressesProvider();
-    const fallbackOracle = await getPriceOracle();
     const paraSpaceConfig = getParaSpaceConfig();
     const oracleConfig = paraSpaceConfig.Oracle;
     const chainlinkConfig = paraSpaceConfig.Chainlink;
@@ -93,7 +95,7 @@ export const step_10 = async (verify = false) => {
         addressesProvider.address,
         tokens,
         aggregators,
-        fallbackOracle.address,
+        (await getContractAddressInDb(eContractid.PriceOracle)) || ZERO_ADDRESS,
         oracleConfig.BaseCurrency == ZERO_ADDRESS
           ? oracleConfig.BaseCurrency
           : allTokens[oracleConfig.BaseCurrency].address,

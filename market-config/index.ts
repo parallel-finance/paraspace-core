@@ -1,5 +1,5 @@
 import {ZERO_ADDRESS} from "../helpers/constants";
-import {MULTI_SEND, MULTI_SIG} from "../helpers/hardhat-constants";
+import {MULTI_SEND, MULTI_SIG, STACKUP_KEY} from "../helpers/hardhat-constants";
 import {
   eEthereumNetwork,
   ERC20TokenContractId,
@@ -137,10 +137,7 @@ export const CommonConfig: Pick<
   },
   // ParaSpaceV1
   ParaSpaceV1: undefined,
-  AccountAbstraction: {
-    rpcUrl: `https://api.stackup.sh/v1/node/${process.env.STACKUP_KEY}`,
-    paymasterUrl: `https://api.stackup.sh/v1/paymaster/${process.env.STACKUP_KEY}`,
-  },
+  AccountAbstraction: undefined,
 };
 
 export const HardhatConfig: IParaSpaceConfiguration = {
@@ -1077,6 +1074,10 @@ export const MainnetConfig: IParaSpaceConfiguration = {
     CApeV1: "0xC5c9fB6223A989208Df27dCEE33fC59ff5c26fFF",
     TimeLockV1: "0x59B72FdB45B3182c8502cC297167FE4f821f332d",
     P2PPairStakingV1: "0xf090Eb4c2B63e7B26E8Bb09e6Fc0cC3A7586263B",
+  },
+  AccountAbstraction: {
+    rpcUrl: `https://api.stackup.sh/v1/node/${STACKUP_KEY}`,
+    paymasterUrl: `https://api.stackup.sh/v1/paymaster/${STACKUP_KEY}`,
   },
 };
 

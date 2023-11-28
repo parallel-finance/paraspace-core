@@ -953,7 +953,7 @@ export interface ICommonConfiguration {
 
   Governance: IGovernanceConfig;
 
-  AccountAbstraction: IAccountAbstraction;
+  AccountAbstraction: IAccountAbstraction | undefined;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {
