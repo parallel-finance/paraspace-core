@@ -20,7 +20,7 @@ import "../libraries/logic/BorrowLogic.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
 import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
-import {ISwapRouter} from "../../dependencies/uniswapv3-periphery/interfaces/ISwapRouter.sol";
+import {ISwapRouter} from "../../interfaces/IUniV3SwapRouter.sol";
 import {IPriceOracleGetter} from "../../interfaces/IPriceOracleGetter.sol";
 import {Helpers} from "../libraries/helpers/Helpers.sol";
 

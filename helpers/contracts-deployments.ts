@@ -155,7 +155,7 @@ import {
   X2Y2R1,
   PoolAAPositionMover__factory,
   PoolBorrowAndStake__factory,
-  PoolBorrowAndStake,
+  PoolBorrowAndStake, QuoterV2,
 } from "../types";
 import {
   getACLManager,
@@ -2092,6 +2092,14 @@ export const deployUniswapV3Factory = async (args: [], verify?: boolean) =>
     [...args],
     verify
   ) as Promise<UniswapV3Factory>;
+
+export const deployUniswapV3QuoterV2 = async (args: [string, string], verify?: boolean) =>
+    withSaveAndVerify(
+        await getContractFactory("QuoterV2"),
+        eContractid.QuoterV2,
+        [...args],
+        verify
+    ) as Promise<QuoterV2>;
 
 export const deployNonfungibleTokenPositionDescriptor = async (
   args: [string, string],

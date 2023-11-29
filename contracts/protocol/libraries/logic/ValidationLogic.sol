@@ -26,7 +26,7 @@ import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.so
 import {IToken} from "../../../interfaces/IToken.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../helpers/Helpers.sol";
-import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
+import {INonfungiblePositionManager} from "../../../interfaces/IUniV3NonfungiblePositionManager.sol";
 import "../../../interfaces/INTokenApeStaking.sol";
 
 /**

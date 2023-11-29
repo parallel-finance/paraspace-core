@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity ^0.8.0;
+pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import '../../uniswapv3-core/interfaces/IUniswapV3Factory.sol';
-import {IUniswapV3Pool} from '../../uniswapv3-core/interfaces/IUniswapV3Pool.sol';
 import '../../uniswapv3-core/interfaces/callback/IUniswapV3MintCallback.sol';
 import '../../uniswapv3-core/libraries/TickMath.sol';
 
@@ -58,11 +57,8 @@ abstract contract LiquidityManagement is IUniswapV3MintCallback, PeripheryImmuta
             IUniswapV3Pool pool
         )
     {
-        PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey({
-            token0: params.token0,
-            token1: params.token1,
-            fee: params.fee
-        });
+        PoolAddress.PoolKey memory poolKey =
+            PoolAddress.PoolKey({token0: params.token0, token1: params.token1, fee: params.fee});
 
         pool = IUniswapV3Pool(PoolAddress.computeAddress(factory, poolKey));
 

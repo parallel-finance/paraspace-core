@@ -225,6 +225,7 @@ export enum eContractid {
   MoonBirdHelper = "MoonBirdHelper",
   UniswapV3 = "UniswapV3",
   UniswapV3Factory = "UniswapV3Factory",
+  QuoterV2 = "QuoterV2",
   UniswapV3SwapRouter = "UniswapV3SwapRouter",
   NFTDescriptor = "NFTDescriptor",
   NonfungibleTokenPositionDescriptor = "NonfungibleTokenPositionDescriptor",

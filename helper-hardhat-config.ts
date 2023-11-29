@@ -93,7 +93,7 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eEthereumNetwork.paraxDev]:
     L2_RPC_URL ||
     RPC_URL ||
-    `https://nitrorpc-widespread-brown-mosquito-de4v5k1jm5.t.conduit.xyz`,
+    `https://nitrorpc-compact-lime-moose-5r7g6fkl78.t.conduit.xyz`,
   [eEthereumNetwork.polygon]:
     RPC_URL || `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eEthereumNetwork.polygonMumbai]:
