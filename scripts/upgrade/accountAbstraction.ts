@@ -4,17 +4,19 @@ import {getAccountRegistry} from "../../helpers/contracts-getters";
 import {dryRunEncodedData} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
 import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
+import {ZERO_ADDRESS} from "../../helpers/constants";
 
 export const upgradeAccountAbstraction = async (verify = false) => {
   console.time("deploy AccountAbstraction");
   const paraSpaceConfig = getParaSpaceConfig();
-  const client = Client.init(paraSpaceConfig.AccountAbstraction.rpcUrl);
   const accountRegistry = await getAccountRegistry();
 
   const account = await deployAccount(
-    (
-      await client
-    ).entryPoint.address,
+    paraSpaceConfig.AccountAbstraction?.rpcUrl
+      ? (
+          await Client.init(paraSpaceConfig.AccountAbstraction.rpcUrl)
+        ).entryPoint.address
+      : ZERO_ADDRESS,
     verify
   );
 
