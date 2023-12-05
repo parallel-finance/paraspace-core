@@ -9,9 +9,7 @@ import {
   deployVertexFeeCalculator,
   deployVertexMockSanctionsList,
   deployVertexOffchainBookWithoutInitializing,
-  deployVertexPerpEngineProxy,
   deployVertexPerpEngineWithoutInitializing,
-  deployVertexSpotEngineProxy,
   deployVertexSpotEngineWithoutInitializing,
 } from "../../../helpers/contracts-deployments";
 import {getAllTokens, getFirstSigner} from "../../../helpers/contracts-getters";
@@ -79,6 +77,35 @@ export const step_25 = async (verify = false) => {
 
     const maxHealthGroup = await clearinghouse.getMaxHealthGroup();
     const vertexConfigs: IVertexMarketConfig[] = [
+      // BTC-spot
+      {
+        healthGroup: maxHealthGroup.toString(),
+        riskStore: {
+          longWeightInitial: "900000000",
+          shortWeightInitial: "1100000000",
+          longWeightMaintenance: "950000000",
+          shortWeightMaintenance: "1050000000",
+          largePositionPenalty: "0",
+        },
+        interestRateConfig: {
+          token: allTokens[ERC20TokenContractId.WBTC].address,
+          interestInflectionUtilX18: "800000000000000000",
+          interestFloorX18: "10000000000000000",
+          interestSmallCapX18: "40000000000000000",
+          interestLargeCapX18: "1000000000000000000",
+        },
+        book: (
+          await deployVertexOffchainBookWithoutInitializing(
+            ZERO_ADDRESS,
+            verify
+          )
+        ).address,
+        sizeIncrement: "1000000000000000",
+        priceIncrementX18: "1000000000000000000",
+        minSize: "0",
+        lpSpreadX18: "3000000000000000",
+      },
+      // BTC-perp
       {
         healthGroup: maxHealthGroup.toString(),
         riskStore: {
