@@ -3434,6 +3434,36 @@ export const deployVertexClearinghouse = async (
     verify
   ) as Promise<Clearinghouse>;
 
+export const deployVertexSpotEngineWithoutInitializing = async (
+  admin: tEthereumAddress,
+  verify?: boolean
+) => {
+  const proxyInstance = await withSaveAndVerify(
+    await getContractFactory("InitializableAdminUpgradeabilityProxy"),
+    eContractid.VertexSpotEngineProxy,
+    [],
+    verify
+  );
+
+  const impl = (await withSaveAndVerify(
+    await getContractFactory("SpotEngine"),
+    eContractid.VertexSpotEngineImpl,
+    [],
+    verify
+  )) as SpotEngine;
+
+  await waitForTx(
+    await proxyInstance["initialize(address,address,bytes)"](
+      impl.address,
+      admin,
+      "0x",
+      GLOBAL_OVERRIDES
+    )
+  );
+
+  return getVertexSpotEngine(proxyInstance.address);
+};
+
 export const deployVertexSpotEngineProxy = async (verify?: boolean) => {
   const proxyInstance = await withSaveAndVerify(
     await getContractFactory("InitializableAdminUpgradeabilityProxy"),
@@ -3481,6 +3511,36 @@ export const deployVertexSpotEngineImplAndAssignItToProxy = async (
   );
 
   return getVertexSpotEngine(proxyInstance.address);
+};
+
+export const deployVertexPerpEngineWithoutInitializing = async (
+  admin: tEthereumAddress,
+  verify?: boolean
+) => {
+  const proxyInstance = await withSaveAndVerify(
+    await getContractFactory("InitializableAdminUpgradeabilityProxy"),
+    eContractid.VertexPerpEngineProxy,
+    [],
+    verify
+  );
+
+  const impl = (await withSaveAndVerify(
+    await getContractFactory("PerpEngine"),
+    eContractid.VertexPerpEngineImpl,
+    [],
+    verify
+  )) as PerpEngine;
+
+  await waitForTx(
+    await proxyInstance["initialize(address,address,bytes)"](
+      impl.address,
+      admin,
+      "0x",
+      GLOBAL_OVERRIDES
+    )
+  );
+
+  return getVertexPerpEngine(proxyInstance.address);
 };
 
 export const deployVertexPerpEngineProxy = async (verify?: boolean) => {

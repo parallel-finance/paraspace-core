@@ -10,7 +10,9 @@ import {
   deployVertexMockSanctionsList,
   deployVertexOffchainBookWithoutInitializing,
   deployVertexPerpEngineProxy,
+  deployVertexPerpEngineWithoutInitializing,
   deployVertexSpotEngineProxy,
+  deployVertexSpotEngineWithoutInitializing,
 } from "../../../helpers/contracts-deployments";
 import {getAllTokens, getFirstSigner} from "../../../helpers/contracts-getters";
 import {waitForTx} from "../../../helpers/misc-utils";
@@ -29,8 +31,14 @@ export const step_25 = async (verify = false) => {
     const clearinghouseLiq = await deployVertexClearinghouseLiq(verify);
     const clearinghouse = await deployVertexClearinghouseProxy(verify);
     const endpoint = await deployVertexEndpointProxy(verify);
-    const spotEngine = await deployVertexSpotEngineProxy(verify);
-    const perpEngine = await deployVertexPerpEngineProxy(verify);
+    const spotEngine = await deployVertexSpotEngineWithoutInitializing(
+      ZERO_ADDRESS,
+      verify
+    );
+    const perpEngine = await deployVertexPerpEngineWithoutInitializing(
+      ZERO_ADDRESS,
+      verify
+    );
 
     const sequencer = await getFirstSigner();
     const allTokens = await getAllTokens();
