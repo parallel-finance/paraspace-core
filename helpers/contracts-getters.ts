@@ -100,6 +100,10 @@ import {
   Account__factory,
   AccountFactory__factory,
   AccountRegistry__factory,
+  Clearinghouse__factory,
+  Endpoint__factory,
+  SpotEngine__factory,
+  PerpEngine__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1343,6 +1347,50 @@ export const getAccountFactory = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.AccountFactory}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getVertexClearinghouse = async (address?: tEthereumAddress) =>
+  await Clearinghouse__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.VertexClearinghouseProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getVertexEndpoint = async (address?: tEthereumAddress) =>
+  await Endpoint__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.VertexEndpointProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getVertexSpotEngine = async (address?: tEthereumAddress) =>
+  await SpotEngine__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.VertexSpotEngineProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getVertexPerpEngine = async (address?: tEthereumAddress) =>
+  await PerpEngine__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.VertexPerpEngineProxy}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

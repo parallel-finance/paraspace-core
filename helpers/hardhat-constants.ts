@@ -155,7 +155,7 @@ export const BROWSER_URLS = {
 };
 
 export const DEPLOY_START = parseInt(process.env.DEPLOY_START || "0");
-export const DEPLOY_END = parseInt(process.env.DEPLOY_END || "25");
+export const DEPLOY_END = parseInt(process.env.DEPLOY_END || "26");
 export const DEPLOY_INCREMENTAL =
   process.env.DEPLOY_INCREMENTAL == "true" ? true : false;
 
@@ -498,5 +498,4 @@ export const XTOKEN_TYPE_UPGRADE_WHITELIST =
     .split(/\s?,\s?/)
     .map((x) => +x);
 export const XTOKEN_SYMBOL_UPGRADE_WHITELIST =
-    process.env.XTOKEN_SYMBOL_UPGRADE_WHITELIST?.trim()
-        .split(/\s?,\s?/);
+  process.env.XTOKEN_SYMBOL_UPGRADE_WHITELIST?.trim().split(/\s?,\s?/);

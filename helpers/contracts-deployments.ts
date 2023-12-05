@@ -156,6 +156,15 @@ import {
   PoolAAPositionMover__factory,
   PoolBorrowAndStake__factory,
   PoolBorrowAndStake,
+  ClearinghouseLiq,
+  FeeCalculator,
+  FQuerier,
+  OffchainBook,
+  Clearinghouse,
+  SpotEngine,
+  PerpEngine,
+  Endpoint,
+  MockSanctionsList,
 } from "../types";
 import {
   getACLManager,
@@ -173,6 +182,10 @@ import {
   getPunks,
   getTimeLockProxy,
   getUniswapV3SwapRouter,
+  getVertexClearinghouse,
+  getVertexEndpoint,
+  getVertexPerpEngine,
+  getVertexSpotEngine,
   getWETH,
 } from "./contracts-getters";
 import {
@@ -3264,6 +3277,283 @@ export const deployAccountRegistry = async (
     [impl],
     verify
   ) as Promise<AccountRegistry>;
+
+export const deployOffchainBook = async (
+  args: [
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    string,
+    string,
+    string,
+    string,
+    string
+  ],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("OffchainBook"),
+    eContractid.VertexOffchainBook,
+    [...args],
+    verify
+  ) as Promise<OffchainBook>;
+
+export const deployVertexClearinghouseLiq = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("ClearinghouseLiq"),
+    eContractid.VertexClearinghouseLiq,
+    [],
+    verify
+  ) as Promise<ClearinghouseLiq>;
+
+export const deployVertexClearinghouseProxy = async (verify?: boolean) => {
+  const proxyInstance = await withSaveAndVerify(
+    await getContractFactory("InitializableAdminUpgradeabilityProxy"),
+    eContractid.VertexClearinghouseProxy,
+    [],
+    verify
+  );
+
+  return getVertexClearinghouse(proxyInstance.address);
+};
+
+export const deployVertexClearinghouseImplAndAssignItToProxy = async (
+  args: [
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress
+  ],
+  verify?: boolean
+) => {
+  const impl = (await withSaveAndVerify(
+    await getContractFactory("Clearinghouse"),
+    eContractid.VertexClearinghouseImpl,
+    [],
+    verify
+  )) as Clearinghouse;
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const initData = impl.interface.encodeFunctionData("initialize", [...args]);
+
+  const proxyInstance = await getInitializableAdminUpgradeabilityProxy(
+    (
+      await getVertexClearinghouse()
+    ).address
+  );
+
+  await waitForTx(
+    await proxyInstance["initialize(address,address,bytes)"](
+      impl.address,
+      deployerAddress,
+      initData,
+      GLOBAL_OVERRIDES
+    )
+  );
+
+  return getVertexClearinghouse(proxyInstance.address);
+};
+
+export const deployVertexClearinghouse = async (
+  args: [
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress
+  ],
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("Clearinghouse"),
+    eContractid.VertexClearinghouseImpl,
+    [...args],
+    verify
+  ) as Promise<Clearinghouse>;
+
+export const deployVertexSpotEngineProxy = async (verify?: boolean) => {
+  const proxyInstance = await withSaveAndVerify(
+    await getContractFactory("InitializableAdminUpgradeabilityProxy"),
+    eContractid.VertexSpotEngineProxy,
+    [],
+    verify
+  );
+
+  return getVertexSpotEngine(proxyInstance.address);
+};
+
+export const deployVertexSpotEngineImplAndAssignItToProxy = async (
+  args: [
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress
+  ],
+  verify?: boolean
+) => {
+  const impl = (await withSaveAndVerify(
+    await getContractFactory("SpotEngine"),
+    eContractid.VertexSpotEngineImpl,
+    [],
+    verify
+  )) as SpotEngine;
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const initData = impl.interface.encodeFunctionData("initialize", [...args]);
+
+  const proxyInstance = await getInitializableAdminUpgradeabilityProxy(
+    (
+      await getVertexSpotEngine()
+    ).address
+  );
+
+  await waitForTx(
+    await proxyInstance["initialize(address,address,bytes)"](
+      impl.address,
+      deployerAddress,
+      initData,
+      GLOBAL_OVERRIDES
+    )
+  );
+
+  return getVertexSpotEngine(proxyInstance.address);
+};
+
+export const deployVertexPerpEngineProxy = async (verify?: boolean) => {
+  const proxyInstance = await withSaveAndVerify(
+    await getContractFactory("InitializableAdminUpgradeabilityProxy"),
+    eContractid.VertexPerpEngineProxy,
+    [],
+    verify
+  );
+
+  return getVertexPerpEngine(proxyInstance.address);
+};
+
+export const deployVertexPerpEngineImplAndAssignItToProxy = async (
+  args: [
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress
+  ],
+  verify?: boolean
+) => {
+  const impl = (await withSaveAndVerify(
+    await getContractFactory("PerpEngine"),
+    eContractid.VertexPerpEngineImpl,
+    [],
+    verify
+  )) as PerpEngine;
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const initData = impl.interface.encodeFunctionData("initialize", [...args]);
+
+  const proxyInstance = await getInitializableAdminUpgradeabilityProxy(
+    (
+      await getVertexPerpEngine()
+    ).address
+  );
+
+  await waitForTx(
+    await proxyInstance["initialize(address,address,bytes)"](
+      impl.address,
+      deployerAddress,
+      initData,
+      GLOBAL_OVERRIDES
+    )
+  );
+
+  return getVertexPerpEngine(proxyInstance.address);
+};
+
+export const deployVertexFQuerier = async (
+  clearinghouse: tEthereumAddress,
+  verify?: boolean
+) =>
+  withSaveAndVerify(
+    await getContractFactory("FQuerier"),
+    eContractid.VertexFQuerier,
+    [clearinghouse],
+    verify
+  ) as Promise<FQuerier>;
+
+export const deployVertexFeeCalculator = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("FeeCalculator"),
+    eContractid.VertexFeeCalculator,
+    [],
+    verify
+  ) as Promise<FeeCalculator>;
+
+export const deployVertexEndpointProxy = async (verify?: boolean) => {
+  const proxyInstance = await withSaveAndVerify(
+    await getContractFactory("InitializableAdminUpgradeabilityProxy"),
+    eContractid.VertexEndpointProxy,
+    [],
+    verify
+  );
+
+  return getVertexEndpoint(proxyInstance.address);
+};
+
+export const deployVertexEndpointImplAndAssignItToProxy = async (
+  args: [
+    tEthereumAddress,
+    tEthereumAddress,
+    tEthereumAddress,
+    string,
+    string,
+    string[]
+  ],
+  verify?: boolean
+) => {
+  const impl = (await withSaveAndVerify(
+    await getContractFactory("Endpoint"),
+    eContractid.VertexEndpointImpl,
+    [],
+    verify
+  )) as Endpoint;
+
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  const initData = impl.interface.encodeFunctionData("initialize", [...args]);
+
+  const proxyInstance = await getInitializableAdminUpgradeabilityProxy(
+    (
+      await getVertexEndpoint()
+    ).address
+  );
+
+  await waitForTx(
+    await proxyInstance["initialize(address,address,bytes)"](
+      impl.address,
+      deployerAddress,
+      initData,
+      GLOBAL_OVERRIDES
+    )
+  );
+
+  return getVertexEndpoint(proxyInstance.address);
+};
+
+export const deployVertexMockSanctionsList = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("MockSanctionsList"),
+    eContractid.VertexMockSanctionsList,
+    [],
+    verify
+  ) as Promise<MockSanctionsList>;
 
 ////////////////////////////////////////////////////////////////////////////////
 //  MOCK

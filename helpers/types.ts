@@ -296,6 +296,19 @@ export enum eContractid {
   AccountFactory = "AccountFactory",
   AccountProxy = "AccountProxy",
   AccountRegistry = "AccountRegistry",
+  VertexClearinghouseLiq = "VertexClearinghouseLiq",
+  VertexClearinghouseProxy = "VertexClearinghouseProxy",
+  VertexClearinghouseImpl = "VertexClearinghouseImpl",
+  VertexEndpointImpl = "VertexEndpointImpl",
+  VertexEndpointProxy = "VertexEndpointProxy",
+  VertexSpotEngineImpl = "VertexSpotEngineImpl",
+  VertexSpotEngineProxy = "VertexSpotEngineProxy",
+  VertexPerpEngineImpl = "VertexPerpEngineImpl",
+  VertexPerpEngineProxy = "VertexPerpEngineProxy",
+  VertexOffchainBook = "VertexOffchainBook",
+  VertexFQuerier = "VertexFQuerier",
+  VertexFeeCalculator = "VertexFeeCalculator",
+  VertexMockSanctionsList = "VertexMockSanctionsList",
 }
 
 /*
@@ -862,6 +875,8 @@ export interface IUniswapConfig {
   V3NFTPositionManager?: tEthereumAddress;
 }
 
+export interface IVertexConfig {}
+
 export interface IBendDAOConfig {
   LendingPool?: tEthereumAddress;
   LendingPoolLoan?: tEthereumAddress;
@@ -933,6 +948,7 @@ export interface ICommonConfiguration {
   Tokens: iMultiPoolsAssets<tEthereumAddress>;
   YogaLabs: IYogaLabs;
   Uniswap: IUniswapConfig;
+  Vertex: IVertexConfig | undefined;
   BendDAO: IBendDAOConfig;
   ParaSpaceV1: IParaSpaceV1Config | undefined;
   Stakefish: IStakefish;
@@ -964,3 +980,14 @@ export type Action = [
   BigNumberish, // executeTime
   boolean // withDelegatecall
 ];
+
+export enum EngineType {
+  SPOT = 0,
+  PERP = 1,
+}
+
+export enum HealthType {
+  INITIAL = 0,
+  MAINTENANCE = 1,
+  PNL = 2,
+}
