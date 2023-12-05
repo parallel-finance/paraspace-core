@@ -104,6 +104,7 @@ import {
   Endpoint__factory,
   SpotEngine__factory,
   PerpEngine__factory,
+  OffchainBook__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -1391,6 +1392,17 @@ export const getVertexPerpEngine = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.VertexPerpEngineProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getVertexOffchainBook = async (address?: tEthereumAddress) =>
+  await OffchainBook__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.VertexOffchainBookProxy}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

@@ -305,7 +305,8 @@ export enum eContractid {
   VertexSpotEngineProxy = "VertexSpotEngineProxy",
   VertexPerpEngineImpl = "VertexPerpEngineImpl",
   VertexPerpEngineProxy = "VertexPerpEngineProxy",
-  VertexOffchainBook = "VertexOffchainBook",
+  VertexOffchainBookImpl = "VertexOffchainBookImpl",
+  VertexOffchainBookProxy = "VertexOffchainBookProxy",
   VertexFQuerier = "VertexFQuerier",
   VertexFeeCalculator = "VertexFeeCalculator",
   VertexMockSanctionsList = "VertexMockSanctionsList",
@@ -875,7 +876,36 @@ export interface IUniswapConfig {
   V3NFTPositionManager?: tEthereumAddress;
 }
 
-export interface IVertexConfig {}
+export interface IVertexRiskStoreConfig {
+  longWeightInitial: string;
+  shortWeightInitial: string;
+  longWeightMaintenance: string;
+  shortWeightMaintenance: string;
+  largePositionPenalty: string;
+}
+
+export interface IVertexInterestRateConfig {
+  token: tEthereumAddress;
+  interestInflectionUtilX18: string;
+  interestFloorX18: string;
+  interestSmallCapX18: string;
+  interestLargeCapX18: string;
+}
+
+export interface IVertexMarketConfig {
+  healthGroup: string;
+  riskStore: IVertexRiskStoreConfig;
+  book: tEthereumAddress;
+  sizeIncrement: string;
+  priceIncrementX18: string;
+  minSize: string;
+  interestRateConfig: IVertexInterestRateConfig | undefined;
+  lpSpreadX18: string;
+}
+
+export interface IVertexConfig {
+  markets;
+}
 
 export interface IBendDAOConfig {
   LendingPool?: tEthereumAddress;

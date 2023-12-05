@@ -1,23 +1,30 @@
+import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
   deployVertexClearinghouseImplAndAssignItToProxy,
   deployVertexClearinghouseLiq,
   deployVertexClearinghouseProxy,
-  deployVertexEndpointGated,
   deployVertexEndpointImplAndAssignItToProxy,
   deployVertexEndpointProxy,
   deployVertexFQuerier,
   deployVertexFeeCalculator,
   deployVertexMockSanctionsList,
+  deployVertexOffchainBookWithoutInitializing,
   deployVertexPerpEngineProxy,
   deployVertexSpotEngineProxy,
 } from "../../../helpers/contracts-deployments";
 import {getAllTokens, getFirstSigner} from "../../../helpers/contracts-getters";
 import {waitForTx} from "../../../helpers/misc-utils";
-import {ERC20TokenContractId, EngineType} from "../../../helpers/types";
+import {
+  ERC20TokenContractId,
+  EngineType,
+  IVertexMarketConfig,
+} from "../../../helpers/types";
 
 export const step_25 = async (verify = false) => {
   try {
     const feeCalculator = await deployVertexFeeCalculator(verify);
+    await waitForTx(await feeCalculator.initialize());
+
     const sanctions = await deployVertexMockSanctionsList(verify);
     const clearinghouseLiq = await deployVertexClearinghouseLiq(verify);
     const clearinghouse = await deployVertexClearinghouseProxy(verify);
@@ -35,6 +42,7 @@ export const step_25 = async (verify = false) => {
         feeCalculator.address,
         clearinghouseLiq.address,
       ],
+      ZERO_ADDRESS,
       verify
     );
     await waitForTx(
@@ -43,6 +51,7 @@ export const step_25 = async (verify = false) => {
     await waitForTx(
       await clearinghouse.addEngine(perpEngine.address, EngineType.PERP)
     );
+    await waitForTx(await feeCalculator.migrate(clearinghouse.address));
 
     await deployVertexEndpointImplAndAssignItToProxy(
       [
@@ -53,17 +62,66 @@ export const step_25 = async (verify = false) => {
         Math.floor(new Date().valueOf() / 1000).toString(),
         [],
       ],
+      ZERO_ADDRESS,
       verify
     );
 
-    await deployVertexFQuerier(clearinghouse.address, verify);
-    // uint32 healthGroup,
-    // IClearinghouseState.RiskStore memory riskStore,
-    // address book,
-    // int128 sizeIncrement,
-    // int128 priceIncrementX18,
-    // int128 minSize,
-    // int128 lpSpreadX18
+    const fquerier = await deployVertexFQuerier(verify);
+    await waitForTx(await fquerier.initialize(clearinghouse.address));
+
+    const maxHealthGroup = await clearinghouse.getMaxHealthGroup();
+    const vertexConfigs: IVertexMarketConfig[] = [
+      {
+        healthGroup: maxHealthGroup.toString(),
+        riskStore: {
+          longWeightInitial: "900000000",
+          shortWeightInitial: "1100000000",
+          longWeightMaintenance: "950000000",
+          shortWeightMaintenance: "1050000000",
+          largePositionPenalty: "0",
+        },
+        interestRateConfig: undefined,
+        book: (
+          await deployVertexOffchainBookWithoutInitializing(
+            await sequencer.getAddress(),
+            verify
+          )
+        ).address,
+        sizeIncrement: "1000000000000000",
+        priceIncrementX18: "1000000000000000000",
+        minSize: "0",
+        lpSpreadX18: "3000000000000000",
+      },
+    ];
+
+    for (const config of vertexConfigs) {
+      if (config.interestRateConfig) {
+        await waitForTx(
+          await spotEngine.addProduct(
+            config.healthGroup,
+            config.book,
+            config.sizeIncrement,
+            config.priceIncrementX18,
+            config.minSize,
+            config.lpSpreadX18,
+            config.interestRateConfig,
+            config.riskStore
+          )
+        );
+      } else {
+        await waitForTx(
+          await perpEngine.addProduct(
+            config.healthGroup,
+            config.book,
+            config.sizeIncrement,
+            config.priceIncrementX18,
+            config.minSize,
+            config.lpSpreadX18,
+            config.riskStore
+          )
+        );
+      }
+    }
   } catch (error) {
     console.error(error);
     process.exit(1);

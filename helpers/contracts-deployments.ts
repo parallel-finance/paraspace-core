@@ -184,6 +184,7 @@ import {
   getUniswapV3SwapRouter,
   getVertexClearinghouse,
   getVertexEndpoint,
+  getVertexOffchainBook,
   getVertexPerpEngine,
   getVertexSpotEngine,
   getWETH,
@@ -3278,7 +3279,47 @@ export const deployAccountRegistry = async (
     verify
   ) as Promise<AccountRegistry>;
 
-export const deployOffchainBook = async (
+export const deployVertexOffchainBookWithoutInitializing = async (
+  admin: tEthereumAddress,
+  verify?: boolean
+) => {
+  const proxyInstance = await getInitializableAdminUpgradeabilityProxy(
+    (
+      await deployVertexOffchainBookProxy(verify)
+    ).address
+  );
+
+  const impl = (await withSaveAndVerify(
+    await getContractFactory("OffchainBook"),
+    eContractid.VertexOffchainBookImpl,
+    [],
+    verify
+  )) as OffchainBook;
+
+  await waitForTx(
+    await proxyInstance["initialize(address,address,bytes)"](
+      impl.address,
+      admin,
+      "0x",
+      GLOBAL_OVERRIDES
+    )
+  );
+
+  return getVertexOffchainBook(proxyInstance.address);
+};
+
+export const deployVertexOffchainBookProxy = async (verify?: boolean) => {
+  const proxyInstance = await withSaveAndVerify(
+    await getContractFactory("InitializableAdminUpgradeabilityProxy"),
+    eContractid.VertexOffchainBookProxy,
+    [],
+    verify
+  );
+
+  return getVertexClearinghouse(proxyInstance.address);
+};
+
+export const deployVertexOffchainBookImplAndAssignItToProxy = async (
   args: [
     tEthereumAddress,
     tEthereumAddress,
@@ -3291,14 +3332,35 @@ export const deployOffchainBook = async (
     string,
     string
   ],
+  admin: tEthereumAddress,
   verify?: boolean
-) =>
-  withSaveAndVerify(
+) => {
+  const impl = (await withSaveAndVerify(
     await getContractFactory("OffchainBook"),
-    eContractid.VertexOffchainBook,
-    [...args],
+    eContractid.VertexOffchainBookImpl,
+    [],
     verify
-  ) as Promise<OffchainBook>;
+  )) as OffchainBook;
+
+  const initData = impl.interface.encodeFunctionData("initialize", [...args]);
+
+  const proxyInstance = await getInitializableAdminUpgradeabilityProxy(
+    (
+      await getVertexOffchainBook()
+    ).address
+  );
+
+  await waitForTx(
+    await proxyInstance["initialize(address,address,bytes)"](
+      impl.address,
+      admin,
+      initData,
+      GLOBAL_OVERRIDES
+    )
+  );
+
+  return getVertexOffchainBook(proxyInstance.address);
+};
 
 export const deployVertexClearinghouseLiq = async (verify?: boolean) =>
   withSaveAndVerify(
@@ -3326,6 +3388,7 @@ export const deployVertexClearinghouseImplAndAssignItToProxy = async (
     tEthereumAddress,
     tEthereumAddress
   ],
+  admin: tEthereumAddress,
   verify?: boolean
 ) => {
   const impl = (await withSaveAndVerify(
@@ -3334,9 +3397,6 @@ export const deployVertexClearinghouseImplAndAssignItToProxy = async (
     [],
     verify
   )) as Clearinghouse;
-
-  const deployer = await getFirstSigner();
-  const deployerAddress = await deployer.getAddress();
 
   const initData = impl.interface.encodeFunctionData("initialize", [...args]);
 
@@ -3349,7 +3409,7 @@ export const deployVertexClearinghouseImplAndAssignItToProxy = async (
   await waitForTx(
     await proxyInstance["initialize(address,address,bytes)"](
       impl.address,
-      deployerAddress,
+      admin,
       initData,
       GLOBAL_OVERRIDES
     )
@@ -3393,6 +3453,7 @@ export const deployVertexSpotEngineImplAndAssignItToProxy = async (
     tEthereumAddress,
     tEthereumAddress
   ],
+  admin: tEthereumAddress,
   verify?: boolean
 ) => {
   const impl = (await withSaveAndVerify(
@@ -3401,9 +3462,6 @@ export const deployVertexSpotEngineImplAndAssignItToProxy = async (
     [],
     verify
   )) as SpotEngine;
-
-  const deployer = await getFirstSigner();
-  const deployerAddress = await deployer.getAddress();
 
   const initData = impl.interface.encodeFunctionData("initialize", [...args]);
 
@@ -3416,7 +3474,7 @@ export const deployVertexSpotEngineImplAndAssignItToProxy = async (
   await waitForTx(
     await proxyInstance["initialize(address,address,bytes)"](
       impl.address,
-      deployerAddress,
+      admin,
       initData,
       GLOBAL_OVERRIDES
     )
@@ -3444,6 +3502,7 @@ export const deployVertexPerpEngineImplAndAssignItToProxy = async (
     tEthereumAddress,
     tEthereumAddress
   ],
+  admin: tEthereumAddress,
   verify?: boolean
 ) => {
   const impl = (await withSaveAndVerify(
@@ -3452,9 +3511,6 @@ export const deployVertexPerpEngineImplAndAssignItToProxy = async (
     [],
     verify
   )) as PerpEngine;
-
-  const deployer = await getFirstSigner();
-  const deployerAddress = await deployer.getAddress();
 
   const initData = impl.interface.encodeFunctionData("initialize", [...args]);
 
@@ -3467,7 +3523,7 @@ export const deployVertexPerpEngineImplAndAssignItToProxy = async (
   await waitForTx(
     await proxyInstance["initialize(address,address,bytes)"](
       impl.address,
-      deployerAddress,
+      admin,
       initData,
       GLOBAL_OVERRIDES
     )
@@ -3476,14 +3532,11 @@ export const deployVertexPerpEngineImplAndAssignItToProxy = async (
   return getVertexPerpEngine(proxyInstance.address);
 };
 
-export const deployVertexFQuerier = async (
-  clearinghouse: tEthereumAddress,
-  verify?: boolean
-) =>
+export const deployVertexFQuerier = async (verify?: boolean) =>
   withSaveAndVerify(
     await getContractFactory("FQuerier"),
     eContractid.VertexFQuerier,
-    [clearinghouse],
+    [],
     verify
   ) as Promise<FQuerier>;
 
@@ -3515,6 +3568,7 @@ export const deployVertexEndpointImplAndAssignItToProxy = async (
     string,
     string[]
   ],
+  admin: tEthereumAddress,
   verify?: boolean
 ) => {
   const impl = (await withSaveAndVerify(
@@ -3523,9 +3577,6 @@ export const deployVertexEndpointImplAndAssignItToProxy = async (
     [],
     verify
   )) as Endpoint;
-
-  const deployer = await getFirstSigner();
-  const deployerAddress = await deployer.getAddress();
 
   const initData = impl.interface.encodeFunctionData("initialize", [...args]);
 
@@ -3538,7 +3589,7 @@ export const deployVertexEndpointImplAndAssignItToProxy = async (
   await waitForTx(
     await proxyInstance["initialize(address,address,bytes)"](
       impl.address,
-      deployerAddress,
+      admin,
       initData,
       GLOBAL_OVERRIDES
     )

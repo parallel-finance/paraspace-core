@@ -105,6 +105,7 @@ export const CommonConfig: Pick<
   | "Governance"
   | "ParaSpaceV1"
   | "AccountAbstraction"
+  | "Vertex"
 > = {
   WrappedNativeTokenId: ERC20TokenContractId.WETH,
   MarketId: "ParaSpaceMM",
@@ -141,6 +142,7 @@ export const CommonConfig: Pick<
     rpcUrl: `https://api.stackup.sh/v1/node/${process.env.STACKUP_KEY}`,
     paymasterUrl: `https://api.stackup.sh/v1/paymaster/${process.env.STACKUP_KEY}`,
   },
+  Vertex: undefined,
 };
 
 export const HardhatConfig: IParaSpaceConfiguration = {
