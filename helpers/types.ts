@@ -458,6 +458,7 @@ export interface iAssetBase<T> {
   DAI: T;
   WETH: T;
   USDC: T;
+  aUSDC: T;
   USDT: T;
   FRAX: T;
   WBTC: T;
@@ -591,6 +592,7 @@ export enum ERC20TokenContractId {
   DAI = "DAI",
   WETH = "WETH",
   USDC = "USDC",
+  aUSDC = "aUSDC",
   USDT = "USDT",
   FRAX = "FRAX",
   WBTC = "WBTC",
