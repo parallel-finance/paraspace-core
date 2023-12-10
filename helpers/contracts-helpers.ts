@@ -1125,14 +1125,14 @@ export const proposeSafeTransaction = async (
   const safeHash = await safeSdk.getTransactionHash(safeTransaction);
   console.log(safeHash);
 
-  try {
-    await safeService.estimateSafeTransaction(MULTI_SIG, {
-      ...safeTransactionData,
-      operation: safeTransactionData.operation as number,
-    });
-  } catch (e) {
-    console.log(e);
-  }
+  // try {
+  //   await safeService.estimateSafeTransaction(MULTI_SIG, {
+  //     ...safeTransactionData,
+  //     operation: safeTransactionData.operation as number,
+  //   });
+  // } catch (e) {
+  //   console.log(e);
+  // }
 
   await safeService.proposeTransaction({
     safeAddress: MULTI_SIG,

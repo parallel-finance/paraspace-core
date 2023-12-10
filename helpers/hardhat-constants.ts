@@ -493,6 +493,9 @@ export const eContractidToContractName = {
   Account: "Account",
   AccountRegistry: "AccountRegistry",
   AccountFactory: "AccountFactory",
+  NFTFloorOracleProviderProxy: "InitializableAdminUpgradeabilityProxy",
+  NFTFloorOracleProviderImpl: "NFTFloorOracleProvider",
+  AggregatorMOONBIRD: "ERC721OracleWrapper",
 };
 
 export const XTOKEN_TYPE_UPGRADE_WHITELIST =
