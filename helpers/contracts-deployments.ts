@@ -86,7 +86,6 @@ import {
   NTokenOtherdeed,
   NTokenStakefish,
   NTokenUniswapV3,
-  P2PPairStaking,
   ParaProxyInterfaces,
   ParaProxyInterfaces__factory,
   ParaProxy__factory,
@@ -154,8 +153,14 @@ import {
   X2Y2Adapter,
   X2Y2R1,
   PoolAAPositionMover__factory,
+  ApeStakingP2PLogic,
+  ApeStakingPairPoolLogic,
+  ApeStakingSinglePoolLogic,
+  ApeCoinPoolLogic,
+  ParaApeStaking,
   PoolBorrowAndStake__factory,
   PoolBorrowAndStake,
+  P2PPairStaking,
 } from "../types";
 import {
   getACLManager,
@@ -168,6 +173,7 @@ import {
   getHelperContract,
   getInitializableAdminUpgradeabilityProxy,
   getP2PPairStaking,
+  getParaApeStaking,
   getPoolProxy,
   getProtocolDataProvider,
   getPunks,
@@ -554,16 +560,9 @@ export const deployPoolApeStaking = async (
       borrowLogic.address,
   };
 
-  const APE_WETH_FEE = 3000;
-  const WETH_USDC_FEE = 500;
-
   const {poolApeStakingSelectors} = await getPoolSignatures();
 
   const allTokens = await getAllTokens();
-
-  const config = getParaSpaceConfig();
-  const treasuryAddress = config.Treasury;
-
   const cApe = await getAutoCompoundApe();
   const poolApeStaking = (await withSaveAndVerify(
     await getContractFactory("PoolApeStaking", apeStakingLibraries),
@@ -572,12 +571,10 @@ export const deployPoolApeStaking = async (
       provider,
       cApe.address,
       allTokens.APE.address,
-      allTokens.USDC.address,
-      (await getUniswapV3SwapRouter()).address,
-      allTokens.WETH.address,
-      APE_WETH_FEE,
-      WETH_USDC_FEE,
-      treasuryAddress,
+      allTokens.BAYC.address,
+      allTokens.MAYC.address,
+      allTokens.BAKC.address,
+      (await getParaApeStaking()).address,
     ],
     verify,
     false,
@@ -908,9 +905,6 @@ export const deployPoolComponents = async (
 
   const allTokens = await getAllTokens();
 
-  const APE_WETH_FEE = 3000;
-  const WETH_USDC_FEE = 500;
-
   const {
     poolCoreSelectors,
     poolParametersSelectors,
@@ -955,8 +949,6 @@ export const deployPoolComponents = async (
     poolMarketplaceSelectors
   )) as PoolMarketplace;
 
-  const config = getParaSpaceConfig();
-  const treasuryAddress = config.Treasury;
   const cApe = await getAutoCompoundApe();
   const poolApeStaking = allTokens.APE
     ? ((await withSaveAndVerify(
@@ -966,12 +958,10 @@ export const deployPoolComponents = async (
           provider,
           cApe.address,
           allTokens.APE.address,
-          allTokens.USDC.address,
-          (await getUniswapV3SwapRouter()).address,
-          allTokens.WETH.address,
-          APE_WETH_FEE,
-          WETH_USDC_FEE,
-          treasuryAddress,
+          allTokens.BAYC.address,
+          allTokens.MAYC.address,
+          allTokens.BAKC.address,
+          (await getParaApeStaking()).address,
         ],
         verify,
         false,
@@ -2444,7 +2434,7 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    parseEther("100000"),
+    parseEther("50000"),
     GLOBAL_OVERRIDES
   );
   return apeCoinStaking;
@@ -2800,6 +2790,127 @@ export const deployP2PPairStaking = async (verify?: boolean) => {
   );
 
   return await getP2PPairStaking(proxyInstance.address);
+};
+
+export const deployApeStakingP2PLogic = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("ApeStakingP2PLogic"),
+    eContractid.ApeStakingP2PLogic,
+    [],
+    verify
+  ) as Promise<ApeStakingP2PLogic>;
+
+export const deployApeStakingPairPoolLogic = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("ApeStakingPairPoolLogic"),
+    eContractid.ApeStakingPairPoolLogic,
+    [],
+    verify
+  ) as Promise<ApeStakingPairPoolLogic>;
+
+export const deployApeStakingSinglePoolLogic = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("ApeStakingSinglePoolLogic"),
+    eContractid.ApeStakingSinglePoolLogic,
+    [],
+    verify
+  ) as Promise<ApeStakingSinglePoolLogic>;
+
+export const deployApeStakingApeCoinPoolLogic = async (verify?: boolean) =>
+  withSaveAndVerify(
+    await getContractFactory("ApeCoinPoolLogic"),
+    eContractid.ApeStakingApeCoinPoolLogic,
+    [],
+    verify
+  ) as Promise<ApeCoinPoolLogic>;
+
+export const deployParaApeStakingLibraries = async (
+  verify?: boolean
+): Promise<Libraries> => {
+  const p2pLogic = await deployApeStakingP2PLogic(verify);
+  const pairPoolLogic = await deployApeStakingPairPoolLogic(verify);
+  const singlePoolLogic = await deployApeStakingSinglePoolLogic(verify);
+  const apeCoinPoolLogic = await deployApeStakingApeCoinPoolLogic(verify);
+
+  return {
+    ["contracts/apestaking/logic/ApeStakingP2PLogic.sol:ApeStakingP2PLogic"]:
+      p2pLogic.address,
+    ["contracts/apestaking/logic/ApeStakingPairPoolLogic.sol:ApeStakingPairPoolLogic"]:
+      pairPoolLogic.address,
+    ["contracts/apestaking/logic/ApeStakingSinglePoolLogic.sol:ApeStakingSinglePoolLogic"]:
+      singlePoolLogic.address,
+    ["contracts/apestaking/logic/ApeCoinPoolLogic.sol:ApeCoinPoolLogic"]:
+      apeCoinPoolLogic.address,
+  };
+};
+
+export const deployParaApeStakingImpl = async (verify?: boolean) => {
+  const poolProxy = await getPoolProxy();
+  const allTokens = await getAllTokens();
+  const protocolDataProvider = await getProtocolDataProvider();
+  const nBAYC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAYC.address)
+  ).xTokenAddress;
+  const nMAYC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.MAYC.address)
+  ).xTokenAddress;
+  const nBAKC = (
+    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAKC.address)
+  ).xTokenAddress;
+  const apeCoinStaking =
+    (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
+    (await deployApeCoinStaking(verify)).address;
+  const aclManager = await getACLManager();
+  const args = [
+    poolProxy.address,
+    allTokens.BAYC.address,
+    allTokens.MAYC.address,
+    allTokens.BAKC.address,
+    nBAYC,
+    nMAYC,
+    nBAKC,
+    allTokens.APE.address,
+    allTokens.cAPE.address,
+    apeCoinStaking,
+    aclManager.address,
+  ];
+
+  const libraries = await deployParaApeStakingLibraries(verify);
+
+  return withSaveAndVerify(
+    await getContractFactory("ParaApeStaking", libraries),
+    eContractid.ParaApeStakingImpl,
+    [...args],
+    verify
+  ) as Promise<ParaApeStaking>;
+};
+
+export const deployParaApeStaking = async (
+  fakeImplementation: boolean,
+  verify?: boolean
+) => {
+  const proxyInstance = await withSaveAndVerify(
+    await getContractFactory("InitializableAdminUpgradeabilityProxy"),
+    eContractid.ParaApeStaking,
+    [],
+    verify
+  );
+  if (!fakeImplementation) {
+    const paraApeStakingImpl = await deployParaApeStakingImpl(verify);
+
+    const deployer = await getFirstSigner();
+    const deployerAddress = await deployer.getAddress();
+    const initData =
+      paraApeStakingImpl.interface.encodeFunctionData("initialize");
+
+    await waitForTx(
+      await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
+        "initialize(address,address,bytes)"
+      ](paraApeStakingImpl.address, deployerAddress, initData, GLOBAL_OVERRIDES)
+    );
+  }
+
+  return await getParaApeStaking(proxyInstance.address);
 };
 
 export const deployAutoYieldApeImpl = async (verify?: boolean) => {

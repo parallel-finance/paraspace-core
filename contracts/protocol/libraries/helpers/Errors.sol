@@ -49,7 +49,6 @@ library Errors {
     string public constant HEALTH_FACTOR_NOT_BELOW_THRESHOLD = "45"; // 'Health factor is not below the threshold'
     string public constant COLLATERAL_CANNOT_BE_AUCTIONED_OR_LIQUIDATED = "46"; // 'The collateral chosen cannot be auctioned OR liquidated'
     string public constant SPECIFIED_CURRENCY_NOT_BORROWED_BY_USER = "47"; // 'User did not borrow the specified currency'
-    string public constant SAME_BLOCK_BORROW_REPAY = "48"; // 'Borrow and repay in same block is not allowed'
     string public constant BORROW_CAP_EXCEEDED = "50"; // 'Borrow cap is exceeded'
     string public constant SUPPLY_CAP_EXCEEDED = "51"; // 'Supply cap is exceeded'
     string public constant XTOKEN_SUPPLY_NOT_ZERO = "54"; // 'PToken supply is not zero'
@@ -133,13 +132,34 @@ library Errors {
     string public constant CALLER_NOT_OPERATOR = "138"; // The caller of the function is not operator
     string public constant INVALID_FEE_VALUE = "139"; // invalid fee rate value
     string public constant TOKEN_NOT_ALLOW_RESCUE = "140"; // token is not allow rescue
+    string public constant CALLER_NOT_ALLOWED = "141"; //The caller of the function is not allowed
 
     string public constant INVALID_PARAMETER = "170"; //invalid parameter
-    string public constant INVALID_CALLER = "171"; //invalid callser
+    string public constant APE_POSITION_EXISTED = "171"; //ape staking position already existed
+    string public constant BAKC_POSITION_EXISTED = "172"; //bakc staking position already existed
+    string public constant PAIR_POSITION_EXISTED = "173"; //pair staking position already existed
+    string public constant NOT_PAIRED_APE_AND_BAKC = "174"; //not paired ape and bakc
+    string public constant NOT_APE_STAKING_BOT = "175"; //not ape staking bot
+    string public constant NOT_THE_SAME_OWNER = "176"; //not the same owner
+    string public constant NFT_NOT_ALLOWED = "177"; //nft now allowed
+    string public constant NFT_NOT_IN_POOL = "178"; //nft not in the pool
+    string public constant SAPE_FREE_BALANCE_NOT_ENOUGH = "179"; //sape free balance not enough
+    string public constant NOT_ORDER_OFFERER = "180"; //not order offerer
+    string public constant ORDER_ALREADY_CANCELLED = "181"; //order already cancelled
+    string public constant ORDER_NOT_STARTED = "182"; //order not started
+    string public constant ORDER_EXPIRED = "183"; //order expired
+    string public constant INVALID_TOKEN = "184"; //invalid token
+    string public constant INVALID_ORDER_STATUS = "185"; //invalid order status
+    string public constant INVALID_STAKING_TYPE = "186"; //invalid stake type
+    string public constant ORDER_TYPE_MATCH_FAILED = "187"; //orders type match failed
+    string public constant ORDER_SHARE_MATCH_FAILED = "188"; //orders share match failed
+    string public constant NO_BREAK_UP_PERMISSION = "189"; //no permission to break up
+    string public constant INVALID_CASH_AMOUNT = "190"; //invalid cash amount
 
-    string public constant ONLY_MSG_HANDLER = "200"; //only msg handler
-    string public constant ONLY_VAULT = "201"; //only vault
-    string public constant ONLY_HANDLER = "202"; //only handler
-    string public constant ONLY_PARAX = "203"; //only parax
-    string public constant ONLY_BRIDGE = "204"; //only cross-chain bridge
+    string public constant INVALID_CALLER = "200"; //invalid caller
+    string public constant ONLY_MSG_HANDLER = "201"; //only msg handler
+    string public constant ONLY_VAULT = "202"; //only vault
+    string public constant ONLY_HANDLER = "203"; //only handler
+    string public constant ONLY_PARAX = "204"; //only parax
+    string public constant ONLY_BRIDGE = "205"; //only cross-chain bridge
 }

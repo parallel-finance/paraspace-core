@@ -27,11 +27,6 @@ interface IPoolParameters {
     );
 
     /**
-     * @dev Emitted when the value of claim for yield incentive rate update
-     **/
-    event ClaimApeForYieldIncentiveUpdated(uint256 oldValue, uint256 newValue);
-
-    /**
      * @notice Initializes a reserve, activating it, assigning an xToken and debt tokens and an
      * interest rate strategy
      * @dev Only callable by the PoolConfigurator contract
@@ -129,28 +124,6 @@ interface IPoolParameters {
      * @param to The address receive the grant
      */
     function revokeUnlimitedApprove(address token, address to) external;
-
-    /**
-     * @notice undate fee percentage for claim ape for compound
-     * @param fee new fee percentage
-     */
-    function setClaimApeForCompoundFee(uint256 fee) external;
-
-    /**
-     * @notice undate ape compound strategy
-     * @param strategy new compound strategy
-     */
-    function setApeCompoundStrategy(
-        DataTypes.ApeCompoundStrategy calldata strategy
-    ) external;
-
-    /**
-     * @notice get user ape compound strategy
-     * @param user The user address
-     */
-    function getUserApeCompoundStrategy(
-        address user
-    ) external view returns (DataTypes.ApeCompoundStrategy memory);
 
     /**
      * @notice Set the auction recovery health factor

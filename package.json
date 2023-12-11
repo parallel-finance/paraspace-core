@@ -7,6 +7,9 @@
     "artifacts",
     "types"
   ],
+  "resolutions": {
+    "ethereumjs-abi": "https://registry.npmjs.org/ethereumjs-abi/-/ethereumjs-abi-0.6.8.tgz"
+  },
   "scripts": {
     "postinstall": "husky install",
     "prepack": "pinst --disable",
@@ -18,11 +21,8 @@
     "coverage": "hardhat coverage --testfiles 'test/*.ts'",
     "format": "prettier --write 'contracts/**/*.sol' 'scripts/**/*.ts' 'helpers/**/*.ts' 'tasks/**/*.ts' 'test/**/*.ts' 'hardhat.config.ts' 'helper-hardhat-config.ts' 'market-config/**/*.ts'",
     "doc": "hardhat docgen",
-    "test": "hardhat test ./test/*.ts",
+    "test": "hardhat test ./test/*.spec.ts",
     "clean": "hardhat clean"
-  },
-  "resolutions": {
-    "ethereumjs-abi": "https://registry.npmjs.org/ethereumjs-abi/-/ethereumjs-abi-0.6.8.tgz"
   },
   "devDependencies": {
     "@commitlint/cli": "^17.0.3",

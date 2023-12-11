@@ -107,6 +107,10 @@ contract NTokenMAYC is NTokenApeStaking {
         return ApeStakingLogic.MAYC_POOL_ID;
     }
 
+    function isBayc() internal pure virtual override returns (bool) {
+        return false;
+    }
+
     function getXTokenType() external pure override returns (XTokenType) {
         return XTokenType.NTokenMAYC;
     }

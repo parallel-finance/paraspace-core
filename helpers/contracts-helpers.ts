@@ -81,7 +81,7 @@ import {
   Seaport__factory,
   NTokenOtherdeed__factory,
   TimeLock__factory,
-  P2PPairStaking__factory,
+  ISafe__factory,
   NFTFloorOracle__factory,
 } from "../types";
 import {
@@ -1084,7 +1084,7 @@ export const decodeInputData = (data: string) => {
     ...ICurve__factory.abi,
     ...NTokenOtherdeed__factory.abi,
     ...TimeLock__factory.abi,
-    ...P2PPairStaking__factory.abi,
+    ...ISafe__factory.abi,
     ...NFTFloorOracle__factory.abi,
   ];
 
@@ -1339,4 +1339,23 @@ export const linkLibraries = (
   // TODO return libraries object with path name <filepath.sol>:<name> for names
 
   return bytecode;
+};
+
+export const exec = (
+  cmd: string,
+  options: {fatal: boolean; silent: boolean} = {fatal: true, silent: true}
+) => {
+  console.log(`$ ${cmd}`);
+  const res = shell.exec(cmd, options);
+  if (res.code !== 0) {
+    console.error("Error: Command failed with code", res.code);
+    console.log(res);
+    if (options.fatal) {
+      process.exit(1);
+    }
+  }
+  if (!options.silent) {
+    console.log(res.stdout.trim());
+  }
+  return res;
 };

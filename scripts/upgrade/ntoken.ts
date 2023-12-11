@@ -247,7 +247,10 @@ export const upgradeNToken = async (verify = false) => {
       await (await getNToken(newImpl)).NTOKEN_REVISION()
     ).toNumber();
 
-    if (oldRevision == newRevision) {
+    if (oldRevision >= newRevision) {
+      console.log(
+        `trying to upgrade ${token.symbol}'s version from v${oldRevision} to v${newRevision}, skip`
+      );
       continue;
     }
 

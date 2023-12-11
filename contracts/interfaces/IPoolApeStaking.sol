@@ -2,6 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
+import "./IParaApeStaking.sol";
+import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
 
 /**
  * @title IPoolApeStaking
@@ -9,28 +11,69 @@ import "../dependencies/yoga-labs/ApeCoinStaking.sol";
  * @notice Defines the basic interface for an ParaSpace Ape Staking Pool.
  **/
 interface IPoolApeStaking {
-    struct StakingInfo {
-        // Contract address of BAYC/MAYC
-        address nftAsset;
-        // address of borrowing asset, can be Ape or cApe
-        address borrowAsset;
-        // Borrow amount of Ape from lending pool
-        uint256 borrowAmount;
-        // Cash amount of Ape from user wallet
-        uint256 cashAmount;
-    }
+    /**
+     * @notice return ParaApeStaking contract address
+     */
+    function paraApeStaking() external view returns (address);
 
     /**
-     * @notice Deposit ape coin to BAYC/MAYC pool or BAKC pool
-     * @param stakingInfo Detail info of the staking
-     * @param _nfts Array of BAYC/MAYC NFT's with staked amounts
-     * @param _nftPairs Array of Paired BAYC/MAYC NFT's with staked amounts
+     * @notice Borrow cApe from lending pool, only ParaApeStaking contract can call this function
+     * @param amount Borrow amount of cApe from lending pool
+     */
+    function borrowPoolCApe(uint256 amount) external returns (uint256);
+
+    /**
+     * @notice Borrow ApeCoin/cApe from lending pool and stake ape in ParaApeStaking apecoin pool
+     * @param apeCoinDepositInfo Detail deposit info of the apecoin pool
+     * @param pairDepositInfo Detail deposit info of the apecoin pair pool
+     * @param asset address of deposit asset, can be ApeCoin or cApe
+     * @param cashAmount deposit amount from user wallet
+     * @param borrowAmount Borrow amount of ApeCoin/cApe from lending pool
      * @dev Need check User health factor > 1.
      */
-    function borrowApeAndStake(
-        StakingInfo calldata stakingInfo,
-        ApeCoinStaking.SingleNft[] calldata _nfts,
-        ApeCoinStaking.PairNftDepositWithAmount[] calldata _nftPairs
+    function borrowAndStakingApeCoin(
+        IParaApeStaking.ApeCoinDepositInfo[] calldata apeCoinDepositInfo,
+        IParaApeStaking.ApeCoinPairDepositInfo[] calldata pairDepositInfo,
+        address asset,
+        uint256 cashAmount,
+        uint256 borrowAmount,
+        bool openSApeCollateralFlag
+    ) external;
+
+    /**
+     * @notice calculate TimeLock parameters for the specified asset, only ParaApeStaking contract can call this function
+     */
+    function calculateTimeLockParams(
+        address asset,
+        uint256 amount
+    ) external returns (DataTypes.TimeLockParams memory);
+
+    struct UnstakingInfo {
+        address nftAsset;
+        ApeCoinStaking.SingleNft[] _nfts;
+        ApeCoinStaking.PairNftWithdrawWithAmount[] _nftPairs;
+    }
+
+    struct ParaStakingInfo {
+        //Para Ape Staking Pool Id
+        uint256 PoolId;
+        //Ape token ids
+        uint32[] apeTokenIds;
+        //BAKC token ids
+        uint32[] bakcTokenIds;
+    }
+
+    struct ApeCoinInfo {
+        address asset;
+        uint256 totalAmount;
+        uint256 borrowAmount;
+        bool openSApeCollateralFlag;
+    }
+
+    function apeStakingMigration(
+        UnstakingInfo[] calldata unstakingInfos,
+        ParaStakingInfo[] calldata stakingInfos,
+        ApeCoinInfo calldata apeCoinInfo
     ) external;
 
     /**
@@ -96,33 +139,4 @@ interface IPoolApeStaking {
         address onBehalfOf,
         uint256 totalAmount
     ) external;
-
-    /**
-     * @notice Claim user Ape coin reward and deposit to ape compound to get cApe, then deposit cApe to Lending pool for user
-     * @param nftAsset Contract address of BAYC/MAYC
-     * @param users array of user address
-     * @param tokenIds array of user tokenId array
-     */
-    function claimApeAndCompound(
-        address nftAsset,
-        address[] calldata users,
-        uint256[][] calldata tokenIds
-    ) external;
-
-    /**
-     * @notice Claim user BAKC paired Ape coin reward and deposit to ape compound to get cApe, then deposit cApe to Lending pool for user
-     * @param nftAsset Contract address of BAYC/MAYC
-     * @param users array of user address
-     * @param _nftPairs Array of Paired BAYC/MAYC NFT's
-     */
-    function claimPairedApeAndCompound(
-        address nftAsset,
-        address[] calldata users,
-        ApeCoinStaking.PairNft[][] calldata _nftPairs
-    ) external;
-
-    /**
-     * @notice get current incentive fee rate for claiming ape position reward to compound
-     */
-    function getApeCompoundFeeRate() external returns (uint256);
 }

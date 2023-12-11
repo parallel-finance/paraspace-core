@@ -84,6 +84,7 @@ interface ITimeLock {
     /** @dev Function to create a new time-lock agreement
      * @param assetType Type of the asset involved
      * @param actionType Type of action for the time-lock
+     * @param sourceAsset Underlying asset of the caller if caller is xToken
      * @param asset Address of the asset
      * @param tokenIdsOrAmounts Array of token IDs or amounts
      * @param beneficiary Address of the beneficiary
@@ -93,6 +94,7 @@ interface ITimeLock {
     function createAgreement(
         DataTypes.AssetType assetType,
         DataTypes.TimeLockActionType actionType,
+        address sourceAsset,
         address asset,
         uint256[] memory tokenIdsOrAmounts,
         address beneficiary,

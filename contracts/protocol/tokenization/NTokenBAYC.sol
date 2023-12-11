@@ -107,6 +107,10 @@ contract NTokenBAYC is NTokenApeStaking {
         return ApeStakingLogic.BAYC_POOL_ID;
     }
 
+    function isBayc() internal pure virtual override returns (bool) {
+        return true;
+    }
+
     function getXTokenType() external pure override returns (XTokenType) {
         return XTokenType.NTokenBAYC;
     }

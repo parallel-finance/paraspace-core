@@ -59,6 +59,7 @@ contract PYieldToken is PToken {
 
         _burnScaled(from, receiverOfUnderlying, amount, index);
         if (receiverOfUnderlying != address(this)) {
+            address underlyingAsset = _underlyingAsset;
             if (timeLockParams.releaseTime != 0) {
                 ITimeLock timeLock = POOL.TIME_LOCK();
                 uint256[] memory amounts = new uint256[](1);
@@ -67,14 +68,15 @@ contract PYieldToken is PToken {
                 timeLock.createAgreement(
                     DataTypes.AssetType.ERC20,
                     timeLockParams.actionType,
-                    _underlyingAsset,
+                    underlyingAsset,
+                    underlyingAsset,
                     amounts,
                     receiverOfUnderlying,
                     timeLockParams.releaseTime
                 );
                 receiverOfUnderlying = address(timeLock);
             }
-            IERC20(_underlyingAsset).safeTransfer(receiverOfUnderlying, amount);
+            IERC20(underlyingAsset).safeTransfer(receiverOfUnderlying, amount);
         }
     }
 
@@ -84,9 +86,10 @@ contract PYieldToken is PToken {
         uint256 amount,
         bool validate
     ) internal override {
-        require(from != to, Errors.SENDER_SAME_AS_RECEIVER);
-        _updateUserIndex(from, -(amount.toInt256()));
-        _updateUserIndex(to, amount.toInt256());
+        if (from != to) {
+            _updateUserIndex(from, -(amount.toInt256()));
+            _updateUserIndex(to, amount.toInt256());
+        }
 
         super._transfer(from, to, amount, validate);
     }
@@ -126,17 +129,18 @@ contract PYieldToken is PToken {
         _updateUserIndex(account, 0);
         (uint256 freeYield, uint256 lockedYield) = _yieldAmount(account);
         if (freeYield > 0) {
+            address underlyingAsset = _underlyingAsset;
             _userPendingYield[account] = lockedYield;
 
             (address yieldUnderlying, address yieldToken) = IYieldInfo(
-                _underlyingAsset
+                underlyingAsset
             ).yieldToken();
             uint256 liquidityIndex = POOL.getReserveNormalizedIncome(
                 yieldUnderlying
             );
             freeYield = freeYield.rayMul(liquidityIndex);
             if (freeYield > IERC20(yieldToken).balanceOf(address(this))) {
-                IAutoYieldApe(_underlyingAsset).claimFor(address(this));
+                IAutoYieldApe(underlyingAsset).claimFor(address(this));
             }
             IERC20(yieldToken).safeTransfer(account, freeYield);
         }

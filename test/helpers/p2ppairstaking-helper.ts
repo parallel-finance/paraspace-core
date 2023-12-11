@@ -1,10 +1,5 @@
 import {DRE} from "../../helpers/misc-utils";
-import {
-  AutoCompoundApe,
-  MintableERC20,
-  MintableERC721,
-  P2PPairStaking,
-} from "../../types";
+import {P2PPairStaking, ParaApeStaking} from "../../types";
 import {SignerWithAddress} from "./make-suite";
 import {convertSignatureToEIP2098} from "../../helpers/seaport-helpers/encoding";
 import {BigNumberish, BytesLike} from "ethers";
@@ -23,9 +18,9 @@ export type ListingOrder = {
 };
 
 export async function getSignedListingOrder(
-  p2pPairStaking: P2PPairStaking,
+  p2pPairStaking: ParaApeStaking | P2PPairStaking,
   stakingType: number,
-  listingToken: MintableERC721 | MintableERC20 | AutoCompoundApe,
+  listingToken: string,
   tokenId: number,
   share: number,
   signer: SignerWithAddress
@@ -54,7 +49,7 @@ export async function getSignedListingOrder(
   const order = {
     stakingType: stakingType,
     offerer: signer.address,
-    token: listingToken.address,
+    token: listingToken,
     tokenId: tokenId,
     share: share,
     startTime: now - 3600,

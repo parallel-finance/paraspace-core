@@ -197,7 +197,7 @@ describe("Functionalities of ptoken permit", () => {
   });
 
   describe("Allowance could be override", () => {
-    let preset: Awaited<ReturnType<typeof fixture>>;
+    let preset;
     before(async () => {
       preset = await loadFixture(fixture);
     });

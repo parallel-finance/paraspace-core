@@ -27,7 +27,6 @@ import {IToken} from "../../../interfaces/IToken.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../helpers/Helpers.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
-import "../../../interfaces/INTokenApeStaking.sol";
 
 /**
  * @title ReserveLogic library
@@ -244,6 +243,59 @@ library ValidationLogic {
         DataTypes.AssetType assetType;
     }
 
+    function validateBorrowBaseInfo(
+        DataTypes.ReserveCache memory reserveCache,
+        uint256 amount,
+        ValidateBorrowLocalVars memory vars
+    ) internal pure {
+        require(amount != 0, Errors.INVALID_AMOUNT);
+
+        (
+            vars.isActive,
+            vars.isFrozen,
+            vars.borrowingEnabled,
+            vars.isPaused,
+            vars.assetType
+        ) = reserveCache.reserveConfiguration.getFlags();
+
+        require(
+            vars.assetType == DataTypes.AssetType.ERC20,
+            Errors.INVALID_ASSET_TYPE
+        );
+        require(vars.isActive, Errors.RESERVE_INACTIVE);
+        require(!vars.isPaused, Errors.RESERVE_PAUSED);
+        require(!vars.isFrozen, Errors.RESERVE_FROZEN);
+        require(vars.borrowingEnabled, Errors.BORROWING_NOT_ENABLED);
+
+        vars.reserveDecimals = reserveCache.reserveConfiguration.getDecimals();
+        vars.borrowCap = reserveCache.reserveConfiguration.getBorrowCap();
+        unchecked {
+            vars.assetUnit = 10 ** vars.reserveDecimals;
+        }
+
+        if (vars.borrowCap != 0) {
+            vars.totalSupplyVariableDebt = reserveCache
+                .currScaledVariableDebt
+                .rayMul(reserveCache.nextVariableBorrowIndex);
+
+            vars.totalDebt = vars.totalSupplyVariableDebt + amount;
+            unchecked {
+                require(
+                    vars.totalDebt <= vars.borrowCap * vars.assetUnit,
+                    Errors.BORROW_CAP_EXCEEDED
+                );
+            }
+        }
+    }
+
+    function validateBorrowWithoutCollateral(
+        DataTypes.ReserveCache memory reserveCache,
+        uint256 amount
+    ) internal pure {
+        ValidateBorrowLocalVars memory vars;
+        validateBorrowBaseInfo(reserveCache, amount, vars);
+    }
+
     /**
      * @notice Validates a borrow action.
      * @param reservesData The state of all the reserves
@@ -255,25 +307,8 @@ library ValidationLogic {
         mapping(uint256 => address) storage reservesList,
         DataTypes.ValidateBorrowParams memory params
     ) internal view {
-        require(params.amount != 0, Errors.INVALID_AMOUNT);
         ValidateBorrowLocalVars memory vars;
-
-        (
-            vars.isActive,
-            vars.isFrozen,
-            vars.borrowingEnabled,
-            vars.isPaused,
-            vars.assetType
-        ) = params.reserveCache.reserveConfiguration.getFlags();
-
-        require(
-            vars.assetType == DataTypes.AssetType.ERC20,
-            Errors.INVALID_ASSET_TYPE
-        );
-        require(vars.isActive, Errors.RESERVE_INACTIVE);
-        require(!vars.isPaused, Errors.RESERVE_PAUSED);
-        require(!vars.isFrozen, Errors.RESERVE_FROZEN);
-        require(vars.borrowingEnabled, Errors.BORROWING_NOT_ENABLED);
+        validateBorrowBaseInfo(params.reserveCache, params.amount, vars);
 
         require(
             params.priceOracleSentinel == address(0) ||
@@ -281,34 +316,6 @@ library ValidationLogic {
                     .isBorrowAllowed(),
             Errors.PRICE_ORACLE_SENTINEL_CHECK_FAILED
         );
-
-        vars.reserveDecimals = params
-            .reserveCache
-            .reserveConfiguration
-            .getDecimals();
-        vars.borrowCap = params
-            .reserveCache
-            .reserveConfiguration
-            .getBorrowCap();
-        unchecked {
-            vars.assetUnit = 10 ** vars.reserveDecimals;
-        }
-
-        if (vars.borrowCap != 0) {
-            vars.totalSupplyVariableDebt = params
-                .reserveCache
-                .currScaledVariableDebt
-                .rayMul(params.reserveCache.nextVariableBorrowIndex);
-
-            vars.totalDebt = vars.totalSupplyVariableDebt + params.amount;
-
-            unchecked {
-                require(
-                    vars.totalDebt <= vars.borrowCap * vars.assetUnit,
-                    Errors.BORROW_CAP_EXCEEDED
-                );
-            }
-        }
 
         (
             vars.userCollateralInBaseCurrency,
@@ -394,15 +401,6 @@ library ValidationLogic {
             Errors.INVALID_ASSET_TYPE
         );
 
-        uint256 variableDebtPreviousIndex = IScaledBalanceToken(
-            reserveCache.variableDebtTokenAddress
-        ).getPreviousIndex(onBehalfOf);
-
-        require(
-            (variableDebtPreviousIndex < reserveCache.nextVariableBorrowIndex),
-            Errors.SAME_BLOCK_BORROW_REPAY
-        );
-
         require((variableDebt != 0), Errors.NO_DEBT_OF_SELECTED_TYPE);
     }
 
@@ -416,12 +414,6 @@ library ValidationLogic {
         uint256 userBalance
     ) internal pure {
         require(userBalance != 0, Errors.UNDERLYING_BALANCE_ZERO);
-
-        IXTokenType xToken = IXTokenType(reserveCache.xTokenAddress);
-        require(
-            xToken.getXTokenType() != XTokenType.PTokenSApe,
-            Errors.SAPE_NOT_ALLOWED
-        );
 
         (
             bool isActive,
@@ -525,14 +517,6 @@ library ValidationLogic {
         require(
             msg.value == 0 || msg.value >= params.actualLiquidationAmount,
             Errors.LIQUIDATION_AMOUNT_NOT_ENOUGH
-        );
-
-        IXTokenType xToken = IXTokenType(
-            params.liquidationAssetReserveCache.xTokenAddress
-        );
-        require(
-            xToken.getXTokenType() != XTokenType.PTokenSApe,
-            Errors.SAPE_NOT_ALLOWED
         );
 
         (

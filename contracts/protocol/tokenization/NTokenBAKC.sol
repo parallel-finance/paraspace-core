@@ -13,6 +13,8 @@ import {ApeCoinStaking} from "../../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {INToken} from "../../interfaces/INToken.sol";
 import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import "../../interfaces/IParaApeStaking.sol";
+import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
 
 /**
  * @title NTokenBAKC
@@ -20,6 +22,9 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
  * @notice Implementation of the NTokenBAKC for the ParaSpace protocol
  */
 contract NTokenBAKC is NToken {
+    using SafeCast for uint256;
+
+    IParaApeStaking immutable paraApeStaking;
     ApeCoinStaking immutable _apeCoinStaking;
     address private immutable nBAYC;
     address private immutable nMAYC;
@@ -34,6 +39,7 @@ contract NTokenBAKC is NToken {
         address _nBAYC,
         address _nMAYC
     ) NToken(pool, false) {
+        paraApeStaking = IParaApeStaking(pool.paraApeStaking());
         _apeCoinStaking = ApeCoinStaking(apeCoinStaking);
         nBAYC = _nBAYC;
         nMAYC = _nMAYC;
@@ -56,6 +62,7 @@ contract NTokenBAKC is NToken {
             params
         );
 
+        //v1
         IERC20 ape = _apeCoinStaking.apeCoin();
         //approve for nBAYC
         uint256 allowance = ape.allowance(address(this), nBAYC);
@@ -68,6 +75,12 @@ contract NTokenBAKC is NToken {
             ape.approve(nMAYC, type(uint256).max);
         }
         IERC721(underlyingAsset).setApprovalForAll(address(POOL), true);
+
+        //v2
+        IERC721(underlyingAsset).setApprovalForAll(
+            address(paraApeStaking),
+            true
+        );
     }
 
     function _transfer(
@@ -76,7 +89,16 @@ contract NTokenBAKC is NToken {
         uint256 tokenId,
         bool validate
     ) internal override {
-        _unStakePairedApePosition(tokenId);
+        address underlyingOwner = IERC721(_ERC721Data.underlyingAsset).ownerOf(
+            tokenId
+        );
+        if (underlyingOwner == address(paraApeStaking)) {
+            uint32[] memory tokenIds = new uint32[](1);
+            tokenIds[0] = tokenId.toUint32();
+            paraApeStaking.nBakcOwnerChangeCallback(tokenIds);
+        } else {
+            _unStakePairedApePosition(tokenId);
+        }
         super._transfer(from, to, tokenId, validate);
     }
 

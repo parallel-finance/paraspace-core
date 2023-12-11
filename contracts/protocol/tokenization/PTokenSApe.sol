@@ -14,6 +14,8 @@ import {IScaledBalanceToken} from "../../interfaces/IScaledBalanceToken.sol";
 import {IncentivizedERC20} from "./base/IncentivizedERC20.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 import {ScaledBalanceTokenBaseERC20} from "../../protocol/tokenization/base/ScaledBalanceTokenBaseERC20.sol";
+import {IParaApeStaking} from "../../interfaces/IParaApeStaking.sol";
+import {ScaledBalanceTokenBaseERC20} from "contracts/protocol/tokenization/base/ScaledBalanceTokenBaseERC20.sol";
 
 /**
  * @title sApe PToken
@@ -23,11 +25,12 @@ import {ScaledBalanceTokenBaseERC20} from "../../protocol/tokenization/base/Scal
 contract PTokenSApe is PToken {
     using WadRayMath for uint256;
 
+    IParaApeStaking immutable paraApeStaking;
     INTokenApeStaking immutable nBAYC;
     INTokenApeStaking immutable nMAYC;
 
     constructor(IPool pool, address _nBAYC, address _nMAYC) PToken(pool) {
-        require(_nBAYC != address(0) && _nMAYC != address(0));
+        paraApeStaking = IParaApeStaking(pool.paraApeStaking());
         nBAYC = INTokenApeStaking(_nBAYC);
         nMAYC = INTokenApeStaking(_nMAYC);
     }
@@ -52,9 +55,10 @@ contract PTokenSApe is PToken {
     }
 
     function balanceOf(address user) public view override returns (uint256) {
-        uint256 totalStakedAPE = nBAYC.getUserApeStakingAmount(user) +
+        uint256 v1StakedAPE = nBAYC.getUserApeStakingAmount(user) +
             nMAYC.getUserApeStakingAmount(user);
-        return totalStakedAPE;
+        uint256 v2StakedAPE = paraApeStaking.totalSApeBalance(user);
+        return v1StakedAPE + v2StakedAPE;
     }
 
     function scaledBalanceOf(
@@ -77,11 +81,11 @@ contract PTokenSApe is PToken {
     }
 
     function transferOnLiquidation(
-        address,
-        address,
-        uint256
-    ) external view override onlyPool {
-        revert("not allowed");
+        address from,
+        address to,
+        uint256 value
+    ) external override onlyPool {
+        return paraApeStaking.transferFreeSApeBalance(from, to, value);
     }
 
     function _transfer(address, address, uint128) internal virtual override {

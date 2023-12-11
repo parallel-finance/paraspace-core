@@ -3,35 +3,45 @@ import {expect} from "chai";
 import {deployReserveTimeLockStrategy} from "../helpers/contracts-deployments";
 import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
 import {
+  getAutoCompoundApe,
+  getParaApeStaking,
   getInitializableAdminUpgradeabilityProxy,
   getPoolConfiguratorProxy,
+  getPTokenSApe,
   getTimeLockProxy,
 } from "../helpers/contracts-getters";
 import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {eContractid, ProtocolErrors} from "../helpers/types";
 import {testEnvFixture} from "./helpers/setup-env";
-import {supplyAndValidate} from "./helpers/validated-steps";
+import {mintAndValidate, supplyAndValidate} from "./helpers/validated-steps";
 import {parseEther} from "ethers/lib/utils";
 import {almostEqual} from "./helpers/uniswapv3-helper";
+import {AutoCompoundApe, ParaApeStaking, PTokenSApe} from "../types";
 
 describe("TimeLock functionality tests", () => {
   const minTime = 5;
   const midTime = 300;
   const maxTime = 3600;
   let timeLockProxy;
+  let cApe: AutoCompoundApe;
+  let paraApeStaking: ParaApeStaking;
+  let pSApeCoin: PTokenSApe;
+  const sApeAddress = ONE_ADDRESS;
 
   const fixture = async () => {
     const testEnv = await loadFixture(testEnvFixture);
     const {
       dai,
+      ape,
       usdc,
       pool,
       mayc,
       weth,
       wPunk,
-      users: [user1, user2],
+      users: [user1, user2, , , , user6],
       poolAdmin,
+      protocolDataProvider,
     } = testEnv;
 
     // User 1 - Deposit dai
@@ -42,6 +52,22 @@ describe("TimeLock functionality tests", () => {
     await supplyAndValidate(mayc, "10", user1, true);
 
     await supplyAndValidate(weth, "1", user1, true);
+
+    cApe = await getAutoCompoundApe();
+    const MINIMUM_LIQUIDITY = await cApe.MINIMUM_LIQUIDITY();
+    paraApeStaking = await getParaApeStaking();
+    const {xTokenAddress: pSApeCoinAddress} =
+      await protocolDataProvider.getReserveTokensAddresses(sApeAddress);
+    pSApeCoin = await getPTokenSApe(pSApeCoinAddress);
+
+    // user6 deposit MINIMUM_LIQUIDITY to make test case easy
+    await mintAndValidate(ape, "1", user6);
+    await waitForTx(
+      await ape.connect(user6.signer).approve(cApe.address, MAX_UINT_AMOUNT)
+    );
+    await waitForTx(
+      await cApe.connect(user6.signer).deposit(user6.address, MINIMUM_LIQUIDITY)
+    );
 
     const minThreshold = await convertToCurrencyDecimals(usdc.address, "1000");
     const midThreshold = await convertToCurrencyDecimals(usdc.address, "2000");
@@ -88,6 +114,19 @@ describe("TimeLock functionality tests", () => {
         .connect(poolAdmin.signer)
         .setReserveTimeLockStrategyAddress(
           weth.address,
+          defaultStrategy.address
+        )
+    );
+    await waitForTx(
+      await poolConfigurator
+        .connect(poolAdmin.signer)
+        .setReserveTimeLockStrategyAddress(ape.address, defaultStrategy.address)
+    );
+    await waitForTx(
+      await poolConfigurator
+        .connect(poolAdmin.signer)
+        .setReserveTimeLockStrategyAddress(
+          cApe.address,
           defaultStrategy.address
         )
     );
@@ -504,6 +543,114 @@ describe("TimeLock functionality tests", () => {
     const balanceAfter = await punks.balanceOf(user1.address);
 
     await expect(balanceAfter).to.be.eq(balanceBefore.add(3));
+  });
+
+  it("sApe work as expected0", async () => {
+    const {
+      users: [user1],
+      ape,
+      bayc,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "1", user1, true);
+    await mintAndValidate(ape, "200000", user1);
+
+    await waitForTx(
+      await ape
+        .connect(user1.signer)
+        .approve(paraApeStaking.address, MAX_UINT_AMOUNT)
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        onBehalf: user1.address,
+        cashToken: ape.address,
+        cashAmount: parseEther("200000"),
+        isBAYC: true,
+        tokenIds: [0],
+      })
+    );
+    expect(await pSApeCoin.balanceOf(user1.address)).to.be.equal(
+      parseEther("200000")
+    );
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).withdrawApeCoinPool({
+        cashToken: ape.address,
+        cashAmount: parseEther("200000"),
+        isBAYC: true,
+        tokenIds: [0],
+      })
+    );
+    expect(await ape.balanceOf(user1.address)).to.be.equal("0");
+    expect(await ape.balanceOf(timeLockProxy.address)).to.be.equal(
+      parseEther("200000")
+    );
+    await advanceTimeAndBlock(13 * 3600);
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+    expect(await ape.balanceOf(timeLockProxy.address)).to.be.equal("0");
+    expect(await ape.balanceOf(user1.address)).to.be.equal(
+      parseEther("200000")
+    );
+  });
+
+  it("sApe work as expected1", async () => {
+    const {
+      users: [user1],
+      ape,
+      bayc,
+    } = await loadFixture(fixture);
+
+    await supplyAndValidate(bayc, "1", user1, true);
+    await mintAndValidate(ape, "200000", user1);
+
+    await waitForTx(
+      await ape
+        .connect(user1.signer)
+        .approve(paraApeStaking.address, MAX_UINT_AMOUNT)
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).depositApeCoinPool({
+        onBehalf: user1.address,
+        cashToken: ape.address,
+        cashAmount: parseEther("200000"),
+        isBAYC: true,
+        tokenIds: [0],
+      })
+    );
+
+    expect(await pSApeCoin.balanceOf(user1.address)).to.be.equal(
+      parseEther("200000")
+    );
+
+    await waitForTx(
+      await paraApeStaking.connect(user1.signer).withdrawApeCoinPool({
+        cashToken: ape.address,
+        cashAmount: "0",
+        isBAYC: true,
+        tokenIds: [0],
+      })
+    );
+
+    await waitForTx(
+      await paraApeStaking
+        .connect(user1.signer)
+        .withdrawFreeSApe(cApe.address, parseEther("200000"))
+    );
+
+    expect(await cApe.balanceOf(user1.address)).to.be.equal("0");
+    expect(await cApe.balanceOf(timeLockProxy.address)).to.be.closeTo(
+      parseEther("200000"),
+      parseEther("1")
+    );
+
+    await advanceTimeAndBlock(13 * 3600);
+    await waitForTx(await timeLockProxy.connect(user1.signer).claim(["0"]));
+
+    expect(await cApe.balanceOf(user1.address)).to.be.closeTo(
+      parseEther("200000"),
+      parseEther("1")
+    );
   });
 
   it("non-pool admin cannot update timeLockWhiteList", async () => {

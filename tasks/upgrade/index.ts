@@ -149,15 +149,15 @@ task("upgrade:timelock", "upgrade timelock").setAction(async (_, DRE) => {
   console.timeEnd("upgrade timelock");
 });
 
-task("upgrade:p2p-pair-staking", "upgrade p2p pair staking").setAction(
+task("upgrade:para-ape-staking", "upgrade para ape staking").setAction(
   async (_, DRE) => {
-    const {upgradeP2PPairStaking} = await import(
-      "../../scripts/upgrade/P2PPairStaking"
+    const {upgradeParaApeStaking} = await import(
+      "../../scripts/upgrade/para_ape_staking"
     );
     await DRE.run("set-DRE");
-    console.time("upgrade p2p pair staking");
-    await upgradeP2PPairStaking(ETHERSCAN_VERIFICATION);
-    console.timeEnd("upgrade p2p pair staking");
+    console.time("upgrade para ape staking");
+    await upgradeParaApeStaking(ETHERSCAN_VERIFICATION);
+    console.timeEnd("upgrade para ape staking");
   }
 );
 

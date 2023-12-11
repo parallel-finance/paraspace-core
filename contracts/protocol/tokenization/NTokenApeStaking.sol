@@ -10,6 +10,10 @@ import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
 import "../../interfaces/INTokenApeStaking.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
+import {UserConfiguration} from "../libraries/configuration/UserConfiguration.sol";
+import "../../interfaces/IParaApeStaking.sol";
+import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import "../libraries/helpers/Errors.sol";
 
 /**
  * @title ApeCoinStaking NToken
@@ -17,12 +21,22 @@ import {DataTypes} from "../libraries/types/DataTypes.sol";
  * @notice Implementation of the NToken for the ParaSpace protocol
  */
 abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
+    using SafeCast for uint256;
+    using UserConfiguration for DataTypes.UserConfigurationMap;
+
     ApeCoinStaking immutable _apeCoinStaking;
+    IParaApeStaking immutable paraApeStaking;
 
     bytes32 constant APE_STAKING_DATA_STORAGE_POSITION =
         bytes32(
             uint256(keccak256("paraspace.proxy.ntoken.apestaking.storage")) - 1
         );
+
+    /**
+     * @dev Minimum health factor to consider a user position healthy
+     * A value of 1e18 results in 1
+     */
+    uint256 public constant HEALTH_FACTOR_LIQUIDATION_THRESHOLD = 1e18;
 
     /**
      * @dev Default percentage of borrower's ape position to be repaid as incentive in a unstaking transaction.
@@ -37,6 +51,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
      */
     constructor(IPool pool, address apeCoinStaking) NToken(pool, false) {
         _apeCoinStaking = ApeCoinStaking(apeCoinStaking);
+        paraApeStaking = IParaApeStaking(pool.paraApeStaking());
     }
 
     function initialize(
@@ -47,8 +62,13 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         string calldata nTokenSymbol,
         bytes calldata params
     ) public virtual override initializer {
+        IERC721(underlyingAsset).setApprovalForAll(
+            address(paraApeStaking),
+            true
+        );
+
         IERC20 _apeCoin = _apeCoinStaking.apeCoin();
-        //approve for apeCoinStaking
+        //approve for apeCoinStaking, only for v1
         uint256 allowance = IERC20(_apeCoin).allowance(
             address(this),
             address(_apeCoinStaking)
@@ -59,7 +79,7 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
                 type(uint256).max
             );
         }
-        //approve for Pool contract
+        //approve for Pool contract, only for v1
         allowance = IERC20(_apeCoin).allowance(address(this), address(POOL));
         if (allowance == 0) {
             IERC20(_apeCoin).approve(address(POOL), type(uint256).max);
@@ -76,6 +96,11 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         );
 
         initializeStakingData();
+    }
+
+    function isBayc() internal pure virtual returns (bool) {
+        // should be overridden
+        return true;
     }
 
     /**
@@ -101,20 +126,60 @@ abstract contract NTokenApeStaking is NToken, INTokenApeStaking {
         uint256 tokenId,
         bool validate
     ) internal override {
-        ApeStakingLogic.executeUnstakePositionAndRepay(
-            _ERC721Data.owners,
-            apeStakingDataStorage(),
-            ApeStakingLogic.UnstakeAndRepayParams({
-                POOL: POOL,
-                _apeCoinStaking: _apeCoinStaking,
-                _underlyingAsset: _ERC721Data.underlyingAsset,
-                poolId: POOL_ID(),
-                tokenId: tokenId,
-                incentiveReceiver: address(0),
-                bakcNToken: getBAKCNTokenAddress()
-            })
+        //v2 logic
+        address underlyingOwner = IERC721(_ERC721Data.underlyingAsset).ownerOf(
+            tokenId
         );
+        if (underlyingOwner == address(paraApeStaking)) {
+            uint32[] memory tokenIds = new uint32[](1);
+            tokenIds[0] = tokenId.toUint32();
+            paraApeStaking.nApeOwnerChangeCallback(isBayc(), tokenIds);
+        } else {
+            //v1 logic
+            ApeStakingLogic.executeUnstakePositionAndRepay(
+                _ERC721Data.owners,
+                apeStakingDataStorage(),
+                ApeStakingLogic.UnstakeAndRepayParams({
+                    POOL: POOL,
+                    _apeCoinStaking: _apeCoinStaking,
+                    _underlyingAsset: _ERC721Data.underlyingAsset,
+                    poolId: POOL_ID(),
+                    tokenId: tokenId,
+                    incentiveReceiver: address(0),
+                    bakcNToken: getBAKCNTokenAddress()
+                })
+            );
+        }
+
         super._transfer(from, to, tokenId, validate);
+    }
+
+    function unstakeApeStakingPosition(
+        address user,
+        uint32[] calldata tokenIds
+    ) external nonReentrant {
+        uint256 arrayLength = tokenIds.length;
+        for (uint256 index = 0; index < arrayLength; index++) {
+            uint32 tokenId = tokenIds[index];
+            require(user == ownerOf(tokenId), Errors.NOT_THE_OWNER);
+        }
+
+        DataTypes.UserConfigurationMap memory userConfig = POOL
+            .getUserConfiguration(user);
+        uint16 sApeReserveId = paraApeStaking.sApeReserveId();
+        bool usageAsCollateralEnabled = userConfig.isUsingAsCollateral(
+            sApeReserveId
+        );
+        if (usageAsCollateralEnabled && userConfig.isBorrowingAny()) {
+            (, , , , , uint256 healthFactor, ) = POOL.getUserAccountData(user);
+            //need to check user health factor
+            require(
+                healthFactor < HEALTH_FACTOR_LIQUIDATION_THRESHOLD,
+                Errors.HEALTH_FACTOR_NOT_BELOW_THRESHOLD
+            );
+        }
+
+        paraApeStaking.nApeOwnerChangeCallback(isBayc(), tokenIds);
     }
 
     /**

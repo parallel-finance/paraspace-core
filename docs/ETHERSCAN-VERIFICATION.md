@@ -412,6 +412,19 @@ proxychains forge verify-contract 0x1Ba6891D74b3B1f84b3EdFa6538D99eE979E8B63 \
 
 ## Oracle
 
+### ParaSpaceOracle
+
+```
+proxychains forge verify-contract 0x075bC485a618873e7Fb356849Df30C0c1eDca2Bc \
+ --chain-id 1 \
+ --num-of-optimizations 800 \
+ --watch \
+ contracts/misc/ParaSpaceOracle.sol:ParaSpaceOracle \
+ --constructor-args \
+ $(cast abi-encode "constructor(address,address[],address[],address,address,uint256)" "0x45a35124749B061a29f91cc8ddf85606586dcf24" "["0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1","0x82aF49447D8a07e3bd95BD0d56f35241523fBab1","0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8","0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9","0x17FC002b466eEc40DaE837Fc4bE5c67993ddBd6F","0x2f2a2543b76a4166549f7aab2e75bef0aefc5b0f","0x5979d7b546e38e414f7e9822514be443a4800529","0x912ce59144191c1204e64559fe8253a0e49e6548","0xfc5a1a6eb076a2c7ad06ed22c90d7e710e35ad0a","0xf97f4df75117a78c1a5a0dbb814af92458539fb4","0xfa7f8980b0f1e64a2062791cc3b0871572f1f7f0","0x040d1edc9569d4bab2d15287dc5a4f10f56a56b8","0xba5ddd1f9d7f570dc94a51479a000e3bce967196","0x3082cc23568ea640225c2467653db90e9250aaa0","0xC36442b4a4522E871399CD717aBDD847Ab11FE88"]" "["0xc5c8e77b397e531b8ec06bfb0048328b30e9ecfb","0x639fe6ab55c921f74e7fac1ee960c0b6293ba612","0x50834f3163758fcc1df9973b6e91f0f0f0434ad3","0x3f3f5df88dc9f13eac63df89ec16ef6e7e25dde7","0x0809e3d38d1b4214958faf06d8b1b1a2b73f2ab8","0xd0c7101eacbb49f3decccc166d238410d6d46d57","0x230E0321Cf38F09e247e50Afc7801EA2351fe56F","0x912CE59144191C1204E64559FE8253a0e49E6548","0xfc5A1A6EB076a2C7aD06eD22C90d7E710E35ad0a","0x86e53cf1b870786351da77a57575e79cb55812cb","0x9c917083fdb403ab5adbec26ee294f6ecada2720","0xbe5ea816870d11239c543f84b71439511d70b94f","0xad1d5344aade45f43e596773bcc4c423eabdd034","0x20d0fcab0ecfd078b036b6caf1fac69a6453b352","0xBc5ee94c86d9be81E99Cffd18050194E51B8B435"]" "0x0000000000000000000000000000000000000000" "0x0000000000000000000000000000000000000000" "100000000") \
+ --compiler-version v0.8.10+commit.fc410830
+```
+
 ### CLFixedPriceSynchronicityPriceAdapter
 
 ```
@@ -529,4 +542,93 @@ proxychains forge verify-contract 0x3F736F58F3c51a7C92d8b6996B77Df19a0b5394F \
   --constructor-args \
   $(cast abi-encode "constructor(address,address)" "0x45a35124749B061a29f91cc8ddf85606586dcf24" "0x0000000000000000000000000000000000000000") \
   --compiler-version v0.8.17+commit.8df45f5f
+```
+
+## UI
+
+### UiPoolDataProvider
+
+```
+proxychains forge verify-contract 0x94bDD135ccC48fF0440D750300A4e4Ba9B216B3A \
+  --chain-id 1 \
+  --num-of-optimizations 800 \
+  --watch \
+  contracts/ui/UiPoolDataProvider.sol:UiPoolDataProvider \
+  --constructor-args \
+  $(cast abi-encode "constructor(address,address)" "0x50834f3163758fcc1df9973b6e91f0f0f0434ad3" "0x50834f3163758fcc1df9973b6e91f0f0f0434ad3") \
+  --compiler-version v0.8.10+commit.fc410830
+```
+
+### UiIncentiveDataProvider
+
+```
+proxychains forge verify-contract 0x94bDD135ccC48fF0440D750300A4e4Ba9B216B3A \
+  --chain-id 1 \
+  --num-of-optimizations 800 \
+  --watch \
+  contracts/ui/UiIncentiveDataProvider.sol:UiIncentiveDataProvider \
+  --compiler-version v0.8.10+commit.fc410830
+```
+
+### WETHGateway
+
+```
+proxychains forge verify-contract 0xCCEaDe52890f49C212B0f993d8a1096eD57Cf747 \
+  --chain-id 1 \
+  --num-of-optimizations 800 \
+  --watch \
+  contracts/ui/WETHGateway.sol:WETHGateway \
+  --constructor-args \
+  $(cast abi-encode "constructor(address,address)" "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1" "0x9E96e796493f630500B1769ff6232b407c8435A3") \
+  --compiler-version v0.8.10+commit.fc410830
+```
+
+## Seaport
+
+### Seaport
+
+```
+proxychains forge verify-contract 0x1B85e8E7a75Bc68e28823Ce7CCD3fAdEA551040c \
+  --chain-id 1 \
+  --num-of-optimizations 800 \
+  --watch \
+  contracts/dependencies/seaport/contracts/Seaport.sol:Seaport \
+  --constructor-args \
+  $(cast abi-encode "constructor(address)" "0x5C2e1E5F0F614C4C3443E98680130191de80dC93") \
+  --compiler-version v0.8.10+commit.fc410830
+```
+
+### SeaportAdapter
+
+```
+proxychains forge verify-contract 0xaE40779759Cc4Bf261f12C179A80df728c8d0c75 \
+  --chain-id 1 \
+  --num-of-optimizations 800 \
+  --watch \
+  contracts/misc/marketplaces/SeaportAdapter.sol:SeaportAdapter \
+  --constructor-args \
+  $(cast abi-encode "constructor(address)" "0x45a35124749B061a29f91cc8ddf85606586dcf24") \
+  --compiler-version v0.8.10+commit.fc410830
+```
+
+### Conduit
+
+```
+proxychains forge verify-contract 0x7A558886Fee0DeF217405C18cb19Eda213C72019 \
+  --chain-id 1 \
+  --num-of-optimizations 800 \
+  --watch \
+  contracts/dependencies/seaport/contracts/conduit/Conduit.sol:Conduit \
+  --compiler-version v0.8.10+commit.fc410830
+```
+
+### PausableZone
+
+```
+proxychains forge verify-contract 0x3EBf80B51A4f1560Ebc64937A326a809Eb86A5B4 \
+  --chain-id 1 \
+  --num-of-optimizations 800 \
+  --watch \
+  contracts/dependencies/seaport/contracts/zones/PausableZone.sol:PausableZone \
+  --compiler-version v0.8.10+commit.fc410830
 ```

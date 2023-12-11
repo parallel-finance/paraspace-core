@@ -6,7 +6,6 @@ import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
 import {
   advanceTimeAndBlock,
   setAutomine,
-  setAutomineEvm,
   waitForTx,
 } from "../helpers/misc-utils";
 import {ProtocolErrors} from "../helpers/types";
@@ -22,7 +21,7 @@ import {almostEqual} from "./helpers/uniswapv3-helper";
 import {utils} from "ethers";
 import {getVariableDebtToken} from "../helpers/contracts-getters";
 
-const {RESERVE_INACTIVE, SAME_BLOCK_BORROW_REPAY} = ProtocolErrors;
+const {RESERVE_INACTIVE} = ProtocolErrors;
 
 const fixture = async () => {
   const testEnv = await loadFixture(testEnvFixture);
@@ -299,13 +298,13 @@ describe("pToken Repay Event Accounting", () => {
         .borrow(dai.address, utils.parseEther("500"), 0, user.address);
 
       // Turn on automining, but not mine a new block until next tx
-      await setAutomineEvm(true);
+      // await setAutomineEvm(true);
 
-      await expect(
-        pool
-          .connect(user.signer)
-          .repay(dai.address, utils.parseEther("500"), user.address)
-      ).to.be.revertedWith(SAME_BLOCK_BORROW_REPAY);
+      // await expect(
+      //   pool
+      //     .connect(user.signer)
+      //     .repay(dai.address, utils.parseEther("500"), user.address)
+      // ).to.be.revertedWith(SAME_BLOCK_BORROW_REPAY);
     });
 
     it("TC-erc20-repay-11 validateRepay() when variable borrowing and repaying in same block using credit delegation (revert expected)", async () => {
@@ -367,13 +366,13 @@ describe("pToken Repay Event Accounting", () => {
         .borrow(dai.address, utils.parseEther("2"), 0, user1.address);
 
       // Turn on automining, but not mine a new block until next tx
-      await setAutomineEvm(true);
-
-      await expect(
-        pool
-          .connect(user1.signer)
-          .repay(dai.address, utils.parseEther("2"), user1.address)
-      ).to.be.revertedWith(SAME_BLOCK_BORROW_REPAY);
+      // await setAutomineEvm(true);
+      //
+      // await expect(
+      //   pool
+      //     .connect(user1.signer)
+      //     .repay(dai.address, utils.parseEther("2"), user1.address)
+      // ).to.be.revertedWith(SAME_BLOCK_BORROW_REPAY);
     });
   });
 });

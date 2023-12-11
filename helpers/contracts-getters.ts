@@ -74,10 +74,8 @@ import {
   AutoCompoundApe__factory,
   InitializableAdminUpgradeabilityProxy__factory,
   StETHDebtToken__factory,
-  ApeStakingLogic__factory,
   MintableERC721Logic__factory,
   NTokenBAKC__factory,
-  P2PPairStaking__factory,
   ExecutorWithTimelock__factory,
   MultiSendCallOnly__factory,
   WstETHMocked__factory,
@@ -96,9 +94,15 @@ import {
   NTokenStakefish__factory,
   MockLendPool__factory,
   NTokenChromieSquiggle__factory,
+  ParaApeStaking__factory,
+  AuctionLogic__factory,
+  PoolCore__factory,
+  PoolParameters__factory,
+  PoolMarketplace__factory,
   Account__factory,
   AccountFactory__factory,
   AccountRegistry__factory,
+  P2PPairStaking__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -307,6 +311,17 @@ export const getBorrowLogic = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
+export const getAuctionLogic = async (address?: tEthereumAddress) =>
+  await AuctionLogic__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.AuctionLogic}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
 export const getLiquidationLogic = async (address?: tEthereumAddress) =>
   await LiquidationLogic__factory.connect(
     address ||
@@ -346,6 +361,39 @@ export const getPoolLogic = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.PoolLogic}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getPoolCoreImpl = async (address?: tEthereumAddress) =>
+  await PoolCore__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.PoolCoreImpl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getPoolParametersImpl = async (address?: tEthereumAddress) =>
+  await PoolParameters__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.PoolParametersImpl}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getPoolMarketplaceImpl = async (address?: tEthereumAddress) =>
+  await PoolMarketplace__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.PoolMarketplaceImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
@@ -1028,17 +1076,6 @@ export const getApeCoinStaking = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getApeStakingLogic = async (address?: tEthereumAddress) =>
-  await ApeStakingLogic__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.ApeStakingLogic}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
 export const getMintableERC721Logic = async (address?: tEthereumAddress) =>
   await MintableERC721Logic__factory.connect(
     address ||
@@ -1107,6 +1144,30 @@ export const getP2PPairStaking = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.P2PPairStaking}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getParaApeStaking = async (address?: tEthereumAddress) =>
+  await ParaApeStaking__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.ParaApeStaking}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getParaApeStakingImplementation = async (
+  address?: tEthereumAddress
+) =>
+  await ParaApeStaking__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.ParaApeStakingImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

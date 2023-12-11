@@ -37,13 +37,19 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     address private immutable weth;
     address private immutable wpunk;
     address private immutable Punk;
+    address private immutable PARA_APE_STAKING;
 
     uint48 private constant MIN_WAIT_TIME = 12;
 
-    modifier onlyXToken(address asset) {
+    /**
+     * @dev Only POOL or callerTag asset's xToken can call functions marked by this modifier.
+     **/
+    modifier onlyValidCaller(address sourceAsset) {
         require(
-            msg.sender == POOL.getReserveXToken(asset),
-            Errors.CALLER_NOT_XTOKEN
+            msg.sender == address(POOL) ||
+                msg.sender == PARA_APE_STAKING ||
+                msg.sender == POOL.getReserveXToken(sourceAsset),
+            Errors.CALLER_NOT_ALLOWED
         );
         _;
     }
@@ -73,6 +79,7 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
             ? IWrappedPunks(_wpunk).punkContract()
             : address(0);
         weth = provider.getWETH();
+        PARA_APE_STAKING = POOL.paraApeStaking();
     }
 
     function initialize() public initializer {
@@ -82,11 +89,12 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
     function createAgreement(
         DataTypes.AssetType assetType,
         DataTypes.TimeLockActionType actionType,
+        address sourceAsset,
         address asset,
         uint256[] calldata tokenIdsOrAmounts,
         address beneficiary,
         uint48 releaseTime
-    ) external onlyXToken(asset) returns (uint256) {
+    ) external onlyValidCaller(sourceAsset) returns (uint256) {
         require(beneficiary != address(0), "Beneficiary cant be zero address");
         if (_whiteList[beneficiary]) {
             releaseTime = uint48(block.timestamp) + MIN_WAIT_TIME;

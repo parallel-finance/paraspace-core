@@ -7,7 +7,6 @@ import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC2
 import {IPToken} from "../../../interfaces/IPToken.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
-import {INTokenApeStaking} from "../../../interfaces/INTokenApeStaking.sol";
 import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";
 import {IAuctionableERC721} from "../../../interfaces/IAuctionableERC721.sol";
 import {ITimeLockStrategy} from "../../../interfaces/ITimeLockStrategy.sol";
@@ -219,17 +218,6 @@ library SupplyLogic {
                     Errors.INVALID_STATE
                 );
             }
-        }
-        if (
-            tokenType == XTokenType.NTokenBAYC ||
-            tokenType == XTokenType.NTokenMAYC
-        ) {
-            Helpers.setAssetUsedAsCollateral(
-                userConfig,
-                reservesData,
-                DataTypes.SApeAddress,
-                params.onBehalfOf
-            );
         }
         for (uint256 index = 0; index < params.tokenData.length; index++) {
             IERC721(params.asset).safeTransferFrom(

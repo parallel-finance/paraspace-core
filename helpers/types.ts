@@ -261,6 +261,12 @@ export enum eContractid {
   HelperContractImpl = "HelperContractImpl",
   HelperContract = "HelperContract",
   P2PPairStakingImpl = "P2PPairStakingImpl",
+  ApeStakingP2PLogic = "ApeStakingP2PLogic",
+  ApeStakingPairPoolLogic = "ApeStakingPairPoolLogic",
+  ApeStakingSinglePoolLogic = "ApeStakingSinglePoolLogic",
+  ApeStakingApeCoinPoolLogic = "ApeStakingApeCoinPoolLogic",
+  ParaApeStakingImpl = "ParaApeStakingImpl",
+  ParaApeStaking = "ParaApeStaking",
   yAPE = "yAPE",
   yAPEImpl = "yAPEImpl",
   ParaProxyInterfacesImpl = "ParaProxyInterfacesImpl",
@@ -416,6 +422,29 @@ export enum ProtocolErrors {
   INVALID_STATE = "134", //invalid token status
 
   INVALID_TOKEN_ID = "135", //invalid token id
+
+  CALLER_NOT_ALLOWED = "141", //The caller of the function is not allowed
+
+  INVALID_PARAMETER = "170", //invalid parameter
+  APE_POSITION_EXISTED = "171", //ape staking position already existed
+  BAKC_POSITION_EXISTED = "172", //bakc staking position already existed
+  PAIR_POSITION_EXISTED = "173", //pair staking position already existed
+  NOT_PAIRED_APE_AND_BAKC = "174", //not paired ape and bakc
+  NOT_APE_STAKING_BOT = "175", //not ape staking bot
+  NOT_THE_SAME_OWNER = "176", //not the same owner
+  NFT_NOT_IN_POOL = "178", //nft not in single pool
+  SAPE_FREE_BALANCE_NOT_ENOUGH = "179", //sape free balance not enough
+  NOT_ORDER_OFFERER = "180", //not order offerer
+  ORDER_ALREADY_CANCELLED = "181", //order already cancelled
+  ORDER_NOT_STARTED = "182", //order not started
+  ORDER_EXPIRED = "183", //order expired
+  INVALID_TOKEN = "184", //invalid token
+  INVALID_ORDER_STATUS = "185", //invalid order status
+  INVALID_STAKING_TYPE = "186", //invalid stake type
+  ORDER_TYPE_MATCH_FAILED = "187", //orders type match failed
+  ORDER_SHARE_MATCH_FAILED = "188", //orders share match failed
+  NO_BREAK_UP_PERMISSION = "189", //no permission to break up
+  INVALID_CASH_AMOUNT = "190", //invalid cash amount
 
   // SafeCast
   SAFECAST_UINT128_OVERFLOW = "SafeCast: value doesn't fit in 128 bits",

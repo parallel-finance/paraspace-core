@@ -65,6 +65,7 @@ contract NTokenMoonBirds is NToken, IMoonBirdBase {
                     DataTypes.AssetType.ERC721,
                     timeLockParams.actionType,
                     underlyingAsset,
+                    underlyingAsset,
                     tokenIds,
                     receiverOfUnderlying,
                     timeLockParams.releaseTime
