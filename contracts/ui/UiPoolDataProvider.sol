@@ -550,36 +550,4 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
         }
         return (userData, tokensData);
     }
-
-    function getDelegatesForTokens(
-        address vault,
-        uint256[] calldata tokenIds
-    ) external view returns (IDelegateRegistry.Delegation[] memory) {
-        address contract_ = INToken(vault).UNDERLYING_ASSET_ADDRESS();
-        address delegationRegistry = ITokenDelegation(vault)
-            .DELEGATE_REGISTRY();
-
-        IDelegateRegistry.Delegation[] memory delegations = IDelegateRegistry(
-            delegationRegistry
-        ).getOutgoingDelegations(vault);
-
-        uint256 tokenLength = tokenIds.length;
-        IDelegateRegistry.Delegation[]
-            memory ret = new IDelegateRegistry.Delegation[](tokenLength);
-        uint256 delegationsLength = delegations.length;
-        for (uint256 index = 0; index < tokenLength; index++) {
-            for (uint256 j = 0; j < delegationsLength; j++) {
-                IDelegateRegistry.Delegation memory delegation = delegations[j];
-                if (
-                    delegation.contract_ == contract_ &&
-                    delegation.tokenId == tokenIds[index]
-                ) {
-                    ret[index] = delegation;
-                    break;
-                }
-            }
-        }
-
-        return ret;
-    }
 }

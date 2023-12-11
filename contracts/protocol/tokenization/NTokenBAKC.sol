@@ -32,9 +32,8 @@ contract NTokenBAKC is NToken {
         IPool pool,
         address apeCoinStaking,
         address _nBAYC,
-        address _nMAYC,
-        address delegateRegistry
-    ) NToken(pool, false, delegateRegistry) {
+        address _nMAYC
+    ) NToken(pool, false) {
         _apeCoinStaking = ApeCoinStaking(apeCoinStaking);
         nBAYC = _nBAYC;
         nMAYC = _nMAYC;

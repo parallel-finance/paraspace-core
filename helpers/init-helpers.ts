@@ -329,7 +329,6 @@ export const initReservesByHelper = async (
         eContractid.NTokenBAKCImpl,
         eContractid.NTokenStakefishImpl,
         eContractid.NTokenChromieSquiggleImpl,
-        eContractid.NTokenOtherdeedImpl,
       ].includes(xTokenImpl)
     ) {
       xTokenType[symbol] = "nft";

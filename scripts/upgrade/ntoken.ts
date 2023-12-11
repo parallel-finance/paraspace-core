@@ -76,11 +76,13 @@ export const upgradeNToken = async (verify = false) => {
       continue;
     }
 
-    if (XTOKEN_SYMBOL_UPGRADE_WHITELIST && !XTOKEN_SYMBOL_UPGRADE_WHITELIST.includes(symbol)) {
+    if (
+      XTOKEN_SYMBOL_UPGRADE_WHITELIST &&
+      !XTOKEN_SYMBOL_UPGRADE_WHITELIST.includes(symbol)
+    ) {
       console.log(symbol + "not in XTOKEN_SYMBOL_UPGRADE_WHITELIST, skip...");
       continue;
     }
-
 
     if (xTokenType == XTokenType.NTokenBAYC) {
       if (!nTokenBAYCImplementationAddress) {

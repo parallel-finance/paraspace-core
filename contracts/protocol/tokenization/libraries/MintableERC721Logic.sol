@@ -172,7 +172,6 @@ library MintableERC721Logic {
         MintableERC721Data storage erc721Data,
         IPool POOL,
         bool ATOMIC_PRICING,
-        address DELEGATION_REGISTRY,
         address from,
         address to,
         uint256 tokenId
@@ -208,7 +207,7 @@ library MintableERC721Logic {
         if (from != to && tokenDelegationAddress != address(0)) {
             _updateTokenDelegation(
                 erc721Data,
-                DELEGATION_REGISTRY,
+                POOL,
                 tokenDelegationAddress,
                 tokenId,
                 false
@@ -239,7 +238,6 @@ library MintableERC721Logic {
         MintableERC721Data storage erc721Data,
         IPool POOL,
         bool ATOMIC_PRICING,
-        address DELEGATION_REGISTRY,
         address from,
         address to,
         uint256 tokenId
@@ -260,15 +258,7 @@ library MintableERC721Logic {
             delete erc721Data.isUsedAsCollateral[tokenId];
         }
 
-        executeTransfer(
-            erc721Data,
-            POOL,
-            ATOMIC_PRICING,
-            DELEGATION_REGISTRY,
-            from,
-            to,
-            tokenId
-        );
+        executeTransfer(erc721Data, POOL, ATOMIC_PRICING, from, to, tokenId);
     }
 
     function executeSetIsUsedAsCollateral(
@@ -441,7 +431,6 @@ library MintableERC721Logic {
         MintableERC721Data storage erc721Data,
         IPool POOL,
         bool ATOMIC_PRICING,
-        address DELEGATION_REGISTRY,
         address user,
         uint256[] calldata tokenIds
     ) external returns (uint64, uint64) {
@@ -496,7 +485,7 @@ library MintableERC721Logic {
             if (tokenDelegationAddress != address(0)) {
                 _updateTokenDelegation(
                     erc721Data,
-                    DELEGATION_REGISTRY,
+                    POOL,
                     tokenDelegationAddress,
                     tokenIds[index],
                     false
@@ -542,23 +531,17 @@ library MintableERC721Logic {
 
     function executeUpdateTokenDelegation(
         MintableERC721Data storage erc721Data,
-        address delegationRegistry,
+        IPool POOL,
         address delegate,
         uint256 tokenId,
         bool value
     ) external {
-        _updateTokenDelegation(
-            erc721Data,
-            delegationRegistry,
-            delegate,
-            tokenId,
-            value
-        );
+        _updateTokenDelegation(erc721Data, POOL, delegate, tokenId, value);
     }
 
     function _updateTokenDelegation(
         MintableERC721Data storage erc721Data,
-        address delegationRegistry,
+        IPool POOL,
         address delegate,
         uint256 tokenId,
         bool value
@@ -569,11 +552,12 @@ library MintableERC721Logic {
             delete erc721Data.tokenDelegations[tokenId];
         }
 
-        IDelegateRegistry(delegationRegistry).delegateERC721(
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        POOL.updateTokenDelegation(
             delegate,
             erc721Data.underlyingAsset,
-            tokenId,
-            "",
+            tokenIds,
             value
         );
     }
