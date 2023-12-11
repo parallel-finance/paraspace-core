@@ -31,10 +31,7 @@ contract NTokenUniswapV3 is NToken, INTokenUniswapV3 {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(
-        IPool pool,
-        address delegateRegistry
-    ) NToken(pool, true, delegateRegistry) {
+    constructor(IPool pool) NToken(pool, true) {
         _ERC721Data.balanceLimit = 30;
     }
 

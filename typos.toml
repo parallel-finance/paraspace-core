@@ -2,6 +2,7 @@
 extend-exclude = ["contracts/dependencies", "contracts/mocks", "lib/", "app/"]
 
 [default.extend-words]
-BAKC = "BAKC"
-BRE  = "BRE"
-Vas  = "Vas"
+BAKC  = "BAKC"
+BRE   = "BRE"
+Datas = "Datas"
+Vas   = "Vas"

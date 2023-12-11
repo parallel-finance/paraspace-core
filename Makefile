@@ -354,7 +354,7 @@ deploy-allAggregators:
 
 .PHONY: deploy-allReserves
 deploy-allReserves:
-	make TASK_NAME=deploy:all-allReserves run-task
+	make TASK_NAME=deploy:all-reserves run-task
 
 .PHONY: deploy-uiIncentiveDataProvider
 deploy-uiIncentiveDataProvider:
@@ -464,6 +464,10 @@ zksync-bytecode-hashes:
 redeploy-market:
 	make SCRIPT_PATH=./scripts/dev/15.redeploy-market.ts run
 
+.PHONY: upgrade-pool-aa-position-mover
+upgrade-pool-aa-position-mover:
+	make TASK_NAME=upgrade:pool-aa-position-mover run-task
+
 .PHONY: transfer-tokens
 transfer-tokens:
 	make SCRIPT_PATH=./scripts/dev/2.transfer-tokens.ts run
@@ -519,6 +523,10 @@ decode-queued-txs:
 .PHONY: list-buffered-txs
 list-buffered-txs:
 	make TASK_NAME=list-buffered-txs run-task
+
+.PHONY: renew-buffered-txs
+renew-buffered-txs:
+	make TASK_NAME=renew-buffered-txs run-task
 
 .PHONY: decode-buffered-txs
 decode-buffered-txs:

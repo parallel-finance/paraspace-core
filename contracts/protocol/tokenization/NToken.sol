@@ -20,7 +20,6 @@ import {MintableIncentivizedERC721} from "./base/MintableIncentivizedERC721.sol"
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
 import {ITimeLock} from "../../interfaces/ITimeLock.sol";
 import {ITokenDelegation} from "../../interfaces/ITokenDelegation.sol";
-import {IDelegationRegistry} from "../../dependencies/delegation/IDelegationRegistry.sol";
 
 /**
  * @title ParaSpace ERC721 NToken
@@ -43,15 +42,13 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
      */
     constructor(
         IPool pool,
-        bool atomic_pricing,
-        address delegateRegistry
+        bool atomic_pricing
     )
         MintableIncentivizedERC721(
             pool,
             "NTOKEN_IMPL",
             "NTOKEN_IMPL",
-            atomic_pricing,
-            delegateRegistry
+            atomic_pricing
         )
     {}
 

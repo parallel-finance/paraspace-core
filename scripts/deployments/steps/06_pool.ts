@@ -1,5 +1,6 @@
 import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {
+  deployAAPoolPositionMover,
   deployMockBendDaoLendPool,
   deployParaApeStaking,
   deployPoolComponents,
@@ -123,6 +124,24 @@ export const step_06 = async (verify = false) => {
         )
       );
     }
+
+    const {poolAAPositionMover, poolAAPositionMoverSelectors} =
+      await deployAAPoolPositionMover(verify);
+
+    await waitForTx(
+      await addressesProvider.updatePoolImpl(
+        [
+          {
+            implAddress: poolAAPositionMover.address,
+            action: 0,
+            functionSelectors: poolAAPositionMoverSelectors,
+          },
+        ],
+        ZERO_ADDRESS,
+        "0x",
+        GLOBAL_OVERRIDES
+      )
+    );
 
     if (poolApeStaking) {
       await waitForTx(

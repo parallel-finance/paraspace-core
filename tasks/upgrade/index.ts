@@ -102,6 +102,21 @@ task("upgrade:pool-position-mover", "upgrade pool position mover")
     console.timeEnd("upgrade poolPositionMover");
   });
 
+task("upgrade:pool-aa-position-mover", "upgrade pool aa position mover")
+  .addPositionalParam("oldPoolAAPositionMover", "old pool aa position mover")
+  .setAction(async ({oldPoolAAPositionMover}, DRE) => {
+    const {upgradePoolAAPositionMover} = await import(
+      "../../scripts/upgrade/pool"
+    );
+    await DRE.run("set-DRE");
+    console.time("upgrade poolAAPositionMover");
+    await upgradePoolAAPositionMover(
+      oldPoolAAPositionMover,
+      ETHERSCAN_VERIFICATION
+    );
+    console.timeEnd("upgrade poolAAPositionMover");
+  });
+
 task("upgrade:configurator", "upgrade pool configurator").setAction(
   async (_, DRE) => {
     const {upgradeConfigurator} = await import(

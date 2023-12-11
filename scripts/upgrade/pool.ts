@@ -7,6 +7,7 @@ import {
   deployPoolMarketplace,
   deployPoolParameters,
   deployPoolPositionMover,
+  deployAAPoolPositionMover,
 } from "../../helpers/contracts-deployments";
 import {
   getAllTokens,
@@ -378,6 +379,31 @@ export const upgradePoolPositionMover = async (
   const implementations = [
     [
       poolPositionMover.address,
+      newPoolPositionMoverSelectors,
+      oldPoolPositionMoverSelectors,
+    ],
+  ] as [string, string[], string[]][];
+
+  await upgradeProxyImplementations(implementations);
+};
+
+export const upgradePoolAAPositionMover = async (
+  oldAAPoolPositionMover: tEthereumAddress,
+  verify = false
+) => {
+  const pool = await getPoolProxy();
+  const oldPoolPositionMoverSelectors = await pool.facetFunctionSelectors(
+    oldAAPoolPositionMover
+  );
+
+  const {
+    poolAAPositionMover,
+    poolAAPositionMoverSelectors: newPoolPositionMoverSelectors,
+  } = await deployAAPoolPositionMover(verify);
+
+  const implementations = [
+    [
+      poolAAPositionMover.address,
       newPoolPositionMoverSelectors,
       oldPoolPositionMoverSelectors,
     ],

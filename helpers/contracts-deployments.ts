@@ -31,7 +31,7 @@ import {
   DefaultReserveInterestRateStrategy,
   DefaultTimeLockStrategy,
   DelegationAwarePToken,
-  DelegationRegistry,
+  DelegateRegistry,
   DepositContract,
   Doodles,
   ERC20OracleWrapper,
@@ -152,6 +152,7 @@ import {
   WstETHMocked,
   X2Y2Adapter,
   X2Y2R1,
+  PoolAAPositionMover__factory,
   ApeStakingP2PLogic,
   ApeStakingPairPoolLogic,
   ApeStakingSinglePoolLogic,
@@ -668,6 +669,27 @@ export const deployPoolParaProxyInterfaces = async (verify?: boolean) => {
   };
 };
 
+export const deployAAPoolPositionMover = async (verify?: boolean) => {
+  const {poolAAPositionMoverSelectors} = await getPoolSignatures();
+
+  const poolAAPositionMover = (await withSaveAndVerify(
+    await getContractFactory("PoolAAPositionMover"),
+    eContractid.PoolAAPositionMoverImpl,
+    [],
+    verify,
+    false,
+    undefined,
+    poolAAPositionMoverSelectors
+  )) as PoolPositionMover;
+
+  return {
+    poolAAPositionMover,
+    poolAAPositionMoverSelectors: poolAAPositionMoverSelectors.map(
+      (s) => s.signature
+    ),
+  };
+};
+
 export const deployPoolPositionMover = async (
   provider: tEthereumAddress,
   bendDaoLendPoolLoan: tEthereumAddress,
@@ -783,6 +805,10 @@ export const getPoolSignatures = () => {
     PoolPositionMover__factory.abi
   );
 
+  const poolAAPositionMoverSelectors = getFunctionSignatures(
+    PoolAAPositionMover__factory.abi
+  );
+
   const poolProxySelectors = getFunctionSignatures(ParaProxy__factory.abi);
 
   const poolParaProxyInterfacesSelectors = getFunctionSignatures(
@@ -799,6 +825,7 @@ export const getPoolSignatures = () => {
     ...poolProxySelectors,
     ...poolParaProxyInterfacesSelectors,
     ...poolPositionMoverSelectors,
+    ...poolAAPositionMoverSelectors,
   ];
   for (const selector of poolSelectors) {
     if (!allSelectors[selector.signature]) {
@@ -820,6 +847,7 @@ export const getPoolSignatures = () => {
     poolBorrowAndStakeSelectors,
     poolParaProxyInterfacesSelectors,
     poolPositionMoverSelectors,
+    poolAAPositionMoverSelectors,
   };
 };
 
@@ -3179,30 +3207,6 @@ export const deployReserveTimeLockStrategy = async (
     verify
   ) as Promise<DefaultTimeLockStrategy>;
 
-export const deployOtherdeedNTokenImpl = async (
-  poolAddress: tEthereumAddress,
-  warmWallet: tEthereumAddress,
-  delegationRegistryAddress: tEthereumAddress,
-  verify?: boolean
-) => {
-  const mintableERC721Logic =
-    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
-    (await deployMintableERC721Logic(verify)).address;
-
-  const libraries = {
-    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic,
-  };
-  return withSaveAndVerify(
-    await getContractFactory("NTokenOtherdeed", libraries),
-    eContractid.NTokenOtherdeedImpl,
-    [poolAddress, warmWallet, delegationRegistryAddress],
-    verify,
-    false,
-    libraries
-  ) as Promise<NTokenOtherdeed>;
-};
-
 export const deployChromieSquiggleNTokenImpl = async (
   poolAddress: tEthereumAddress,
   delegationRegistryAddress: tEthereumAddress,
@@ -3261,11 +3265,11 @@ export const deployHotWalletProxy = async (verify?: boolean) =>
 
 export const deployDelegationRegistry = async (verify?: boolean) =>
   withSaveAndVerify(
-    await getContractFactory("DelegationRegistry"),
+    await getContractFactory("DelegateRegistry"),
     eContractid.DelegationRegistry,
     [],
     verify
-  ) as Promise<DelegationRegistry>;
+  ) as Promise<DelegateRegistry>;
 
 export const deployStakefishValidatorFactory = async (
   genesisImplementation: tEthereumAddress,
@@ -3321,15 +3325,21 @@ export const deployAccount = async (
   ) as Promise<Account>;
 
 export const deployAccountFactory = async (
-  accountRegistry: tEthereumAddress,
+  entryPoint: tEthereumAddress,
   verify?: boolean
-) =>
-  withSaveAndVerify(
+) => {
+  const accountImpl = await deployAccount(entryPoint, verify);
+  const accountRegistry = await deployAccountRegistry(
+    accountImpl.address,
+    verify
+  );
+  return withSaveAndVerify(
     await getContractFactory("AccountFactory"),
     eContractid.AccountFactory,
-    [accountRegistry],
+    [accountRegistry.address],
     verify
   ) as Promise<AccountFactory>;
+};
 
 export const deployAccountRegistry = async (
   impl: tEthereumAddress,

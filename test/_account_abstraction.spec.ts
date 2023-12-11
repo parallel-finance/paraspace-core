@@ -4,9 +4,12 @@ import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {
   deployAccount,
   deployAccountFactory,
-  deployAccountRegistry,
 } from "../helpers/contracts-deployments";
-import {getAccount, getChainId} from "../helpers/contracts-getters";
+import {
+  getAccount,
+  getAccountRegistry,
+  getChainId,
+} from "../helpers/contracts-getters";
 import {expect} from "chai";
 import {calcOpHash, waitForTx} from "../helpers/misc-utils";
 import {AccountProxy__factory} from "../types";
@@ -16,10 +19,8 @@ const fixture = async () => {
   const {
     users: [, entryPoint],
   } = testEnv;
-  const accountImpl = await deployAccount(entryPoint.address);
-  const accountRegistry = await deployAccountRegistry(accountImpl.address);
-  console.log("latest impl", await accountRegistry.getLatestImplementation());
-  const accountFactory = await deployAccountFactory(accountRegistry.address);
+  const accountFactory = await deployAccountFactory(entryPoint.address);
+  const accountRegistry = await getAccountRegistry();
 
   return {...testEnv, accountFactory, accountRegistry};
 };

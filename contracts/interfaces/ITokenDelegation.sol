@@ -13,10 +13,4 @@ interface ITokenDelegation {
         uint256[] calldata tokenIds,
         bool value
     ) external;
-
-    /**
-     * @notice Returns the address of the delegation registry of this nToken
-     * @return The address of the delegation registry
-     **/
-    function DELEGATE_REGISTRY() external view returns (address);
 }

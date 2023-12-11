@@ -15,9 +15,8 @@ import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
 contract NTokenMAYC is NTokenApeStaking {
     constructor(
         IPool pool,
-        address apeCoinStaking,
-        address delegateRegistry
-    ) NTokenApeStaking(pool, apeCoinStaking, delegateRegistry) {}
+        address apeCoinStaking
+    ) NTokenApeStaking(pool, apeCoinStaking) {}
 
     /**
      * @notice Deposit ApeCoin to the MAYC Pool

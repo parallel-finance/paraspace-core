@@ -155,4 +155,11 @@ library Errors {
     string public constant ORDER_SHARE_MATCH_FAILED = "188"; //orders share match failed
     string public constant NO_BREAK_UP_PERMISSION = "189"; //no permission to break up
     string public constant INVALID_CASH_AMOUNT = "190"; //invalid cash amount
+
+    string public constant INVALID_CALLER = "200"; //invalid caller
+    string public constant ONLY_MSG_HANDLER = "201"; //only msg handler
+    string public constant ONLY_VAULT = "202"; //only vault
+    string public constant ONLY_HANDLER = "203"; //only handler
+    string public constant ONLY_PARAX = "204"; //only parax
+    string public constant ONLY_BRIDGE = "205"; //only cross-chain bridge
 }

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import {IERC20Detailed} from "../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 import {IERC721Metadata} from "../dependencies/openzeppelin/contracts/IERC721Metadata.sol";
 import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
-import {IDelegationRegistry} from "../dependencies/delegation/IDelegationRegistry.sol";
+import {IDelegateRegistry} from "../dependencies/delegation/IDelegateRegistry.sol";
 import {IPoolAddressesProvider} from "../interfaces/IPoolAddressesProvider.sol";
 import {IUiPoolDataProvider} from "./interfaces/IUiPoolDataProvider.sol";
 import {IPool} from "../interfaces/IPool.sol";
@@ -549,26 +549,5 @@ contract UiPoolDataProvider is IUiPoolDataProvider {
             }
         }
         return (userData, tokensData);
-    }
-
-    function getDelegatesForTokens(
-        address vault,
-        uint256[] calldata tokenIds
-    ) external view returns (DelegationData[] memory) {
-        address contract_ = INToken(vault).UNDERLYING_ASSET_ADDRESS();
-        address delegationRegistry = ITokenDelegation(vault)
-            .DELEGATE_REGISTRY();
-
-        DelegationData[] memory delegationData = new DelegationData[](
-            tokenIds.length
-        );
-
-        for (uint256 index = 0; index < tokenIds.length; index++) {
-            delegationData[index].delegations = IDelegationRegistry(
-                delegationRegistry
-            ).getDelegatesForToken(vault, contract_, tokenIds[index]);
-        }
-
-        return delegationData;
     }
 }

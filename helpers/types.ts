@@ -233,6 +233,7 @@ export enum eContractid {
   MockAirdropProject = "MockAirdropProject",
   PoolCoreImpl = "PoolCoreImpl",
   PoolMarketplaceImpl = "PoolMarketplaceImpl",
+  PoolAAPositionMoverImpl = "PoolAAPositionMoverImpl",
   PoolParametersImpl = "PoolParametersImpl",
   PoolApeStakingImpl = "PoolApeStakingImpl",
   PoolBorrowAndStakeImpl = "PoolBorrowAndStakeImpl",
@@ -275,7 +276,6 @@ export enum eContractid {
   TimeLockProxy = "TimeLockProxy",
   TimeLockImpl = "TimeLockImpl",
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
-  NTokenOtherdeedImpl = "NTokenOtherdeedImpl",
   NTokenChromieSquiggleImpl = "NTokenChromieSquiggleImpl",
   NTokenStakefishImpl = "NTokenStakefishImpl",
   HotWalletProxy = "HotWalletProxy",
@@ -537,6 +537,8 @@ export interface iAssetBase<T> {
   KODA: T;
   BLOCKS: T;
   EXRP: T;
+  uBAYC: T;
+  uPPG: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, "ETH">;
@@ -602,6 +604,8 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "KODA"
   | "BLOCKS"
   | "EXRP"
+  | "uBAYC"
+  | "uPPG"
 >;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iParaSpacePoolAssets<T>;
@@ -648,6 +652,8 @@ export enum ERC20TokenContractId {
   stMATIC = "stMATIC",
   CRV = "CRV",
   WMATIC = "WMATIC",
+  uBAYC = "uBAYC",
+  uPPG = "uPPG",
 }
 
 export enum ERC721TokenContractId {

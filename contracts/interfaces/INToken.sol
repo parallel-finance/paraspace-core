@@ -5,7 +5,7 @@ import {IERC721} from "../dependencies/openzeppelin/contracts/IERC721.sol";
 import {IERC721Receiver} from "../dependencies/openzeppelin/contracts/IERC721Receiver.sol";
 import {IERC721Enumerable} from "../dependencies/openzeppelin/contracts/IERC721Enumerable.sol";
 import {IERC1155Receiver} from "../dependencies/openzeppelin/contracts/IERC1155Receiver.sol";
-
+import {ICollateralizableERC721} from "./ICollateralizableERC721.sol";
 import {IInitializableNToken} from "./IInitializableNToken.sol";
 import {IXTokenType} from "./IXTokenType.sol";
 import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
@@ -16,6 +16,7 @@ import {DataTypes} from "../protocol/libraries/types/DataTypes.sol";
  * @notice Defines the basic interface for an NToken.
  **/
 interface INToken is
+    ICollateralizableERC721,
     IERC721Enumerable,
     IInitializableNToken,
     IERC721Receiver,

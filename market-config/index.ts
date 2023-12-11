@@ -76,6 +76,8 @@ import {
   strategyWBTCWH,
   strategySTDOT,
   strategyEXRP,
+  strategyuBAYC,
+  strategyuPPG,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -381,8 +383,10 @@ export const GoerliConfig: IParaSpaceConfiguration = {
     VSL: strategyVSL,
     KODA: strategyKODA,
     BLOCKS: strategyBLOCKS,
+    uBAYC: strategyuBAYC,
+    uPPG: strategyuPPG,
   },
-  DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
+  DelegationRegistry: "0x00000000000000447e69651d841bD8D104Bed493",
 };
 
 export const PolygonConfig: IParaSpaceConfiguration = {
@@ -892,6 +896,8 @@ export const MainnetConfig: IParaSpaceConfiguration = {
     VSL: "0x5b1085136a811e55b2bb2ca1ea456ba82126a376",
     KODA: "0xe012baf811cf9c05c408e879c399960d1f305903",
     BLOCKS: "0x059EDD72Cd353dF5106D2B9cC5ab83a52287aC3a",
+    uBAYC: "0x1e610de0d7acfa1d820024948a91d96c5c9ce6b9",
+    uPPG: "0x30F7c830e0C2f4bEC871DF809D73E27eF19EB151",
   },
   YogaLabs: {
     ApeCoinStaking: "0x5954aB967Bc958940b7EB73ee84797Dc8a2AFbb9",
@@ -985,11 +991,13 @@ export const MainnetConfig: IParaSpaceConfiguration = {
     VSL: strategyVSL,
     KODA: strategyKODA,
     BLOCKS: strategyBLOCKS,
+    uBAYC: strategyuBAYC,
+    uPPG: strategyuPPG,
   },
   Mocks: undefined,
   Oracle: MainnetOracleConfig,
   HotWallet: "0xC3AA9bc72Bd623168860a1e5c6a4530d3D80456c",
-  DelegationRegistry: "0x00000000000076A84feF008CDAbe6409d2FE638B",
+  DelegationRegistry: "0x00000000000000447e69651d841bD8D104Bed493",
   Governance: {
     Multisend: MULTI_SEND || "0x40A2aCCbd92BCA938b02010E17A5b8929b49130D",
     Multisig: MULTI_SIG || "0x19293FBec52F94165f903708a74513Dd6dFedd0a",

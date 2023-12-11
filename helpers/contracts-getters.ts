@@ -86,8 +86,7 @@ import {
   MockCToken__factory,
   TimeLock__factory,
   HotWalletProxy__factory,
-  NTokenOtherdeed__factory,
-  DelegationRegistry__factory,
+  DelegateRegistry__factory,
   DepositContract__factory,
   StakefishNFTManager__factory,
   StakefishValidatorV1__factory,
@@ -101,6 +100,7 @@ import {
   PoolParameters__factory,
   PoolMarketplace__factory,
   Account__factory,
+  AccountFactory__factory,
   AccountRegistry__factory,
   P2PPairStaking__factory,
 } from "../types";
@@ -1278,17 +1278,6 @@ export const getTimeLockProxy = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getNTokenOtherdeed = async (address?: tEthereumAddress) =>
-  await NTokenOtherdeed__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.NTokenOtherdeedImpl}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
 export const getNTokenChromieSquiggle = async (address?: tEthereumAddress) =>
   await NTokenChromieSquiggle__factory.connect(
     address ||
@@ -1312,7 +1301,7 @@ export const getHotWalletProxy = async (address?: tEthereumAddress) =>
   );
 
 export const getDelegationRegistry = async (address?: tEthereumAddress) =>
-  await DelegationRegistry__factory.connect(
+  await DelegateRegistry__factory.connect(
     address ||
       (
         await getDb()
@@ -1392,6 +1381,17 @@ export const getAccountRegistry = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.AccountRegistry}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+
+export const getAccountFactory = async (address?: tEthereumAddress) =>
+  await AccountFactory__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.AccountFactory}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
