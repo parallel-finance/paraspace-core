@@ -32,10 +32,9 @@ contract NTokenChromieSquiggle is NToken {
      */
     constructor(
         IPool pool,
-        address delegateRegistry,
         uint256 _startTokenId,
         uint256 _endTokenId
-    ) NToken(pool, false, delegateRegistry) {
+    ) NToken(pool, false) {
         startTokenId = _startTokenId;
         endTokenId = _endTokenId;
     }

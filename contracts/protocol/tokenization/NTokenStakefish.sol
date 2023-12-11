@@ -26,10 +26,7 @@ contract NTokenStakefish is NToken, INTokenStakefish {
      * @dev Constructor.
      * @param pool The address of the Pool contract
      */
-    constructor(
-        IPool pool,
-        address delegateRegistry
-    ) NToken(pool, false, delegateRegistry) {
+    constructor(IPool pool) NToken(pool, false) {
         WETH = IWETH(_addressesProvider.getWETH());
     }
 

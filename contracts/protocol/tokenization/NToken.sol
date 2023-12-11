@@ -42,15 +42,13 @@ contract NToken is VersionedInitializable, MintableIncentivizedERC721, INToken {
      */
     constructor(
         IPool pool,
-        bool atomic_pricing,
-        address delegateRegistry
+        bool atomic_pricing
     )
         MintableIncentivizedERC721(
             pool,
             "NTOKEN_IMPL",
             "NTOKEN_IMPL",
-            atomic_pricing,
-            delegateRegistry
+            atomic_pricing
         )
     {}
 

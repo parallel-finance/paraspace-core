@@ -136,4 +136,10 @@ library Errors {
 
     string public constant INVALID_PARAMETER = "170"; //invalid parameter
     string public constant INVALID_CALLER = "171"; //invalid callser
+
+    string public constant ONLY_MSG_HANDLER = "200"; //only msg handler
+    string public constant ONLY_VAULT = "201"; //only vault
+    string public constant ONLY_HANDLER = "202"; //only handler
+    string public constant ONLY_PARAX = "203"; //only parax
+    string public constant ONLY_BRIDGE = "204"; //only cross-chain bridge
 }

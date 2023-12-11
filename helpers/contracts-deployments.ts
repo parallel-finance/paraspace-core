@@ -3096,30 +3096,6 @@ export const deployReserveTimeLockStrategy = async (
     verify
   ) as Promise<DefaultTimeLockStrategy>;
 
-export const deployOtherdeedNTokenImpl = async (
-  poolAddress: tEthereumAddress,
-  warmWallet: tEthereumAddress,
-  delegationRegistryAddress: tEthereumAddress,
-  verify?: boolean
-) => {
-  const mintableERC721Logic =
-    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
-    (await deployMintableERC721Logic(verify)).address;
-
-  const libraries = {
-    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic,
-  };
-  return withSaveAndVerify(
-    await getContractFactory("NTokenOtherdeed", libraries),
-    eContractid.NTokenOtherdeedImpl,
-    [poolAddress, warmWallet, delegationRegistryAddress],
-    verify,
-    false,
-    libraries
-  ) as Promise<NTokenOtherdeed>;
-};
-
 export const deployChromieSquiggleNTokenImpl = async (
   poolAddress: tEthereumAddress,
   delegationRegistryAddress: tEthereumAddress,

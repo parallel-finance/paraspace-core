@@ -155,9 +155,4 @@ interface IUiPoolDataProvider {
         external
         view
         returns (UserGlobalData memory, TokenInLiquidationData[][] memory);
-
-    function getDelegatesForTokens(
-        address vault,
-        uint256[] calldata tokenIds
-    ) external view returns (IDelegateRegistry.Delegation[] memory);
 }

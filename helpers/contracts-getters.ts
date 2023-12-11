@@ -88,7 +88,6 @@ import {
   MockCToken__factory,
   TimeLock__factory,
   HotWalletProxy__factory,
-  NTokenOtherdeed__factory,
   DelegateRegistry__factory,
   DepositContract__factory,
   StakefishNFTManager__factory,
@@ -1213,17 +1212,6 @@ export const getTimeLockProxy = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.TimeLockProxy}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getNTokenOtherdeed = async (address?: tEthereumAddress) =>
-  await NTokenOtherdeed__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.NTokenOtherdeedImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
