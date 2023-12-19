@@ -491,49 +491,33 @@ export const initReservesByHelper = async (
         if (reserveSymbol === ERC721TokenContractId.MOONBIRD) {
           if (!nTokenMoonBirdImplementationAddress) {
             nTokenMoonBirdImplementationAddress = (
-              await deployGenericMoonbirdNTokenImpl(
-                pool.address,
-                verify
-              )
+              await deployGenericMoonbirdNTokenImpl(pool.address, verify)
             ).address;
           }
           xTokenToUse = nTokenMoonBirdImplementationAddress;
         } else if (reserveSymbol === ERC721TokenContractId.UniswapV3) {
           if (!nTokenUniSwapV3ImplementationAddress) {
             nTokenUniSwapV3ImplementationAddress = (
-              await deployUniswapV3NTokenImpl(
-                pool.address,
-                verify
-              )
+              await deployUniswapV3NTokenImpl(pool.address, verify)
             ).address;
           }
           xTokenToUse = nTokenUniSwapV3ImplementationAddress;
         } else if (reserveSymbol == ERC721TokenContractId.SFVLDR) {
           nTokenStakefishImplementationAddress = (
-            await deployStakefishNTokenImpl(
-              pool.address,
-              verify
-            )
+            await deployStakefishNTokenImpl(pool.address, verify)
           ).address;
 
           xTokenToUse = nTokenStakefishImplementationAddress;
         } else if (reserveSymbol == ERC721TokenContractId.BLOCKS) {
           xTokenToUse = (
-            await deployChromieSquiggleNTokenImpl(
-              pool.address,
-              verify
-            )
+            await deployChromieSquiggleNTokenImpl(pool.address, verify)
           ).address;
         }
 
         if (!xTokenToUse) {
           if (!nTokenImplementationAddress) {
             nTokenImplementationAddress = (
-              await deployGenericNTokenImpl(
-                pool.address,
-                false,
-                verify
-              )
+              await deployGenericNTokenImpl(pool.address, false, verify)
             ).address;
           }
           xTokenToUse = nTokenImplementationAddress;

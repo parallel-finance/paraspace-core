@@ -1,9 +1,7 @@
 import {deployP2PPairStaking} from "../../../helpers/contracts-deployments";
 import {
   getAllTokens,
-  getNTokenBAKC,
-  getNTokenBAYC,
-  getNTokenMAYC,
+  getNToken,
   getPoolProxy,
 } from "../../../helpers/contracts-getters";
 import {getParaSpaceConfig, waitForTx} from "../../../helpers/misc-utils";
@@ -28,7 +26,7 @@ export const step_20 = async (verify = false) => {
     const bakc = allTokens[ERC721TokenContractId.BAKC];
 
     if (bayc) {
-      const nBAYC = await getNTokenBAYC(
+      const nBAYC = await getNToken(
         (
           await pool.getReserveData(bayc.address)
         ).xTokenAddress
@@ -43,7 +41,7 @@ export const step_20 = async (verify = false) => {
     }
 
     if (mayc) {
-      const nMAYC = await getNTokenMAYC(
+      const nMAYC = await getNToken(
         (
           await pool.getReserveData(mayc.address)
         ).xTokenAddress
@@ -58,7 +56,7 @@ export const step_20 = async (verify = false) => {
     }
 
     if (bakc) {
-      const nBAKC = await getNTokenBAKC(
+      const nBAKC = await getNToken(
         (
           await pool.getReserveData(bakc.address)
         ).xTokenAddress

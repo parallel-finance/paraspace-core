@@ -57,8 +57,6 @@ import {
   MockMultiAssetAirdropProject__factory,
   IPool__factory,
   MockReserveAuctionStrategy__factory,
-  NTokenBAYC__factory,
-  NTokenMAYC__factory,
   ApeCoinStaking__factory,
   PTokenSApe__factory,
   StandardPolicyERC721__factory,
@@ -76,7 +74,6 @@ import {
   StETHDebtToken__factory,
   ApeStakingLogic__factory,
   MintableERC721Logic__factory,
-  NTokenBAKC__factory,
   P2PPairStaking__factory,
   ExecutorWithTimelock__factory,
   MultiSendCallOnly__factory,
@@ -979,39 +976,6 @@ export const getUserFlashClaimRegistry = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.UserFlashClaimRegistryProxy}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getNTokenBAYC = async (address?: tEthereumAddress) =>
-  await NTokenBAYC__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.NTokenImpl}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getNTokenMAYC = async (address?: tEthereumAddress) =>
-  await NTokenMAYC__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.NTokenImpl}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getNTokenBAKC = async (address?: tEthereumAddress) =>
-  await NTokenBAKC__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.NTokenBAKCImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

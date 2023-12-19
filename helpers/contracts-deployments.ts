@@ -2588,7 +2588,12 @@ export const deployAutoCompoundApeImpl = async (verify?: boolean) => {
     (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
     (await deployApeCoinStaking(verify)).address;
   const aclManager = await getACLManager();
-  const args = [allTokens.APE.address, apeCoinStaking, aclManager.address, zeroAddress()];
+  const args = [
+    allTokens.APE.address,
+    apeCoinStaking,
+    aclManager.address,
+    zeroAddress(),
+  ];
 
   return withSaveAndVerify(
     await getContractFactory("AutoCompoundApe"),

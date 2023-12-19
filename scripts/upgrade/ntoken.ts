@@ -3,10 +3,6 @@ import {
   deployChromieSquiggleNTokenImpl,
   deployGenericMoonbirdNTokenImpl,
   deployGenericNTokenImpl,
-  deployNTokenBAKCImpl,
-  deployNTokenBAYCImpl,
-  deployNTokenMAYCImpl,
-  deployOtherdeedNTokenImpl,
   deployStakefishNTokenImpl,
   deployUniswapV3NTokenImpl,
 } from "../../helpers/contracts-deployments";
@@ -15,8 +11,6 @@ import {
   getPoolConfiguratorProxy,
   getProtocolDataProvider,
   getNToken,
-  getApeCoinStaking,
-  getPoolProxy,
 } from "../../helpers/contracts-getters";
 import {NTokenContractId, XTokenType} from "../../helpers/types";
 
@@ -38,16 +32,11 @@ export const upgradeNToken = async (verify = false) => {
   const poolConfiguratorProxy = await getPoolConfiguratorProxy(
     await addressesProvider.getPoolConfigurator()
   );
-  const delegationRegistry = paraSpaceConfig.DelegationRegistry;
   const protocolDataProvider = await getProtocolDataProvider();
   const allXTokens = await protocolDataProvider.getAllXTokens();
   let nTokenImplementationAddress = "";
-  let nTokenBAYCImplementationAddress = "";
-  let nTokenMAYCImplementationAddress = "";
-  let nTokenBAKCImplementationAddress = "";
   let nTokenMoonBirdImplementationAddress = "";
   let nTokenUniSwapV3ImplementationAddress = "";
-  let nTokenOTHRImplementationAddress = "";
   let nTokenStakefishImplementationAddress = "";
   let nTokenBlocksImplementationAddress = "";
   let newImpl = "";
@@ -55,7 +44,6 @@ export const upgradeNToken = async (verify = false) => {
   for (let i = 0; i < allXTokens.length; i++) {
     const token = allXTokens[i];
     const nToken = await getNToken(token.tokenAddress);
-    const pool = await getPoolProxy();
     const asset = await nToken.UNDERLYING_ASSET_ADDRESS();
     const incentivesController = paraSpaceConfig.IncentivesController;
     const name = await nToken.name();
@@ -83,70 +71,11 @@ export const upgradeNToken = async (verify = false) => {
       console.log(symbol + "not in XTOKEN_SYMBOL_UPGRADE_WHITELIST, skip...");
       continue;
     }
-
-    if (xTokenType == XTokenType.NTokenBAYC) {
-      if (!nTokenBAYCImplementationAddress) {
-        console.log("deploy NTokenBAYC implementation");
-        const apeCoinStaking = await getApeCoinStaking();
-        nTokenBAYCImplementationAddress = (
-          await deployNTokenBAYCImpl(
-            apeCoinStaking.address,
-            poolAddress,
-            delegationRegistry,
-            verify
-          )
-        ).address;
-      }
-      newImpl = nTokenBAYCImplementationAddress;
-    } else if (xTokenType == XTokenType.NTokenMAYC) {
-      if (!nTokenMAYCImplementationAddress) {
-        console.log("deploy NTokenMAYC implementation");
-        const apeCoinStaking = await getApeCoinStaking();
-        nTokenMAYCImplementationAddress = (
-          await deployNTokenMAYCImpl(
-            apeCoinStaking.address,
-            poolAddress,
-            delegationRegistry,
-            verify
-          )
-        ).address;
-      }
-      newImpl = nTokenMAYCImplementationAddress;
-    } else if (xTokenType == XTokenType.NTokenBAKC) {
-      if (!nTokenBAKCImplementationAddress) {
-        console.log("deploy NTokenBAKC implementation");
-        const apeCoinStaking = await getApeCoinStaking();
-        const nBAYC =
-          // eslint-disable-next-line
-          allXTokens.find(
-            (x) => x.symbol == NTokenContractId.nBAYC
-          )!.tokenAddress;
-        const nMAYC =
-          // eslint-disable-next-line
-          allXTokens.find(
-            (x) => x.symbol == NTokenContractId.nMAYC
-          )!.tokenAddress;
-        nTokenBAKCImplementationAddress = (
-          await deployNTokenBAKCImpl(
-            pool.address,
-            apeCoinStaking.address,
-            nBAYC,
-            nMAYC,
-            delegationRegistry,
-            verify
-          )
-        ).address;
-      }
-      newImpl = nTokenBAKCImplementationAddress;
-    } else if (xTokenType == XTokenType.NTokenUniswapV3) {
+    if (xTokenType == XTokenType.NTokenUniswapV3) {
       if (!nTokenUniSwapV3ImplementationAddress) {
         console.log("deploy NTokenUniswapV3 implementation");
         nTokenUniSwapV3ImplementationAddress = (
-          await deployUniswapV3NTokenImpl(
-            poolAddress,
-            delegationRegistry,
-            verify
-          )
+          await deployUniswapV3NTokenImpl(poolAddress, verify)
         ).address;
       }
       newImpl = nTokenUniSwapV3ImplementationAddress;
@@ -154,73 +83,28 @@ export const upgradeNToken = async (verify = false) => {
       if (!nTokenMoonBirdImplementationAddress) {
         console.log("deploy NTokenMoonBirds implementation");
         nTokenMoonBirdImplementationAddress = (
-          await deployGenericMoonbirdNTokenImpl(
-            poolAddress,
-            delegationRegistry,
-            verify
-          )
+          await deployGenericMoonbirdNTokenImpl(poolAddress, verify)
         ).address;
       }
       newImpl = nTokenMoonBirdImplementationAddress;
-    } else if (xTokenType == XTokenType.NTokenOtherdeed) {
-      if (!nTokenOTHRImplementationAddress) {
-        console.log("deploy NTokenOtherdeed implementation");
-        nTokenOTHRImplementationAddress = (
-          await deployOtherdeedNTokenImpl(
-            poolAddress,
-            paraSpaceConfig.HotWallet,
-            delegationRegistry,
-            verify
-          )
-        ).address;
-      }
-      newImpl = nTokenOTHRImplementationAddress;
     } else if (xTokenType == XTokenType.NTokenStakefish) {
       if (!nTokenStakefishImplementationAddress) {
         console.log("deploy NTokenStakefish implementation");
         nTokenStakefishImplementationAddress = (
-          await deployStakefishNTokenImpl(
-            poolAddress,
-            delegationRegistry,
-            verify
-          )
+          await deployStakefishNTokenImpl(poolAddress, verify)
         ).address;
       }
       newImpl = nTokenStakefishImplementationAddress;
     } else if (xTokenType == XTokenType.NTokenChromieSquiggle) {
       console.log("deploy NTokenChromieSquiggle implementation");
-      newImpl = (
-        await deployChromieSquiggleNTokenImpl(
-          poolAddress,
-          delegationRegistry,
-          verify
-        )
-      ).address;
+      newImpl = (await deployChromieSquiggleNTokenImpl(poolAddress, verify))
+        .address;
     } else if (xTokenType == XTokenType.NToken) {
-      // compatibility
-      if (symbol == NTokenContractId.nOTHR) {
-        if (!nTokenOTHRImplementationAddress) {
-          console.log("deploy NTokenOtherdeed implementation");
-          nTokenOTHRImplementationAddress = (
-            await deployOtherdeedNTokenImpl(
-              poolAddress,
-              paraSpaceConfig.HotWallet,
-              delegationRegistry,
-              verify
-            )
-          ).address;
-        }
-        newImpl = nTokenOTHRImplementationAddress;
-        // compatibility
-      } else if (symbol == NTokenContractId.nBLOCKS) {
+      if (symbol == NTokenContractId.nBLOCKS) {
         if (!nTokenBlocksImplementationAddress) {
           console.log("deploy NTokenBLOCKS implementation");
           nTokenBlocksImplementationAddress = (
-            await deployChromieSquiggleNTokenImpl(
-              poolAddress,
-              delegationRegistry,
-              verify
-            )
+            await deployChromieSquiggleNTokenImpl(poolAddress, verify)
           ).address;
         }
         newImpl = nTokenBlocksImplementationAddress;
@@ -228,12 +112,7 @@ export const upgradeNToken = async (verify = false) => {
         if (!nTokenImplementationAddress) {
           console.log("deploy NToken implementation");
           nTokenImplementationAddress = (
-            await deployGenericNTokenImpl(
-              poolAddress,
-              false,
-              delegationRegistry,
-              verify
-            )
+            await deployGenericNTokenImpl(poolAddress, false, verify)
           ).address;
         }
         newImpl = nTokenImplementationAddress;

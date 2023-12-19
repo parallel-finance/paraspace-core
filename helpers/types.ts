@@ -466,7 +466,6 @@ export interface iAssetBase<T> {
   awstETH: T;
   aWETH: T;
   APE: T;
-  sAPE: T;
   cAPE: T;
   yAPE: T;
   cETH: T;
@@ -533,7 +532,6 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "awstETH"
   | "aWETH"
   | "APE"
-  | "sAPE"
   | "cAPE"
   | "yAPE"
   | "cETH"

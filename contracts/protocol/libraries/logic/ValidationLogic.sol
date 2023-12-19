@@ -1014,23 +1014,6 @@ library ValidationLogic {
             Errors.FLASHCLAIM_NOT_ALLOWED
         );
 
-        // need check sApe status when flash claim for bayc or mayc
-        if (
-            tokenType == XTokenType.NTokenBAYC ||
-            tokenType == XTokenType.NTokenMAYC
-        ) {
-            DataTypes.ReserveData storage sApeReserve = ps._reserves[
-                DataTypes.SApeAddress
-            ];
-
-            (bool isActive, , , bool isPaused, ) = sApeReserve
-                .configuration
-                .getFlags();
-
-            require(isActive, Errors.RESERVE_INACTIVE);
-            require(!isPaused, Errors.RESERVE_PAUSED);
-        }
-
         // only token owner can do flash claim
         for (uint256 i = 0; i < nftTokenIds.length; i++) {
             require(
