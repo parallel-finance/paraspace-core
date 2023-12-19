@@ -17,11 +17,11 @@ contract ParaxL2MessageHandler is IParaxL2MessageHandler {
     function bridgeReceive(BridgeMessage calldata message) external {
         require(msg.sender == bridgeImpl, "");
         if (message.msgType == MessageType.BridgeERC721) {
-            BridgeERC721Message memory message = abi.decode(
+            BridgeERC721Message memory erc721Message = abi.decode(
                 message.data,
                 (BridgeERC721Message)
             );
-            erc712Handler.bridgeAsset(message);
+            erc712Handler.bridgeAsset(erc721Message);
         } else {}
     }
 

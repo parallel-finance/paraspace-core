@@ -5,7 +5,6 @@ import {
   AccountRegistry,
   ACLManager,
   AirdropFlashClaimReceiver,
-  ApeStakingLogic,
   AStETHDebtToken,
   ATokenDebtToken,
   AuctionLogic,
@@ -79,11 +78,7 @@ import {
   MutantApeYachtClub,
   NFTFloorOracle,
   NToken,
-  NTokenBAKC,
-  NTokenBAYC,
-  NTokenMAYC,
   NTokenMoonBirds,
-  NTokenOtherdeed,
   NTokenStakefish,
   NTokenUniswapV3,
   P2PPairStaking,
@@ -210,6 +205,7 @@ import {pick, upperFirst} from "lodash";
 import shell from "shelljs";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES, ZK_LIBRARIES_PATH} from "./hardhat-constants";
+import {zeroAddress} from "ethereumjs-util";
 
 export const deployAllLibraries = async (verify?: boolean) => {
   const supplyLogic = await deploySupplyLogic(verify);
@@ -220,7 +216,6 @@ export const deployAllLibraries = async (verify?: boolean) => {
   const poolLogic = await deployPoolLogic(verify);
   const configuratorLogic = await deployConfiguratorLogic(verify);
   const mintableERC721Logic = await deployMintableERC721Logic(verify);
-  const apeStakingLogic = await deployApeStakingLogic(verify);
   const merkleVerifier = await deployMerkleVerifier(verify);
 
   const libraries = {
@@ -241,9 +236,6 @@ export const deployAllLibraries = async (verify?: boolean) => {
     },
     "contracts/protocol/libraries/logic/PoolLogic.sol": {
       PoolLogic: poolLogic.address,
-    },
-    "contracts/protocol/tokenization/libraries/ApeStakingLogic.sol": {
-      ApeStakingLogic: apeStakingLogic.address,
     },
     "contracts/protocol/tokenization/libraries/MintableERC721Logic.sol": {
       MintableERC721Logic: mintableERC721Logic.address,
@@ -1161,7 +1153,6 @@ export const deployGenericPTokenImpl = async (
 export const deployGenericNTokenImpl = async (
   poolAddress: tEthereumAddress,
   atomicPricing: boolean,
-  delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -1175,7 +1166,7 @@ export const deployGenericNTokenImpl = async (
   return withSaveAndVerify(
     await getContractFactory("NToken", libraries),
     eContractid.NTokenImpl,
-    [poolAddress, atomicPricing, delegationRegistry],
+    [poolAddress, atomicPricing],
     verify,
     false,
     libraries
@@ -1184,7 +1175,6 @@ export const deployGenericNTokenImpl = async (
 
 export const deployUniswapV3NTokenImpl = async (
   poolAddress: tEthereumAddress,
-  delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -1198,7 +1188,7 @@ export const deployUniswapV3NTokenImpl = async (
   return withSaveAndVerify(
     await getContractFactory("NTokenUniswapV3", libraries),
     eContractid.NTokenUniswapV3Impl,
-    [poolAddress, delegationRegistry],
+    [poolAddress],
     verify,
     false,
     libraries
@@ -1207,15 +1197,11 @@ export const deployUniswapV3NTokenImpl = async (
 
 export const deployGenericMoonbirdNTokenImpl = async (
   poolAddress: tEthereumAddress,
-  delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
     (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
     (await deployMintableERC721Logic(verify)).address;
-  const paraSpaceConfig = getParaSpaceConfig();
-
-  const timeLockV1 = paraSpaceConfig.ParaSpaceV1?.TimeLockV1 || ZERO_ADDRESS;
 
   const libraries = {
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
@@ -1224,7 +1210,7 @@ export const deployGenericMoonbirdNTokenImpl = async (
   return withSaveAndVerify(
     await getContractFactory("NTokenMoonBirds", libraries),
     eContractid.NTokenMoonBirdsImpl,
-    [poolAddress, delegationRegistry, timeLockV1],
+    [poolAddress],
     verify,
     false,
     libraries
@@ -2450,99 +2436,6 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
   return apeCoinStaking;
 };
 
-export const deployApeStakingLogic = async (verify?: boolean) => {
-  return withSaveAndVerify(
-    await getContractFactory("ApeStakingLogic"),
-    eContractid.ApeStakingLogic,
-    [],
-    verify
-  ) as Promise<ApeStakingLogic>;
-};
-
-export const deployNTokenBAYCImpl = async (
-  apeCoinStaking: tEthereumAddress,
-  poolAddress: tEthereumAddress,
-  delegationRegistry: tEthereumAddress,
-  verify?: boolean
-) => {
-  const apeStakingLogic =
-    (await getContractAddressInDb(eContractid.ApeStakingLogic)) ||
-    (await deployApeStakingLogic(verify)).address;
-  const mintableERC721Logic =
-    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
-    (await deployMintableERC721Logic(verify)).address;
-
-  const libraries = {
-    ["contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic"]:
-      apeStakingLogic,
-    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic,
-  };
-
-  return withSaveAndVerify(
-    await getContractFactory("NTokenBAYC", libraries),
-    eContractid.NTokenBAYCImpl,
-    [poolAddress, apeCoinStaking, delegationRegistry],
-    verify,
-    false,
-    libraries
-  ) as Promise<NTokenBAYC>;
-};
-
-export const deployNTokenMAYCImpl = async (
-  apeCoinStaking: tEthereumAddress,
-  poolAddress: tEthereumAddress,
-  delegationRegistry: tEthereumAddress,
-  verify?: boolean
-) => {
-  const apeStakingLogic =
-    (await getContractAddressInDb(eContractid.ApeStakingLogic)) ||
-    (await deployApeStakingLogic(verify)).address;
-  const mintableERC721Logic =
-    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
-    (await deployMintableERC721Logic(verify)).address;
-
-  const libraries = {
-    ["contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic"]:
-      apeStakingLogic,
-    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic,
-  };
-  return withSaveAndVerify(
-    await getContractFactory("NTokenMAYC", libraries),
-    eContractid.NTokenMAYCImpl,
-    [poolAddress, apeCoinStaking, delegationRegistry],
-    verify,
-    false,
-    libraries
-  ) as Promise<NTokenMAYC>;
-};
-
-export const deployNTokenBAKCImpl = async (
-  poolAddress: tEthereumAddress,
-  apeCoinStaking: tEthereumAddress,
-  nBAYC: tEthereumAddress,
-  nMAYC: tEthereumAddress,
-  delegationRegistry: tEthereumAddress,
-  verify?: boolean
-) => {
-  const mintableERC721Logic =
-    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
-    (await deployMintableERC721Logic(verify)).address;
-  const libraries = {
-    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic,
-  };
-  return withSaveAndVerify(
-    await getContractFactory("NTokenBAKC", libraries),
-    eContractid.NTokenBAKCImpl,
-    [poolAddress, apeCoinStaking, nBAYC, nMAYC, delegationRegistry],
-    verify,
-    false,
-    libraries
-  ) as Promise<NTokenBAKC>;
-};
-
 export const deployATokenDebtToken = async (
   poolAddress: tEthereumAddress,
   verify?: boolean
@@ -2695,7 +2588,7 @@ export const deployAutoCompoundApeImpl = async (verify?: boolean) => {
     (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
     (await deployApeCoinStaking(verify)).address;
   const aclManager = await getACLManager();
-  const args = [allTokens.APE.address, apeCoinStaking, aclManager.address];
+  const args = [allTokens.APE.address, apeCoinStaking, aclManager.address, zeroAddress()];
 
   return withSaveAndVerify(
     await getContractFactory("AutoCompoundApe"),
@@ -3098,7 +2991,6 @@ export const deployReserveTimeLockStrategy = async (
 
 export const deployChromieSquiggleNTokenImpl = async (
   poolAddress: tEthereumAddress,
-  delegationRegistryAddress: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -3114,7 +3006,7 @@ export const deployChromieSquiggleNTokenImpl = async (
   return withSaveAndVerify(
     await getContractFactory("NTokenChromieSquiggle", libraries),
     eContractid.NTokenChromieSquiggleImpl,
-    [poolAddress, delegationRegistryAddress, startTokenId, endTokenId],
+    [poolAddress, startTokenId, endTokenId],
     verify,
     false,
     libraries
@@ -3123,7 +3015,6 @@ export const deployChromieSquiggleNTokenImpl = async (
 
 export const deployStakefishNTokenImpl = async (
   poolAddress: tEthereumAddress,
-  delegationRegistryAddress: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -3137,7 +3028,7 @@ export const deployStakefishNTokenImpl = async (
   return withSaveAndVerify(
     await getContractFactory("NTokenStakefish", libraries),
     eContractid.NTokenStakefishImpl,
-    [poolAddress, delegationRegistryAddress],
+    [poolAddress],
     verify,
     false,
     libraries

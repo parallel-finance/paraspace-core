@@ -26,9 +26,9 @@ contract BridgeERC21Handler {
     function bridgeAsset(
         BridgeERC721Message calldata message
     ) external onlyMsgHandler {
-        address bridgeAsset = getBridgeAsset[message.asset];
-        require(bridgeAsset != address(0), "invalid");
+        address asset = getBridgeAsset[message.asset];
+        require(asset != address(0), "invalid");
 
-        IBridgeERC721(bridgeAsset).mint(message.receiver, message.tokenIds);
+        IBridgeERC721(asset).mint(message.receiver, message.tokenIds);
     }
 }

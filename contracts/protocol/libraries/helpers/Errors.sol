@@ -135,11 +135,14 @@ library Errors {
     string public constant TOKEN_NOT_ALLOW_RESCUE = "140"; // token is not allow rescue
 
     string public constant INVALID_PARAMETER = "170"; //invalid parameter
-    string public constant INVALID_CALLER = "171"; //invalid callser
 
-    string public constant ONLY_MSG_HANDLER = "200"; //only msg handler
-    string public constant ONLY_VAULT = "201"; //only vault
-    string public constant ONLY_HANDLER = "202"; //only handler
-    string public constant ONLY_PARAX = "203"; //only parax
-    string public constant ONLY_BRIDGE = "204"; //only cross-chain bridge
+    string public constant INVALID_CALLER = "200"; //invalid caller
+    string public constant ONLY_MSG_HANDLER = "201"; //only msg handler
+    string public constant ONLY_VAULT = "202"; //only vault
+    string public constant ONLY_HANDLER = "203"; //only handler
+    string public constant ONLY_PARAX = "204"; //only parax
+    string public constant ONLY_BRIDGE = "205"; //only cross-chain bridge
+    string public constant NOT_APE_STAKING_BOT = "206"; //only ape staking bot
+    string public constant NFT_NOT_IN_POOL = "207"; //nft not in the pool
+    string public constant ALREADY_STAKING = "208"; //already staking
 }

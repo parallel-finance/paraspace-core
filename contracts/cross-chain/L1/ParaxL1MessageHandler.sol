@@ -33,17 +33,17 @@ contract ParaxL1MessageHandler {
 
     function bridgeReceive(BridgeMessage calldata message) external onlyBridge {
         if (message.msgType == MessageType.BridgeERC721) {
-            BridgeERC721Message memory message = abi.decode(
+            BridgeERC721Message memory erc721Message = abi.decode(
                 message.data,
                 (BridgeERC721Message)
             );
-            nftVault.releaseNFT(message);
+            nftVault.releaseNFT(erc721Message);
         } else if (message.msgType == MessageType.ERC721DELEGATION) {
-            ERC721DelegationMessage memory message = abi.decode(
+            ERC721DelegationMessage memory delegationMsg = abi.decode(
                 message.data,
                 (ERC721DelegationMessage)
             );
-            nftVault.updateTokenDelegation(message);
+            nftVault.updateTokenDelegation(delegationMsg);
         }
     }
 }

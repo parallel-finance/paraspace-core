@@ -12,12 +12,16 @@ import {IDelegateRegistry} from "../../dependencies/delegation/IDelegateRegistry
 contract ParaxBridgeNFTVault is Initializable, OwnableUpgradeable {
     IParaxL1MessageHandler internal immutable l1MsgHander;
 
-    IDelegateRegistry delegationRegistry;
+    IDelegateRegistry internal immutable delegationRegistry;
 
     mapping(address => bool) supportAsset;
 
-    constructor(IParaxL1MessageHandler msgHandler) {
+    constructor(
+        IParaxL1MessageHandler msgHandler,
+        address _delegationRegistry
+    ) {
         l1MsgHander = msgHandler;
+        delegationRegistry = IDelegateRegistry(_delegationRegistry);
     }
 
     modifier onlyMsgHandler() {
