@@ -49,6 +49,14 @@ interface IVaultApeStaking {
     event ApeStakingBotUpdated(address oldBot, address newBot);
 
     /**
+     * @dev Emitted during setCApeIncomeRate()
+     * @param nft identify pool
+     * @param oldValue The value of the old cApe income rate
+     * @param newValue The value of the new cApe income rate
+     **/
+    event CApeIncomeRateUpdated(address nft, uint32 oldValue, uint32 newValue);
+
+    /**
      * @dev Emitted during setCompoundFeeRate()
      * @param oldValue The old value of compound fee rate
      * @param newValue The new value of compound fee rate
@@ -144,7 +152,38 @@ interface IVaultApeStaking {
      */
     function compoundBAKC(BAKCPairActionInfo calldata actionInfo) external;
 
-    function checkApeStakingPosition(address nft, uint32 tokenId) external;
+    function onboardCheckApeStakingPosition(
+        address nft,
+        uint32 tokenId,
+        address beneficiary
+    ) external;
+
+    function offboardCheckApeStakingPosition(
+        address nft,
+        uint32 tokenId
+    ) external;
 
     function unstakeApe(bool isBAYC, uint32[] calldata tokenIds) external;
+
+    function setApeStakingBot(address _apeStakingBot) external;
+
+    function setCompoundFeeRate(uint32 _compoundFeeRate) external;
+
+    function claimCompoundFee(address receiver) external;
+
+    function updateBeneficiary(
+        address nft,
+        uint32[] calldata tokenIds,
+        address newBenificiary
+    ) external;
+
+    function pause() external;
+
+    function unpause() external;
+
+    function initialize() external;
+
+    function compoundFee() external view returns (uint256);
+
+    function setCApeIncomeRate(address nft, uint32 rate) external;
 }

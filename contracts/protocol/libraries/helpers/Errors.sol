@@ -145,4 +145,5 @@ library Errors {
     string public constant NOT_APE_STAKING_BOT = "206"; //only ape staking bot
     string public constant NFT_NOT_IN_POOL = "207"; //nft not in the pool
     string public constant ALREADY_STAKING = "208"; //already staking
+    string public constant INVALID_STATUS = "209"; //invalid status
 }

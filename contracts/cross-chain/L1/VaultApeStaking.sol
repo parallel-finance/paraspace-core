@@ -75,6 +75,23 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
         bakcMatchedCap = bakcPool.currentTimeRange.capPerPosition;
     }
 
+    function initialize() external {
+        //approve ApeCoin for apeCoinStaking
+        uint256 allowance = IERC20(apeCoin).allowance(
+            address(this),
+            address(apeCoinStaking)
+        );
+        if (allowance == 0) {
+            IERC20(apeCoin).approve(address(apeCoinStaking), type(uint256).max);
+        }
+
+        //approve ApeCoin for cApe
+        allowance = IERC20(apeCoin).allowance(address(this), address(cApe));
+        if (allowance == 0) {
+            IERC20(apeCoin).approve(address(cApe), type(uint256).max);
+        }
+    }
+
     /// @inheritdoc IVaultApeStaking
     function stakingApe(
         bool isBAYC,
@@ -82,10 +99,12 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
     ) external override whenNotPaused nonReentrant {
         uint256 arrayLength = tokenIds.length;
         require(arrayLength > 0, Errors.INVALID_PARAMETER);
+        ApeStakingStorage storage ds = apeStakingStorage();
+        require(ds.apeStakingBot == msg.sender, Errors.NOT_APE_STAKING_BOT);
 
         address nft = isBAYC ? bayc : mayc;
         uint256 positionCap = isBAYC ? baycMatchedCap : maycMatchedCap;
-        PoolState storage poolState = apeStakingStorage().poolStates[nft];
+        PoolState storage poolState = ds.poolStates[nft];
         ApeCoinStaking.SingleNft[]
             memory _nfts = new ApeCoinStaking.SingleNft[](arrayLength);
         for (uint256 index = 0; index < arrayLength; index++) {
@@ -133,6 +152,8 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
             uint256 baycArrayLength,
             uint256 maycArrayLength
         ) = _validateBAKCPairActionInfo(actionInfo);
+        ApeStakingStorage storage ds = apeStakingStorage();
+        require(ds.apeStakingBot == msg.sender, Errors.NOT_APE_STAKING_BOT);
 
         ApeCoinStaking.PairNftDepositWithAmount[]
             memory _baycPairs = new ApeCoinStaking.PairNftDepositWithAmount[](
@@ -143,8 +164,8 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
                 maycArrayLength
             );
 
-        PoolState storage bakcPoolState = apeStakingStorage().poolStates[bakc];
-        PoolState storage baycPoolState = apeStakingStorage().poolStates[bayc];
+        PoolState storage bakcPoolState = ds.poolStates[bakc];
+        PoolState storage baycPoolState = ds.poolStates[bayc];
         for (uint256 index = 0; index < baycArrayLength; index++) {
             uint32 apeTokenId = actionInfo.baycTokenIds[index];
             uint32 bakcTokenId = actionInfo.bakcPairBaycTokenIds[index];
@@ -185,7 +206,7 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
             emit BakcStaked(true, apeTokenId, bakcTokenId);
         }
 
-        PoolState storage maycPoolState = apeStakingStorage().poolStates[mayc];
+        PoolState storage maycPoolState = ds.poolStates[mayc];
         for (uint256 index = 0; index < maycArrayLength; index++) {
             uint32 apeTokenId = actionInfo.maycTokenIds[index];
             uint32 bakcTokenId = actionInfo.bakcPairMaycTokenIds[index];
@@ -254,6 +275,8 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
         for (uint256 index = 0; index < arrayLength; index++) {
             uint32 tokenId = tokenIds[index];
 
+            //skip check if token is in pool or in staking
+
             // construct staking data
             _nfts[index] = tokenId;
 
@@ -294,6 +317,8 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
             uint32 apeTokenId = actionInfo.baycTokenIds[index];
             uint32 bakcTokenId = actionInfo.bakcPairBaycTokenIds[index];
 
+            //skip check if token is in pool or in staking
+
             // construct staking data
             _baycPairs[index] = ApeCoinStaking.PairNft({
                 mainTokenId: apeTokenId,
@@ -327,10 +352,46 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
     }
 
     /// @inheritdoc IVaultApeStaking
-    function checkApeStakingPosition(
+    function onboardCheckApeStakingPosition(
+        address nft,
+        uint32 tokenId,
+        address beneficiary
+    ) external override {
+        require(msg.sender == address(this), Errors.INVALID_CALLER);
+
+        if (nft == bayc || nft == mayc || nft == bakc) {
+            //ensure no ape position
+            uint256 poolId = (nft == bayc) ? 1 : ((nft == mayc) ? 2 : 3);
+            (uint256 stakedAmount, ) = apeCoinStaking.nftPosition(
+                poolId,
+                tokenId
+            );
+            require(stakedAmount == 0, Errors.ALREADY_STAKING);
+            if (nft == bayc || nft == mayc) {
+                (, bool isPaired) = apeCoinStaking.mainToBakc(poolId, tokenId);
+                require(!isPaired, Errors.ALREADY_STAKING);
+            }
+
+            PoolState storage poolState = apeStakingStorage().poolStates[nft];
+            TokenStatus memory tokenStatus = poolState.tokenStatus[tokenId];
+            require(
+                tokenStatus.beneficiary == address(0),
+                Errors.INVALID_STATUS
+            );
+
+            tokenStatus.beneficiary = beneficiary;
+            tokenStatus.rewardsDebt = poolState.accumulatedRewardsPerNft;
+            poolState.tokenStatus[tokenId] = tokenStatus;
+
+            poolState.totalPosition += 1;
+        }
+    }
+
+    function offboardCheckApeStakingPosition(
         address nft,
         uint32 tokenId
     ) external override {
+        //ensure ownership by bridge, don't validate ownership here
         require(msg.sender == address(this), Errors.INVALID_CALLER);
 
         PoolState storage poolState = apeStakingStorage().poolStates[nft];
@@ -480,22 +541,21 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
         ApeStakingStorage storage ds = apeStakingStorage();
         PoolState storage poolState = ds.poolStates[nft];
         //first part compound fee
-        uint256 compoundFee = totalClaimedApe.percentMul(ds.compoundFeeRate);
+        uint256 fee = totalClaimedApe.percentMul(ds.compoundFeeRate);
         //second part repay cape
-        uint256 cApeIncome = (totalClaimedApe - compoundFee).percentMul(
+        uint256 cApeIncome = (totalClaimedApe - fee).percentMul(
             poolState.cApeIncomeRatio
         );
         //third ape pool income
-        uint256 poolIncome = totalClaimedApe - compoundFee - cApeIncome;
+        uint256 poolIncome = totalClaimedApe - fee - cApeIncome;
 
         cApe.notifyReward(cApeIncome);
-        cApe.deposit(address(this), compoundFee + poolIncome);
+        cApe.deposit(address(this), fee + poolIncome);
         uint256 cApeExchangeRate = cApe.getPooledApeByShares(WadRayMath.RAY);
         poolState.accumulatedRewardsPerNft += (poolIncome.rayDiv(
             cApeExchangeRate
         ) / poolState.totalPosition).toUint128();
-        ds.accuCompoundFee += (compoundFee.rayDiv(cApeExchangeRate))
-            .toUint128();
+        ds.accuCompoundFee += (fee.rayDiv(cApeExchangeRate)).toUint128();
     }
 
     function _validateBAKCPairActionInfo(
@@ -566,6 +626,7 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
             uint32 tokenId = tokenIds[index];
 
             TokenStatus memory tokenStatus = poolState.tokenStatus[tokenId];
+            //ensure token id is in pool and caller is valid by checking beneficiary
             require(
                 msg.sender == tokenStatus.beneficiary,
                 Errors.INVALID_CALLER
@@ -625,6 +686,20 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
         }
     }
 
+    function setCApeIncomeRate(
+        address nft,
+        uint32 rate
+    ) external onlyPoolAdmin {
+        require(rate <= 1e4, Errors.INVALID_PARAMETER);
+        ApeStakingStorage storage ds = apeStakingStorage();
+        PoolState storage poolState = ds.poolStates[nft];
+        uint32 oldValue = poolState.cApeIncomeRatio;
+        if (oldValue != rate) {
+            poolState.cApeIncomeRatio = rate;
+            emit CApeIncomeRateUpdated(nft, oldValue, rate);
+        }
+    }
+
     function claimCompoundFee(address receiver) external {
         ApeStakingStorage storage ds = apeStakingStorage();
         require(ds.apeStakingBot == msg.sender, Errors.NOT_APE_STAKING_BOT);
@@ -636,6 +711,11 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
 
             emit CompoundFeeClaimed(amount);
         }
+    }
+
+    function compoundFee() external view returns (uint256) {
+        ApeStakingStorage storage ds = apeStakingStorage();
+        return ds.accuCompoundFee;
     }
 
     function updateBeneficiary(

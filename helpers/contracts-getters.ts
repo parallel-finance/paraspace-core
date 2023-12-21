@@ -58,7 +58,6 @@ import {
   IPool__factory,
   MockReserveAuctionStrategy__factory,
   ApeCoinStaking__factory,
-  PTokenSApe__factory,
   StandardPolicyERC721__factory,
   BlurExchange__factory,
   ExecutionDelegate__factory,
@@ -96,6 +95,8 @@ import {
   Account__factory,
   AccountFactory__factory,
   AccountRegistry__factory,
+  IVault__factory,
+  ParaProxy__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -349,7 +350,7 @@ export const getPoolLogic = async (address?: tEthereumAddress) =>
   );
 
 export const getPoolProxy = async (address?: tEthereumAddress) => {
-  return await IPool__factory.connect(
+  return IPool__factory.connect(
     address ||
       (
         await getDb()
@@ -359,6 +360,31 @@ export const getPoolProxy = async (address?: tEthereumAddress) => {
     await getFirstSigner()
   );
 };
+
+export const getVaultProxy = async (address?: tEthereumAddress) => {
+  return ParaProxy__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.VaultProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+};
+
+export const getVault = async (address?: tEthereumAddress) => {
+  return IVault__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.VaultProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+};
+
 export const getPriceOracle = async (address?: tEthereumAddress) =>
   await PriceOracle__factory.connect(
     address ||
@@ -932,17 +958,6 @@ export const getPTokenStETH = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.PTokenStETHImpl}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getPTokenSApe = async (address?: tEthereumAddress) =>
-  await PTokenSApe__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.PTokenSApeImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

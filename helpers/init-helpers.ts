@@ -34,7 +34,6 @@ import {
   deployPTokenAToken,
   deployATokenDebtToken,
   deployStETHDebtToken,
-  deployPTokenSApe,
   deployPTokenCApe,
   deployCApeDebtToken,
   deployPTokenAStETH,
@@ -436,25 +435,6 @@ export const initReservesByHelper = async (
             ).address;
           }
           variableDebtTokenToUse = astETHVariableDebtTokenImplementationAddress;
-        } else if (reserveSymbol === ERC20TokenContractId.sAPE) {
-          if (!pTokenSApeImplementationAddress) {
-            const protocolDataProvider = await getProtocolDataProvider();
-            const allTokens = await protocolDataProvider.getAllXTokens();
-            const nBAYC =
-              // eslint-disable-next-line
-              allTokens.find(
-                (x) => x.symbol == NTokenContractId.nBAYC
-              )!.tokenAddress;
-            const nMAYC =
-              // eslint-disable-next-line
-              allTokens.find(
-                (x) => x.symbol == NTokenContractId.nMAYC
-              )!.tokenAddress;
-            pTokenSApeImplementationAddress = (
-              await deployPTokenSApe(pool.address, nBAYC, nMAYC, verify)
-            ).address;
-          }
-          xTokenToUse = pTokenSApeImplementationAddress;
         } else if (reserveSymbol === ERC20TokenContractId.cAPE) {
           await deployAutoCompoundApeImplAndAssignItToProxy(verify);
           if (!pTokenPsApeImplementationAddress) {
