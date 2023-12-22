@@ -72,6 +72,7 @@ export const isPublicTestnet = (): boolean => {
     ].includes(DRE.network.config.chainId!) ||
     [
       eEthereumNetwork.goerli,
+      eEthereumNetwork.sepolia,
       eEthereumNetwork.arbitrumGoerli,
       eEthereumNetwork.arbitrumSepolia,
       eEthereumNetwork.paraxDev,

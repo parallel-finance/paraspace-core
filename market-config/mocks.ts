@@ -6,6 +6,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_PRICES = {
   // ERC20
   DAI: parseEther("0.000908578801039414").toString(),
   USDC: parseEther("0.000915952223931999").toString(),
+  aUSDC: parseEther("0.000477910115122588").toString(),
   USDT: parseEther("0.000915952223931999").toString(),
   FRAX: parseEther("0.000915952223931999").toString(),
   WETH: parseEther("1").toString(),
@@ -72,6 +73,7 @@ export const MOCK_CHAINLINK_AGGREGATORS_USD_PRICES = {
   // ERC20
   DAI: parseUnits("1", 8).toString(),
   USDC: parseUnits("1", 8).toString(),
+  aUSDC: parseUnits("1", 8).toString(),
   USDT: parseUnits("1", 8).toString(),
   FRAX: parseUnits("1", 8).toString(),
   WETH: parseUnits("1896", 8).toString(),
