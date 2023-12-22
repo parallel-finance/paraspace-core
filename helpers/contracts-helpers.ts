@@ -1318,8 +1318,8 @@ export const linkLibraries = (
           if (addr === undefined) {
             continue;
           }
-          console.log("****linkLibraries*****libName:", libName);
-          console.log("****linkLibraries*****addr:", addr);
+          // console.log("****linkLibraries*****libName:", libName);
+          // console.log("****linkLibraries*****addr:", addr);
 
           for (const fixup of fixups) {
             bytecode =

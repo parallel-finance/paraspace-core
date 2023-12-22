@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {SafeCast} from "../../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import "../../../dependencies/openzeppelin/contracts/Address.sol";
 import {WadRayMath} from "../../libraries/math/WadRayMath.sol";
 import "../../../interfaces/IRewardController.sol";
 import "../../libraries/types/DataTypes.sol";

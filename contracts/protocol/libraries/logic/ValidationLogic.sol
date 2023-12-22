@@ -27,7 +27,6 @@ import {IToken} from "../../../interfaces/IToken.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../helpers/Helpers.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
-import "../../../interfaces/INTokenApeStaking.sol";
 
 /**
  * @title ReserveLogic library
@@ -993,10 +992,8 @@ library ValidationLogic {
 
     /**
      * @notice Validates a flash claim.
-     * @param ps The pool storage
      */
     function validateFlashClaim(
-        DataTypes.PoolStorage storage ps,
         address xTokenAddress,
         DataTypes.AssetType assetType,
         uint256[] memory nftTokenIds

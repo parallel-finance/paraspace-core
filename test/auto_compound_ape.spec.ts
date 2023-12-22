@@ -1,33 +1,20 @@
 import {loadFixture} from "@nomicfoundation/hardhat-network-helpers";
 import {expect} from "chai";
-import {AutoCompoundApe, PToken, PTokenSApe, VariableDebtToken} from "../types";
+import {AutoCompoundApe, PToken, VariableDebtToken} from "../types";
 import {TestEnv} from "./helpers/make-suite";
 import {testEnvFixture} from "./helpers/setup-env";
 import {mintAndValidate} from "./helpers/validated-steps";
 import {parseEther, solidityKeccak256} from "ethers/lib/utils";
-import {
-  almostEqual,
-  approveTo,
-  createNewPool,
-  fund,
-  mintNewPosition,
-} from "./helpers/uniswapv3-helper";
+import {almostEqual} from "./helpers/uniswapv3-helper";
 import {
   getAutoCompoundApe,
   getPToken,
-  getPTokenSApe,
   getVariableDebtToken,
 } from "../helpers/contracts-getters";
-import {MAX_UINT_AMOUNT, ONE_ADDRESS} from "../helpers/constants";
-import {
-  advanceTimeAndBlock,
-  getParaSpaceConfig,
-  waitForTx,
-} from "../helpers/misc-utils";
+import {MAX_UINT_AMOUNT} from "../helpers/constants";
+import {advanceTimeAndBlock, waitForTx} from "../helpers/misc-utils";
 import {deployMockedDelegateRegistry} from "../helpers/contracts-deployments";
 import {ETHERSCAN_VERIFICATION} from "../helpers/hardhat-constants";
-import {convertToCurrencyDecimals} from "../helpers/contracts-helpers";
-import {encodeSqrtRatioX96} from "@uniswap/v3-sdk";
 import {ProtocolErrors} from "../helpers/types";
 
 describe("Auto Compound Ape Test", () => {
@@ -35,8 +22,6 @@ describe("Auto Compound Ape Test", () => {
   let cApe: AutoCompoundApe;
   let pCApe: PToken;
   let variableDebtCAPE: VariableDebtToken;
-  let pSApeCoin: PTokenSApe;
-  const sApeAddress = ONE_ADDRESS;
   let user1Amount;
   let user2Amount;
   let user3Amount;
@@ -48,14 +33,11 @@ describe("Auto Compound Ape Test", () => {
     testEnv = await loadFixture(testEnvFixture);
     const {
       ape,
-      usdc,
-      weth,
-      users: [user1, user2, , , user3, user4, user5],
+      users: [user1, user2, , , user3, user4],
       apeCoinStaking,
       pool,
       protocolDataProvider,
       poolAdmin,
-      nftPositionManager,
     } = testEnv;
 
     cApe = await getAutoCompoundApe();
@@ -67,9 +49,6 @@ describe("Auto Compound Ape Test", () => {
     } = await protocolDataProvider.getReserveTokensAddresses(cApe.address);
     pCApe = await getPToken(pCApeAddress);
     variableDebtCAPE = await getVariableDebtToken(variableDebtPsApeAddress);
-    const {xTokenAddress: pSApeCoinAddress} =
-      await protocolDataProvider.getReserveTokensAddresses(sApeAddress);
-    pSApeCoin = await getPTokenSApe(pSApeCoinAddress);
 
     await mintAndValidate(ape, "1000", user1);
     await mintAndValidate(ape, "2000", user2);
@@ -128,98 +107,6 @@ describe("Auto Compound Ape Test", () => {
     await waitForTx(
       await cApe.connect(user4.signer).deposit(user4.address, MINIMUM_LIQUIDITY)
     );
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // Uniswap APE/WETH/USDC
-    ////////////////////////////////////////////////////////////////////////////////
-    const userApeAmount = await convertToCurrencyDecimals(
-      ape.address,
-      "200000"
-    );
-    const userUsdcAmount = await convertToCurrencyDecimals(
-      usdc.address,
-      "800000"
-    );
-    const userWethAmount = await convertToCurrencyDecimals(
-      weth.address,
-      "732.76177"
-    );
-    await fund({token: ape, user: user5, amount: userApeAmount});
-    await fund({token: weth, user: user5, amount: userWethAmount.mul(2)});
-    await fund({token: usdc, user: user5, amount: userUsdcAmount});
-    const nft = nftPositionManager.connect(user5.signer);
-    await approveTo({
-      target: nftPositionManager.address,
-      token: ape,
-      user: user5,
-    });
-    await approveTo({
-      target: nftPositionManager.address,
-      token: usdc,
-      user: user5,
-    });
-    await approveTo({
-      target: nftPositionManager.address,
-      token: weth,
-      user: user5,
-    });
-    const apeWethFee = 3000;
-    const usdcWethFee = 500;
-    const apeWethTickSpacing = apeWethFee / 50;
-    const usdcWethTickSpacing = usdcWethFee / 50;
-    const apeWethInitialPrice = encodeSqrtRatioX96(1091760000, 4000000);
-    const apeWethLowerPrice = encodeSqrtRatioX96(109176000, 4000000);
-    const apeWethUpperPrice = encodeSqrtRatioX96(10917600000, 4000000);
-    const usdcWethInitialPrice = encodeSqrtRatioX96(
-      1000000000000000000,
-      1091760000
-    );
-    const usdcWethLowerPrice = encodeSqrtRatioX96(
-      100000000000000000,
-      1091760000
-    );
-    const usdcWethUpperPrice = encodeSqrtRatioX96(
-      10000000000000000000,
-      1091760000
-    );
-    await createNewPool({
-      positionManager: nft,
-      token0: weth,
-      token1: ape,
-      fee: apeWethFee,
-      initialSqrtPrice: apeWethInitialPrice.toString(),
-    });
-    await createNewPool({
-      positionManager: nft,
-      token0: usdc,
-      token1: weth,
-      fee: usdcWethFee,
-      initialSqrtPrice: usdcWethInitialPrice.toString(),
-    });
-    await mintNewPosition({
-      nft: nft,
-      token0: weth,
-      token1: ape,
-      fee: apeWethFee,
-      user: user5,
-      tickSpacing: apeWethTickSpacing,
-      lowerPrice: apeWethLowerPrice,
-      upperPrice: apeWethUpperPrice,
-      token0Amount: userWethAmount,
-      token1Amount: userApeAmount,
-    });
-    await mintNewPosition({
-      nft: nft,
-      token0: usdc,
-      token1: weth,
-      fee: usdcWethFee,
-      user: user5,
-      tickSpacing: usdcWethTickSpacing,
-      lowerPrice: usdcWethLowerPrice,
-      upperPrice: usdcWethUpperPrice,
-      token0Amount: userUsdcAmount,
-      token1Amount: userWethAmount,
-    });
 
     return testEnv;
   };
