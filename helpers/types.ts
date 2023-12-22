@@ -84,6 +84,7 @@ export type ParaSpaceLibraryAddresses = Libraries;
 export enum eEthereumNetwork {
   ropsten = "ropsten",
   goerli = "goerli",
+  sepolia = "sepolia",
   mainnet = "mainnet",
   hardhat = "hardhat",
   tenderlyMain = "tenderlyMain",
@@ -95,6 +96,8 @@ export enum eEthereumNetwork {
   moonbase = "moonbase",
   arbitrum = "arbitrum",
   arbitrumGoerli = "arbitrumGoerli",
+  arbitrumSepolia = "arbitrumSepolia",
+  paraxDev = "paraxDev",
   polygon = "polygon",
   polygonMumbai = "polygonMumbai",
   polygonZkevm = "polygonZkevm",
@@ -222,6 +225,7 @@ export enum eContractid {
   MoonBirdHelper = "MoonBirdHelper",
   UniswapV3 = "UniswapV3",
   UniswapV3Factory = "UniswapV3Factory",
+  QuoterV2 = "QuoterV2",
   UniswapV3SwapRouter = "UniswapV3SwapRouter",
   NFTDescriptor = "NFTDescriptor",
   NonfungibleTokenPositionDescriptor = "NonfungibleTokenPositionDescriptor",
@@ -455,6 +459,7 @@ export interface iAssetBase<T> {
   DAI: T;
   WETH: T;
   USDC: T;
+  aUSDC: T;
   USDT: T;
   FRAX: T;
   WBTC: T;
@@ -588,6 +593,7 @@ export enum ERC20TokenContractId {
   DAI = "DAI",
   WETH = "WETH",
   USDC = "USDC",
+  aUSDC = "aUSDC",
   USDT = "USDT",
   FRAX = "FRAX",
   WBTC = "WBTC",
@@ -745,6 +751,7 @@ export type iParamsPerNetworkAll<T> = iEthereumParamsPerNetwork<T>;
 
 export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.goerli]: T;
+  [eEthereumNetwork.sepolia]: T;
   [eEthereumNetwork.mainnet]: T;
   [eEthereumNetwork.hardhat]: T;
   [eEthereumNetwork.anvil]: T;
@@ -755,6 +762,8 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.moonbase]: T;
   [eEthereumNetwork.arbitrum]: T;
   [eEthereumNetwork.arbitrumGoerli]: T;
+  [eEthereumNetwork.arbitrumSepolia]: T;
+  [eEthereumNetwork.paraxDev]: T;
   [eEthereumNetwork.polygon]: T;
   [eEthereumNetwork.polygonMumbai]: T;
   [eEthereumNetwork.polygonZkevm]: T;
@@ -947,7 +956,7 @@ export interface ICommonConfiguration {
 
   Governance: IGovernanceConfig;
 
-  AccountAbstraction: IAccountAbstraction;
+  AccountAbstraction: IAccountAbstraction | undefined;
 }
 
 export interface IParaSpaceConfiguration extends ICommonConfiguration {

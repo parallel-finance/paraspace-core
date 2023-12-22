@@ -22,13 +22,16 @@ const getPrivateKeyfromEncryptedJson = (
 
 export const HARDHAT_CHAINID = 31337;
 export const GOERLI_CHAINID = 5;
+export const SEPOLIA_CHAINID = 11155111;
 export const FORK_CHAINID = 522;
 export const MAINNET_CHAINID = 1;
 export const PARALLEL_CHAINID = 1592;
+export const PARAX_DEV_CHAINID = 2982896226593698;
 export const MOONBEAM_CHAINID = 1284;
 export const MOONBASE_CHAINID = 1287;
 export const ARBITRUM_ONE_CHAINID = 42161;
 export const ARBITRUM_GOERLI_CHAINID = 421613;
+export const ARBITRUM_SEPOLIA_CHAINID = 421613;
 export const POLYGON_CHAINID = 137;
 export const POLYGON_ZKEVM_CHAINID = 1101;
 export const POLYGON_ZKEVM_GOERLI_CHAINID = 1442;
@@ -67,10 +70,16 @@ export const DB_PATH = process.env.DB_PATH ?? ":memory:";
 export const ETHERSCAN_KEY = process.env.ETHERSCAN_KEY || "";
 export const GOERLI_ETHERSCAN_KEY =
   process.env.GOERLI_ETHERSCAN_KEY || ETHERSCAN_KEY;
+export const SEPOLIA_ETHERSCAN_KEY =
+  process.env.SEPOLIA_ETHERSCAN_KEY || ETHERSCAN_KEY;
 export const ARBITRUM_ETHERSCAN_KEY =
   process.env.ARBITRUM_ETHERSCAN_KEY || ETHERSCAN_KEY;
 export const ARBITRUM_GOERLI_ETHERSCAN_KEY =
   process.env.ARBITRUM_GOERLI_ETHERSCAN_KEY || ARBITRUM_ETHERSCAN_KEY;
+export const ARBITRUM_SEPOLIA_ETHERSCAN_KEY =
+  process.env.ARBITRUM_SEPOLIA_ETHERSCAN_KEY || ARBITRUM_ETHERSCAN_KEY;
+export const PARAX_DEV_ETHERSCAN_KEY =
+  process.env.PARAX_DEV_ETHERSCAN_KEY || ETHERSCAN_KEY;
 export const POLYGON_ETHERSCAN_KEY =
   process.env.POLYGON_ETHERSCAN_KEY || ETHERSCAN_KEY;
 export const POLYGON_MUMBAI_ETHERSCAN_KEY =
@@ -104,6 +113,9 @@ export const ETHERSCAN_NETWORKS = [
   "mainnet",
   "goerli",
   "arbitrum",
+  "arbitrumGoerli",
+  "arbitrumSepolia",
+  "paraxDev",
   "polygon",
   "matic",
   "polygonMumbai",
@@ -122,6 +134,9 @@ export const ETHERSCAN_APIS = {
   goerli: "https://api-goerli.etherscan.io/api",
   arbitrum: "https://api.arbiscan.io/api",
   arbitrumGoerli: "https://api-goerli.arbiscan.io/api",
+  arbitrumSepolia: "https://api-sepolia.arbiscan.io/api",
+  paraxDev:
+    "https://explorerl2new-surprised-harlequin-bonobo-fvcy2k9oqh.t.conduit.xyz/api",
   polygon: "https://api.polygonscan.com/api",
   matic: "https://api.polygonscan.com/api",
   polygonMumbai: "https://api-mumbai.polygonscan.com/api",
@@ -141,8 +156,11 @@ export const BROWSER_URLS = {
   goerli: "https://goerli.etherscan.io",
   arbitrum: "https://arbiscan.io",
   arbitrumGoerli: "https://goerli.arbiscan.io",
+  arbitrumSepolia: "https://sepolia.arbiscan.io",
   polygonZkevm: "https://zkevm.polygonscan.com",
   polygonZkevmGoerli: "https://testnet-zkevm.polygonscan.com",
+  paraxDev:
+    "https://explorerl2new-surprised-harlequin-bonobo-fvcy2k9oqh.t.conduit.xyz",
   polygon: "https://polygonscan.com",
   matic: "https://polygonscan.com",
   polygonMumbai: "https://mumbai.polygonscan.com",
@@ -217,7 +235,7 @@ export const MULTI_SIG_NONCE = process.env.MULTI_SIG_NONCE
   ? parseInt(process.env.MULTI_SIG_NONCE)
   : undefined;
 export const MULTI_SEND_CHUNK_SIZE = parseInt(
-  process.env.MULTI_SEND_CHUNK_SIZE || "30"
+  process.env.MULTI_SEND_CHUNK_SIZE || "45"
 );
 
 export const VERSION = version;
@@ -498,5 +516,6 @@ export const XTOKEN_TYPE_UPGRADE_WHITELIST =
     .split(/\s?,\s?/)
     .map((x) => +x);
 export const XTOKEN_SYMBOL_UPGRADE_WHITELIST =
-    process.env.XTOKEN_SYMBOL_UPGRADE_WHITELIST?.trim()
-        .split(/\s?,\s?/);
+  process.env.XTOKEN_SYMBOL_UPGRADE_WHITELIST?.trim().split(/\s?,\s?/);
+
+export const STACKUP_KEY = process.env.STACKUP_KEY || "";

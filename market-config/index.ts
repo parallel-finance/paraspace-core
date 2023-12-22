@@ -1,5 +1,5 @@
 import {ZERO_ADDRESS} from "../helpers/constants";
-import {MULTI_SEND, MULTI_SIG} from "../helpers/hardhat-constants";
+import {MULTI_SEND, MULTI_SIG, STACKUP_KEY} from "../helpers/hardhat-constants";
 import {
   eEthereumNetwork,
   ERC20TokenContractId,
@@ -78,6 +78,7 @@ import {
   strategyEXRP,
   strategyuBAYC,
   strategyuPPG,
+  strategyAUSDC,
 } from "./reservesConfigs";
 
 export const CommonConfig: Pick<
@@ -137,10 +138,7 @@ export const CommonConfig: Pick<
   },
   // ParaSpaceV1
   ParaSpaceV1: undefined,
-  AccountAbstraction: {
-    rpcUrl: `https://api.stackup.sh/v1/node/${process.env.STACKUP_KEY}`,
-    paymasterUrl: `https://api.stackup.sh/v1/paymaster/${process.env.STACKUP_KEY}`,
-  },
+  AccountAbstraction: undefined,
 };
 
 export const HardhatConfig: IParaSpaceConfiguration = {
@@ -631,6 +629,82 @@ export const ArbitrumGoerliConfig: IParaSpaceConfiguration = {
   Oracle: ArbitrumOracleConfig,
 };
 
+export const ArbitrumSepoliaConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  YogaLabs: {},
+  Uniswap: {},
+  Tokens: {},
+  Marketplace: {},
+  Chainlink: {},
+  BendDAO: {},
+  Stakefish: {},
+  // RESERVE ASSETS - CONFIG, ASSETS, BORROW RATES,
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    PUNK: strategyPUNK,
+    BLUR: strategyBLUR,
+    DOODLE: strategyDoodles,
+    WPUNKS: strategyWPunks,
+    MOONBIRD: strategyMoonbird,
+    MEEBITS: strategyMeebits,
+    AZUKI: strategyAzuki,
+    OTHR: strategyOthr,
+    CLONEX: strategyClonex,
+    BLOCKS: strategyBLOCKS,
+    SEWER: strategySEWER,
+    PPG: strategyPudgyPenguins,
+  },
+};
+export const ParaxDevConfig: IParaSpaceConfiguration = {
+  // BASIC INFO
+  ...CommonConfig,
+  ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
+  ParaSpaceAdmin: "0x28abAC3E3F1fbC8Aa4Ded74C1589026038f889d8",
+  EmergencyAdmins: ["0x28abAC3E3F1fbC8Aa4Ded74C1589026038f889d8"],
+  RiskAdmin: "0x28abAC3E3F1fbC8Aa4Ded74C1589026038f889d8",
+  GatewayAdmin: "0x28abAC3E3F1fbC8Aa4Ded74C1589026038f889d8",
+  YogaLabs: {},
+  Uniswap: {},
+  Tokens: {
+    aUSDC: "0x259CdA67f5a3836aEBb207b94f0b57f548921631",
+  },
+  Marketplace: {},
+  Chainlink: {},
+  BendDAO: {},
+  Stakefish: {},
+  // RESERVE ASSETS - CONFIG, ASSETS, BORROW RATES,
+  ReservesConfig: {
+    DAI: strategyDAI,
+    USDC: strategyUSDC,
+    USDT: strategyUSDT,
+    FRAX: strategyFRAX,
+    WETH: strategyWETH,
+    WBTC: strategyWBTC,
+    PUNK: strategyPUNK,
+    BLUR: strategyBLUR,
+    DOODLE: strategyDoodles,
+    WPUNKS: strategyWPunks,
+    MOONBIRD: strategyMoonbird,
+    MEEBITS: strategyMeebits,
+    AZUKI: strategyAzuki,
+    OTHR: strategyOthr,
+    CLONEX: strategyClonex,
+    BLOCKS: strategyBLOCKS,
+    SEWER: strategySEWER,
+    PPG: strategyPudgyPenguins,
+    aUSDC: strategyAUSDC,
+  },
+};
+
 export const ZkSyncGoerliConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
@@ -1009,6 +1083,10 @@ export const MainnetConfig: IParaSpaceConfiguration = {
     TimeLockV1: "0x59B72FdB45B3182c8502cC297167FE4f821f332d",
     P2PPairStakingV1: "0xf090Eb4c2B63e7B26E8Bb09e6Fc0cC3A7586263B",
   },
+  AccountAbstraction: {
+    rpcUrl: `https://api.stackup.sh/v1/node/${STACKUP_KEY}`,
+    paymasterUrl: `https://api.stackup.sh/v1/paymaster/${STACKUP_KEY}`,
+  },
 };
 
 export const ParaSpaceConfigs: Partial<
@@ -1022,6 +1100,8 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.goerli]: GoerliConfig,
   [eEthereumNetwork.mainnet]: MainnetConfig,
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
+  [eEthereumNetwork.arbitrumSepolia]: ArbitrumSepoliaConfig,
+  [eEthereumNetwork.paraxDev]: ParaxDevConfig,
   [eEthereumNetwork.arbitrum]: ArbitrumConfig,
   [eEthereumNetwork.polygon]: PolygonConfig,
   [eEthereumNetwork.polygonMumbai]: PolygonMumbaiConfig,

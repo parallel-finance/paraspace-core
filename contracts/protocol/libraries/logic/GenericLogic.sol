@@ -16,7 +16,7 @@ import {PercentageMath} from "../math/PercentageMath.sol";
 import {WadRayMath} from "../math/WadRayMath.sol";
 import {DataTypes} from "../types/DataTypes.sol";
 import {ReserveLogic} from "./ReserveLogic.sol";
-import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
+import {INonfungiblePositionManager} from "../../../interfaces/IUniV3NonfungiblePositionManager.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../../libraries/helpers/Helpers.sol";
 

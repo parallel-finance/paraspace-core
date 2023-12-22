@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.17;
 
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts/interfaces/IERC1271.sol";
+import "../dependencies/openzeppelin/contracts/ECDSA.sol";
+import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
+import "../dependencies/openzeppelin/contracts/IERC1271.sol";
 import {SignatureChecker} from "../dependencies/openzeppelin/contracts/SignatureChecker.sol";
 import "./base-account-abstraction/core/BaseAccount.sol";
 import "./callback/TokenCallbackHandler.sol";

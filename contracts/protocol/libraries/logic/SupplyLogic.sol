@@ -5,7 +5,6 @@ import {IERC20} from "../../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {GPv2SafeERC20} from "../../../dependencies/gnosis/contracts/GPv2SafeERC20.sol";
 import {IPToken} from "../../../interfaces/IPToken.sol";
-import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
 import {INToken} from "../../../interfaces/INToken.sol";
 import {INTokenApeStaking} from "../../../interfaces/INTokenApeStaking.sol";
 import {ICollateralizableERC721} from "../../../interfaces/ICollateralizableERC721.sol";

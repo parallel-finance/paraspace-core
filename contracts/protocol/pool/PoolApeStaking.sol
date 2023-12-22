@@ -23,7 +23,7 @@ import {IAutoCompoundApe} from "../../interfaces/IAutoCompoundApe.sol";
 import {PercentageMath} from "../libraries/math/PercentageMath.sol";
 import {WadRayMath} from "../libraries/math/WadRayMath.sol";
 import {Math} from "../../dependencies/openzeppelin/contracts/Math.sol";
-import {ISwapRouter} from "../../dependencies/uniswapv3-periphery/interfaces/ISwapRouter.sol";
+import {ISwapRouter} from "../../interfaces/IUniV3SwapRouter.sol";
 import {IPriceOracleGetter} from "../../interfaces/IPriceOracleGetter.sol";
 import {Helpers} from "../libraries/helpers/Helpers.sol";
 

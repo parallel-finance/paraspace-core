@@ -420,7 +420,8 @@ export const initReservesByHelper = async (
           variableDebtTokenToUse = stKSMVariableDebtTokenImplementationAddress;
         } else if (
           reserveSymbol === ERC20TokenContractId.aWETH ||
-          reserveSymbol === ERC20TokenContractId.awstETH
+          reserveSymbol === ERC20TokenContractId.awstETH ||
+          reserveSymbol === ERC20TokenContractId.aUSDC
         ) {
           if (!pTokenATokenImplementationAddress) {
             pTokenATokenImplementationAddress = (

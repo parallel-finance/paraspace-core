@@ -8,7 +8,7 @@ import "../dependencies/openzeppelin/contracts/IERC20.sol";
 import "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import "../dependencies/openzeppelin/contracts/SafeCast.sol";
 import "../dependencies/openzeppelin/contracts/Address.sol";
-import "../dependencies/uniswapv3-periphery/interfaces/ISwapRouter.sol";
+import "../interfaces/IUniV3SwapRouter.sol";
 import "../dependencies/yoga-labs/ApeCoinStaking.sol";
 import "../interfaces/IAutoYieldApe.sol";
 import "../interfaces/IYieldInfo.sol";
