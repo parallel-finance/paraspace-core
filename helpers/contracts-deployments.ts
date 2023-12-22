@@ -145,6 +145,8 @@ import {
   VariableDebtToken,
   VaultApeStaking,
   VaultApeStaking__factory,
+  VaultCommon,
+  VaultCommon__factory,
   VaultTemplate,
   VaultTemplate__factory,
   WalletBalanceProvider,
@@ -341,6 +343,7 @@ export const deployACLManager = async (
   ) as Promise<ACLManager>;
 
 export const getVaultSignatures = () => {
+  const commonSelectors = getFunctionSignatures(VaultCommon__factory.abi);
   const apeStakingSelectors = getFunctionSignatures(
     VaultApeStaking__factory.abi
   );
@@ -353,6 +356,7 @@ export const getVaultSignatures = () => {
 
   const allSelectors = {};
   const vaultSelectors = [
+    ...commonSelectors,
     ...apeStakingSelectors,
     ...templateSelectors,
     ...paraProxyInterfacesSelectors,
@@ -370,6 +374,7 @@ export const getVaultSignatures = () => {
   }
 
   return {
+    commonSelectors,
     apeStakingSelectors,
     templateSelectors,
     paraProxyInterfacesSelectors,
@@ -408,6 +413,23 @@ export const deployVaultApeStaking = async (verify?: boolean) => {
   return {
     vaultApeStaking,
     apeStakingSelectors: apeStakingSelectors.map((s) => s.signature),
+  };
+};
+
+export const deployVaultCommon = async (verify?: boolean) => {
+  const {commonSelectors} = getVaultSignatures();
+
+  const vaultCommon = (await withSaveAndVerify(
+    await getContractFactory("VaultCommon"),
+    eContractid.VaultCommon,
+    [],
+    verify,
+    false
+  )) as VaultCommon;
+
+  return {
+    vaultCommon,
+    vaultCommonSelectors: commonSelectors.map((s) => s.signature),
   };
 };
 
@@ -468,6 +490,8 @@ export const deployVault = async (verify?: boolean) => {
 
   const proxy = await getVaultProxy(proxyAddress);
 
+  const {vaultCommon, vaultCommonSelectors} = await deployVaultCommon(verify);
+
   const {vaultApeStaking, apeStakingSelectors} = await deployVaultApeStaking(
     verify
   );
@@ -481,6 +505,11 @@ export const deployVault = async (verify?: boolean) => {
 
   await proxy.updateImplementation(
     [
+      {
+        implAddress: vaultCommon.address,
+        action: 0,
+        functionSelectors: vaultCommonSelectors,
+      },
       {
         implAddress: vaultApeStaking.address,
         action: 0,

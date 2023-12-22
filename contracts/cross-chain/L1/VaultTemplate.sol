@@ -39,13 +39,4 @@ contract VaultTemplate is ReentrancyGuard, Pausable, IVaultTemplate {
         );
         IERC721(nft).safeTransferFrom(address(this), msg.sender, tokenId);
     }
-
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes memory
-    ) external pure returns (bytes4) {
-        return this.onERC721Received.selector;
-    }
 }

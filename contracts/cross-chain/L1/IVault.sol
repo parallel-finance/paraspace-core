@@ -3,6 +3,12 @@ pragma solidity ^0.8.0;
 
 import "./IVaultApeStaking.sol";
 import "./IVaultTemplate.sol";
+import "./IVaultCommon.sol";
 import "../../interfaces/IParaProxyInterfaces.sol";
 
-interface IVault is IVaultApeStaking, IVaultTemplate, IParaProxyInterfaces {}
+interface IVault is
+    IVaultApeStaking,
+    IVaultTemplate,
+    IVaultCommon,
+    IParaProxyInterfaces
+{}

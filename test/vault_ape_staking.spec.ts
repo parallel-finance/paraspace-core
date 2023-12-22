@@ -700,4 +700,113 @@ describe("Vault Ape staking Test", () => {
         .claimPendingReward(bakc.address, [0, 1])
     );
   });
+
+  it("multicall test", async () => {
+    const {
+      users: [user1, , , user4],
+      bayc,
+      mayc,
+      bakc,
+    } = await loadFixture(fixture);
+
+    await mintAndValidate(bayc, "4", user1);
+    await mintAndValidate(mayc, "4", user1);
+    await mintAndValidate(bakc, "4", user1);
+    await waitForTx(
+      await bayc
+        .connect(user1.signer)
+        .setApprovalForAll(vaultProxy.address, true)
+    );
+    await waitForTx(
+      await mayc
+        .connect(user1.signer)
+        .setApprovalForAll(vaultProxy.address, true)
+    );
+    await waitForTx(
+      await bakc
+        .connect(user1.signer)
+        .setApprovalForAll(vaultProxy.address, true)
+    );
+
+    let tx0 = vaultProxy.interface.encodeFunctionData("onboardNFTs", [
+      bayc.address,
+      [0, 1, 2],
+    ]);
+    let tx1 = vaultProxy.interface.encodeFunctionData("onboardNFTs", [
+      mayc.address,
+      [0, 1, 2],
+    ]);
+    let tx2 = vaultProxy.interface.encodeFunctionData("onboardNFTs", [
+      bakc.address,
+      [0, 1, 2],
+    ]);
+
+    await waitForTx(
+      await vaultProxy.connect(user1.signer).multicall([tx0, tx1, tx2])
+    );
+
+    tx0 = vaultProxy.interface.encodeFunctionData("stakingApe", [
+      true,
+      [0, 1, 2],
+    ]);
+    tx1 = vaultProxy.interface.encodeFunctionData("stakingApe", [
+      false,
+      [0, 1, 2],
+    ]);
+    tx2 = vaultProxy.interface.encodeFunctionData("stakingBAKC", [
+      {
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [2],
+        bakcPairMaycTokenIds: [2],
+      },
+    ]);
+
+    await waitForTx(
+      await vaultProxy.connect(user4.signer).multicall([tx0, tx1, tx2])
+    );
+
+    await advanceTimeAndBlock(parseInt("3600"));
+
+    tx0 = vaultProxy.interface.encodeFunctionData("compoundApe", [
+      true,
+      [0, 1, 2],
+    ]);
+    tx1 = vaultProxy.interface.encodeFunctionData("compoundApe", [
+      false,
+      [0, 1, 2],
+    ]);
+    tx2 = vaultProxy.interface.encodeFunctionData("compoundBAKC", [
+      {
+        baycTokenIds: [0, 1],
+        bakcPairBaycTokenIds: [0, 1],
+        maycTokenIds: [2],
+        bakcPairMaycTokenIds: [2],
+      },
+    ]);
+
+    await waitForTx(
+      await vaultProxy.connect(user4.signer).multicall([tx0, tx1, tx2])
+    );
+
+    tx0 = vaultProxy.interface.encodeFunctionData("claimPendingReward", [
+      bayc.address,
+      [0, 1, 2],
+    ]);
+    tx1 = vaultProxy.interface.encodeFunctionData("claimPendingReward", [
+      mayc.address,
+      [0, 1, 2],
+    ]);
+    tx2 = vaultProxy.interface.encodeFunctionData("claimPendingReward", [
+      bakc.address,
+      [0, 1, 2],
+    ]);
+
+    await waitForTx(
+      await vaultProxy.connect(user1.signer).multicall([tx0, tx1, tx2])
+    );
+
+    const user1Balance = await cApe.balanceOf(user1.address);
+    expect(user1Balance).to.be.closeTo(parseEther("10800"), parseEther("100"));
+  });
 });

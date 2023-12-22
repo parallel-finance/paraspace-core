@@ -237,6 +237,7 @@ export enum eContractid {
   PoolApeStakingImpl = "PoolApeStakingImpl",
   PoolBorrowAndStakeImpl = "PoolBorrowAndStakeImpl",
   VaultProxy = "VaultProxy",
+  VaultCommon = "VaultCommon",
   VaultApeStaking = "VaultApeStaking",
   VaultTemplate = "VaultTemplate",
   VaultProxyInterfacesImpl = "VaultProxyInterfacesImpl",
