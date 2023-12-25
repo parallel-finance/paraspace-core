@@ -397,10 +397,6 @@ abstract contract MintableIncentivizedERC721 is
             );
     }
 
-    function revokeDelegation(address v1Registry) external onlyPoolAdmin {
-        IDelegationRegistry(v1Registry).revokeAllDelegates();
-    }
-
     function delegateForToken(
         address delegate,
         uint256[] calldata tokenIds,

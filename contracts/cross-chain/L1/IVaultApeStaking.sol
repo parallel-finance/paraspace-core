@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {BridgeERC721Message, ERC721DelegationMessage} from "../BridgeDefine.sol";
-
 interface IVaultApeStaking {
     struct TokenStatus {
         //record tokenId reward debt position
@@ -152,38 +150,88 @@ interface IVaultApeStaking {
      */
     function compoundBAKC(BAKCPairActionInfo calldata actionInfo) external;
 
+    /**
+     * @notice enter ape staking pool when bayc/mayc/bakc transferred to vault contract.
+     * It's an interceptor call, can only be called by vault self.
+     * @param nft Identify pool
+     * @param tokenId The tokenId of the nft
+     * @param beneficiary The reward beneficiary for the pool position
+     */
     function onboardCheckApeStakingPosition(
         address nft,
         uint32 tokenId,
         address beneficiary
     ) external;
 
+    /**
+     * @notice exit ape staking pool when bayc/mayc/bakc transferred out from vault contract.
+     * It's an interceptor call, can only be called by vault self.
+     * @param nft Identify pool
+     * @param tokenId The tokenId of the nft
+     */
     function offboardCheckApeStakingPosition(
         address nft,
         uint32 tokenId
     ) external;
 
+    /**
+     * @notice unstake the ape coin position on the ape. can only be called by the bot.
+     * @param isBAYC if Ape is BAYC
+     * @param tokenIds Ape token ids
+     */
     function unstakeApe(bool isBAYC, uint32[] calldata tokenIds) external;
 
+    /**
+     * @notice set ape coin staking bot address. can only be called by pool admin.
+     */
     function setApeStakingBot(address _apeStakingBot) external;
 
+    /**
+     * @notice set compound fee rate. can only be called by pool admin.
+     */
     function setCompoundFeeRate(uint32 _compoundFeeRate) external;
 
+    /**
+     * @notice set cApe income rate. can only be called by pool admin.
+     * @param nft Identify pool
+     * @param rate new cApe income rate
+     */
+    function setCApeIncomeRate(address nft, uint32 rate) external;
+
+    /**
+     * @notice claim compound fee. can only be called by bot.
+     */
     function claimCompoundFee(address receiver) external;
 
+    /**
+     * @notice update the position reward beneficiary. can only be called by bridge.
+     *Nft owner can launch the cross-chain calling from L2
+     * @param nft Identify pool
+     * @param tokenIds The tokenIds of the nft
+     */
     function updateBeneficiary(
         address nft,
         uint32[] calldata tokenIds,
         address newBenificiary
     ) external;
 
+    /**
+     * @notice Pauses the contract. Only pool admin or emergency admin can call this function
+     **/
     function pause() external;
 
+    /**
+     * @notice Unpause the contract. Only pool admin can call this function
+     **/
     function unpause() external;
 
+    /**
+     * @notice initialization operation for the vault
+     **/
     function initialize() external;
 
+    /**
+     * @notice fetch accumulated compound fee.
+     **/
     function compoundFee() external view returns (uint256);
-
-    function setCApeIncomeRate(address nft, uint32 rate) external;
 }

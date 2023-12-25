@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {BridgeERC721Message, ERC721DelegationMessage} from "../BridgeDefine.sol";
 import "../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 import "../../dependencies/openzeppelin/contracts//Pausable.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
@@ -387,6 +386,7 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
         }
     }
 
+    /// @inheritdoc IVaultApeStaking
     function offboardCheckApeStakingPosition(
         address nft,
         uint32 tokenId
@@ -664,6 +664,7 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
         );
     }
 
+    /// @inheritdoc IVaultApeStaking
     function setApeStakingBot(address _apeStakingBot) external onlyPoolAdmin {
         ApeStakingStorage storage ds = apeStakingStorage();
         address oldValue = ds.apeStakingBot;
@@ -673,6 +674,7 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
         }
     }
 
+    /// @inheritdoc IVaultApeStaking
     function setCompoundFeeRate(
         uint32 _compoundFeeRate
     ) external onlyPoolAdmin {
@@ -686,6 +688,7 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
         }
     }
 
+    /// @inheritdoc IVaultApeStaking
     function setCApeIncomeRate(
         address nft,
         uint32 rate
@@ -700,6 +703,7 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
         }
     }
 
+    /// @inheritdoc IVaultApeStaking
     function claimCompoundFee(address receiver) external {
         ApeStakingStorage storage ds = apeStakingStorage();
         require(ds.apeStakingBot == msg.sender, Errors.NOT_APE_STAKING_BOT);
@@ -713,11 +717,13 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
         }
     }
 
+    /// @inheritdoc IVaultApeStaking
     function compoundFee() external view returns (uint256) {
         ApeStakingStorage storage ds = apeStakingStorage();
         return ds.accuCompoundFee;
     }
 
+    /// @inheritdoc IVaultApeStaking
     function updateBeneficiary(
         address nft,
         uint32[] calldata tokenIds,
@@ -753,16 +759,12 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
         }
     }
 
-    /**
-     * @notice Pauses the contract. Only pool admin or emergency admin can call this function
-     **/
+    /// @inheritdoc IVaultApeStaking
     function pause() external onlyEmergencyOrPoolAdmin {
         _pause();
     }
 
-    /**
-     * @notice Unpause the contract. Only pool admin can call this function
-     **/
+    /// @inheritdoc IVaultApeStaking
     function unpause() external onlyPoolAdmin {
         _unpause();
     }
