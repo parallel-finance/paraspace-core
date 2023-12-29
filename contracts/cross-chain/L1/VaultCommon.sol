@@ -4,12 +4,28 @@ pragma solidity ^0.8.0;
 import "../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 import "../../dependencies/openzeppelin/contracts//Pausable.sol";
 import "../../dependencies/openzeppelin/contracts/Address.sol";
+import "../../interfaces/IACLManager.sol";
+import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
 import "./IVaultCommon.sol";
 
 contract VaultCommon is ReentrancyGuard, Pausable, IVaultCommon {
-    /**
-     * @dev Receives and executes a batch of function calls on this contract.
-     */
+    IACLManager private immutable aclManager;
+
+    constructor(address _aclManager) {
+        aclManager = IACLManager(_aclManager);
+    }
+
+    /// @inheritdoc IVaultCommon
+    function pause() external onlyEmergencyOrPoolAdmin {
+        _pause();
+    }
+
+    /// @inheritdoc IVaultCommon
+    function unpause() external onlyPoolAdmin {
+        _unpause();
+    }
+
+    /// @inheritdoc IVaultCommon
     function multicall(
         bytes[] calldata data
     ) external virtual returns (bytes[] memory results) {
@@ -27,5 +43,36 @@ contract VaultCommon is ReentrancyGuard, Pausable, IVaultCommon {
         bytes memory
     ) external pure returns (bytes4) {
         return this.onERC721Received.selector;
+    }
+
+    /**
+     * @dev Only pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyPoolAdmin() {
+        _onlyPoolAdmin();
+        _;
+    }
+
+    /**
+     * @dev Only emergency or pool admin can call functions marked by this modifier.
+     **/
+    modifier onlyEmergencyOrPoolAdmin() {
+        _onlyPoolOrEmergencyAdmin();
+        _;
+    }
+
+    function _onlyPoolAdmin() internal view {
+        require(
+            aclManager.isPoolAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_ADMIN
+        );
+    }
+
+    function _onlyPoolOrEmergencyAdmin() internal view {
+        require(
+            aclManager.isPoolAdmin(msg.sender) ||
+                aclManager.isEmergencyAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
+        );
     }
 }

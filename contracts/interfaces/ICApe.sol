@@ -83,4 +83,6 @@ interface ICApe is IERC20 {
      * @notice collect ape reward in ApeCoinStaking and deposit to earn compound interest.
      **/
     function harvestAndCompound() external;
+
+    function apeCoin() external view returns(IERC20);
 }

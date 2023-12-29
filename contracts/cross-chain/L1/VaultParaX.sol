@@ -14,8 +14,6 @@ contract VaultParaX is ReentrancyGuard, Pausable, IVaultParaX {
 
     IDelegateRegistry internal immutable delegationRegistry;
 
-    mapping(address => bool) supportAsset;
-
     constructor(
         IParaxL1MessageHandler msgHandler,
         address _delegationRegistry

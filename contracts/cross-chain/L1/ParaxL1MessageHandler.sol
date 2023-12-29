@@ -4,7 +4,7 @@ pragma abicoder v2;
 
 import {MessageType, BridgeMessage, ERC721DelegationMessage} from "../BridgeDefine.sol";
 import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
-import "./IVaultParaX.sol";
+import "./IVault.sol";
 
 contract ParaxL1MessageHandler {
     address internal immutable vault;
@@ -22,18 +22,25 @@ contract ParaxL1MessageHandler {
 
     function migration(address asset) external {}
 
-    function bridgeReceive(BridgeMessage calldata message) external onlyBridge {
-        if (message.msgType == MessageType.ERC721DELEGATION) {
-            ERC721DelegationMessage memory delegationMsg = abi.decode(
-                message.data,
-                (ERC721DelegationMessage)
-            );
-            IVaultParaX(vault).updateTokenDelegation(
-                delegationMsg.delegateTo,
-                delegationMsg.asset,
-                delegationMsg.tokenIds,
-                delegationMsg.value
-            );
-        }
+    function updateTokenDelegation(
+        address delegateTo,
+        address underlyingAsset,
+        uint256[] calldata tokenIds,
+        bool value
+    ) external onlyBridge {
+        IVault(vault).updateTokenDelegation(
+            delegateTo,
+            underlyingAsset,
+            tokenIds,
+            value
+        );
+    }
+
+    function updateApeStakingBeneficiary(
+        address nft,
+        uint32[] calldata tokenIds,
+        address newBenificiary
+    ) external onlyBridge {
+        IVault(vault).updateBeneficiary(nft, tokenIds, newBenificiary);
     }
 }

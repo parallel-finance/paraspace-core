@@ -5,6 +5,7 @@ import {MessageType, BridgeMessage, ERC721DelegationMessage} from "../BridgeDefi
 import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
 import "./IParaxL2MessageHandler.sol";
 import "../socket/ISocket.sol";
+import "../L1/IParaxL1MessageHandler.sol";
 
 contract ParaxL2MessageHandler is IParaxL2MessageHandler {
     uint32 public immutable siblingChainSlug;
@@ -25,21 +26,39 @@ contract ParaxL2MessageHandler is IParaxL2MessageHandler {
     ) external {
         require(msg.sender == paraX, Errors.ONLY_PARAX);
 
-        ERC721DelegationMessage memory delegationInfo;
-        delegationInfo.asset = underlyingAsset;
-        delegationInfo.delegateTo = delegateTo;
-        delegationInfo.tokenIds = tokenIds;
-        delegationInfo.value = value;
-        BridgeMessage memory message;
-        message.msgType = MessageType.ERC721DELEGATION;
-        message.data = abi.encode(delegationInfo);
-        //send msg
         ISocket(socket).outbound(
             siblingChainSlug,
             150000,
             "",
             "",
-            abi.encode(message)
+            abi.encodeWithSelector(
+                IParaxL1MessageHandler.updateTokenDelegation.selector,
+                delegateTo,
+                underlyingAsset,
+                tokenIds,
+                value
+            )
+        );
+    }
+
+    function updateApeStakingBeneficiary(
+        address nft,
+        uint32[] calldata tokenIds,
+        address newBenificiary
+    ) external {
+        require(msg.sender == paraX, Errors.ONLY_PARAX);
+
+        ISocket(socket).outbound(
+            siblingChainSlug,
+            150000,
+            "",
+            "",
+            abi.encodeWithSelector(
+                IParaxL1MessageHandler.updateApeStakingBeneficiary.selector,
+                nft,
+                tokenIds,
+                newBenificiary
+            )
         );
     }
 }

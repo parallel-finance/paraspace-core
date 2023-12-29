@@ -216,16 +216,6 @@ interface IVaultApeStaking {
     ) external;
 
     /**
-     * @notice Pauses the contract. Only pool admin or emergency admin can call this function
-     **/
-    function pause() external;
-
-    /**
-     * @notice Unpause the contract. Only pool admin can call this function
-     **/
-    function unpause() external;
-
-    /**
      * @notice initialization operation for the vault
      **/
     function initialize() external;

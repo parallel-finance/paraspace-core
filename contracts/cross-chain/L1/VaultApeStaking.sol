@@ -759,16 +759,6 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
         }
     }
 
-    /// @inheritdoc IVaultApeStaking
-    function pause() external onlyEmergencyOrPoolAdmin {
-        _pause();
-    }
-
-    /// @inheritdoc IVaultApeStaking
-    function unpause() external onlyPoolAdmin {
-        _unpause();
-    }
-
     modifier onlyMsgHandler() {
         require(msg.sender == address(l1MsgHander), Errors.ONLY_MSG_HANDLER);
         _;
@@ -782,26 +772,10 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
         _;
     }
 
-    /**
-     * @dev Only emergency or pool admin can call functions marked by this modifier.
-     **/
-    modifier onlyEmergencyOrPoolAdmin() {
-        _onlyPoolOrEmergencyAdmin();
-        _;
-    }
-
     function _onlyPoolAdmin() internal view {
         require(
             aclManager.isPoolAdmin(msg.sender),
             Errors.CALLER_NOT_POOL_ADMIN
-        );
-    }
-
-    function _onlyPoolOrEmergencyAdmin() internal view {
-        require(
-            aclManager.isPoolAdmin(msg.sender) ||
-                aclManager.isEmergencyAdmin(msg.sender),
-            Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
         );
     }
 

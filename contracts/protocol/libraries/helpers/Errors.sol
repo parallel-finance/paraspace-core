@@ -146,4 +146,9 @@ library Errors {
     string public constant NFT_NOT_IN_POOL = "207"; //nft not in the pool
     string public constant ALREADY_STAKING = "208"; //already staking
     string public constant INVALID_STATUS = "209"; //invalid status
+    string public constant NOT_IN_ACCESS_LIST = "210"; //not in access list
+    string public constant STRATEGY_NOT_MATCH = "211"; //strategy not match
+    string public constant ASSET_STRATEGY_ALREADY_SET = "212"; //asset strategy already set
+    string public constant NOT_ENABLE = "213"; //cross chain not enable
+    string public constant NOT_STAKING_BOT = "214"; //not staking bot
 }
