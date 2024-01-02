@@ -80,7 +80,6 @@ import {
   Seaport,
   Seaport__factory,
   TimeLock__factory,
-  P2PPairStaking__factory,
   NFTFloorOracle__factory,
 } from "../types";
 import {
@@ -1082,7 +1081,6 @@ export const decodeInputData = (data: string) => {
     ...InitializableAdminUpgradeabilityProxy__factory.abi,
     ...ICurve__factory.abi,
     ...TimeLock__factory.abi,
-    ...P2PPairStaking__factory.abi,
     ...NFTFloorOracle__factory.abi,
   ];
 

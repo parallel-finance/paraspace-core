@@ -240,6 +240,7 @@ export enum eContractid {
   VaultCommon = "VaultCommon",
   VaultApeStaking = "VaultApeStaking",
   VaultTemplate = "VaultTemplate",
+  VaultEarlyAccess = "VaultEarlyAccess",
   VaultProxyInterfacesImpl = "VaultProxyInterfacesImpl",
   ApeCoinStaking = "ApeCoinStaking",
   ATokenDebtToken = "ATokenDebtToken",

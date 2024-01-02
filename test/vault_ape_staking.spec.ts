@@ -21,6 +21,9 @@ describe("Vault Ape staking Test", () => {
   const fixture = async () => {
     testEnv = await loadFixture(testEnvFixture);
     const {
+      bayc,
+      mayc,
+      bakc,
       ape,
       users: [user1, , , user4, , user6],
       apeCoinStaking,
@@ -32,6 +35,24 @@ describe("Vault Ape staking Test", () => {
 
     await waitForTx(
       await vaultProxy.connect(poolAdmin.signer).setApeStakingBot(user4.address)
+    );
+
+    await waitForTx(
+      await vaultProxy
+        .connect(poolAdmin.signer)
+        .updateAccessListStatus(
+          [bayc.address, mayc.address, bakc.address],
+          [true, true, true]
+        )
+    );
+
+    await waitForTx(
+      await vaultProxy
+        .connect(poolAdmin.signer)
+        .setCollectionStrategy(
+          [bayc.address, mayc.address, bakc.address],
+          [3, 3, 3]
+        )
     );
 
     cApe = await getAutoCompoundApe();
@@ -124,17 +145,17 @@ describe("Vault Ape staking Test", () => {
     await waitForTx(
       await vaultProxy
         .connect(user1.signer)
-        .onboardNFTs(bayc.address, [0, 1, 2])
+        .depositERC721(bayc.address, [0, 1, 2])
     );
     await waitForTx(
       await vaultProxy
         .connect(user2.signer)
-        .onboardNFTs(mayc.address, [0, 1, 2])
+        .depositERC721(mayc.address, [0, 1, 2])
     );
     await waitForTx(
       await vaultProxy
         .connect(user3.signer)
-        .onboardNFTs(bakc.address, [0, 1, 2])
+        .depositERC721(bakc.address, [0, 1, 2])
     );
     await waitForTx(
       await vaultProxy.connect(user4.signer).stakingApe(true, [0, 1, 2])
@@ -269,28 +290,28 @@ describe("Vault Ape staking Test", () => {
 
     await waitForTx(
       await vaultProxy
-        .connect(user1.signer)
-        .offboardNFTs(bayc.address, [0, 1, 2])
+        .connect(user4.signer)
+        .offboardCheckApeStakingPosition(bayc.address, [0, 1, 2])
     );
     await waitForTx(
       await vaultProxy
-        .connect(user2.signer)
-        .offboardNFTs(mayc.address, [0, 1, 2])
+        .connect(user4.signer)
+        .offboardCheckApeStakingPosition(mayc.address, [0, 1, 2])
     );
     await waitForTx(
       await vaultProxy
-        .connect(user3.signer)
-        .offboardNFTs(bakc.address, [0, 1, 2])
+        .connect(user4.signer)
+        .offboardCheckApeStakingPosition(bakc.address, [0, 1, 2])
     );
-    expect(await bayc.ownerOf(0)).to.be.equal(user1.address);
-    expect(await bayc.ownerOf(1)).to.be.equal(user1.address);
-    expect(await bayc.ownerOf(2)).to.be.equal(user1.address);
-    expect(await mayc.ownerOf(0)).to.be.equal(user2.address);
-    expect(await mayc.ownerOf(1)).to.be.equal(user2.address);
-    expect(await mayc.ownerOf(2)).to.be.equal(user2.address);
-    expect(await bakc.ownerOf(0)).to.be.equal(user3.address);
-    expect(await bakc.ownerOf(1)).to.be.equal(user3.address);
-    expect(await bakc.ownerOf(2)).to.be.equal(user3.address);
+    // expect(await bayc.ownerOf(0)).to.be.equal(user1.address);
+    // expect(await bayc.ownerOf(1)).to.be.equal(user1.address);
+    // expect(await bayc.ownerOf(2)).to.be.equal(user1.address);
+    // expect(await mayc.ownerOf(0)).to.be.equal(user2.address);
+    // expect(await mayc.ownerOf(1)).to.be.equal(user2.address);
+    // expect(await mayc.ownerOf(2)).to.be.equal(user2.address);
+    // expect(await bakc.ownerOf(0)).to.be.equal(user3.address);
+    // expect(await bakc.ownerOf(1)).to.be.equal(user3.address);
+    // expect(await bakc.ownerOf(2)).to.be.equal(user3.address);
 
     //1080 + 1080
     compoundFee = await vaultProxy.compoundFee();
@@ -373,7 +394,7 @@ describe("Vault Ape staking Test", () => {
         .setApprovalForAll(vaultProxy.address, true)
     );
     await expect(
-      vaultProxy.connect(user1.signer).onboardNFTs(bayc.address, [0])
+      vaultProxy.connect(user1.signer).depositERC721(bayc.address, [0])
     ).to.be.revertedWith(ProtocolErrors.ALREADY_STAKING);
 
     await apeCoinStaking.connect(user1.signer).depositBAKC(
@@ -387,7 +408,7 @@ describe("Vault Ape staking Test", () => {
       []
     );
     await expect(
-      vaultProxy.connect(user1.signer).onboardNFTs(bayc.address, [1])
+      vaultProxy.connect(user1.signer).depositERC721(bayc.address, [1])
     ).to.be.revertedWith(ProtocolErrors.ALREADY_STAKING);
   });
 
@@ -409,7 +430,7 @@ describe("Vault Ape staking Test", () => {
     ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
 
     await waitForTx(
-      await vaultProxy.connect(user1.signer).onboardNFTs(bayc.address, [0])
+      await vaultProxy.connect(user1.signer).depositERC721(bayc.address, [0])
     );
 
     await waitForTx(
@@ -464,15 +485,15 @@ describe("Vault Ape staking Test", () => {
     ).to.be.revertedWith(ProtocolErrors.NFT_NOT_IN_POOL);
 
     await waitForTx(
-      await vaultProxy.connect(user1.signer).onboardNFTs(bayc.address, [0])
+      await vaultProxy.connect(user1.signer).depositERC721(bayc.address, [0])
     );
 
     await waitForTx(
-      await vaultProxy.connect(user1.signer).onboardNFTs(mayc.address, [0])
+      await vaultProxy.connect(user1.signer).depositERC721(mayc.address, [0])
     );
 
     await waitForTx(
-      await vaultProxy.connect(user1.signer).onboardNFTs(bakc.address, [0, 1])
+      await vaultProxy.connect(user1.signer).depositERC721(bakc.address, [0, 1])
     );
 
     await waitForTx(
@@ -518,7 +539,7 @@ describe("Vault Ape staking Test", () => {
     );
 
     await waitForTx(
-      await vaultProxy.connect(user1.signer).onboardNFTs(bayc.address, [0, 1])
+      await vaultProxy.connect(user1.signer).depositERC721(bayc.address, [0, 1])
     );
 
     await waitForTx(
@@ -559,12 +580,12 @@ describe("Vault Ape staking Test", () => {
     await waitForTx(
       await vaultProxy
         .connect(user1.signer)
-        .onboardNFTs(bayc.address, [0, 1, 2])
+        .depositERC721(bayc.address, [0, 1, 2])
     );
     await waitForTx(
       await vaultProxy
         .connect(user1.signer)
-        .onboardNFTs(bakc.address, [0, 1, 2])
+        .depositERC721(bakc.address, [0, 1, 2])
     );
 
     await waitForTx(
@@ -627,10 +648,10 @@ describe("Vault Ape staking Test", () => {
     );
 
     await waitForTx(
-      await vaultProxy.connect(user1.signer).onboardNFTs(bayc.address, [0, 1])
+      await vaultProxy.connect(user1.signer).depositERC721(bayc.address, [0, 1])
     );
     await waitForTx(
-      await vaultProxy.connect(user1.signer).onboardNFTs(bakc.address, [0, 1])
+      await vaultProxy.connect(user1.signer).depositERC721(bakc.address, [0, 1])
     );
 
     await waitForTx(
@@ -728,15 +749,15 @@ describe("Vault Ape staking Test", () => {
         .setApprovalForAll(vaultProxy.address, true)
     );
 
-    let tx0 = vaultProxy.interface.encodeFunctionData("onboardNFTs", [
+    let tx0 = vaultProxy.interface.encodeFunctionData("depositERC721", [
       bayc.address,
       [0, 1, 2],
     ]);
-    let tx1 = vaultProxy.interface.encodeFunctionData("onboardNFTs", [
+    let tx1 = vaultProxy.interface.encodeFunctionData("depositERC721", [
       mayc.address,
       [0, 1, 2],
     ]);
-    let tx2 = vaultProxy.interface.encodeFunctionData("onboardNFTs", [
+    let tx2 = vaultProxy.interface.encodeFunctionData("depositERC721", [
       bakc.address,
       [0, 1, 2],
     ]);

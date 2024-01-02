@@ -4,32 +4,37 @@ pragma solidity ^0.8.0;
 import "../../dependencies/openzeppelin/contracts/ReentrancyGuard.sol";
 import "../../dependencies/openzeppelin/contracts//Pausable.sol";
 import "../../dependencies/openzeppelin/contracts/SafeCast.sol";
+import "../../dependencies/openzeppelin/contracts/EnumerableSet.sol";
 import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
-import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
+import {IERC20, IERC20Detailed} from "../../dependencies/openzeppelin/contracts/IERC20Detailed.sol";
 import {SafeERC20} from "../../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {Errors} from "../../protocol/libraries/helpers/Errors.sol";
 import "../../interfaces/IACLManager.sol";
 import "../../interfaces/IAAVEPool.sol";
 import "../../misc/interfaces/IWETH.sol";
 import "../../interfaces/ILido.sol";
+import "../../interfaces/IcbETH.sol";
+import "../../interfaces/IrETH.sol";
+import "../../interfaces/IwstETH.sol";
 import "../../interfaces/ICApe.sol";
-import "../../interfaces/ICurve.sol";
 import "./IVaultEarlyAccess.sol";
 import "./IVaultApeStaking.sol";
 
 contract VaultEarlyAccess is ReentrancyGuard, Pausable, IVaultEarlyAccess {
     using SafeERC20 for IERC20;
     using SafeCast for uint256;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
-    address public constant ETH = address(0x1);
-    address public constant USD = address(0x2);
+    address public constant ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address public constant ETHCollection = address(0x1);
+    address public constant USDCollection = address(0x2);
     address internal immutable weth;
-    address internal immutable usdt;
-    address internal immutable usdc;
-    address internal immutable apecoin;
+    address internal immutable stETH;
+    address internal immutable wstETH;
+    address internal immutable cbETH;
+    address internal immutable rETH;
     address internal immutable cApe;
     address internal immutable aavePool;
-    address internal immutable LIDO;
     IACLManager private immutable aclManager;
 
     bytes32 constant EARLY_ACCESS_STORAGE_POSITION =
@@ -37,25 +42,26 @@ contract VaultEarlyAccess is ReentrancyGuard, Pausable, IVaultEarlyAccess {
             uint256(keccak256("vault.early.access.implementation.storage")) - 1
         );
 
-    enum AssetType {
-        NONE,
-        CollectionAsset,
-        SingleAsset
-    }
+    /**
+     * @dev Emitted during deposit asset in early access
+     * @param assetCollection asset collection address tag, 0x1 for ETH, 0x2 for USD
+     * @param share share for asset collection
+     * @param asset deposited asset address
+     * @param amount deposited asset amount
+     **/
+    event Deposit(
+        address assetCollection,
+        uint256 share,
+        address asset,
+        uint256 amount
+    );
 
-    enum StrategyType {
-        NONE,
-        NOYIELD,
-        AAVE,
-        LIDO,
-        APESTAKING,
-        CAPE
-    }
-
-    struct AssetInfo {
+    struct CollectionInfo {
         StrategyType strategyType;
-        //total share for ERC20, total balance for ERC721
-        uint184 totalShare;
+        //exchange rate for ERC20
+        uint184 exchangeRate;
+        // total share on current chain
+        uint256 totalShare;
         // user => shareBalance
         mapping(address => uint256) shareBalance;
         // tokenId => owner, only for ERC721
@@ -66,28 +72,37 @@ contract VaultEarlyAccess is ReentrancyGuard, Pausable, IVaultEarlyAccess {
         address bridge;
         address yieldBot;
         uint256 crossChainETH;
+        EnumerableSet.AddressSet ethCollection;
+        EnumerableSet.AddressSet usdCollection;
         //single asset status
         mapping(address => bool) assetStatus;
-        //asset => assetInfo
-        mapping(address => AssetInfo) assetInfo;
+        //collection => CollectionInfo
+        mapping(address => CollectionInfo) collectionInfo;
     }
 
+    //1. asset address might be zero address on some chain
+    //2. big amount share attach
+    //3. is strategy still useful
     constructor(
         address _weth,
+        address _wstETH,
+        address _cbETH,
+        address _rETH,
         address _cApe,
-        address _usdt,
-        address _usdc,
         address _aavePool,
-        address _LIDO,
         address _aclManager
     ) {
         weth = _weth;
+        wstETH = _wstETH;
+        if (wstETH == address(0)) {
+            stETH = address(0);
+        } else {
+            stETH = IwstETH(wstETH).stETH();
+        }
+        cbETH = _cbETH;
+        rETH = _rETH;
         cApe = _cApe;
-        apecoin = address(ICApe(cApe).apeCoin());
-        usdt = _usdt;
-        usdc = _usdc;
         aavePool = _aavePool;
-        LIDO = _LIDO;
         aclManager = IACLManager(_aclManager);
     }
 
@@ -110,12 +125,12 @@ contract VaultEarlyAccess is ReentrancyGuard, Pausable, IVaultEarlyAccess {
         for (uint256 index = 0; index < arrayLength; index++) {
             address asset = assets[index];
             bool status = statuses[index];
-            require(ds.assetStatus[asset].isAllow != status, Errors.INVALID_STATUS);
-            ds.assetStatus[asset].isAllow = status;
+            require(ds.assetStatus[asset] != status, Errors.INVALID_STATUS);
+            ds.assetStatus[asset] = status;
         }
     }
 
-    function setAssetStrategy(
+    function setCollectionStrategy(
         address[] calldata assets,
         StrategyType[] calldata strategies
     ) external onlyPoolAdmin {
@@ -124,202 +139,381 @@ contract VaultEarlyAccess is ReentrancyGuard, Pausable, IVaultEarlyAccess {
         EarlyAccessStorage storage ds = earlyAccessStorage();
         for (uint256 index = 0; index < arrayLength; index++) {
             address asset = assets[index];
-            AssetInfo storage assetInfo = ds.assetInfo[asset];
+            CollectionInfo storage collectionInfo = ds.collectionInfo[asset];
             //change strategy is not allowed currently
             require(
-                assetInfo.strategyType == StrategyType.NONE,
+                collectionInfo.strategyType == StrategyType.NONE,
                 Errors.ASSET_STRATEGY_ALREADY_SET
             );
-            assetInfo.strategyType = strategies[index];
-        }
-    }
-
-    function depositERC721(address asset, uint32[] calldata tokenIds) external {
-        uint256 arrayLength = tokenIds.length;
-        EarlyAccessStorage storage ds = earlyAccessStorage();
-        AssetInfo storage assetInfo = ds.assetInfo[asset];
-        require(assetInfo.isAllow, Errors.NOT_IN_ACCESS_LIST);
-        bool isApeStaking = assetInfo.strategyType == StrategyType.APESTAKING;
-        for (uint256 index = 0; index < arrayLength; index++) {
-            uint32 tokenId = tokenIds[index];
-            IERC721(asset).safeTransferFrom(msg.sender, address(this), tokenId);
-            if (isApeStaking) {
-                IVaultApeStaking(address(this)).onboardCheckApeStakingPosition(
-                    asset,
-                    tokenId,
-                    msg.sender
-                );
+            collectionInfo.strategyType = strategies[index];
+            if (collectionInfo.exchangeRate == 0) {
+                collectionInfo.exchangeRate = 1e18;
             }
-            assetInfo.erc721Owner[tokenId] = msg.sender;
         }
-        assetInfo.shareBalance[msg.sender] += arrayLength;
-        assetInfo.totalShare += arrayLength.toUint184();
     }
 
     receive() external payable {
         revert("not allow yet");
     }
 
-    //ETH + wETH + stETH + cbETH + rETH
-    function depositETHCollection(address asset, uint256 amount) public payable {
+    /// ETH collection
+
+    function addETHCollection(address asset) external onlyPoolAdmin {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        require(!isInETHList(asset), Errors.ALREADY_IN_COLLECTION_LIST);
+        if (asset != ETH) {
+            require(
+                IERC20Detailed(asset).decimals() == 18,
+                Errors.INVALID_PARAMETER
+            );
+        }
+        ds.ethCollection.add(asset);
+    }
+
+    // eth + weth + stETH + wstETH + cbETH + rETH
+    function ethCollection() external view returns (address[] memory) {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        return ds.ethCollection.values();
+    }
+
+    function isInETHList(address asset) public view returns (bool) {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        return ds.ethCollection.contains(asset);
+    }
+
+    function depositETHCollection(
+        address asset,
+        uint256 amount
+    ) external payable {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        require(ds.assetStatus[asset], Errors.NOT_IN_ACCESS_LIST);
+        require(isInETHList(asset), Errors.NOT_IN_COLLECTION_LIST);
+        CollectionInfo storage collectionInfo = ds.collectionInfo[
+            ETHCollection
+        ];
+        require(
+            collectionInfo.strategyType != StrategyType.NONE,
+            Errors.STRATEGY_NOT_SET
+        );
+
         if (asset == ETH) {
             require(msg.value > 0, Errors.INVALID_PARAMETER);
+            amount = msg.value;
         } else {
-            require(msg.value == 0, Errors.INVALID_PARAMETER);
-        }
-        EarlyAccessStorage storage ds = earlyAccessStorage();
-        require(ds.assetStatus, Errors.NOT_IN_ACCESS_LIST);
-        _depositLidoStrategy(ETH, msg.value, true);
-    }
-
-    function depositLidoStrategy(address asset, uint256 amount) external {
-        _depositLidoStrategy(asset, amount, false);
-    }
-
-    function _depositLidoStrategy(
-        address asset,
-        uint256 amount,
-        bool transferred
-    ) internal {
-        require(amount > 0, Errors.INVALID_PARAMETER);
-
-        EarlyAccessStorage storage ds = earlyAccessStorage();
-        AssetInfo storage assetInfo = ds.assetInfo[asset];
-        require(assetInfo.isAllow, Errors.NOT_IN_ACCESS_LIST);
-        require(
-            assetInfo.strategyType == StrategyType.LIDO,
-            Errors.STRATEGY_NOT_MATCH
-        );
-
-        uint256 totalBalance = totalLIDOBalance();
-        if (transferred) {
-            totalBalance -= amount;
-        }
-        uint256 share = (amount * assetInfo.totalShare) / totalBalance;
-        assetInfo.totalShare += share.toUint184();
-        ds.shareBalance[LIDO][msg.sender] += share;
-
-        if (!transferred) {
+            require(msg.value == 0 && amount > 0, Errors.INVALID_PARAMETER);
             IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
         }
+
+        uint256 ethValue = _getETHValue(asset, amount);
+        uint256 share = _updateUserShare(collectionInfo, msg.sender, ethValue);
+
+        emit Deposit(ETHCollection, share, asset, amount);
     }
 
-    function lidoStaking() external {
+    function totalETHValue() external view returns (uint256) {
         EarlyAccessStorage storage ds = earlyAccessStorage();
-        require(msg.sender == ds.yieldBot, Errors.NOT_STAKING_BOT);
-        uint256 balance = IERC20(weth).balanceOf(address(this));
-        if (balance > 0) {
-            IWETH(weth).withdraw(balance);
+        address[] memory ethAssets = ds.ethCollection.values();
+        uint256 length = ethAssets.length;
+        uint256 totalValue;
+        for (uint256 index = 0; index < length; index++) {
+            totalValue += _getETHCollectionAssetValue(ethAssets[index]);
         }
-        balance = address(this).balance;
-        if (balance > 0) {
-            ILido(LIDO).submit{value: balance}(address(0));
+
+        return totalValue;
+    }
+
+    function totalETHShare() external view returns (uint256) {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        return ds.collectionInfo[ETHCollection].totalShare;
+    }
+
+    function _getETHCollectionAssetValue(
+        address asset
+    ) internal view returns (uint256) {
+        if (asset == ETH) {
+            return address(this).balance;
+        }
+
+        uint256 totalBalance = _totalBalanceWithAAVE(asset);
+        if (totalBalance == 0) {
+            return 0;
+        }
+
+        return _getETHValue(asset, totalBalance);
+    }
+
+    function _getETHValue(
+        address asset,
+        uint256 amount
+    ) internal view returns (uint256) {
+        uint256 exchangeRate = 1e18;
+        if (asset == cbETH) {
+            exchangeRate = IcbETH(cbETH).exchangeRate();
+        } else if (asset == rETH) {
+            exchangeRate = IrETH(rETH).getExchangeRate();
+        } else if (asset == wstETH) {
+            exchangeRate = IwstETH(wstETH).stEthPerToken();
+        }
+
+        return (amount * exchangeRate) / 1e18;
+    }
+
+    /// USD collection
+
+    function addUSDCollection(address asset) external onlyPoolAdmin {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        require(!isInUSDList(asset), Errors.ALREADY_IN_COLLECTION_LIST);
+        ds.usdCollection.add(asset);
+    }
+
+    //USDT + USDC + DAI
+    function usdCollection() external view returns (address[] memory) {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        return ds.usdCollection.values();
+    }
+
+    function isInUSDList(address asset) public view returns (bool) {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        return ds.usdCollection.contains(asset);
+    }
+
+    function depositUSDCollection(address asset, uint256 amount) external {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        require(ds.assetStatus[asset], Errors.NOT_IN_ACCESS_LIST);
+        require(isInUSDList(asset), Errors.NOT_IN_COLLECTION_LIST);
+        CollectionInfo storage collectionInfo = ds.collectionInfo[
+            USDCollection
+        ];
+        require(
+            collectionInfo.strategyType != StrategyType.NONE,
+            Errors.STRATEGY_NOT_SET
+        );
+
+        IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
+
+        uint256 usdValue = _getUSDValue(asset, amount);
+        uint256 share = _updateUserShare(collectionInfo, msg.sender, usdValue);
+
+        emit Deposit(USDCollection, share, asset, amount);
+    }
+
+    function totalUSDValue() external view returns (uint256) {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        address[] memory usdAssets = ds.ethCollection.values();
+        uint256 length = usdAssets.length;
+        uint256 totalValue;
+        for (uint256 index = 0; index < length; index++) {
+            totalValue += _getUSDCollectionAssetValue(usdAssets[index]);
+        }
+
+        return totalValue;
+    }
+
+    function totalUSDShare() external view returns (uint256) {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        return ds.collectionInfo[USDCollection].totalShare;
+    }
+
+    function _getUSDCollectionAssetValue(
+        address asset
+    ) internal view returns (uint256) {
+        uint256 totalBalance = _totalBalanceWithAAVE(asset);
+        if (totalBalance == 0) {
+            return 0;
+        }
+
+        return _getUSDValue(asset, totalBalance);
+    }
+
+    function _getUSDValue(
+        address asset,
+        uint256 amount
+    ) internal view returns (uint256) {
+        uint8 decimals = IERC20Detailed(asset).decimals();
+        uint256 multiplier = 10 ** (18 - decimals);
+        return amount * multiplier;
+    }
+
+    /// ape coin collection
+
+    //ape coin + cApe, only valid on ETH mainnet
+    function cApeCollection() external view returns (address[] memory) {
+        if (cApe == address(0)) {
+            address[] memory list = new address[](0);
+            return list;
+        } else {
+            address[] memory list = new address[](2);
+            list[0] = cApe;
+            list[1] = address(ICApe(cApe).apeCoin());
+            return list;
         }
     }
 
-    function totalETHBalance() internal view returns (uint256) {
-        return
-            address(this).balance +
-            IERC20(LIDO).balanceOf(address(this)) +
-            IERC20(weth).balanceOf(address(this));
-    }
-
-    function depositAAVEStrategy(address asset, uint256 amount) external {
+    function depositCApeCollection(address asset, uint256 amount) external {
         require(amount > 0, Errors.INVALID_PARAMETER);
 
         EarlyAccessStorage storage ds = earlyAccessStorage();
-        AssetInfo storage assetInfo = ds.assetInfo[asset];
-        require(assetInfo.isAllow, Errors.NOT_IN_ACCESS_LIST);
+        require(ds.assetStatus[asset], Errors.NOT_IN_ACCESS_LIST);
+        CollectionInfo storage collectionInfo = ds.collectionInfo[asset];
         require(
-            assetInfo.strategyType == StrategyType.AAVE,
+            collectionInfo.strategyType == StrategyType.CAPE,
             Errors.STRATEGY_NOT_MATCH
         );
 
-        uint256 share = (amount * assetInfo.totalShare) /
-            _totalBalanceForAAVE(asset);
-        assetInfo.totalShare += share.toUint184();
-        ds.shareBalance[asset][msg.sender] += share;
+        _updateCApeExchange(collectionInfo);
+        uint256 share = _updateUserShare(collectionInfo, msg.sender, amount);
 
         IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
+
+        emit Deposit(cApe, share, asset, amount);
     }
 
-    function aaveStaking(address asset) external {
-        EarlyAccessStorage storage ds = earlyAccessStorage();
-        require(msg.sender == ds.yieldBot, Errors.NOT_STAKING_BOT);
-        uint256 balance = IERC20(asset).balanceOf(address(this));
-        IERC20(asset).safeApprove(aavePool, balance);
-        IAAVEPool(aavePool).supply(asset, balance, address(this), 0);
-    }
-
-    function _totalBalanceForAAVE(address asset) internal view returns (uint256) {
-        address aToken = IAAVEPool(aavePool)
-            .getReserveData(asset)
-            .aTokenAddress;
-        return
-            IERC20(asset).balanceOf(address(this)) +
-            IERC20(aToken).balanceOf(address(this));
-    }
-
-    function depositCApeStrategy(address asset, uint256 amount) external {
-        require(amount > 0, Errors.INVALID_PARAMETER);
-
-        EarlyAccessStorage storage ds = earlyAccessStorage();
-        AssetInfo storage assetInfo = ds.assetInfo[asset];
-        require(assetInfo.isAllow, Errors.NOT_IN_ACCESS_LIST);
-        require(
-            assetInfo.strategyType == StrategyType.CAPE,
-            Errors.STRATEGY_NOT_MATCH
-        );
-
-        uint256 share = (amount * assetInfo.totalShare) /
-            _totalBalanceForCApe();
-        assetInfo.totalShare += share.toUint184();
-        ds.shareBalance[cApe][msg.sender] += share;
-
-        IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
-    }
-
-    function capeStaking() external {
-        EarlyAccessStorage storage ds = earlyAccessStorage();
-        require(msg.sender == ds.yieldBot, Errors.NOT_STAKING_BOT);
-        uint256 balance = IERC20(apecoin).balanceOf(address(this));
-        IERC20(apecoin).safeApprove(cApe, balance);
-        ICApe(cApe).deposit(address(this), balance);
-    }
-
-    function _totalBalanceForCApe() internal view returns (uint256) {
-        return
-            IERC20(apecoin).balanceOf(address(this)) +
+    function _updateCApeExchange(
+        CollectionInfo storage collectionInfo
+    ) internal {
+        IERC20 apecoin = ICApe(cApe).apeCoin();
+        uint256 totalBalance = apecoin.balanceOf(address(this)) +
             IERC20(cApe).balanceOf(address(this));
+        uint256 exchangeRate = (totalBalance * 1e18) /
+            collectionInfo.totalShare;
+        if (exchangeRate == 0) {
+            exchangeRate = 1e18;
+        }
+        collectionInfo.exchangeRate = exchangeRate.toUint184();
     }
+
+    /// normal ERC20
 
     function depositERC20(address asset, uint256 amount) external {
         require(amount > 0, Errors.INVALID_PARAMETER);
 
         EarlyAccessStorage storage ds = earlyAccessStorage();
-        AssetInfo storage assetInfo = ds.assetInfo[asset];
-        require(assetInfo.isAllow, Errors.NOT_IN_ACCESS_LIST);
+        require(ds.assetStatus[asset], Errors.NOT_IN_ACCESS_LIST);
+        CollectionInfo storage collectionInfo = ds.collectionInfo[asset];
         require(
-            assetInfo.strategyType == StrategyType.NOYIELD,
-            Errors.STRATEGY_NOT_MATCH
+            collectionInfo.strategyType != StrategyType.NONE,
+            Errors.STRATEGY_NOT_SET
         );
 
-        uint256 share = (amount * assetInfo.totalShare) / _totalBalance(asset);
-        assetInfo.totalShare += share.toUint184();
-        ds.shareBalance[asset][msg.sender] += share;
-
         IERC20(asset).safeTransferFrom(msg.sender, address(this), amount);
+        uint256 share = _updateUserShare(collectionInfo, msg.sender, amount);
+
+        emit Deposit(asset, share, asset, amount);
     }
 
-    function _totalBalance(address asset) internal view returns (uint256) {
-        return IERC20(asset).balanceOf(address(this));
+    /// ERC721
+
+    function depositERC721(address asset, uint32[] calldata tokenIds) external {
+        uint256 arrayLength = tokenIds.length;
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        require(ds.assetStatus[asset], Errors.NOT_IN_ACCESS_LIST);
+        CollectionInfo storage collectionInfo = ds.collectionInfo[asset];
+        require(
+            collectionInfo.strategyType != StrategyType.NONE,
+            Errors.STRATEGY_NOT_SET
+        );
+
+        for (uint256 index = 0; index < arrayLength; index++) {
+            uint32 tokenId = tokenIds[index];
+            IERC721(asset).safeTransferFrom(msg.sender, address(this), tokenId);
+            collectionInfo.erc721Owner[tokenId] = msg.sender;
+        }
+        collectionInfo.shareBalance[msg.sender] += arrayLength;
+        collectionInfo.totalShare += arrayLength.toUint184();
+
+        if (collectionInfo.strategyType == StrategyType.APESTAKING) {
+            IVaultApeStaking(address(this)).onboardCheckApeStakingPosition(
+                asset,
+                tokenIds,
+                msg.sender
+            );
+        }
     }
 
-    function depositUSDT() external {}
+    function _updateUserShare(
+        CollectionInfo storage collectionInfo,
+        address user,
+        uint256 amount
+    ) internal returns (uint256) {
+        uint256 share = (amount * 1e18) / collectionInfo.exchangeRate;
+        collectionInfo.shareBalance[user] += share;
+        collectionInfo.totalShare += share;
+        return share;
+    }
 
-    function depositUSDC() external {}
+    function _totalBalanceWithAAVE(
+        address asset
+    ) internal view returns (uint256) {
+        address aToken = IAAVEPool(aavePool)
+            .getReserveData(asset)
+            .aTokenAddress;
+        if (aToken == address(0)) {
+            return IERC20(asset).balanceOf(address(this));
+        } else {
+            return
+                IERC20(asset).balanceOf(address(this)) +
+                IERC20(aToken).balanceOf(address(this));
+        }
+    }
 
-    function crossChain(address asset) external {
+    ///yield bot
+
+    //eth -> weth
+    function depositWETH(uint256 amount) external {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        require(msg.sender == ds.yieldBot, Errors.NOT_STAKING_BOT);
+        IWETH(weth).deposit{value: amount}();
+    }
+
+    // weth -> eth
+    function withdrawWETH(uint256 amount) external {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        require(msg.sender == ds.yieldBot, Errors.NOT_STAKING_BOT);
+        IWETH(weth).withdraw(amount);
+    }
+
+    // eth -> stETH
+    function depositLIDO(uint256 amount) external {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        require(msg.sender == ds.yieldBot, Errors.NOT_STAKING_BOT);
+        ILido(stETH).submit{value: amount}(address(0));
+    }
+
+    // apecoin -> cApe
+    function depositCApe(uint256 amount) external {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        require(msg.sender == ds.yieldBot, Errors.NOT_STAKING_BOT);
+        IERC20 apecoin = ICApe(cApe).apeCoin();
+        apecoin.safeApprove(cApe, amount);
+        ICApe(cApe).deposit(address(this), amount);
+    }
+
+    // cApe -> apecoin
+    function withdrawCApe(uint256 amount) external {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        require(msg.sender == ds.yieldBot, Errors.NOT_STAKING_BOT);
+        ICApe(cApe).withdraw(amount);
+    }
+
+    // token -> aToken
+    function depositAAVE(address asset, uint256 amount) external {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        require(msg.sender == ds.yieldBot, Errors.NOT_STAKING_BOT);
+        //uint256 balance = IERC20(asset).balanceOf(address(this));
+        IERC20(asset).safeApprove(aavePool, amount);
+        IAAVEPool(aavePool).supply(asset, amount, address(this), 0);
+    }
+
+    // aToken -> token
+    function withdrawAAVE(address asset, uint256 amount) external {
+        EarlyAccessStorage storage ds = earlyAccessStorage();
+        require(msg.sender == ds.yieldBot, Errors.NOT_STAKING_BOT);
+        // uint256 balance = IERC20(asset).balanceOf(address(this));
+        IERC20(asset).safeApprove(aavePool, amount);
+        IAAVEPool(aavePool).withdraw(asset, amount, address(this));
+    }
+
+    function crossChain(address asset) external view {
         EarlyAccessStorage storage ds = earlyAccessStorage();
         require(ds.bridge != address(0), Errors.NOT_ENABLE);
 

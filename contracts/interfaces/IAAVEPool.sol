@@ -59,7 +59,9 @@ interface IAAVEPool {
         uint256 data;
     }
 
-    function getReserveData(address asset) external view returns (ReserveData memory);
+    function getReserveData(
+        address asset
+    ) external view returns (ReserveData memory);
 
     function supply(
         address asset,

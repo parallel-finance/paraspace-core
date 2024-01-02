@@ -147,8 +147,11 @@ library Errors {
     string public constant ALREADY_STAKING = "208"; //already staking
     string public constant INVALID_STATUS = "209"; //invalid status
     string public constant NOT_IN_ACCESS_LIST = "210"; //not in access list
-    string public constant STRATEGY_NOT_MATCH = "211"; //strategy not match
-    string public constant ASSET_STRATEGY_ALREADY_SET = "212"; //asset strategy already set
-    string public constant NOT_ENABLE = "213"; //cross chain not enable
-    string public constant NOT_STAKING_BOT = "214"; //not staking bot
+    string public constant NOT_IN_COLLECTION_LIST = "211"; //not in access list
+    string public constant ALREADY_IN_COLLECTION_LIST = "212"; //already in access list
+    string public constant STRATEGY_NOT_SET = "213"; //strategy not set
+    string public constant STRATEGY_NOT_MATCH = "214"; //strategy not match
+    string public constant ASSET_STRATEGY_ALREADY_SET = "215"; //asset strategy already set
+    string public constant NOT_ENABLE = "216"; //cross chain not enable
+    string public constant NOT_STAKING_BOT = "217"; //not staking bot
 }

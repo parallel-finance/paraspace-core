@@ -84,5 +84,5 @@ interface ICApe is IERC20 {
      **/
     function harvestAndCompound() external;
 
-    function apeCoin() external view returns(IERC20);
+    function apeCoin() external view returns (IERC20);
 }

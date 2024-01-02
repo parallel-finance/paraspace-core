@@ -154,12 +154,12 @@ interface IVaultApeStaking {
      * @notice enter ape staking pool when bayc/mayc/bakc transferred to vault contract.
      * It's an interceptor call, can only be called by vault self.
      * @param nft Identify pool
-     * @param tokenId The tokenId of the nft
+     * @param tokenIds The tokenId array of the nft
      * @param beneficiary The reward beneficiary for the pool position
      */
     function onboardCheckApeStakingPosition(
         address nft,
-        uint32 tokenId,
+        uint32[] calldata tokenIds,
         address beneficiary
     ) external;
 
@@ -167,11 +167,11 @@ interface IVaultApeStaking {
      * @notice exit ape staking pool when bayc/mayc/bakc transferred out from vault contract.
      * It's an interceptor call, can only be called by vault self.
      * @param nft Identify pool
-     * @param tokenId The tokenId of the nft
+     * @param tokenIds The tokenId array of the nft
      */
     function offboardCheckApeStakingPosition(
         address nft,
-        uint32 tokenId
+        uint32[] calldata tokenIds
     ) external;
 
     /**

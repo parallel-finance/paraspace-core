@@ -80,7 +80,6 @@ import {
   NTokenMoonBirds,
   NTokenStakefish,
   NTokenUniswapV3,
-  P2PPairStaking,
   ParaProxy,
   ParaProxy__factory,
   ParaProxyInterfaces,
@@ -141,8 +140,8 @@ import {
   VaultApeStaking__factory,
   VaultCommon,
   VaultCommon__factory,
-  VaultTemplate,
-  VaultTemplate__factory,
+  VaultEarlyAccess,
+  VaultEarlyAccess__factory,
   WalletBalanceProvider,
   WETH9Mocked,
   WETHGateway,
@@ -161,9 +160,7 @@ import {
   getContractFactory,
   getFirstSigner,
   getInitializableAdminUpgradeabilityProxy,
-  getP2PPairStaking,
   getPoolProxy,
-  getProtocolDataProvider,
   getPunks,
   getTimeLockProxy,
   getUniswapV3SwapRouter,
@@ -341,7 +338,9 @@ export const getVaultSignatures = () => {
     VaultApeStaking__factory.abi
   );
 
-  const templateSelectors = getFunctionSignatures(VaultTemplate__factory.abi);
+  const earlyAccessSelectors = getFunctionSignatures(
+    VaultEarlyAccess__factory.abi
+  );
 
   const paraProxyInterfacesSelectors = getFunctionSignatures(
     ParaProxyInterfaces__factory.abi
@@ -351,7 +350,7 @@ export const getVaultSignatures = () => {
   const vaultSelectors = [
     ...commonSelectors,
     ...apeStakingSelectors,
-    ...templateSelectors,
+    ...earlyAccessSelectors,
     ...paraProxyInterfacesSelectors,
   ];
   for (const selector of vaultSelectors) {
@@ -369,7 +368,7 @@ export const getVaultSignatures = () => {
   return {
     commonSelectors,
     apeStakingSelectors,
-    templateSelectors,
+    earlyAccessSelectors,
     paraProxyInterfacesSelectors,
   };
 };
@@ -412,10 +411,11 @@ export const deployVaultApeStaking = async (verify?: boolean) => {
 export const deployVaultCommon = async (verify?: boolean) => {
   const {commonSelectors} = getVaultSignatures();
 
+  const aclManager = await getACLManager();
   const vaultCommon = (await withSaveAndVerify(
     await getContractFactory("VaultCommon"),
     eContractid.VaultCommon,
-    [],
+    [aclManager.address],
     verify,
     false
   )) as VaultCommon;
@@ -426,20 +426,36 @@ export const deployVaultCommon = async (verify?: boolean) => {
   };
 };
 
-export const deployVaultTemplate = async (verify?: boolean) => {
-  const {templateSelectors} = getVaultSignatures();
+export const deployVaultEarlyAccess = async (verify?: boolean) => {
+  const {earlyAccessSelectors} = getVaultSignatures();
 
-  const vaultTemplate = (await withSaveAndVerify(
-    await getContractFactory("VaultTemplate"),
-    eContractid.VaultTemplate,
-    [],
+  const weth = await getWETH();
+  const wstETH = zeroAddress();
+  const cbETH = zeroAddress();
+  const rETH = zeroAddress();
+  const cApe = await getAutoCompoundApe();
+  const aavePool = zeroAddress();
+  const aclManager = await getACLManager();
+
+  const vaultEarlyAccess = (await withSaveAndVerify(
+    await getContractFactory("VaultEarlyAccess"),
+    eContractid.VaultEarlyAccess,
+    [
+      weth.address,
+      wstETH,
+      cbETH,
+      rETH,
+      cApe.address,
+      aavePool,
+      aclManager.address,
+    ],
     verify,
     false
-  )) as VaultTemplate;
+  )) as VaultEarlyAccess;
 
   return {
-    vaultTemplate,
-    vaultTemplateSelectors: templateSelectors.map((s) => s.signature),
+    vaultEarlyAccess,
+    earlyAccessSelectors: earlyAccessSelectors.map((s) => s.signature),
   };
 };
 
@@ -489,7 +505,7 @@ export const deployVault = async (verify?: boolean) => {
     verify
   );
 
-  const {vaultTemplate, vaultTemplateSelectors} = await deployVaultTemplate(
+  const {vaultEarlyAccess, earlyAccessSelectors} = await deployVaultEarlyAccess(
     verify
   );
 
@@ -509,9 +525,9 @@ export const deployVault = async (verify?: boolean) => {
         functionSelectors: apeStakingSelectors,
       },
       {
-        implAddress: vaultTemplate.address,
+        implAddress: vaultEarlyAccess.address,
         action: 0,
-        functionSelectors: vaultTemplateSelectors,
+        functionSelectors: earlyAccessSelectors,
       },
       {
         implAddress: vaultParaProxyInterfaces.address,
@@ -2585,65 +2601,6 @@ export const deployAutoCompoundApeImplAndAssignItToProxy = async (
       GLOBAL_OVERRIDES
     )
   );
-};
-
-export const deployP2PPairStakingImpl = async (verify?: boolean) => {
-  const allTokens = await getAllTokens();
-  const protocolDataProvider = await getProtocolDataProvider();
-  const nBAYC = (
-    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAYC.address)
-  ).xTokenAddress;
-  const nMAYC = (
-    await protocolDataProvider.getReserveTokensAddresses(allTokens.MAYC.address)
-  ).xTokenAddress;
-  const nBAKC = (
-    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAKC.address)
-  ).xTokenAddress;
-  const apeCoinStaking =
-    (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
-    (await deployApeCoinStaking(verify)).address;
-  const args = [
-    allTokens.BAYC.address,
-    allTokens.MAYC.address,
-    allTokens.BAKC.address,
-    nBAYC,
-    nMAYC,
-    nBAKC,
-    allTokens.APE.address,
-    allTokens.cAPE.address,
-    apeCoinStaking,
-  ];
-
-  return withSaveAndVerify(
-    await getContractFactory("P2PPairStaking"),
-    eContractid.P2PPairStakingImpl,
-    [...args],
-    verify
-  ) as Promise<P2PPairStaking>;
-};
-
-export const deployP2PPairStaking = async (verify?: boolean) => {
-  const p2pImplementation = await deployP2PPairStakingImpl(verify);
-
-  const deployer = await getFirstSigner();
-  const deployerAddress = await deployer.getAddress();
-
-  const initData = p2pImplementation.interface.encodeFunctionData("initialize");
-
-  const proxyInstance = await withSaveAndVerify(
-    await getContractFactory("InitializableAdminUpgradeabilityProxy"),
-    eContractid.P2PPairStaking,
-    [],
-    verify
-  );
-
-  await waitForTx(
-    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
-      "initialize(address,address,bytes)"
-    ](p2pImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
-  );
-
-  return await getP2PPairStaking(proxyInstance.address);
 };
 
 export const deployAutoYieldApeImpl = async (verify?: boolean) => {

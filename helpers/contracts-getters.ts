@@ -71,16 +71,13 @@ import {
   AutoCompoundApe__factory,
   InitializableAdminUpgradeabilityProxy__factory,
   StETHDebtToken__factory,
-  ApeStakingLogic__factory,
   MintableERC721Logic__factory,
-  P2PPairStaking__factory,
   ExecutorWithTimelock__factory,
   MultiSendCallOnly__factory,
   WstETHMocked__factory,
   BAYCSewerPass__factory,
   AutoYieldApe__factory,
   PYieldToken__factory,
-  HelperContract__factory,
   MockCToken__factory,
   TimeLock__factory,
   HotWalletProxy__factory,
@@ -1007,17 +1004,6 @@ export const getApeCoinStaking = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getApeStakingLogic = async (address?: tEthereumAddress) =>
-  await ApeStakingLogic__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.ApeStakingLogic}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
 export const getMintableERC721Logic = async (address?: tEthereumAddress) =>
   await MintableERC721Logic__factory.connect(
     address ||
@@ -1076,28 +1062,6 @@ export const getAutoYieldApe = async (address?: tEthereumAddress) =>
     address ||
       (
         await getDb().get(`${eContractid.yAPE}.${DRE.network.name}`).value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getP2PPairStaking = async (address?: tEthereumAddress) =>
-  await P2PPairStaking__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.P2PPairStaking}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getHelperContract = async (address?: tEthereumAddress) =>
-  await HelperContract__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.HelperContract}.${DRE.network.name}`)
-          .value()
       ).address,
     await getFirstSigner()
   );

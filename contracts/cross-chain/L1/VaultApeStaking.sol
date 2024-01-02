@@ -353,7 +353,7 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
     /// @inheritdoc IVaultApeStaking
     function onboardCheckApeStakingPosition(
         address nft,
-        uint32 tokenId,
+        uint32[] calldata tokenIds,
         address beneficiary
     ) external override {
         require(msg.sender == address(this), Errors.INVALID_CALLER);
@@ -361,80 +361,104 @@ contract VaultApeStaking is ReentrancyGuard, Pausable, IVaultApeStaking {
         if (nft == bayc || nft == mayc || nft == bakc) {
             //ensure no ape position
             uint256 poolId = (nft == bayc) ? 1 : ((nft == mayc) ? 2 : 3);
-            (uint256 stakedAmount, ) = apeCoinStaking.nftPosition(
-                poolId,
-                tokenId
-            );
-            require(stakedAmount == 0, Errors.ALREADY_STAKING);
-            if (nft == bayc || nft == mayc) {
-                (, bool isPaired) = apeCoinStaking.mainToBakc(poolId, tokenId);
-                require(!isPaired, Errors.ALREADY_STAKING);
+            PoolState storage poolState = apeStakingStorage().poolStates[nft];
+
+            uint256 arrayLength = tokenIds.length;
+            for (uint256 index = 0; index < arrayLength; index++) {
+                uint32 tokenId = tokenIds[index];
+                (uint256 stakedAmount, ) = apeCoinStaking.nftPosition(
+                    poolId,
+                    tokenId
+                );
+                require(stakedAmount == 0, Errors.ALREADY_STAKING);
+                if (nft == bayc || nft == mayc) {
+                    (, bool isPaired) = apeCoinStaking.mainToBakc(
+                        poolId,
+                        tokenId
+                    );
+                    require(!isPaired, Errors.ALREADY_STAKING);
+                }
+
+                TokenStatus memory tokenStatus = poolState.tokenStatus[tokenId];
+                require(
+                    tokenStatus.beneficiary == address(0),
+                    Errors.INVALID_STATUS
+                );
+
+                tokenStatus.beneficiary = beneficiary;
+                tokenStatus.rewardsDebt = poolState.accumulatedRewardsPerNft;
+                poolState.tokenStatus[tokenId] = tokenStatus;
             }
 
-            PoolState storage poolState = apeStakingStorage().poolStates[nft];
-            TokenStatus memory tokenStatus = poolState.tokenStatus[tokenId];
-            require(
-                tokenStatus.beneficiary == address(0),
-                Errors.INVALID_STATUS
-            );
-
-            tokenStatus.beneficiary = beneficiary;
-            tokenStatus.rewardsDebt = poolState.accumulatedRewardsPerNft;
-            poolState.tokenStatus[tokenId] = tokenStatus;
-
-            poolState.totalPosition += 1;
+            poolState.totalPosition += arrayLength.toUint32();
         }
     }
 
     /// @inheritdoc IVaultApeStaking
     function offboardCheckApeStakingPosition(
         address nft,
-        uint32 tokenId
+        uint32[] calldata tokenIds
     ) external override {
+        ApeStakingStorage storage ds = apeStakingStorage();
         //ensure ownership by bridge, don't validate ownership here
-        require(msg.sender == address(this), Errors.INVALID_CALLER);
+        require(
+            msg.sender == address(this) || msg.sender == ds.apeStakingBot,
+            Errors.INVALID_CALLER
+        );
 
-        PoolState storage poolState = apeStakingStorage().poolStates[nft];
+        PoolState storage poolState = ds.poolStates[nft];
         if (poolState.totalPosition > 0) {
-            if (poolState.stakingPosition > 0) {
-                TokenStatus memory tokenStatus = poolState.tokenStatus[tokenId];
-                if (nft == bakc) {
-                    if (tokenStatus.isStaking) {
-                        uint32[] memory tokenIds = new uint32[](1);
-                        tokenIds[0] = tokenStatus.pairTokenId;
-                        _unstakeApe(tokenStatus.isPairedWithBayc, tokenIds);
-                    }
-                } else {
-                    if (tokenStatus.isStaking || tokenStatus.isPairedStaking) {
-                        bool isBAYC = (nft == bayc);
-                        uint32[] memory tokenIds = new uint32[](1);
-                        tokenIds[0] = tokenId;
-                        _unstakeApe(isBAYC, tokenIds);
+            uint256 arrayLength = tokenIds.length;
+            for (uint256 index = 0; index < arrayLength; index++) {
+                uint32 tokenId = tokenIds[index];
+
+                if (poolState.stakingPosition > 0) {
+                    TokenStatus memory tokenStatus = poolState.tokenStatus[
+                        tokenId
+                    ];
+                    if (nft == bakc) {
+                        if (tokenStatus.isStaking) {
+                            uint32[] memory ids = new uint32[](1);
+                            ids[0] = tokenStatus.pairTokenId;
+                            _unstakeApe(tokenStatus.isPairedWithBayc, ids);
+                        }
+                    } else {
+                        if (
+                            tokenStatus.isStaking || tokenStatus.isPairedStaking
+                        ) {
+                            bool isBAYC = (nft == bayc);
+                            uint32[] memory ids = new uint32[](1);
+                            ids[0] = tokenId;
+                            _unstakeApe(isBAYC, ids);
+                        }
                     }
                 }
-            }
 
-            //claim pending reward
-            uint256 cApeExchangeRate = cApe.getPooledApeByShares(
-                WadRayMath.RAY
-            );
-            uint256 rewardShare = _claimPendingReward(
-                poolState.tokenStatus[tokenId],
-                poolState.accumulatedRewardsPerNft,
-                nft,
-                tokenId,
-                cApeExchangeRate
-            );
-            if (rewardShare > 0) {
-                uint256 pendingReward = rewardShare.rayMul(cApeExchangeRate);
-                cApe.transfer(
-                    poolState.tokenStatus[tokenId].beneficiary,
-                    pendingReward
+                //claim one by one, since every token id may have a different beneficiary
+                uint256 cApeExchangeRate = cApe.getPooledApeByShares(
+                    WadRayMath.RAY
                 );
-            }
+                uint256 rewardShare = _claimPendingReward(
+                    poolState.tokenStatus[tokenId],
+                    poolState.accumulatedRewardsPerNft,
+                    nft,
+                    tokenId,
+                    cApeExchangeRate
+                );
+                if (rewardShare > 0) {
+                    uint256 pendingReward = rewardShare.rayMul(
+                        cApeExchangeRate
+                    );
+                    cApe.transfer(
+                        poolState.tokenStatus[tokenId].beneficiary,
+                        pendingReward
+                    );
+                }
 
-            poolState.totalPosition -= 1;
-            delete poolState.tokenStatus[tokenId];
+                // we also reduce totalPosition one by one for accuracy
+                poolState.totalPosition -= 1;
+                delete poolState.tokenStatus[tokenId];
+            }
         }
     }
 
