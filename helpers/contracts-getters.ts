@@ -57,10 +57,7 @@ import {
   MockMultiAssetAirdropProject__factory,
   IPool__factory,
   MockReserveAuctionStrategy__factory,
-  NTokenBAYC__factory,
-  NTokenMAYC__factory,
   ApeCoinStaking__factory,
-  PTokenSApe__factory,
   StandardPolicyERC721__factory,
   BlurExchange__factory,
   ExecutionDelegate__factory,
@@ -74,21 +71,16 @@ import {
   AutoCompoundApe__factory,
   InitializableAdminUpgradeabilityProxy__factory,
   StETHDebtToken__factory,
-  ApeStakingLogic__factory,
   MintableERC721Logic__factory,
-  NTokenBAKC__factory,
-  P2PPairStaking__factory,
   ExecutorWithTimelock__factory,
   MultiSendCallOnly__factory,
   WstETHMocked__factory,
   BAYCSewerPass__factory,
   AutoYieldApe__factory,
   PYieldToken__factory,
-  HelperContract__factory,
   MockCToken__factory,
   TimeLock__factory,
   HotWalletProxy__factory,
-  NTokenOtherdeed__factory,
   DelegateRegistry__factory,
   DepositContract__factory,
   StakefishNFTManager__factory,
@@ -100,6 +92,8 @@ import {
   Account__factory,
   AccountFactory__factory,
   AccountRegistry__factory,
+  IVault__factory,
+  ParaProxy__factory,
 } from "../types";
 import {
   getEthersSigners,
@@ -353,7 +347,7 @@ export const getPoolLogic = async (address?: tEthereumAddress) =>
   );
 
 export const getPoolProxy = async (address?: tEthereumAddress) => {
-  return await IPool__factory.connect(
+  return IPool__factory.connect(
     address ||
       (
         await getDb()
@@ -363,6 +357,31 @@ export const getPoolProxy = async (address?: tEthereumAddress) => {
     await getFirstSigner()
   );
 };
+
+export const getVaultProxy = async (address?: tEthereumAddress) => {
+  return ParaProxy__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.VaultProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+};
+
+export const getVault = async (address?: tEthereumAddress) => {
+  return IVault__factory.connect(
+    address ||
+      (
+        await getDb()
+          .get(`${eContractid.VaultProxy}.${DRE.network.name}`)
+          .value()
+      ).address,
+    await getFirstSigner()
+  );
+};
+
 export const getPriceOracle = async (address?: tEthereumAddress) =>
   await PriceOracle__factory.connect(
     address ||
@@ -941,17 +960,6 @@ export const getPTokenStETH = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getPTokenSApe = async (address?: tEthereumAddress) =>
-  await PTokenSApe__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.PTokenSApeImpl}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
 export const getPTokenAToken = async (address?: tEthereumAddress) =>
   await PTokenAToken__factory.connect(
     address ||
@@ -985,56 +993,12 @@ export const getUserFlashClaimRegistry = async (address?: tEthereumAddress) =>
     await getFirstSigner()
   );
 
-export const getNTokenBAYC = async (address?: tEthereumAddress) =>
-  await NTokenBAYC__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.NTokenImpl}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getNTokenMAYC = async (address?: tEthereumAddress) =>
-  await NTokenMAYC__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.NTokenImpl}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getNTokenBAKC = async (address?: tEthereumAddress) =>
-  await NTokenBAKC__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.NTokenBAKCImpl}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
 export const getApeCoinStaking = async (address?: tEthereumAddress) =>
   await ApeCoinStaking__factory.connect(
     address ||
       (
         await getDb()
           .get(`${eContractid.ApeCoinStaking}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getApeStakingLogic = async (address?: tEthereumAddress) =>
-  await ApeStakingLogic__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.ApeStakingLogic}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()
@@ -1098,28 +1062,6 @@ export const getAutoYieldApe = async (address?: tEthereumAddress) =>
     address ||
       (
         await getDb().get(`${eContractid.yAPE}.${DRE.network.name}`).value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getP2PPairStaking = async (address?: tEthereumAddress) =>
-  await P2PPairStaking__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.P2PPairStaking}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getHelperContract = async (address?: tEthereumAddress) =>
-  await HelperContract__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.HelperContract}.${DRE.network.name}`)
-          .value()
       ).address,
     await getFirstSigner()
   );
@@ -1213,17 +1155,6 @@ export const getTimeLockProxy = async (address?: tEthereumAddress) =>
       (
         await getDb()
           .get(`${eContractid.TimeLockProxy}.${DRE.network.name}`)
-          .value()
-      ).address,
-    await getFirstSigner()
-  );
-
-export const getNTokenOtherdeed = async (address?: tEthereumAddress) =>
-  await NTokenOtherdeed__factory.connect(
-    address ||
-      (
-        await getDb()
-          .get(`${eContractid.NTokenOtherdeedImpl}.${DRE.network.name}`)
           .value()
       ).address,
     await getFirstSigner()

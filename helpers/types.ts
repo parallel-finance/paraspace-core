@@ -133,7 +133,6 @@ export enum eContractid {
   InitializableImmutableAdminUpgradeabilityProxy = "InitializableImmutableAdminUpgradeabilityProxy",
   MockFlashLoanReceiver = "MockFlashLoanReceiver",
   PTokenImpl = "PTokenImpl",
-  PTokenSApeImpl = "PTokenSApeImpl",
   PTokenATokenImpl = "PTokenATokenImpl",
   PTokenStETHImpl = "PTokenStETHImpl",
   PTokenStKSMImpl = "PTokenStKSMImpl",
@@ -237,6 +236,12 @@ export enum eContractid {
   PoolParametersImpl = "PoolParametersImpl",
   PoolApeStakingImpl = "PoolApeStakingImpl",
   PoolBorrowAndStakeImpl = "PoolBorrowAndStakeImpl",
+  VaultProxy = "VaultProxy",
+  VaultCommon = "VaultCommon",
+  VaultApeStaking = "VaultApeStaking",
+  VaultTemplate = "VaultTemplate",
+  VaultEarlyAccess = "VaultEarlyAccess",
+  VaultProxyInterfacesImpl = "VaultProxyInterfacesImpl",
   ApeCoinStaking = "ApeCoinStaking",
   ATokenDebtToken = "ATokenDebtToken",
   StETHDebtToken = "StETHDebtToken",
@@ -270,7 +275,6 @@ export enum eContractid {
   TimeLockProxy = "TimeLockProxy",
   TimeLockImpl = "TimeLockImpl",
   DefaultTimeLockStrategy = "DefaultTimeLockStrategy",
-  NTokenOtherdeedImpl = "NTokenOtherdeedImpl",
   NTokenChromieSquiggleImpl = "NTokenChromieSquiggleImpl",
   NTokenStakefishImpl = "NTokenStakefishImpl",
   HotWalletProxy = "HotWalletProxy",
@@ -435,6 +439,9 @@ export enum ProtocolErrors {
   EMEGENCY_DISABLE_CALL = "emergency disable call",
 
   MAKER_SAME_AS_TAKER = "132",
+  INVALID_CALLER = "200", //invalid caller
+  NFT_NOT_IN_POOL = "207", //nft not in the pool
+  ALREADY_STAKING = "208", //already staking
 }
 
 export type tEthereumAddress = string;
@@ -467,7 +474,6 @@ export interface iAssetBase<T> {
   awstETH: T;
   aWETH: T;
   APE: T;
-  sAPE: T;
   cAPE: T;
   yAPE: T;
   cETH: T;
@@ -534,7 +540,6 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "awstETH"
   | "aWETH"
   | "APE"
-  | "sAPE"
   | "cAPE"
   | "yAPE"
   | "cETH"

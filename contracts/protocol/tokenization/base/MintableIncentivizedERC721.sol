@@ -91,7 +91,6 @@ abstract contract MintableIncentivizedERC721 is
     IPoolAddressesProvider internal immutable _addressesProvider;
     IPool internal immutable POOL;
     bool internal immutable ATOMIC_PRICING;
-    address internal immutable DELEGATE_REGISTRY_ADDRESS;
 
     /**
      * @dev Constructor.
@@ -103,15 +102,13 @@ abstract contract MintableIncentivizedERC721 is
         IPool pool,
         string memory name_,
         string memory symbol_,
-        bool atomic_pricing,
-        address delegateRegistry
+        bool atomic_pricing
     ) {
         _addressesProvider = pool.ADDRESSES_PROVIDER();
         _ERC721Data.name = name_;
         _ERC721Data.symbol = symbol_;
         POOL = pool;
         ATOMIC_PRICING = atomic_pricing;
-        DELEGATE_REGISTRY_ADDRESS = delegateRegistry;
     }
 
     function name() public view override returns (string memory) {
@@ -395,14 +392,9 @@ abstract contract MintableIncentivizedERC721 is
                 _ERC721Data,
                 POOL,
                 ATOMIC_PRICING,
-                DELEGATE_REGISTRY_ADDRESS,
                 user,
                 tokenIds
             );
-    }
-
-    function revokeDelegation(address v1Registry) external onlyPoolAdmin {
-        IDelegationRegistry(v1Registry).revokeAllDelegates();
     }
 
     function delegateForToken(
@@ -424,16 +416,12 @@ abstract contract MintableIncentivizedERC721 is
 
             MintableERC721Logic.executeUpdateTokenDelegation(
                 _ERC721Data,
-                DELEGATE_REGISTRY_ADDRESS,
+                POOL,
                 delegate,
                 tokenIds[index],
                 value
             );
         }
-    }
-
-    function DELEGATE_REGISTRY() external view returns (address) {
-        return DELEGATE_REGISTRY_ADDRESS;
     }
 
     /**
@@ -456,7 +444,6 @@ abstract contract MintableIncentivizedERC721 is
             _ERC721Data,
             POOL,
             ATOMIC_PRICING,
-            DELEGATE_REGISTRY_ADDRESS,
             from,
             to,
             tokenId
@@ -476,7 +463,6 @@ abstract contract MintableIncentivizedERC721 is
                 _ERC721Data,
                 POOL,
                 ATOMIC_PRICING,
-                DELEGATE_REGISTRY_ADDRESS,
                 from,
                 to,
                 tokenId

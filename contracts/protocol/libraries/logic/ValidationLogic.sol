@@ -27,7 +27,6 @@ import {IToken} from "../../../interfaces/IToken.sol";
 import {XTokenType, IXTokenType} from "../../../interfaces/IXTokenType.sol";
 import {Helpers} from "../helpers/Helpers.sol";
 import {INonfungiblePositionManager} from "../../../dependencies/uniswapv3-periphery/interfaces/INonfungiblePositionManager.sol";
-import "../../../interfaces/INTokenApeStaking.sol";
 
 /**
  * @title ReserveLogic library
@@ -993,10 +992,8 @@ library ValidationLogic {
 
     /**
      * @notice Validates a flash claim.
-     * @param ps The pool storage
      */
     function validateFlashClaim(
-        DataTypes.PoolStorage storage ps,
         address xTokenAddress,
         DataTypes.AssetType assetType,
         uint256[] memory nftTokenIds
@@ -1013,23 +1010,6 @@ library ValidationLogic {
                 tokenType != XTokenType.NTokenStakefish,
             Errors.FLASHCLAIM_NOT_ALLOWED
         );
-
-        // need check sApe status when flash claim for bayc or mayc
-        if (
-            tokenType == XTokenType.NTokenBAYC ||
-            tokenType == XTokenType.NTokenMAYC
-        ) {
-            DataTypes.ReserveData storage sApeReserve = ps._reserves[
-                DataTypes.SApeAddress
-            ];
-
-            (bool isActive, , , bool isPaused, ) = sApeReserve
-                .configuration
-                .getFlags();
-
-            require(isActive, Errors.RESERVE_INACTIVE);
-            require(!isPaused, Errors.RESERVE_PAUSED);
-        }
 
         // only token owner can do flash claim
         for (uint256 i = 0; i < nftTokenIds.length; i++) {

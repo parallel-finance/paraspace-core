@@ -25,7 +25,6 @@ contract WalletBalanceProvider {
 
     address constant MOCK_ETH_ADDRESS =
         0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    address constant SAPE_ADDRESS = address(0x1);
 
     /**
     @dev Fallback function, don't accept any ETH
@@ -48,8 +47,6 @@ contract WalletBalanceProvider {
         if (token == MOCK_ETH_ADDRESS) {
             return user.balance; // ETH balance
             // check if token is actually a contract
-        } else if (token == SAPE_ADDRESS) {
-            return 0;
         } else if (token.isContract()) {
             return IERC20(token).balanceOf(user);
         }

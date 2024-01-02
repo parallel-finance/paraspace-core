@@ -7,11 +7,7 @@ import {IERC20} from "../../dependencies/openzeppelin/contracts/IERC20.sol";
 import {IERC721} from "../../dependencies/openzeppelin/contracts/IERC721.sol";
 import {Errors} from "../libraries/helpers/Errors.sol";
 import {XTokenType} from "../../interfaces/IXTokenType.sol";
-import {ApeStakingLogic} from "./libraries/ApeStakingLogic.sol";
-import {INTokenApeStaking} from "../../interfaces/INTokenApeStaking.sol";
-import {ApeCoinStaking} from "../../dependencies/yoga-labs/ApeCoinStaking.sol";
 import {INToken} from "../../interfaces/INToken.sol";
-import {IRewardController} from "../../interfaces/IRewardController.sol";
 import {DataTypes} from "../libraries/types/DataTypes.sol";
 
 /**
@@ -32,10 +28,9 @@ contract NTokenChromieSquiggle is NToken {
      */
     constructor(
         IPool pool,
-        address delegateRegistry,
         uint256 _startTokenId,
         uint256 _endTokenId
-    ) NToken(pool, false, delegateRegistry) {
+    ) NToken(pool, false) {
         startTokenId = _startTokenId;
         endTokenId = _endTokenId;
     }

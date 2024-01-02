@@ -6,8 +6,8 @@ import "../dependencies/openzeppelin/upgradeability/OwnableUpgradeable.sol";
 import {IERC20} from "../dependencies/openzeppelin/contracts/IERC20.sol";
 import {SafeERC20} from "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import {ApeCoinStaking} from "../dependencies/yoga-labs/ApeCoinStaking.sol";
-import {IAutoCompoundApe} from "../interfaces/IAutoCompoundApe.sol";
 import {CApe} from "./base/CApe.sol";
+import {ICApe} from "../interfaces/ICApe.sol";
 import {IVoteDelegator} from "../interfaces/IVoteDelegator.sol";
 import {IDelegation} from "../interfaces/IDelegation.sol";
 import {IACLManager} from "../interfaces/IACLManager.sol";
@@ -17,8 +17,7 @@ contract AutoCompoundApe is
     Initializable,
     OwnableUpgradeable,
     CApe,
-    IVoteDelegator,
-    IAutoCompoundApe
+    IVoteDelegator
 {
     using SafeERC20 for IERC20;
 
@@ -34,11 +33,19 @@ contract AutoCompoundApe is
     uint256 public bufferBalance;
     uint256 public stakingBalance;
     IACLManager private immutable aclManager;
+    address private immutable bridgeVault;
+    uint256 public nftStakingBalance;
 
-    constructor(address _apeCoin, address _apeStaking, address _aclManager) {
+    constructor(
+        address _apeCoin,
+        address _apeStaking,
+        address _aclManager,
+        address _bridgeVault
+    ) {
         apeStaking = ApeCoinStaking(_apeStaking);
         apeCoin = IERC20(_apeCoin);
         aclManager = IACLManager(_aclManager);
+        bridgeVault = _bridgeVault;
     }
 
     function initialize() public initializer {
@@ -47,7 +54,7 @@ contract AutoCompoundApe is
         apeCoin.safeApprove(address(apeStaking), type(uint256).max);
     }
 
-    /// @inheritdoc IAutoCompoundApe
+    /// @inheritdoc ICApe
     function deposit(address onBehalf, uint256 amount) external override {
         require(amount > 0, "zero amount");
         uint256 amountShare = getShareByPooledApe(amount);
@@ -67,7 +74,7 @@ contract AutoCompoundApe is
         emit Deposit(msg.sender, onBehalf, amount, amountShare);
     }
 
-    /// @inheritdoc IAutoCompoundApe
+    /// @inheritdoc ICApe
     function withdraw(uint256 amount) external override {
         require(amount > 0, "zero amount");
 
@@ -87,10 +94,30 @@ contract AutoCompoundApe is
         emit Redeem(msg.sender, amount, amountShare);
     }
 
-    /// @inheritdoc IAutoCompoundApe
+    /// @inheritdoc ICApe
     function harvestAndCompound() external {
         _harvest();
         _compound();
+    }
+
+    function borrowApeCoin(uint256 amount) external onlyBridgeVault {
+        _harvest();
+        uint256 _bufferBalance = bufferBalance;
+        if (amount > _bufferBalance) {
+            _withdrawFromApeCoinStaking(amount - _bufferBalance);
+        }
+        _transferTokenOut(msg.sender, amount);
+
+        nftStakingBalance += amount;
+    }
+
+    function repayApeCoin(uint256 amount) external onlyBridgeVault {
+        _transferTokenIn(msg.sender, amount);
+        nftStakingBalance -= amount;
+    }
+
+    function notifyReward(uint256 amount) external onlyBridgeVault {
+        _transferTokenIn(msg.sender, amount);
     }
 
     function _getTotalPooledApeBalance()
@@ -104,7 +131,8 @@ contract AutoCompoundApe is
             address(this),
             0
         );
-        return stakingBalance + rewardAmount + bufferBalance;
+        return
+            stakingBalance + rewardAmount + bufferBalance + nftStakingBalance;
     }
 
     function _withdrawFromApeCoinStaking(uint256 amount) internal {
@@ -204,6 +232,11 @@ contract AutoCompoundApe is
      **/
     modifier onlyPoolAdmin() {
         _onlyPoolAdmin();
+        _;
+    }
+
+    modifier onlyBridgeVault() {
+        require(msg.sender == bridgeVault, Errors.ONLY_VAULT);
         _;
     }
 

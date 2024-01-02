@@ -79,9 +79,7 @@ import {
   ReservesSetupHelper__factory,
   Seaport,
   Seaport__factory,
-  NTokenOtherdeed__factory,
   TimeLock__factory,
-  P2PPairStaking__factory,
   NFTFloorOracle__factory,
 } from "../types";
 import {
@@ -1082,9 +1080,7 @@ export const decodeInputData = (data: string) => {
     ...Seaport__factory.abi,
     ...InitializableAdminUpgradeabilityProxy__factory.abi,
     ...ICurve__factory.abi,
-    ...NTokenOtherdeed__factory.abi,
     ...TimeLock__factory.abi,
-    ...P2PPairStaking__factory.abi,
     ...NFTFloorOracle__factory.abi,
   ];
 
@@ -1320,8 +1316,8 @@ export const linkLibraries = (
           if (addr === undefined) {
             continue;
           }
-          console.log("****linkLibraries*****libName:", libName);
-          console.log("****linkLibraries*****addr:", addr);
+          // console.log("****linkLibraries*****libName:", libName);
+          // console.log("****linkLibraries*****addr:", addr);
 
           for (const fixup of fixups) {
             bytecode =

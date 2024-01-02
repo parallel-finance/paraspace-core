@@ -4,7 +4,6 @@ import {
   deployGenericPTokenImpl,
   deployPTokenAToken,
   deployPTokenCApe,
-  deployPTokenSApe,
   deployPTokenStETH,
   deployPTokenStKSM,
 } from "../../helpers/contracts-deployments";
@@ -14,11 +13,7 @@ import {
   getProtocolDataProvider,
   getPToken,
 } from "../../helpers/contracts-getters";
-import {
-  NTokenContractId,
-  PTokenContractId,
-  XTokenType,
-} from "../../helpers/types";
+import {PTokenContractId, XTokenType} from "../../helpers/types";
 
 import dotenv from "dotenv";
 import {
@@ -43,7 +38,6 @@ export const upgradePToken = async (verify = false) => {
   let pTokenDelegationAwareImplementationAddress = "";
   let pTokenStETHImplementationAddress = "";
   let pTokenStKSMImplementationAddress = "";
-  let pTokenSApeImplementationAddress = "";
   let pTokenCApeImplementationAddress = "";
   let pTokenATokenImplementationAddress = "";
   let newImpl = "";
@@ -89,24 +83,6 @@ export const upgradePToken = async (verify = false) => {
         }
         newImpl = pTokenATokenImplementationAddress;
       }
-    } else if (xTokenType == XTokenType.PTokenSApe) {
-      if (!pTokenSApeImplementationAddress) {
-        console.log("deploy PTokenSApe implementation");
-        const nBAYC =
-          // eslint-disable-next-line
-          allXTokens.find(
-            (x) => x.symbol == NTokenContractId.nBAYC
-          )!.tokenAddress;
-        const nMAYC =
-          // eslint-disable-next-line
-          allXTokens.find(
-            (x) => x.symbol == NTokenContractId.nMAYC
-          )!.tokenAddress;
-        pTokenSApeImplementationAddress = (
-          await deployPTokenSApe(poolAddress, nBAYC, nMAYC, verify)
-        ).address;
-      }
-      newImpl = pTokenSApeImplementationAddress;
     } else if (xTokenType == XTokenType.PTokenCApe) {
       if (!pTokenCApeImplementationAddress) {
         console.log("deploy PTokenCApe implementation");

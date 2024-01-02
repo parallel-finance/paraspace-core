@@ -1,32 +1,20 @@
 import {ZERO_ADDRESS} from "../../helpers/constants";
 import {
-  deployPoolApeStaking,
-  deployPoolBorrowAndStake,
   deployPoolComponents,
   deployPoolCore,
   deployPoolMarketplace,
   deployPoolParameters,
-  deployPoolPositionMover,
   deployAAPoolPositionMover,
 } from "../../helpers/contracts-deployments";
 import {
-  getAllTokens,
   getPoolAddressesProvider,
   getPoolProxy,
 } from "../../helpers/contracts-getters";
-import {
-  dryRunEncodedData,
-  getContractAddressInDb,
-} from "../../helpers/contracts-helpers";
+import {dryRunEncodedData} from "../../helpers/contracts-helpers";
 import {DRY_RUN, GLOBAL_OVERRIDES} from "../../helpers/hardhat-constants";
-import {getParaSpaceConfig, waitForTx} from "../../helpers/misc-utils";
-import {
-  eContractid,
-  ERC20TokenContractId,
-  tEthereumAddress,
-} from "../../helpers/types";
+import {waitForTx} from "../../helpers/misc-utils";
+import {tEthereumAddress} from "../../helpers/types";
 import {IParaProxy} from "../../types";
-import {zeroAddress} from "ethereumjs-util";
 
 export const upgradeProxyImplementations = async (
   implementations: [string, string[], string[]][]
@@ -129,11 +117,9 @@ export const resetPool = async (verify = false) => {
     poolCore,
     poolParameters,
     poolMarketplace,
-    poolApeStaking,
     poolCoreSelectors: newPoolCoreSelectors,
     poolParametersSelectors: newPoolParametersSelectors,
     poolMarketplaceSelectors: newPoolMarketplaceSelectors,
-    poolApeStakingSelectors: newPoolApeStakingSelectors,
   } = await deployPoolComponents(addressesProvider.address, verify);
   console.timeEnd("deploy PoolComponent");
 
@@ -143,27 +129,17 @@ export const resetPool = async (verify = false) => {
     [poolParameters.address, newPoolParametersSelectors, []],
   ] as [string, string[], string[]][];
 
-  if (poolApeStaking) {
-    implementations.push([
-      poolApeStaking.address,
-      newPoolApeStakingSelectors,
-      [],
-    ]);
-  }
-
   await upgradeProxyImplementations(implementations);
 };
 
 export const upgradePool = async (
   {
     oldPoolCore,
-    oldPoolApeStaking,
     oldPoolMarketplace,
     oldPoolParameters,
   }: {
     oldPoolCore: tEthereumAddress;
     oldPoolMarketplace: tEthereumAddress;
-    oldPoolApeStaking: tEthereumAddress;
     oldPoolParameters: tEthereumAddress;
   },
   verify = false
@@ -172,9 +148,6 @@ export const upgradePool = async (
   const pool = await getPoolProxy();
   console.time("deploy PoolComponent");
   const oldPoolCoreSelectors = await pool.facetFunctionSelectors(oldPoolCore);
-  const oldPoolApeStakingSelectors = await pool.facetFunctionSelectors(
-    oldPoolApeStaking
-  );
   const oldPoolMarketplaceSelectors = await pool.facetFunctionSelectors(
     oldPoolMarketplace
   );
@@ -186,11 +159,9 @@ export const upgradePool = async (
     poolCore,
     poolParameters,
     poolMarketplace,
-    poolApeStaking,
     poolCoreSelectors: newPoolCoreSelectors,
     poolParametersSelectors: newPoolParametersSelectors,
     poolMarketplaceSelectors: newPoolMarketplaceSelectors,
-    poolApeStakingSelectors: newPoolApeStakingSelectors,
   } = await deployPoolComponents(addressesProvider.address, verify);
   console.timeEnd("deploy PoolComponent");
 
@@ -207,14 +178,6 @@ export const upgradePool = async (
       oldPoolParametersSelectors,
     ],
   ] as [string, string[], string[]][];
-
-  if (poolApeStaking) {
-    implementations.push([
-      poolApeStaking.address,
-      newPoolApeStakingSelectors,
-      oldPoolApeStakingSelectors,
-    ]);
-  }
 
   await upgradeProxyImplementations(implementations);
 };
@@ -263,59 +226,6 @@ export const upgradePoolMarketplace = async (
   await upgradeProxyImplementations(implementations);
 };
 
-export const upgradePoolApeStaking = async (
-  oldPoolApeStaking: tEthereumAddress,
-  verify = false
-) => {
-  const addressesProvider = await getPoolAddressesProvider();
-  const pool = await getPoolProxy();
-  const oldPoolApeStakingSelectors = await pool.facetFunctionSelectors(
-    oldPoolApeStaking
-  );
-
-  const {poolApeStaking, poolApeStakingSelectors: newPoolApeStakingSelectors} =
-    await deployPoolApeStaking(addressesProvider.address, verify);
-
-  const implementations = [
-    [
-      poolApeStaking.address,
-      newPoolApeStakingSelectors,
-      oldPoolApeStakingSelectors,
-    ],
-  ] as [string, string[], string[]][];
-
-  await upgradeProxyImplementations(implementations);
-};
-
-export const upgradeBorrowApeAndStake = async (
-  oldPoolApeStaking: tEthereumAddress,
-  verify = false
-) => {
-  const addressesProvider = await getPoolAddressesProvider();
-  let oldPoolApeStakingSelectors: Array<string> = [];
-  if (oldPoolApeStaking != zeroAddress()) {
-    const pool = await getPoolProxy();
-    oldPoolApeStakingSelectors = await pool.facetFunctionSelectors(
-      oldPoolApeStaking
-    );
-  }
-
-  const {
-    poolBorrowAndStake,
-    poolBorrowAndStakeSelectors: newPoolApeStakingSelectors,
-  } = await deployPoolBorrowAndStake(addressesProvider.address, verify);
-
-  const implementations = [
-    [
-      poolBorrowAndStake.address,
-      newPoolApeStakingSelectors,
-      oldPoolApeStakingSelectors,
-    ],
-  ] as [string, string[], string[]][];
-
-  await upgradeProxyImplementations(implementations);
-};
-
 export const upgradePoolParameters = async (
   oldPoolParameters: tEthereumAddress,
   verify = false
@@ -334,53 +244,6 @@ export const upgradePoolParameters = async (
       poolParameters.address,
       newPoolParametersSelectors,
       oldPoolParametersSelectors,
-    ],
-  ] as [string, string[], string[]][];
-
-  await upgradeProxyImplementations(implementations);
-};
-
-export const upgradePoolPositionMover = async (
-  oldPoolPositionMover: tEthereumAddress,
-  verify = false
-) => {
-  const addressesProvider = await getPoolAddressesProvider();
-  const pool = await getPoolProxy();
-  const allTokens = await getAllTokens();
-  const paraSpaceConfig = getParaSpaceConfig();
-  const oldPoolPositionMoverSelectors = await pool.facetFunctionSelectors(
-    oldPoolPositionMover
-  );
-
-  const bendDaoLendPoolLoan =
-    paraSpaceConfig.BendDAO.LendingPoolLoan ||
-    (await getContractAddressInDb(eContractid.MockBendDaoLendPool));
-  const bendDaoLendPool =
-    paraSpaceConfig.BendDAO.LendingPool ||
-    (await getContractAddressInDb(eContractid.MockBendDaoLendPool));
-
-  const {
-    poolPositionMover,
-    poolPositionMoverSelectors: newPoolPositionMoverSelectors,
-  } = await deployPoolPositionMover(
-    addressesProvider.address,
-    bendDaoLendPoolLoan,
-    bendDaoLendPool,
-    paraSpaceConfig.ParaSpaceV1?.PoolV1 || ZERO_ADDRESS,
-    paraSpaceConfig.ParaSpaceV1?.ProtocolDataProviderV1 || ZERO_ADDRESS,
-    paraSpaceConfig.ParaSpaceV1?.CApeV1 || ZERO_ADDRESS,
-    allTokens[ERC20TokenContractId.cAPE].address,
-    allTokens[ERC20TokenContractId.APE].address,
-    paraSpaceConfig.ParaSpaceV1?.TimeLockV1 || ZERO_ADDRESS,
-    paraSpaceConfig.ParaSpaceV1?.P2PPairStakingV1 || ZERO_ADDRESS,
-    verify
-  );
-
-  const implementations = [
-    [
-      poolPositionMover.address,
-      newPoolPositionMoverSelectors,
-      oldPoolPositionMoverSelectors,
     ],
   ] as [string, string[], string[]][];
 

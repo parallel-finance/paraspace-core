@@ -2,7 +2,6 @@
 pragma solidity ^0.8.10;
 
 import {ParaVersionedInitializable} from "../libraries/paraspace-upgradeability/ParaVersionedInitializable.sol";
-import {Errors} from "../libraries/helpers/Errors.sol";
 import {ReserveConfiguration} from "../libraries/configuration/ReserveConfiguration.sol";
 import {PoolLogic} from "../libraries/logic/PoolLogic.sol";
 import {ReserveLogic} from "../libraries/logic/ReserveLogic.sol";

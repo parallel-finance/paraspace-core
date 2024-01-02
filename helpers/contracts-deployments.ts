@@ -5,7 +5,6 @@ import {
   AccountRegistry,
   ACLManager,
   AirdropFlashClaimReceiver,
-  ApeStakingLogic,
   AStETHDebtToken,
   ATokenDebtToken,
   AuctionLogic,
@@ -30,8 +29,8 @@ import {
   DefaultReserveAuctionStrategy,
   DefaultReserveInterestRateStrategy,
   DefaultTimeLockStrategy,
-  DelegationAwarePToken,
   DelegateRegistry,
+  DelegationAwarePToken,
   DepositContract,
   Doodles,
   ERC20OracleWrapper,
@@ -41,7 +40,6 @@ import {
   ExecutionManager,
   ExecutorWithTimelock,
   FlashClaimLogic,
-  HelperContract,
   HotWalletProxy,
   InitializableAdminUpgradeabilityProxy,
   InitializableImmutableAdminUpgradeabilityProxy,
@@ -79,25 +77,21 @@ import {
   MutantApeYachtClub,
   NFTFloorOracle,
   NToken,
-  NTokenBAKC,
-  NTokenBAYC,
-  NTokenMAYC,
   NTokenMoonBirds,
-  NTokenOtherdeed,
   NTokenStakefish,
   NTokenUniswapV3,
-  P2PPairStaking,
+  ParaProxy,
+  ParaProxy__factory,
   ParaProxyInterfaces,
   ParaProxyInterfaces__factory,
-  ParaProxy__factory,
   ParaSpaceAirdrop,
   ParaSpaceOracle,
   PausableZoneController,
   PolicyManager,
+  PoolAAPositionMover,
+  PoolAAPositionMover__factory,
   PoolAddressesProvider,
   PoolAddressesProviderRegistry,
-  PoolApeStaking,
-  PoolApeStaking__factory,
   PoolConfigurator,
   PoolCore,
   PoolCore__factory,
@@ -106,8 +100,6 @@ import {
   PoolMarketplace__factory,
   PoolParameters,
   PoolParameters__factory,
-  PoolPositionMover,
-  PoolPositionMover__factory,
   PositionMoverLogic,
   PriceOracle,
   ProtocolDataProvider,
@@ -115,7 +107,6 @@ import {
   PTokenAStETH,
   PTokenAToken,
   PTokenCApe,
-  PTokenSApe,
   PTokenStETH,
   PTokenStKSM,
   PYieldToken,
@@ -145,6 +136,12 @@ import {
   UniswapV3TwapOracleWrapper,
   UserFlashclaimRegistry,
   VariableDebtToken,
+  VaultApeStaking,
+  VaultApeStaking__factory,
+  VaultCommon,
+  VaultCommon__factory,
+  VaultEarlyAccess,
+  VaultEarlyAccess__factory,
   WalletBalanceProvider,
   WETH9Mocked,
   WETHGateway,
@@ -153,9 +150,6 @@ import {
   WstETHMocked,
   X2Y2Adapter,
   X2Y2R1,
-  PoolAAPositionMover__factory,
-  PoolBorrowAndStake__factory,
-  PoolBorrowAndStake,
 } from "../types";
 import {
   getACLManager,
@@ -165,14 +159,12 @@ import {
   getBAYCSewerPass,
   getContractFactory,
   getFirstSigner,
-  getHelperContract,
   getInitializableAdminUpgradeabilityProxy,
-  getP2PPairStaking,
   getPoolProxy,
-  getProtocolDataProvider,
   getPunks,
   getTimeLockProxy,
   getUniswapV3SwapRouter,
+  getVaultProxy,
   getWETH,
 } from "./contracts-getters";
 import {
@@ -210,6 +202,7 @@ import {pick, upperFirst} from "lodash";
 import shell from "shelljs";
 import {ZERO_ADDRESS} from "./constants";
 import {GLOBAL_OVERRIDES, ZK_LIBRARIES_PATH} from "./hardhat-constants";
+import {zeroAddress} from "ethereumjs-util";
 
 export const deployAllLibraries = async (verify?: boolean) => {
   const supplyLogic = await deploySupplyLogic(verify);
@@ -220,7 +213,6 @@ export const deployAllLibraries = async (verify?: boolean) => {
   const poolLogic = await deployPoolLogic(verify);
   const configuratorLogic = await deployConfiguratorLogic(verify);
   const mintableERC721Logic = await deployMintableERC721Logic(verify);
-  const apeStakingLogic = await deployApeStakingLogic(verify);
   const merkleVerifier = await deployMerkleVerifier(verify);
 
   const libraries = {
@@ -241,9 +233,6 @@ export const deployAllLibraries = async (verify?: boolean) => {
     },
     "contracts/protocol/libraries/logic/PoolLogic.sol": {
       PoolLogic: poolLogic.address,
-    },
-    "contracts/protocol/tokenization/libraries/ApeStakingLogic.sol": {
-      ApeStakingLogic: apeStakingLogic.address,
     },
     "contracts/protocol/tokenization/libraries/MintableERC721Logic.sol": {
       MintableERC721Logic: mintableERC721Logic.address,
@@ -342,6 +331,215 @@ export const deployACLManager = async (
     [provider],
     verify
   ) as Promise<ACLManager>;
+
+export const getVaultSignatures = () => {
+  const commonSelectors = getFunctionSignatures(VaultCommon__factory.abi);
+  const apeStakingSelectors = getFunctionSignatures(
+    VaultApeStaking__factory.abi
+  );
+
+  const earlyAccessSelectors = getFunctionSignatures(
+    VaultEarlyAccess__factory.abi
+  );
+
+  const paraProxyInterfacesSelectors = getFunctionSignatures(
+    ParaProxyInterfaces__factory.abi
+  );
+
+  const allSelectors = {};
+  const vaultSelectors = [
+    ...commonSelectors,
+    ...apeStakingSelectors,
+    ...earlyAccessSelectors,
+    ...paraProxyInterfacesSelectors,
+  ];
+  for (const selector of vaultSelectors) {
+    if (!allSelectors[selector.signature]) {
+      allSelectors[selector.signature] = selector;
+    } else {
+      throw new Error(
+        `added function ${selector.name} conflict with exist function:${
+          allSelectors[selector.signature].name
+        }`
+      );
+    }
+  }
+
+  return {
+    commonSelectors,
+    apeStakingSelectors,
+    earlyAccessSelectors,
+    paraProxyInterfacesSelectors,
+  };
+};
+
+export const deployVaultApeStaking = async (verify?: boolean) => {
+  const allTokens = await getAllTokens();
+  const apeCoinStaking =
+    (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
+    (await deployApeCoinStaking(verify)).address;
+
+  const cApe = await getAutoCompoundApe();
+  const aclManager = await getACLManager();
+
+  const {apeStakingSelectors} = getVaultSignatures();
+  const args = [
+    allTokens.BAYC.address,
+    allTokens.MAYC.address,
+    allTokens.BAKC.address,
+    allTokens.APE.address,
+    cApe.address,
+    apeCoinStaking,
+    aclManager.address,
+    zeroAddress(),
+  ];
+
+  const vaultApeStaking = (await withSaveAndVerify(
+    await getContractFactory("VaultApeStaking"),
+    eContractid.VaultApeStaking,
+    args,
+    verify,
+    false
+  )) as VaultApeStaking;
+
+  return {
+    vaultApeStaking,
+    apeStakingSelectors: apeStakingSelectors.map((s) => s.signature),
+  };
+};
+
+export const deployVaultCommon = async (verify?: boolean) => {
+  const {commonSelectors} = getVaultSignatures();
+
+  const aclManager = await getACLManager();
+  const vaultCommon = (await withSaveAndVerify(
+    await getContractFactory("VaultCommon"),
+    eContractid.VaultCommon,
+    [aclManager.address],
+    verify,
+    false
+  )) as VaultCommon;
+
+  return {
+    vaultCommon,
+    vaultCommonSelectors: commonSelectors.map((s) => s.signature),
+  };
+};
+
+export const deployVaultEarlyAccess = async (verify?: boolean) => {
+  const {earlyAccessSelectors} = getVaultSignatures();
+
+  const weth = await getWETH();
+  const wstETH = zeroAddress();
+  const cbETH = zeroAddress();
+  const rETH = zeroAddress();
+  const cApe = await getAutoCompoundApe();
+  const aavePool = zeroAddress();
+  const aclManager = await getACLManager();
+
+  const vaultEarlyAccess = (await withSaveAndVerify(
+    await getContractFactory("VaultEarlyAccess"),
+    eContractid.VaultEarlyAccess,
+    [
+      weth.address,
+      wstETH,
+      cbETH,
+      rETH,
+      cApe.address,
+      aavePool,
+      aclManager.address,
+    ],
+    verify,
+    false
+  )) as VaultEarlyAccess;
+
+  return {
+    vaultEarlyAccess,
+    earlyAccessSelectors: earlyAccessSelectors.map((s) => s.signature),
+  };
+};
+
+export const deployVaultParaProxyInterfaces = async (verify?: boolean) => {
+  const {paraProxyInterfacesSelectors} = await getVaultSignatures();
+  const vaultParaProxyInterfaces = (await withSaveAndVerify(
+    await getContractFactory("ParaProxyInterfaces"),
+    eContractid.VaultProxyInterfacesImpl,
+    [],
+    verify,
+    false,
+    undefined,
+    paraProxyInterfacesSelectors
+  )) as ParaProxyInterfaces;
+
+  return {
+    vaultParaProxyInterfaces,
+    paraProxyInterfacesSelectors: paraProxyInterfacesSelectors.map(
+      (s) => s.signature
+    ),
+  };
+};
+
+export const deployVaultProxy = async (verify?: boolean) => {
+  const deployer = await getFirstSigner();
+  const deployerAddress = await deployer.getAddress();
+
+  return (await withSaveAndVerify(
+    await getContractFactory("ParaProxy"),
+    eContractid.VaultProxy,
+    [deployerAddress],
+    verify,
+    false
+  )) as ParaProxy;
+};
+
+export const deployVault = async (verify?: boolean) => {
+  const proxyAddress =
+    (await getContractAddressInDb(eContractid.VaultProxy)) ||
+    (await deployVaultProxy(verify)).address;
+
+  const proxy = await getVaultProxy(proxyAddress);
+
+  const {vaultCommon, vaultCommonSelectors} = await deployVaultCommon(verify);
+
+  const {vaultApeStaking, apeStakingSelectors} = await deployVaultApeStaking(
+    verify
+  );
+
+  const {vaultEarlyAccess, earlyAccessSelectors} = await deployVaultEarlyAccess(
+    verify
+  );
+
+  const {vaultParaProxyInterfaces, paraProxyInterfacesSelectors} =
+    await deployVaultParaProxyInterfaces(verify);
+
+  await proxy.updateImplementation(
+    [
+      {
+        implAddress: vaultCommon.address,
+        action: 0,
+        functionSelectors: vaultCommonSelectors,
+      },
+      {
+        implAddress: vaultApeStaking.address,
+        action: 0,
+        functionSelectors: apeStakingSelectors,
+      },
+      {
+        implAddress: vaultEarlyAccess.address,
+        action: 0,
+        functionSelectors: earlyAccessSelectors,
+      },
+      {
+        implAddress: vaultParaProxyInterfaces.address,
+        action: 0,
+        functionSelectors: paraProxyInterfacesSelectors,
+      },
+    ],
+    proxy.address,
+    vaultApeStaking.interface.encodeFunctionData("initialize"),
+    GLOBAL_OVERRIDES
+  );
+};
 
 export const deployConfiguratorLogic = async (verify?: boolean) =>
   withSaveAndVerify(
@@ -540,90 +738,6 @@ export const deployPoolMarketplace = async (
   };
 };
 
-export const deployPoolApeStaking = async (
-  provider: string,
-  verify?: boolean
-) => {
-  const supplyLogic = await deploySupplyLogic(verify);
-  const borrowLogic = await deployBorrowLogic(verify);
-
-  const apeStakingLibraries = {
-    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
-      supplyLogic.address,
-    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
-      borrowLogic.address,
-  };
-
-  const APE_WETH_FEE = 3000;
-  const WETH_USDC_FEE = 500;
-
-  const {poolApeStakingSelectors} = await getPoolSignatures();
-
-  const allTokens = await getAllTokens();
-
-  const config = getParaSpaceConfig();
-  const treasuryAddress = config.Treasury;
-
-  const cApe = await getAutoCompoundApe();
-  const poolApeStaking = (await withSaveAndVerify(
-    await getContractFactory("PoolApeStaking", apeStakingLibraries),
-    eContractid.PoolApeStakingImpl,
-    [
-      provider,
-      cApe.address,
-      allTokens.APE.address,
-      allTokens.USDC.address,
-      (await getUniswapV3SwapRouter()).address,
-      allTokens.WETH.address,
-      APE_WETH_FEE,
-      WETH_USDC_FEE,
-      treasuryAddress,
-    ],
-    verify,
-    false,
-    apeStakingLibraries,
-    poolApeStakingSelectors
-  )) as PoolApeStaking;
-
-  return {
-    poolApeStaking,
-    poolApeStakingSelectors: poolApeStakingSelectors.map((s) => s.signature),
-  };
-};
-
-export const deployPoolBorrowAndStake = async (
-  provider: string,
-  verify?: boolean
-) => {
-  const borrowLogic = await deployBorrowLogic(verify);
-
-  const apeStakingLibraries = {
-    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
-      borrowLogic.address,
-  };
-
-  const {poolBorrowAndStakeSelectors} = await getPoolSignatures();
-
-  const allTokens = await getAllTokens();
-  const cApe = await getAutoCompoundApe();
-  const poolBorrowAndStake = (await withSaveAndVerify(
-    await getContractFactory("PoolBorrowAndStake", apeStakingLibraries),
-    eContractid.PoolBorrowAndStakeImpl,
-    [provider, cApe.address, allTokens.APE.address],
-    verify,
-    false,
-    apeStakingLibraries,
-    poolBorrowAndStakeSelectors
-  )) as PoolApeStaking;
-
-  return {
-    poolBorrowAndStake,
-    poolBorrowAndStakeSelectors: poolBorrowAndStakeSelectors.map(
-      (s) => s.signature
-    ),
-  };
-};
-
 export const deployPoolParameters = async (
   provider: string,
   verify?: boolean
@@ -683,75 +797,11 @@ export const deployAAPoolPositionMover = async (verify?: boolean) => {
     false,
     undefined,
     poolAAPositionMoverSelectors
-  )) as PoolPositionMover;
+  )) as PoolAAPositionMover;
 
   return {
     poolAAPositionMover,
     poolAAPositionMoverSelectors: poolAAPositionMoverSelectors.map(
-      (s) => s.signature
-    ),
-  };
-};
-
-export const deployPoolPositionMover = async (
-  provider: tEthereumAddress,
-  bendDaoLendPoolLoan: tEthereumAddress,
-  bendDaoLendPool: tEthereumAddress,
-  poolV1: tEthereumAddress,
-  protocolDataProviderV1: tEthereumAddress,
-  capeV1: tEthereumAddress,
-  capeV2: tEthereumAddress,
-  apeCoin: tEthereumAddress,
-  timeLockV1: tEthereumAddress,
-  p2pPairStakingV1: tEthereumAddress,
-  verify?: boolean
-) => {
-  const supplyLogic = await deploySupplyLogic(verify);
-  const borrowLogic = await deployBorrowLogic(verify);
-  const positionMoverLogicLibraries = {
-    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic":
-      supplyLogic.address,
-    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic":
-      borrowLogic.address,
-  };
-  const positionMoverLogic = await deployPositionMoverLogic(
-    positionMoverLogicLibraries,
-    verify
-  );
-
-  const positionMoverLibraries = {
-    ["contracts/protocol/libraries/logic/PositionMoverLogic.sol:PositionMoverLogic"]:
-      positionMoverLogic.address,
-  };
-  const {poolPositionMoverSelectors} = await getPoolSignatures();
-  const libraries = {
-    ["contracts/protocol/libraries/logic/PositionMoverLogic.sol:PositionMoverLogic"]:
-      positionMoverLogic.address,
-  };
-  const poolPositionMover = (await withSaveAndVerify(
-    await getContractFactory("PoolPositionMover", positionMoverLibraries),
-    eContractid.PoolPositionMoverImpl,
-    [
-      provider,
-      bendDaoLendPoolLoan,
-      bendDaoLendPool,
-      poolV1,
-      protocolDataProviderV1,
-      capeV1,
-      capeV2,
-      apeCoin,
-      timeLockV1,
-      p2pPairStakingV1,
-    ],
-    verify,
-    false,
-    libraries,
-    poolPositionMoverSelectors
-  )) as PoolPositionMover;
-
-  return {
-    poolPositionMover,
-    poolPositionMoverSelectors: poolPositionMoverSelectors.map(
       (s) => s.signature
     ),
   };
@@ -796,18 +846,6 @@ export const getPoolSignatures = () => {
     PoolMarketplace__factory.abi
   );
 
-  const poolApeStakingSelectors = getFunctionSignatures(
-    PoolApeStaking__factory.abi
-  );
-
-  const poolBorrowAndStakeSelectors = getFunctionSignatures(
-    PoolBorrowAndStake__factory.abi
-  );
-
-  const poolPositionMoverSelectors = getFunctionSignatures(
-    PoolPositionMover__factory.abi
-  );
-
   const poolAAPositionMoverSelectors = getFunctionSignatures(
     PoolAAPositionMover__factory.abi
   );
@@ -823,11 +861,8 @@ export const getPoolSignatures = () => {
     ...poolCoreSelectors,
     ...poolParametersSelectors,
     ...poolMarketplaceSelectors,
-    ...poolApeStakingSelectors,
-    ...poolBorrowAndStakeSelectors,
     ...poolProxySelectors,
     ...poolParaProxyInterfacesSelectors,
-    ...poolPositionMoverSelectors,
     ...poolAAPositionMoverSelectors,
   ];
   for (const selector of poolSelectors) {
@@ -846,10 +881,7 @@ export const getPoolSignatures = () => {
     poolCoreSelectors,
     poolParametersSelectors,
     poolMarketplaceSelectors,
-    poolApeStakingSelectors,
-    poolBorrowAndStakeSelectors,
     poolParaProxyInterfacesSelectors,
-    poolPositionMoverSelectors,
     poolAAPositionMoverSelectors,
   };
 };
@@ -867,25 +899,20 @@ export const getPoolSignaturesFromDb = async () => {
     eContractid.PoolMarketplaceImpl
   );
 
-  const poolApeStakingSelectors = await getFunctionSignaturesFromDb(
-    eContractid.PoolApeStakingImpl
-  );
-
   const poolParaProxyInterfacesSelectors = await getFunctionSignaturesFromDb(
     eContractid.ParaProxyInterfacesImpl
   );
 
-  const poolPositionMoverSelectors = await getFunctionSignaturesFromDb(
-    eContractid.PoolPositionMoverImpl
+  const poolAAPositionMoverSelectors = await getFunctionSignaturesFromDb(
+    eContractid.PoolAAPositionMoverImpl
   );
 
   return {
     poolCoreSelectors,
     poolParametersSelectors,
     poolMarketplaceSelectors,
-    poolApeStakingSelectors,
     poolParaProxyInterfacesSelectors,
-    poolPositionMoverSelectors,
+    poolAAPositionMoverSelectors,
   };
 };
 
@@ -901,23 +928,8 @@ export const deployPoolComponents = async (
 
   const parametersLibraries = await deployPoolParametersLibraries(verify);
 
-  const apeStakingLibraries = pick(coreLibraries, [
-    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
-    "contracts/protocol/libraries/logic/SupplyLogic.sol:SupplyLogic",
-  ]);
-
-  const allTokens = await getAllTokens();
-
-  const APE_WETH_FEE = 3000;
-  const WETH_USDC_FEE = 500;
-
-  const {
-    poolCoreSelectors,
-    poolParametersSelectors,
-    poolMarketplaceSelectors,
-    poolApeStakingSelectors,
-    poolBorrowAndStakeSelectors,
-  } = getPoolSignatures();
+  const {poolCoreSelectors, poolParametersSelectors, poolMarketplaceSelectors} =
+    getPoolSignatures();
 
   const poolCore = (await withSaveAndVerify(
     await getContractFactory("PoolCore", coreLibraries),
@@ -955,59 +967,13 @@ export const deployPoolComponents = async (
     poolMarketplaceSelectors
   )) as PoolMarketplace;
 
-  const config = getParaSpaceConfig();
-  const treasuryAddress = config.Treasury;
-  const cApe = await getAutoCompoundApe();
-  const poolApeStaking = allTokens.APE
-    ? ((await withSaveAndVerify(
-        await getContractFactory("PoolApeStaking", apeStakingLibraries),
-        eContractid.PoolApeStakingImpl,
-        [
-          provider,
-          cApe.address,
-          allTokens.APE.address,
-          allTokens.USDC.address,
-          (await getUniswapV3SwapRouter()).address,
-          allTokens.WETH.address,
-          APE_WETH_FEE,
-          WETH_USDC_FEE,
-          treasuryAddress,
-        ],
-        verify,
-        false,
-        apeStakingLibraries,
-        poolApeStakingSelectors
-      )) as PoolApeStaking)
-    : undefined;
-
-  const BorrowAndStakeLibraries = pick(coreLibraries, [
-    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
-  ]);
-  const poolBorrowAndStake = allTokens.APE
-    ? ((await withSaveAndVerify(
-        await getContractFactory("PoolBorrowAndStake", BorrowAndStakeLibraries),
-        eContractid.PoolBorrowAndStakeImpl,
-        [provider, cApe.address, allTokens.APE.address],
-        verify,
-        false,
-        BorrowAndStakeLibraries,
-        poolBorrowAndStakeSelectors
-      )) as PoolBorrowAndStake)
-    : undefined;
-
   return {
     poolCore,
     poolParameters,
     poolMarketplace,
-    poolApeStaking,
-    poolBorrowAndStake,
     poolCoreSelectors: poolCoreSelectors.map((s) => s.signature),
     poolParametersSelectors: poolParametersSelectors.map((s) => s.signature),
     poolMarketplaceSelectors: poolMarketplaceSelectors.map((s) => s.signature),
-    poolApeStakingSelectors: poolApeStakingSelectors.map((s) => s.signature),
-    poolBorrowAndStakeSelectors: poolBorrowAndStakeSelectors.map(
-      (s) => s.signature
-    ),
   };
 };
 
@@ -1161,7 +1127,6 @@ export const deployGenericPTokenImpl = async (
 export const deployGenericNTokenImpl = async (
   poolAddress: tEthereumAddress,
   atomicPricing: boolean,
-  delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -1175,7 +1140,7 @@ export const deployGenericNTokenImpl = async (
   return withSaveAndVerify(
     await getContractFactory("NToken", libraries),
     eContractid.NTokenImpl,
-    [poolAddress, atomicPricing, delegationRegistry],
+    [poolAddress, atomicPricing],
     verify,
     false,
     libraries
@@ -1184,7 +1149,6 @@ export const deployGenericNTokenImpl = async (
 
 export const deployUniswapV3NTokenImpl = async (
   poolAddress: tEthereumAddress,
-  delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -1198,7 +1162,7 @@ export const deployUniswapV3NTokenImpl = async (
   return withSaveAndVerify(
     await getContractFactory("NTokenUniswapV3", libraries),
     eContractid.NTokenUniswapV3Impl,
-    [poolAddress, delegationRegistry],
+    [poolAddress],
     verify,
     false,
     libraries
@@ -1207,15 +1171,11 @@ export const deployUniswapV3NTokenImpl = async (
 
 export const deployGenericMoonbirdNTokenImpl = async (
   poolAddress: tEthereumAddress,
-  delegationRegistry: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
     (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
     (await deployMintableERC721Logic(verify)).address;
-  const paraSpaceConfig = getParaSpaceConfig();
-
-  const timeLockV1 = paraSpaceConfig.ParaSpaceV1?.TimeLockV1 || ZERO_ADDRESS;
 
   const libraries = {
     ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
@@ -1224,7 +1184,7 @@ export const deployGenericMoonbirdNTokenImpl = async (
   return withSaveAndVerify(
     await getContractFactory("NTokenMoonBirds", libraries),
     eContractid.NTokenMoonBirdsImpl,
-    [poolAddress, delegationRegistry, timeLockV1],
+    [poolAddress],
     verify,
     false,
     libraries
@@ -2291,19 +2251,6 @@ export const deployPTokenAStETH = async (
     verify
   ) as Promise<PTokenAStETH>;
 
-export const deployPTokenSApe = async (
-  poolAddress: tEthereumAddress,
-  nBAYC: tEthereumAddress,
-  nMAYC: tEthereumAddress,
-  verify?: boolean
-) =>
-  withSaveAndVerify(
-    await getContractFactory("PTokenSApe"),
-    eContractid.PTokenSApeImpl,
-    [poolAddress, nBAYC, nMAYC],
-    verify
-  ) as Promise<PTokenSApe>;
-
 export const deployUserFlashClaimRegistry = async (
   receiverImpl: tEthereumAddress,
   verify?: boolean
@@ -2444,103 +2391,10 @@ export const deployApeCoinStaking = async (verify?: boolean) => {
     amount,
     "1666771200",
     "1761465600",
-    parseEther("100000"),
+    parseEther("50000"),
     GLOBAL_OVERRIDES
   );
   return apeCoinStaking;
-};
-
-export const deployApeStakingLogic = async (verify?: boolean) => {
-  return withSaveAndVerify(
-    await getContractFactory("ApeStakingLogic"),
-    eContractid.ApeStakingLogic,
-    [],
-    verify
-  ) as Promise<ApeStakingLogic>;
-};
-
-export const deployNTokenBAYCImpl = async (
-  apeCoinStaking: tEthereumAddress,
-  poolAddress: tEthereumAddress,
-  delegationRegistry: tEthereumAddress,
-  verify?: boolean
-) => {
-  const apeStakingLogic =
-    (await getContractAddressInDb(eContractid.ApeStakingLogic)) ||
-    (await deployApeStakingLogic(verify)).address;
-  const mintableERC721Logic =
-    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
-    (await deployMintableERC721Logic(verify)).address;
-
-  const libraries = {
-    ["contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic"]:
-      apeStakingLogic,
-    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic,
-  };
-
-  return withSaveAndVerify(
-    await getContractFactory("NTokenBAYC", libraries),
-    eContractid.NTokenBAYCImpl,
-    [poolAddress, apeCoinStaking, delegationRegistry],
-    verify,
-    false,
-    libraries
-  ) as Promise<NTokenBAYC>;
-};
-
-export const deployNTokenMAYCImpl = async (
-  apeCoinStaking: tEthereumAddress,
-  poolAddress: tEthereumAddress,
-  delegationRegistry: tEthereumAddress,
-  verify?: boolean
-) => {
-  const apeStakingLogic =
-    (await getContractAddressInDb(eContractid.ApeStakingLogic)) ||
-    (await deployApeStakingLogic(verify)).address;
-  const mintableERC721Logic =
-    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
-    (await deployMintableERC721Logic(verify)).address;
-
-  const libraries = {
-    ["contracts/protocol/tokenization/libraries/ApeStakingLogic.sol:ApeStakingLogic"]:
-      apeStakingLogic,
-    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic,
-  };
-  return withSaveAndVerify(
-    await getContractFactory("NTokenMAYC", libraries),
-    eContractid.NTokenMAYCImpl,
-    [poolAddress, apeCoinStaking, delegationRegistry],
-    verify,
-    false,
-    libraries
-  ) as Promise<NTokenMAYC>;
-};
-
-export const deployNTokenBAKCImpl = async (
-  poolAddress: tEthereumAddress,
-  apeCoinStaking: tEthereumAddress,
-  nBAYC: tEthereumAddress,
-  nMAYC: tEthereumAddress,
-  delegationRegistry: tEthereumAddress,
-  verify?: boolean
-) => {
-  const mintableERC721Logic =
-    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
-    (await deployMintableERC721Logic(verify)).address;
-  const libraries = {
-    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic,
-  };
-  return withSaveAndVerify(
-    await getContractFactory("NTokenBAKC", libraries),
-    eContractid.NTokenBAKCImpl,
-    [poolAddress, apeCoinStaking, nBAYC, nMAYC, delegationRegistry],
-    verify,
-    false,
-    libraries
-  ) as Promise<NTokenBAKC>;
 };
 
 export const deployATokenDebtToken = async (
@@ -2690,12 +2544,18 @@ export const deployTimeLockExecutor = async (
 };
 
 export const deployAutoCompoundApeImpl = async (verify?: boolean) => {
+  const proxy = await deployVaultProxy();
   const allTokens = await getAllTokens();
   const apeCoinStaking =
     (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
     (await deployApeCoinStaking(verify)).address;
   const aclManager = await getACLManager();
-  const args = [allTokens.APE.address, apeCoinStaking, aclManager.address];
+  const args = [
+    allTokens.APE.address,
+    apeCoinStaking,
+    aclManager.address,
+    proxy.address,
+  ];
 
   return withSaveAndVerify(
     await getContractFactory("AutoCompoundApe"),
@@ -2741,65 +2601,6 @@ export const deployAutoCompoundApeImplAndAssignItToProxy = async (
       GLOBAL_OVERRIDES
     )
   );
-};
-
-export const deployP2PPairStakingImpl = async (verify?: boolean) => {
-  const allTokens = await getAllTokens();
-  const protocolDataProvider = await getProtocolDataProvider();
-  const nBAYC = (
-    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAYC.address)
-  ).xTokenAddress;
-  const nMAYC = (
-    await protocolDataProvider.getReserveTokensAddresses(allTokens.MAYC.address)
-  ).xTokenAddress;
-  const nBAKC = (
-    await protocolDataProvider.getReserveTokensAddresses(allTokens.BAKC.address)
-  ).xTokenAddress;
-  const apeCoinStaking =
-    (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
-    (await deployApeCoinStaking(verify)).address;
-  const args = [
-    allTokens.BAYC.address,
-    allTokens.MAYC.address,
-    allTokens.BAKC.address,
-    nBAYC,
-    nMAYC,
-    nBAKC,
-    allTokens.APE.address,
-    allTokens.cAPE.address,
-    apeCoinStaking,
-  ];
-
-  return withSaveAndVerify(
-    await getContractFactory("P2PPairStaking"),
-    eContractid.P2PPairStakingImpl,
-    [...args],
-    verify
-  ) as Promise<P2PPairStaking>;
-};
-
-export const deployP2PPairStaking = async (verify?: boolean) => {
-  const p2pImplementation = await deployP2PPairStakingImpl(verify);
-
-  const deployer = await getFirstSigner();
-  const deployerAddress = await deployer.getAddress();
-
-  const initData = p2pImplementation.interface.encodeFunctionData("initialize");
-
-  const proxyInstance = await withSaveAndVerify(
-    await getContractFactory("InitializableAdminUpgradeabilityProxy"),
-    eContractid.P2PPairStaking,
-    [],
-    verify
-  );
-
-  await waitForTx(
-    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
-      "initialize(address,address,bytes)"
-    ](p2pImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
-  );
-
-  return await getP2PPairStaking(proxyInstance.address);
 };
 
 export const deployAutoYieldApeImpl = async (verify?: boolean) => {
@@ -2863,60 +2664,6 @@ export const deployAutoYieldApeImplAndAssignItToProxy = async (
       GLOBAL_OVERRIDES
     )
   );
-};
-
-export const deployHelperContractImpl = async (
-  cApeV1: tEthereumAddress,
-  verify?: boolean
-) => {
-  const allTokens = await getAllTokens();
-  const protocolDataProvider = await getProtocolDataProvider();
-  const pCApe = (
-    await protocolDataProvider.getReserveTokensAddresses(allTokens.cAPE.address)
-  ).xTokenAddress;
-  const pool = await getPoolProxy();
-  const args = [
-    allTokens.APE.address,
-    cApeV1,
-    allTokens.cAPE.address,
-    pCApe,
-    pool.address,
-  ];
-
-  return withSaveAndVerify(
-    await getContractFactory("HelperContract"),
-    eContractid.HelperContractImpl,
-    [...args],
-    verify
-  ) as Promise<HelperContract>;
-};
-
-export const deployHelperContract = async (
-  cApeV1: tEthereumAddress,
-  verify?: boolean
-) => {
-  const helperImplementation = await deployHelperContractImpl(cApeV1, verify);
-
-  const deployer = await getFirstSigner();
-  const deployerAddress = await deployer.getAddress();
-
-  const initData =
-    helperImplementation.interface.encodeFunctionData("initialize");
-
-  const proxyInstance = await withSaveAndVerify(
-    await getContractFactory("InitializableAdminUpgradeabilityProxy"),
-    eContractid.HelperContract,
-    [],
-    verify
-  );
-
-  await waitForTx(
-    await (proxyInstance as InitializableAdminUpgradeabilityProxy)[
-      "initialize(address,address,bytes)"
-    ](helperImplementation.address, deployerAddress, initData, GLOBAL_OVERRIDES)
-  );
-
-  return await getHelperContract(proxyInstance.address);
 };
 
 export const deployPTokenCApe = async (
@@ -3096,33 +2843,8 @@ export const deployReserveTimeLockStrategy = async (
     verify
   ) as Promise<DefaultTimeLockStrategy>;
 
-export const deployOtherdeedNTokenImpl = async (
-  poolAddress: tEthereumAddress,
-  warmWallet: tEthereumAddress,
-  delegationRegistryAddress: tEthereumAddress,
-  verify?: boolean
-) => {
-  const mintableERC721Logic =
-    (await getContractAddressInDb(eContractid.MintableERC721Logic)) ||
-    (await deployMintableERC721Logic(verify)).address;
-
-  const libraries = {
-    ["contracts/protocol/tokenization/libraries/MintableERC721Logic.sol:MintableERC721Logic"]:
-      mintableERC721Logic,
-  };
-  return withSaveAndVerify(
-    await getContractFactory("NTokenOtherdeed", libraries),
-    eContractid.NTokenOtherdeedImpl,
-    [poolAddress, warmWallet, delegationRegistryAddress],
-    verify,
-    false,
-    libraries
-  ) as Promise<NTokenOtherdeed>;
-};
-
 export const deployChromieSquiggleNTokenImpl = async (
   poolAddress: tEthereumAddress,
-  delegationRegistryAddress: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -3138,7 +2860,7 @@ export const deployChromieSquiggleNTokenImpl = async (
   return withSaveAndVerify(
     await getContractFactory("NTokenChromieSquiggle", libraries),
     eContractid.NTokenChromieSquiggleImpl,
-    [poolAddress, delegationRegistryAddress, startTokenId, endTokenId],
+    [poolAddress, startTokenId, endTokenId],
     verify,
     false,
     libraries
@@ -3147,7 +2869,6 @@ export const deployChromieSquiggleNTokenImpl = async (
 
 export const deployStakefishNTokenImpl = async (
   poolAddress: tEthereumAddress,
-  delegationRegistryAddress: tEthereumAddress,
   verify?: boolean
 ) => {
   const mintableERC721Logic =
@@ -3161,7 +2882,7 @@ export const deployStakefishNTokenImpl = async (
   return withSaveAndVerify(
     await getContractFactory("NTokenStakefish", libraries),
     eContractid.NTokenStakefishImpl,
-    [poolAddress, delegationRegistryAddress],
+    [poolAddress],
     verify,
     false,
     libraries

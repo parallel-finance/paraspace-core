@@ -40,8 +40,6 @@ import {
   getPTokenStETH,
   getWPunkGatewayProxy,
   getWETHGatewayProxy,
-  getNTokenBAYC,
-  getNTokenMAYC,
   getApeCoinStaking,
   getBlurExchangeProxy,
   getExecutionDelegate,
@@ -49,10 +47,8 @@ import {
   getLooksRareAdapter,
   getX2Y2Adapter,
   getBlurAdapter,
-  getNTokenBAKC,
   getWstETH,
   getMockCToken,
-  getNTokenOtherdeed,
   getStakefishNFTManager,
   getNTokenStakefish,
   getTimeLockProxy,
@@ -77,11 +73,7 @@ import {
   LooksRareAdapter,
   MockCToken,
   NFTFloorOracle,
-  NTokenBAKC,
-  NTokenBAYC,
-  NTokenMAYC,
   NTokenMoonBirds,
-  NTokenOtherdeed,
   NTokenStakefish,
   NTokenUniswapV3,
   PausableZone,
@@ -171,8 +163,8 @@ export interface TestEnv {
   pUsdc: PToken;
   usdc: MintableERC20;
   usdt: MintableERC20;
-  nBAYC: NTokenBAYC;
-  nOTHR: NTokenOtherdeed;
+  nBAYC: NToken;
+  nOTHR: NToken;
   bayc: MintableERC721;
   sfvldr: StakefishNFTManager;
   nSfvldr: NTokenStakefish;
@@ -187,12 +179,12 @@ export interface TestEnv {
   wstETH: WstETHMocked;
   pstETH: PTokenStETH;
   ape: MintableERC20;
-  nMAYC: NTokenMAYC;
+  nMAYC: NToken;
   mayc: MintableERC721;
   nDOODLE: NToken;
   doodles: MintableERC721;
   bakc: MintableERC721;
-  nBAKC: NTokenBAKC;
+  nBAKC: NToken;
   mockTokenFaucet: MockTokenFaucet;
   wPunkGateway: WPunkGateway;
   wETHGateway: WETHGateway;
@@ -251,9 +243,9 @@ export async function initializeMakeSuite() {
     pUsdc: {} as PToken,
     usdc: {} as MintableERC20,
     usdt: {} as MintableERC20,
-    nBAYC: {} as NTokenBAYC,
+    nBAYC: {} as NToken,
     nMOONBIRD: {} as NTokenMoonBirds,
-    nBAKC: {} as NTokenBAKC,
+    nBAKC: {} as NToken,
     bayc: {} as MintableERC721,
     sfvldr: {} as StakefishNFTManager,
     nSfvldr: {} as NTokenStakefish,
@@ -335,8 +327,6 @@ export async function initializeMakeSuite() {
     testEnv.poolAdmin.signer
   );
 
-  testEnv.nOTHR = await getNTokenOtherdeed();
-
   testEnv.protocolDataProvider = await getProtocolDataProvider();
 
   testEnv.mockTokenFaucet = await getMockTokenFaucet();
@@ -416,6 +406,10 @@ export async function initializeMakeSuite() {
 
   const nUniwapV3Address = allTokens.find(
     (xToken) => xToken.symbol === NTokenContractId.nUniswapV3
+  )?.tokenAddress;
+
+  const nOTHRAddress = allTokens.find(
+    (xToken) => xToken.symbol === NTokenContractId.nOTHR
   )?.tokenAddress;
 
   const reservesTokens =
@@ -525,13 +519,14 @@ export async function initializeMakeSuite() {
     variableDebtAWethAddress
   );
 
-  testEnv.nBAYC = await getNTokenBAYC(nBAYCAddress);
-  testEnv.nMAYC = await getNTokenMAYC(nMAYCAddress);
+  testEnv.nBAYC = await getNToken(nBAYCAddress);
+  testEnv.nMAYC = await getNToken(nMAYCAddress);
   testEnv.nDOODLE = await getNToken(nDOODLEAddress);
-  testEnv.nBAKC = await getNTokenBAKC(nBAKCAddress);
+  testEnv.nBAKC = await getNToken(nBAKCAddress);
   testEnv.nSfvldr = await getNTokenStakefish(nSfvldrAddress);
 
   testEnv.nMOONBIRD = await getNTokenMoonBirds(nMOONBIRDAddress);
+  testEnv.nOTHR = await getNToken(nOTHRAddress);
 
   testEnv.dai = await getMintableERC20(daiAddress);
   testEnv.usdc = await getMintableERC20(usdcAddress);
