@@ -30,6 +30,8 @@ import {
   SEPOLIA_ETHERSCAN_KEY,
   ARBITRUM_SEPOLIA_ETHERSCAN_KEY,
   PARAX_DEV_ETHERSCAN_KEY,
+  NEON_ETHERSCAN_KEY,
+  PARALLEL_ETHERSCAN_KEY,
 } from "./helpers/hardhat-constants";
 import {accounts} from "./wallets";
 import {accounts as evmAccounts} from "./evm-wallets";
@@ -152,24 +154,6 @@ const hardhatConfig: HardhatUserConfig = {
       allowUnlimitedContractSize: true,
       timeout: 9000000,
     },
-    parallel: {
-      url: NETWORKS_RPC_URL[eEthereumNetwork.parallel],
-      chainId: CHAINS_ID[eEthereumNetwork.parallel],
-      accounts: evmAccounts.map(({privateKey}) => privateKey),
-      gasPrice: 4e9,
-      gas: 4e6,
-      allowUnlimitedContractSize: true,
-    },
-    moonbeam: {
-      chainId: CHAINS_ID[eEthereumNetwork.moonbeam],
-      url: NETWORKS_RPC_URL[eEthereumNetwork.moonbeam],
-      accounts: DEPLOYER,
-    },
-    moonbase: {
-      chainId: CHAINS_ID[eEthereumNetwork.moonbase],
-      url: NETWORKS_RPC_URL[eEthereumNetwork.moonbase],
-      accounts: DEPLOYER,
-    },
     hardhat: {
       hardfork: HARDFORK,
       blockGasLimit: DEFAULT_BLOCK_GAS_LIMIT,
@@ -182,6 +166,21 @@ const hardhatConfig: HardhatUserConfig = {
       loggingEnabled: VERBOSE,
       forking: buildForkConfig(),
       allowUnlimitedContractSize: true,
+    },
+    parallel: {
+      url: NETWORKS_RPC_URL[eEthereumNetwork.parallel],
+      chainId: CHAINS_ID[eEthereumNetwork.parallel],
+      accounts: DEPLOYER,
+    },
+    moonbeam: {
+      chainId: CHAINS_ID[eEthereumNetwork.moonbeam],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.moonbeam],
+      accounts: DEPLOYER,
+    },
+    moonbase: {
+      chainId: CHAINS_ID[eEthereumNetwork.moonbase],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.moonbase],
+      accounts: DEPLOYER,
     },
     goerli: {
       chainId: CHAINS_ID[eEthereumNetwork.goerli],
@@ -259,6 +258,11 @@ const hardhatConfig: HardhatUserConfig = {
       url: NETWORKS_RPC_URL[eEthereumNetwork.lineaGoerli],
       accounts: DEPLOYER,
     },
+    neon: {
+      chainId: CHAINS_ID[eEthereumNetwork.neon],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.neon],
+      accounts: DEPLOYER,
+    },
     mainnet: {
       chainId: CHAINS_ID[eEthereumNetwork.mainnet],
       url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
@@ -283,6 +287,8 @@ const hardhatConfig: HardhatUserConfig = {
       moonbase: MOONBASE_ETHERSCAN_KEY,
       linea: LINEA_ETHERSCAN_KEY,
       lineaGoerli: LINEA_GOERLI_ETHERSCAN_KEY,
+      neon: NEON_ETHERSCAN_KEY,
+      parallel: PARALLEL_ETHERSCAN_KEY,
     },
     customChains: [
       eEthereumNetwork.localhost,
@@ -302,6 +308,8 @@ const hardhatConfig: HardhatUserConfig = {
       eEthereumNetwork.moonbase,
       eEthereumNetwork.linea,
       eEthereumNetwork.lineaGoerli,
+      eEthereumNetwork.neon,
+      eEthereumNetwork.parallel,
     ].map((network) => ({
       network,
       chainId: CHAINS_ID[network]!,

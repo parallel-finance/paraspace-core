@@ -30,6 +30,7 @@ import {
   ZKSYNC_GOERLI_CHAINID,
   ARBITRUM_SEPOLIA_CHAINID,
   PARAX_DEV_CHAINID,
+  NEON_CHAINID,
 } from "./helpers/hardhat-constants";
 
 dotenv.config();
@@ -75,7 +76,7 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eEthereumNetwork.ganache]: RPC_URL || "http://localhost:8545",
   [eEthereumNetwork.tenderlyMain]:
     RPC_URL || `https://rpc.tenderly.co/fork/${TENDERLY_FORK_ID}`,
-  [eEthereumNetwork.parallel]: RPC_URL || "http://localhost:29933",
+  [eEthereumNetwork.parallel]: RPC_URL || "https://rpc.parallel.fi",
   [eEthereumNetwork.moonbeam]: "https://rpc.api.moonbeam.network",
   [eEthereumNetwork.moonbase]: "https://rpc.testnet.moonbeam.network",
   [eEthereumNetwork.arbitrum]:
@@ -122,6 +123,8 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
     (INFURA_KEY
       ? `https://linea-goerli.infura.io/v3/${INFURA_KEY}`
       : `https://rpc.goerli.linea.build`),
+  [eEthereumNetwork.neon]:
+    RPC_URL || `https://neon-proxy-mainnet.solana.p2p.org`,
 };
 
 export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
@@ -147,6 +150,7 @@ export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.zksyncGoerli]: ZKSYNC_GOERLI_CHAINID,
   [eEthereumNetwork.linea]: LINEA_CHAINID,
   [eEthereumNetwork.lineaGoerli]: LINEA_GOERLI_CHAINID,
+  [eEthereumNetwork.neon]: NEON_CHAINID,
 };
 
 export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
@@ -172,4 +176,5 @@ export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.zksyncGoerli]: undefined,
   [eEthereumNetwork.linea]: undefined,
   [eEthereumNetwork.lineaGoerli]: undefined,
+  [eEthereumNetwork.neon]: undefined,
 };

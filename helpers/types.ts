@@ -106,6 +106,7 @@ export enum eEthereumNetwork {
   zksyncGoerli = "zksyncGoerli",
   linea = "linea",
   lineaGoerli = "lineaGoerli",
+  neon = "neon",
 }
 
 export enum eContractid {
@@ -771,6 +772,7 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.zksyncGoerli]: T;
   [eEthereumNetwork.linea]: T;
   [eEthereumNetwork.lineaGoerli]: T;
+  [eEthereumNetwork.neon]: T;
 }
 
 export enum RateMode {

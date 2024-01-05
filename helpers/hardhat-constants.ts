@@ -25,7 +25,7 @@ export const GOERLI_CHAINID = 5;
 export const SEPOLIA_CHAINID = 11155111;
 export const FORK_CHAINID = 522;
 export const MAINNET_CHAINID = 1;
-export const PARALLEL_CHAINID = 1592;
+export const PARALLEL_CHAINID = 1024;
 export const PARAX_DEV_CHAINID = 2982896226593698;
 export const MOONBEAM_CHAINID = 1284;
 export const MOONBASE_CHAINID = 1287;
@@ -40,6 +40,7 @@ export const ZKSYNC_CHAINID = 324;
 export const ZKSYNC_GOERLI_CHAINID = 280;
 export const LINEA_GOERLI_CHAINID = 59140;
 export const LINEA_CHAINID = 59144;
+export const NEON_CHAINID = 245022934;
 
 export const INFURA_KEY = process.env.INFURA_KEY || "";
 export const ALCHEMY_KEY = process.env.ALCHEMY_KEY || "";
@@ -108,6 +109,11 @@ export const ETHERSCAN_VERIFICATION_JOBS = parseInt(
 export const ETHERSCAN_VERIFICATION_MAX_RETRIES = parseInt(
   process.env.ETHERSCAN_VERIFICATION_MAX_RETRIES || "3"
 );
+export const NEON_ETHERSCAN_KEY =
+  process.env.NEON_ETHERSCAN_KEY || ETHERSCAN_KEY;
+export const PARALLEL_ETHERSCAN_KEY =
+  process.env.PARALLEL_ETHERSCAN_KEY || ETHERSCAN_KEY;
+
 export const ETHERSCAN_NETWORKS = [
   "localhost",
   "mainnet",
@@ -127,6 +133,8 @@ export const ETHERSCAN_NETWORKS = [
   "lineaGoerli",
   "moonbeam",
   "moonbase",
+  "neon",
+  "parallel",
 ];
 export const ETHERSCAN_APIS = {
   localhost: "http://localhost:4000/api",
@@ -149,6 +157,8 @@ export const ETHERSCAN_APIS = {
   moonbase: "https://api-moonbase.moonscan.io/api",
   linea: "http://explorer.linea.build/api",
   lineaGoerli: "https://explorer.goerli.linea.build/api",
+  neon: "https://neonscan.org/api",
+  parallel: "https://explorer.parallel.fi/api",
 };
 export const BROWSER_URLS = {
   localhost: "http://localhost:4000",
@@ -170,6 +180,8 @@ export const BROWSER_URLS = {
   moonbase: "https://moonbase.moonscan.io",
   linea: "https://explorer.linea.build",
   lineaGoerli: "https://explorer.goerli.linea.build",
+  neon: "https://neonscan.org",
+  parallel: "https://explorer.parallel.fi",
 };
 
 export const DEPLOY_START = parseInt(process.env.DEPLOY_START || "0");

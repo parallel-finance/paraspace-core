@@ -1111,4 +1111,6 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.zksyncGoerli]: ZkSyncGoerliConfig,
   [eEthereumNetwork.linea]: LineaConfig,
   [eEthereumNetwork.lineaGoerli]: LineaGoerliConfig,
+  [eEthereumNetwork.parallel]: HardhatConfig,
+  [eEthereumNetwork.neon]: HardhatConfig,
 };

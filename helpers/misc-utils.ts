@@ -31,6 +31,8 @@ import {
   SEPOLIA_CHAINID,
   ARBITRUM_SEPOLIA_CHAINID,
   PARAX_DEV_CHAINID,
+  NEON_CHAINID,
+  PARALLEL_CHAINID,
 } from "./hardhat-constants";
 import {ConstructorArgs, eContractid, tEthereumAddress} from "./types";
 import dotenv from "dotenv";
@@ -146,6 +148,22 @@ export const isLinea = (): boolean => {
   );
 };
 
+export const isNeon = (): boolean => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return (
+    [NEON_CHAINID].includes(DRE.network.config.chainId!) ||
+    [eEthereumNetwork.neon].includes(FORK as eEthereumNetwork)
+  );
+};
+
+export const isParallel = (): boolean => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return (
+    [PARALLEL_CHAINID].includes(DRE.network.config.chainId!) ||
+    [eEthereumNetwork.parallel].includes(FORK as eEthereumNetwork)
+  );
+};
+
 export const isMainnet = (): boolean =>
   isEthereum() ||
   isMoonbeam() ||
@@ -153,7 +171,9 @@ export const isMainnet = (): boolean =>
   isZkSync() ||
   isPolygon() ||
   isPolygonZkEVM() ||
-  isLinea();
+  isLinea() ||
+  isNeon() ||
+  isParallel();
 
 export const safeTransactionServiceUrl = (): string => {
   return isMoonbeam()
