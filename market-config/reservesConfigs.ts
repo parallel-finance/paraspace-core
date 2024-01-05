@@ -28,6 +28,7 @@ import {
   rateStrategyAAVE,
   rateStrategyAPE,
   rateStrategyARB,
+  rateStrategyaUSDC,
   rateStrategyBAL,
   rateStrategyBLUR,
   rateStrategyCRV,
@@ -114,6 +115,7 @@ import {
   timeLockStrategyEXRP,
   timeLockStrategyuPPG,
   timeLockStrategyuBAYC,
+  timeLockStrategyaUSDC,
 } from "./timeLockStrategies";
 
 export const strategyDAI: IReserveParams = {
@@ -143,6 +145,22 @@ export const strategyUSDC: IReserveParams = {
   borrowingEnabled: true,
   reserveDecimals: "6",
   xTokenImpl: eContractid.PTokenImpl,
+  reserveFactor: "1000",
+  borrowCap: "0",
+  supplyCap: "0",
+};
+
+export const strategyAUSDC: IReserveParams = {
+  strategy: rateStrategyaUSDC,
+  auctionStrategy: auctionStrategyZero,
+  timeLockStrategy: timeLockStrategyaUSDC,
+  baseLTVAsCollateral: "8700",
+  liquidationThreshold: "8900",
+  liquidationProtocolFeePercentage: "0",
+  liquidationBonus: "10450",
+  borrowingEnabled: true,
+  reserveDecimals: "6",
+  xTokenImpl: eContractid.PTokenATokenImpl,
   reserveFactor: "1000",
   borrowCap: "0",
   supplyCap: "0",
