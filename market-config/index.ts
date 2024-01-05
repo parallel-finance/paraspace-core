@@ -1101,7 +1101,7 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.mainnet]: MainnetConfig,
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
   [eEthereumNetwork.arbitrumSepolia]: ArbitrumSepoliaConfig,
-  [eEthereumNetwork.paraxDev]: ParaxDevConfig,
+  [eEthereumNetwork.parallelDev]: ParaxDevConfig,
   [eEthereumNetwork.arbitrum]: ArbitrumConfig,
   [eEthereumNetwork.polygon]: PolygonConfig,
   [eEthereumNetwork.polygonMumbai]: PolygonMumbaiConfig,

@@ -26,7 +26,7 @@ export const SEPOLIA_CHAINID = 11155111;
 export const FORK_CHAINID = 522;
 export const MAINNET_CHAINID = 1;
 export const PARALLEL_CHAINID = 1024;
-export const PARAX_DEV_CHAINID = 2982896226593698;
+export const PARALLEL_DEV_CHAINID = 2982896226593698;
 export const MOONBEAM_CHAINID = 1284;
 export const MOONBASE_CHAINID = 1287;
 export const ARBITRUM_ONE_CHAINID = 42161;
@@ -79,8 +79,8 @@ export const ARBITRUM_GOERLI_ETHERSCAN_KEY =
   process.env.ARBITRUM_GOERLI_ETHERSCAN_KEY || ARBITRUM_ETHERSCAN_KEY;
 export const ARBITRUM_SEPOLIA_ETHERSCAN_KEY =
   process.env.ARBITRUM_SEPOLIA_ETHERSCAN_KEY || ARBITRUM_ETHERSCAN_KEY;
-export const PARAX_DEV_ETHERSCAN_KEY =
-  process.env.PARAX_DEV_ETHERSCAN_KEY || ETHERSCAN_KEY;
+export const PARALLEL_DEV_ETHERSCAN_KEY =
+  process.env.PARALLEL_DEV_ETHERSCAN_KEY || ETHERSCAN_KEY;
 export const POLYGON_ETHERSCAN_KEY =
   process.env.POLYGON_ETHERSCAN_KEY || ETHERSCAN_KEY;
 export const POLYGON_MUMBAI_ETHERSCAN_KEY =
@@ -121,7 +121,7 @@ export const ETHERSCAN_NETWORKS = [
   "arbitrum",
   "arbitrumGoerli",
   "arbitrumSepolia",
-  "paraxDev",
+  "parallelDev",
   "polygon",
   "matic",
   "polygonMumbai",
@@ -143,7 +143,7 @@ export const ETHERSCAN_APIS = {
   arbitrum: "https://api.arbiscan.io/api",
   arbitrumGoerli: "https://api-goerli.arbiscan.io/api",
   arbitrumSepolia: "https://api-sepolia.arbiscan.io/api",
-  paraxDev:
+  parallelDev:
     "https://explorerl2new-surprised-harlequin-bonobo-fvcy2k9oqh.t.conduit.xyz/api",
   polygon: "https://api.polygonscan.com/api",
   matic: "https://api.polygonscan.com/api",
@@ -169,7 +169,7 @@ export const BROWSER_URLS = {
   arbitrumSepolia: "https://sepolia.arbiscan.io",
   polygonZkevm: "https://zkevm.polygonscan.com",
   polygonZkevmGoerli: "https://testnet-zkevm.polygonscan.com",
-  paraxDev:
+  parallelDev:
     "https://explorerl2new-surprised-harlequin-bonobo-fvcy2k9oqh.t.conduit.xyz",
   polygon: "https://polygonscan.com",
   matic: "https://polygonscan.com",

@@ -29,7 +29,7 @@ import {
   ZKSYNC_CHAINID,
   ZKSYNC_GOERLI_CHAINID,
   ARBITRUM_SEPOLIA_CHAINID,
-  PARAX_DEV_CHAINID,
+  PARALLEL_DEV_CHAINID,
   NEON_CHAINID,
 } from "./helpers/hardhat-constants";
 
@@ -91,7 +91,7 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
     L2_RPC_URL ||
     RPC_URL ||
     `https://arb-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`,
-  [eEthereumNetwork.paraxDev]:
+  [eEthereumNetwork.parallelDev]:
     L2_RPC_URL ||
     RPC_URL ||
     `https://rpc-surprised-harlequin-bonobo-fvcy2k9oqh.t.conduit.xyz`,
@@ -141,7 +141,7 @@ export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.arbitrum]: ARBITRUM_ONE_CHAINID,
   [eEthereumNetwork.arbitrumGoerli]: ARBITRUM_GOERLI_CHAINID,
   [eEthereumNetwork.arbitrumSepolia]: ARBITRUM_SEPOLIA_CHAINID,
-  [eEthereumNetwork.paraxDev]: PARAX_DEV_CHAINID,
+  [eEthereumNetwork.parallelDev]: PARALLEL_DEV_CHAINID,
   [eEthereumNetwork.polygon]: POLYGON_CHAINID,
   [eEthereumNetwork.polygonMumbai]: POLYGON_MUMBAI_CHAINID,
   [eEthereumNetwork.polygonZkevm]: POLYGON_ZKEVM_CHAINID,
@@ -167,7 +167,7 @@ export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.arbitrum]: undefined,
   [eEthereumNetwork.arbitrumGoerli]: undefined,
   [eEthereumNetwork.arbitrumSepolia]: undefined,
-  [eEthereumNetwork.paraxDev]: undefined,
+  [eEthereumNetwork.parallelDev]: undefined,
   [eEthereumNetwork.polygon]: undefined,
   [eEthereumNetwork.polygonMumbai]: undefined,
   [eEthereumNetwork.polygonZkevm]: undefined,
