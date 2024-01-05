@@ -663,20 +663,14 @@ export const ArbitrumSepoliaConfig: IParaSpaceConfiguration = {
     PPG: strategyPudgyPenguins,
   },
 };
-export const ParaxDevConfig: IParaSpaceConfiguration = {
+export const ParallelDevConfig: IParaSpaceConfiguration = {
   // BASIC INFO
   ...CommonConfig,
   ParaSpaceTeam: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
   Treasury: "0x018281853eCC543Aa251732e8FDaa7323247eBeB",
-  ParaSpaceAdmin: "0x28abAC3E3F1fbC8Aa4Ded74C1589026038f889d8",
-  EmergencyAdmins: ["0x28abAC3E3F1fbC8Aa4Ded74C1589026038f889d8"],
-  RiskAdmin: "0x28abAC3E3F1fbC8Aa4Ded74C1589026038f889d8",
-  GatewayAdmin: "0x28abAC3E3F1fbC8Aa4Ded74C1589026038f889d8",
   YogaLabs: {},
   Uniswap: {},
-  Tokens: {
-    aUSDC: "0x259CdA67f5a3836aEBb207b94f0b57f548921631",
-  },
+  Tokens: {},
   Marketplace: {},
   Chainlink: {},
   BendDAO: {},
@@ -701,7 +695,6 @@ export const ParaxDevConfig: IParaSpaceConfiguration = {
     BLOCKS: strategyBLOCKS,
     SEWER: strategySEWER,
     PPG: strategyPudgyPenguins,
-    aUSDC: strategyAUSDC,
   },
 };
 
@@ -1101,7 +1094,7 @@ export const ParaSpaceConfigs: Partial<
   [eEthereumNetwork.mainnet]: MainnetConfig,
   [eEthereumNetwork.arbitrumGoerli]: ArbitrumGoerliConfig,
   [eEthereumNetwork.arbitrumSepolia]: ArbitrumSepoliaConfig,
-  [eEthereumNetwork.parallelDev]: ParaxDevConfig,
+  [eEthereumNetwork.parallelDev]: ParallelDevConfig,
   [eEthereumNetwork.arbitrum]: ArbitrumConfig,
   [eEthereumNetwork.polygon]: PolygonConfig,
   [eEthereumNetwork.polygonMumbai]: PolygonMumbaiConfig,
