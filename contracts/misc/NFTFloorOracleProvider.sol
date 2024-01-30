@@ -402,6 +402,17 @@ contract NFTFloorOracleProvider is
         if (address(router) == address(0) || finalized.length == 0) {
             return;
         }
+
+        // clear price data for finalized price
+        address[] memory allFeeders = feeders;
+        for (uint256 i = 0; i < finalized.length; i++) {
+            FinalizedPrice memory price = finalized[i];
+            FeederRegistrar storage feederData = assetFeederMap[price.nft];
+            for (uint256 j = 0; j< allFeeders.length; j++) {
+                feederData.feederPrice[allFeeders[j]].updatedTimestamp = 0;
+            }
+        }
+
         uint256 nextMessageId = ++sentMessageId;
         require(
             validateMessageIdSignature(nextMessageId, signature),
