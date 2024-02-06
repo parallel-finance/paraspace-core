@@ -28,6 +28,8 @@ import {
   MOONBASE_CHAINID,
   LINEA_CHAINID,
   LINEA_GOERLI_CHAINID,
+  MANTA_TEST_CHAINID,
+  MANTA_CHAINID,
 } from "./hardhat-constants";
 import {ConstructorArgs, eContractid, tEthereumAddress} from "./types";
 import dotenv from "dotenv";
@@ -63,6 +65,7 @@ export const isPublicTestnet = (): boolean => {
       POLYGON_MUMBAI_CHAINID,
       MOONBASE_CHAINID,
       LINEA_GOERLI_CHAINID,
+      MANTA_TEST_CHAINID,
     ].includes(DRE.network.config.chainId!) ||
     [
       eEthereumNetwork.goerli,
@@ -137,6 +140,14 @@ export const isLinea = (): boolean => {
   );
 };
 
+export const isManta = (): boolean => {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return (
+    [MANTA_CHAINID].includes(DRE.network.config.chainId!) ||
+    [eEthereumNetwork.manta].includes(FORK as eEthereumNetwork)
+  );
+};
+
 export const isMainnet = (): boolean =>
   isEthereum() ||
   isMoonbeam() ||
@@ -144,6 +155,7 @@ export const isMainnet = (): boolean =>
   isZkSync() ||
   isPolygon() ||
   isPolygonZkEVM() ||
+  isManta() ||
   isLinea();
 
 export const safeTransactionServiceUrl = (): string => {

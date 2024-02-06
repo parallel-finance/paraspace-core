@@ -965,6 +965,11 @@ export interface ICommonConfiguration {
   Oracle: IOracleConfig;
   HotWallet: tEthereumAddress;
   DelegationRegistry: tEthereumAddress;
+  EnableSeaport: boolean;
+  EnableLooksrare: boolean;
+  EnableX2Y2: boolean;
+  EnableBLUR: boolean;
+  EnableApeStaking: boolean;
 
   Governance: IGovernanceConfig;
 

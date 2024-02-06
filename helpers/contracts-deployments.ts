@@ -956,44 +956,51 @@ export const deployPoolComponents = async (
   )) as PoolMarketplace;
 
   const config = getParaSpaceConfig();
-  const treasuryAddress = config.Treasury;
-  const cApe = await getAutoCompoundApe();
-  const poolApeStaking = allTokens.APE
-    ? ((await withSaveAndVerify(
-        await getContractFactory("PoolApeStaking", apeStakingLibraries),
-        eContractid.PoolApeStakingImpl,
-        [
-          provider,
-          cApe.address,
-          allTokens.APE.address,
-          allTokens.USDC.address,
-          (await getUniswapV3SwapRouter()).address,
-          allTokens.WETH.address,
-          APE_WETH_FEE,
-          WETH_USDC_FEE,
-          treasuryAddress,
-        ],
-        verify,
-        false,
-        apeStakingLibraries,
-        poolApeStakingSelectors
-      )) as PoolApeStaking)
-    : undefined;
+  let poolApeStaking;
+  let poolBorrowAndStake;
+  if (config.EnableApeStaking) {
+    const treasuryAddress = config.Treasury;
+    const cApe = await getAutoCompoundApe();
+    poolApeStaking = allTokens.APE
+      ? ((await withSaveAndVerify(
+          await getContractFactory("PoolApeStaking", apeStakingLibraries),
+          eContractid.PoolApeStakingImpl,
+          [
+            provider,
+            cApe.address,
+            allTokens.APE.address,
+            allTokens.USDC.address,
+            (await getUniswapV3SwapRouter()).address,
+            allTokens.WETH.address,
+            APE_WETH_FEE,
+            WETH_USDC_FEE,
+            treasuryAddress,
+          ],
+          verify,
+          false,
+          apeStakingLibraries,
+          poolApeStakingSelectors
+        )) as PoolApeStaking)
+      : undefined;
 
-  const BorrowAndStakeLibraries = pick(coreLibraries, [
-    "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
-  ]);
-  const poolBorrowAndStake = allTokens.APE
-    ? ((await withSaveAndVerify(
-        await getContractFactory("PoolBorrowAndStake", BorrowAndStakeLibraries),
-        eContractid.PoolBorrowAndStakeImpl,
-        [provider, cApe.address, allTokens.APE.address],
-        verify,
-        false,
-        BorrowAndStakeLibraries,
-        poolBorrowAndStakeSelectors
-      )) as PoolBorrowAndStake)
-    : undefined;
+    const BorrowAndStakeLibraries = pick(coreLibraries, [
+      "contracts/protocol/libraries/logic/BorrowLogic.sol:BorrowLogic",
+    ]);
+    poolBorrowAndStake = allTokens.APE
+      ? ((await withSaveAndVerify(
+          await getContractFactory(
+            "PoolBorrowAndStake",
+            BorrowAndStakeLibraries
+          ),
+          eContractid.PoolBorrowAndStakeImpl,
+          [provider, cApe.address, allTokens.APE.address],
+          verify,
+          false,
+          BorrowAndStakeLibraries,
+          poolBorrowAndStakeSelectors
+        )) as PoolBorrowAndStake)
+      : undefined;
+  }
 
   return {
     poolCore,

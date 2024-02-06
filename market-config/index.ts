@@ -110,6 +110,11 @@ export const CommonConfig: Pick<
   | "Governance"
   | "ParaSpaceV1"
   | "AccountAbstraction"
+  | "EnableSeaport"
+  | "EnableLooksrare"
+  | "EnableX2Y2"
+  | "EnableBLUR"
+  | "EnableApeStaking"
 > = {
   WrappedNativeTokenId: ERC20TokenContractId.WETH,
   MarketId: "ParaSpaceMM",
@@ -135,6 +140,11 @@ export const CommonConfig: Pick<
   HotWallet: ZERO_ADDRESS,
   DelegationRegistry: ZERO_ADDRESS,
   IncentivesController: ZERO_ADDRESS,
+  EnableSeaport: false,
+  EnableLooksrare: false,
+  EnableX2Y2: false,
+  EnableBLUR: false,
+  EnableApeStaking: false,
   // Governance
   Governance: {
     Multisend: MULTI_SEND || ZERO_ADDRESS,
