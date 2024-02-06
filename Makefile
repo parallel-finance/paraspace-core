@@ -448,8 +448,8 @@ send-eth:
 set-traits-multipliers:
 	make SCRIPT_PATH=./scripts/dev/11.set-traits-multipliers.ts run
 
-.PHONY: set-timelock-strategy
-set-timelock-strategy:
+.PHONY: update-timelock-strategy
+update-timelock-strategy:
 	make SCRIPT_PATH=./scripts/dev/12.set-timelock-strategy.ts run
 
 .PHONY: acl
@@ -575,6 +575,10 @@ set-interest-rate-strategy:
 .PHONY: set-auction-strategy
 set-auction-strategy:
 	make TASK_NAME=set-auction-strategy run-task
+
+.PHONY: set-timelock-strategy
+set-timelock-strategy:
+	make TASK_NAME=set-timelock-strategy run-task
 
 .PHONY: set-supply-cap
 set-supply-cap:

@@ -1,14 +1,20 @@
+import {ZERO_ADDRESS} from "../../../helpers/constants";
 import {deployAccountFactory} from "../../../helpers/contracts-deployments";
-import {isLocalTestnet} from "../../../helpers/misc-utils";
-import {zeroAddress} from "ethereumjs-util";
+import {getParaSpaceConfig, isLocalTestnet} from "../../../helpers/misc-utils";
+import {Client} from "userop";
 
 export const step_24 = async (verify = false) => {
+  const paraSpaceConfig = getParaSpaceConfig();
   try {
     if (!isLocalTestnet()) {
-      // const client = Client.init(paraSpaceConfig.AccountAbstraction.rpcUrl);
-      //
-      // const entryPoint = (await client).entryPoint.address;
-      await deployAccountFactory(zeroAddress(), verify);
+      await deployAccountFactory(
+        paraSpaceConfig.AccountAbstraction?.rpcUrl
+          ? (
+              await Client.init(paraSpaceConfig.AccountAbstraction.rpcUrl)
+            ).entryPoint.address
+          : ZERO_ADDRESS,
+        verify
+      );
     }
   } catch (error) {
     console.error(error);
