@@ -37,6 +37,8 @@ export const ZKSYNC_CHAINID = 324;
 export const ZKSYNC_GOERLI_CHAINID = 280;
 export const LINEA_GOERLI_CHAINID = 59140;
 export const LINEA_CHAINID = 59144;
+export const MANTA_CHAINID = 169;
+export const MANTA_TEST_CHAINID = 3441005;
 
 export const INFURA_KEY = process.env.INFURA_KEY || "";
 export const ALCHEMY_KEY = process.env.ALCHEMY_KEY || "";
@@ -498,5 +500,4 @@ export const XTOKEN_TYPE_UPGRADE_WHITELIST =
     .split(/\s?,\s?/)
     .map((x) => +x);
 export const XTOKEN_SYMBOL_UPGRADE_WHITELIST =
-    process.env.XTOKEN_SYMBOL_UPGRADE_WHITELIST?.trim()
-        .split(/\s?,\s?/);
+  process.env.XTOKEN_SYMBOL_UPGRADE_WHITELIST?.trim().split(/\s?,\s?/);

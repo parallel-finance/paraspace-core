@@ -103,6 +103,8 @@ export enum eEthereumNetwork {
   zksyncGoerli = "zksyncGoerli",
   linea = "linea",
   lineaGoerli = "lineaGoerli",
+  manta = "manta",
+  mantaTest = "mantaTest",
 }
 
 export enum eContractid {
@@ -511,6 +513,10 @@ export interface iAssetBase<T> {
   EXRP: T;
   uBAYC: T;
   uPPG: T;
+  WUSDM: T;
+  STONE: T;
+  TIA: T;
+  MANTA: T;
 }
 
 export type iAssetsWithoutETH<T> = Omit<iAssetBase<T>, "ETH">;
@@ -578,6 +584,10 @@ export type iParaSpacePoolAssets<T> = Pick<
   | "EXRP"
   | "uBAYC"
   | "uPPG"
+  | "WUSDM"
+  | "STONE"
+  | "TIA"
+  | "MANTA"
 >;
 
 export type iMultiPoolsAssets<T> = iAssetCommon<T> | iParaSpacePoolAssets<T>;
@@ -626,6 +636,10 @@ export enum ERC20TokenContractId {
   WMATIC = "WMATIC",
   uBAYC = "uBAYC",
   uPPG = "uPPG",
+  WUSDM = "WUSDM",
+  STONE = "STONE",
+  TIA = "TIA",
+  MANTA = "MANTA",
 }
 
 export enum ERC721TokenContractId {
@@ -763,6 +777,8 @@ export interface iEthereumParamsPerNetwork<T> {
   [eEthereumNetwork.zksyncGoerli]: T;
   [eEthereumNetwork.linea]: T;
   [eEthereumNetwork.lineaGoerli]: T;
+  [eEthereumNetwork.manta]: T;
+  [eEthereumNetwork.mantaTest]: T;
 }
 
 export enum RateMode {
@@ -825,6 +841,11 @@ export interface IChainlinkConfig {
   stMATIC?: tEthereumAddress;
   CRV?: tEthereumAddress;
   BLUR?: tEthereumAddress;
+  WUSDM?: tEthereumAddress;
+  STONE?: tEthereumAddress;
+  TIA?: tEthereumAddress;
+  WSTETH?: tEthereumAddress;
+  MANTA?: tEthereumAddress;
   // ERC721
   DOODLE?: tEthereumAddress;
   BAYC?: tEthereumAddress;

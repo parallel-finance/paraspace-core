@@ -486,16 +486,16 @@ export const step_23 = async (
       console.time("transferring nftFloorOracle ownership...");
       const nftFloorOracle = await getNFTFloorOracle();
       if (DRY_RUN) {
-        const encodedData1 = nftFloorOracle.interface.encodeFunctionData(
-          "grantRole",
-          [await nftFloorOracle.UPDATER_ROLE(), paraSpaceAdminAddress]
-        );
-        await dryRunEncodedData(nftFloorOracle.address, encodedData1);
-        const encodedData2 = nftFloorOracle.interface.encodeFunctionData(
-          "revokeRole",
-          [await nftFloorOracle.UPDATER_ROLE(), oldParaSpaceAdminAddress]
-        );
-        await dryRunEncodedData(nftFloorOracle.address, encodedData2);
+        // const encodedData1 = nftFloorOracle.interface.encodeFunctionData(
+        //   "grantRole",
+        //   [await nftFloorOracle.UPDATER_ROLE(), paraSpaceAdminAddress]
+        // );
+        // await dryRunEncodedData(nftFloorOracle.address, encodedData1);
+        // const encodedData2 = nftFloorOracle.interface.encodeFunctionData(
+        //   "revokeRole",
+        //   [await nftFloorOracle.UPDATER_ROLE(), oldParaSpaceAdminAddress]
+        // );
+        // await dryRunEncodedData(nftFloorOracle.address, encodedData2);
         const encodedData3 = nftFloorOracle.interface.encodeFunctionData(
           "grantRole",
           [await nftFloorOracle.DEFAULT_ADMIN_ROLE(), paraSpaceAdminAddress]
@@ -507,20 +507,20 @@ export const step_23 = async (
         );
         await dryRunEncodedData(nftFloorOracle.address, encodedData4);
       } else {
-        await waitForTx(
-          await nftFloorOracle.grantRole(
-            await nftFloorOracle.UPDATER_ROLE(),
-            paraSpaceAdminAddress,
-            GLOBAL_OVERRIDES
-          )
-        );
-        await waitForTx(
-          await nftFloorOracle.revokeRole(
-            await nftFloorOracle.UPDATER_ROLE(),
-            oldParaSpaceAdminAddress,
-            GLOBAL_OVERRIDES
-          )
-        );
+        // await waitForTx(
+        //   await nftFloorOracle.grantRole(
+        //     await nftFloorOracle.UPDATER_ROLE(),
+        //     paraSpaceAdminAddress,
+        //     GLOBAL_OVERRIDES
+        //   )
+        // );
+        // await waitForTx(
+        //   await nftFloorOracle.revokeRole(
+        //     await nftFloorOracle.UPDATER_ROLE(),
+        //     oldParaSpaceAdminAddress,
+        //     GLOBAL_OVERRIDES
+        //   )
+        // );
         await waitForTx(
           await nftFloorOracle.grantRole(
             await nftFloorOracle.DEFAULT_ADMIN_ROLE(),
