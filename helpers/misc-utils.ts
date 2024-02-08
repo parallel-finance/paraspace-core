@@ -183,8 +183,9 @@ export const isMainnet = (): boolean =>
   isPolygon() ||
   isPolygonZkEVM() ||
   isNeon() ||
-  isParallel();
-isManta() || isLinea();
+  isParallel() ||
+  isManta() ||
+  isLinea();
 
 export const safeTransactionServiceUrl = (): string => {
   return isMoonbeam()

@@ -989,7 +989,7 @@ export const MantaConfig: IParaSpaceConfiguration = {
     USDC: strategyUSDC,
     TIA: strategyTIA,
     MANTA: strategyMANTA,
-    WSTETH: strategyWSTETH,
+    wstETH: strategyWSTETH,
   },
   Oracle: MantaOracleConfig,
 };
