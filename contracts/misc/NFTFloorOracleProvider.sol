@@ -13,9 +13,9 @@ import "../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
 
 //we need to deploy 3 oracles at least
 uint8 constant MIN_ORACLES_NUM = 3;
-//expirationPeriod at least the interval of client to feed data(currently 6h=21600s)
+//expirationPeriod at least the interval of client to feed data(currently 24h=86400s)
 //we do not accept price lags behind to much
-uint128 constant EXPIRATION_PERIOD = 21600;
+uint128 constant EXPIRATION_PERIOD = 86400;
 //reject when price increase/decrease 3 times more than original value
 uint128 constant MAX_DEVIATION_RATE = 300;
 
@@ -408,7 +408,7 @@ contract NFTFloorOracleProvider is
         for (uint256 i = 0; i < finalized.length; i++) {
             FinalizedPrice memory price = finalized[i];
             FeederRegistrar storage feederData = assetFeederMap[price.nft];
-            for (uint256 j = 0; j< allFeeders.length; j++) {
+            for (uint256 j = 0; j < allFeeders.length; j++) {
                 feederData.feederPrice[allFeeders[j]].updatedTimestamp = 0;
             }
         }

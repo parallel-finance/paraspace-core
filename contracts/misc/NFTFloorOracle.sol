@@ -10,8 +10,8 @@ import "../dependencies/chainlink/ccip/CCIPReceiver.sol";
 import "./interfaces/INFTFloorOracle.sol";
 import "../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
 
-//we do not accept price lags behind to much(10h=36000s))
-uint128 constant EXPIRATION_PERIOD = 36000;
+//we do not accept price lags behind to much(26h=93600s))
+uint128 constant EXPIRATION_PERIOD = 93600;
 
 struct CrossChainPriceMessage {
     uint256 messageId;
@@ -154,10 +154,14 @@ contract NFTFloorOracle is CCIPReceiver, AccessControl, INFTFloorOracle {
     /// @param _asset The nft contract to set a floor price for
     /// @param _twap The last floor twap
     function setEmergencyPrice(
-        address _asset,
-        uint256 _twap
+        address[] calldata _asset,
+        uint256[] calldata _twap
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _updatePrice(_asset, _twap, block.timestamp);
+        uint256 length = _asset.length;
+        require(_twap.length == length, "invalid parameter");
+        for (uint256 index = 0; index < length; index++) {
+            _updatePrice(_asset[index], _twap[index], block.timestamp);
+        }
     }
 
     /// @param _asset The nft contract

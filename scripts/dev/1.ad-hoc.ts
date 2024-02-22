@@ -4,7 +4,8 @@ import {
   getERC721,
   getERC721OracleWrapper,
   getMintableERC721,
-  getNFTFloorOracle, getNFTFloorOracleProvider,
+  getNFTFloorOracle,
+  getNFTFloorOracleProvider,
   getParaSpaceOracle,
   getPoolAddressesProvider,
   getPoolProxy,
@@ -22,7 +23,10 @@ import {
 } from "../../helpers/contracts-helpers";
 import {increaseTime, waitForTx} from "../../helpers/misc-utils";
 import {assignWith} from "lodash";
-import {ERC721OracleWrapper, NFTFloorOracleProvider__factory} from "../../types";
+import {
+  ERC721OracleWrapper,
+  NFTFloorOracleProvider__factory,
+} from "../../types";
 import {tEthereumAddress} from "../../helpers/types";
 import {deployERC721OracleWrapper} from "../../helpers/contracts-deployments";
 import {formatEther, parseEther} from "ethers/lib/utils";
@@ -139,16 +143,19 @@ const updateAllOracleWrapperSource = async () => {
 };
 
 const decodeOnchainPrice = async () => {
-  const data = "0xec170fc400000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000340000000000000000000000000000000000000000000000000000000000000001c8a00fd7319456f2eac4c320ba11b0d495d70ef0ca8f833fbe5ced5fb7fb3381f6bc4ca737ff3fa0f588306d116833a482d4ee04f83f44f55c60fb5315261f6ca00000000000000000000000000000000000000000000000000000000000000140000000000000000000000007bd29408f11d2bfc23c34f18275bbf23bb716bc7000000000000000000000000ba30e5f9bb24caa003e9f2f0497ad287fdf95623000000000000000000000000059edd72cd353df5106d2b9cc5ab83a52287ac3a0000000000000000000000008821bee2ba0df28761afff119d66390d594cd280000000000000000000000000e012baf811cf9c05c408e879c399960d1f3059030000000000000000000000005b1085136a811e55b2bb2ca1ea456ba82126a376000000000000000000000000790b2cf29ed4f310bf7641f013c65d4560d28371000000000000000000000000bc4ca0eda7647a8ab7c2061c2e118a18a936f13d000000000000000000000000b6a37b5d14d502c3ab0ae6f3a0e058bc9517786e0000000000000000000000003af2a97414d1101e2107a70e7f33955da1346305000000000000000000000000ed5af388653567af2f388e6224dc7c4b3241c5440000000000000000000000009401518f4ebba857baa879d9f76e1cc8b31ed197000000000000000000000000bd3531da5cf5857e7cfaa92426877b022e612cf800000000000000000000000060e4d786628fea6478f785a6d7e704777c86a7c6000000000000000000000000b47e3cd837ddf8e4c57f05d70ab865de6e193bbb0000000000000000000000008a90cab2b38dba80c64b7734e58ee1db38b8992e00000000000000000000000023581767a106ae21c074b2276d25e5c3e136a68b00000000000000000000000049cf6f5d44e70224e2e23fdcdd2c053f30ada28b00000000000000000000000034d85c9cdeb23fa97cb08333b511ac86e1c4e258000000000000000000000000306b1ea3ecdf94ab739f1910bbda052ed4a9f9490000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000106033bf82f6000000000000000000000000000000000000000000000000000012df9cff6c18bd5500000000000000000000000000000000000000000000000067f1785de732c0000000000000000000000000000000000000000000000000002b4c777833380000000000000000000000000000000000000000000000000000342e3414237800000000000000000000000000000000000000000000000000000238135a9c954aaa00000000000000000000000000000000000000000000000003bf3b91c95b001e00000000000000000000000000000000000000000000000168d28e3f002800000000000000000000000000000000000000000000000000000ad31dde0cce000000000000000000000000000000000000000000000000000011ce21b3ced3800000000000000000000000000000000000000000000000000067847f21f5c9aaaa00000000000000000000000000000000000000000000000005bb134a24c61000000000000000000000000000000000000000000000000001022c8dbc268080000000000000000000000000000000000000000000000000003fcf4e72e859be0c00000000000000000000000000000000000000000000000355585d3646c5000000000000000000000000000000000000000000000000000026b81237cb5700000000000000000000000000000000000000000000000000000fce8466eadf1555000000000000000000000000000000000000000000000000124683679e25221800000000000000000000000000000000000000000000000007293344201a0000000000000000000000000000000000000000000000000000067c84ab785d2555";
+  const data =
+    "0xec170fc400000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000340000000000000000000000000000000000000000000000000000000000000001c8a00fd7319456f2eac4c320ba11b0d495d70ef0ca8f833fbe5ced5fb7fb3381f6bc4ca737ff3fa0f588306d116833a482d4ee04f83f44f55c60fb5315261f6ca00000000000000000000000000000000000000000000000000000000000000140000000000000000000000007bd29408f11d2bfc23c34f18275bbf23bb716bc7000000000000000000000000ba30e5f9bb24caa003e9f2f0497ad287fdf95623000000000000000000000000059edd72cd353df5106d2b9cc5ab83a52287ac3a0000000000000000000000008821bee2ba0df28761afff119d66390d594cd280000000000000000000000000e012baf811cf9c05c408e879c399960d1f3059030000000000000000000000005b1085136a811e55b2bb2ca1ea456ba82126a376000000000000000000000000790b2cf29ed4f310bf7641f013c65d4560d28371000000000000000000000000bc4ca0eda7647a8ab7c2061c2e118a18a936f13d000000000000000000000000b6a37b5d14d502c3ab0ae6f3a0e058bc9517786e0000000000000000000000003af2a97414d1101e2107a70e7f33955da1346305000000000000000000000000ed5af388653567af2f388e6224dc7c4b3241c5440000000000000000000000009401518f4ebba857baa879d9f76e1cc8b31ed197000000000000000000000000bd3531da5cf5857e7cfaa92426877b022e612cf800000000000000000000000060e4d786628fea6478f785a6d7e704777c86a7c6000000000000000000000000b47e3cd837ddf8e4c57f05d70ab865de6e193bbb0000000000000000000000008a90cab2b38dba80c64b7734e58ee1db38b8992e00000000000000000000000023581767a106ae21c074b2276d25e5c3e136a68b00000000000000000000000049cf6f5d44e70224e2e23fdcdd2c053f30ada28b00000000000000000000000034d85c9cdeb23fa97cb08333b511ac86e1c4e258000000000000000000000000306b1ea3ecdf94ab739f1910bbda052ed4a9f9490000000000000000000000000000000000000000000000000000000000000014000000000000000000000000000000000000000000000000106033bf82f6000000000000000000000000000000000000000000000000000012df9cff6c18bd5500000000000000000000000000000000000000000000000067f1785de732c0000000000000000000000000000000000000000000000000002b4c777833380000000000000000000000000000000000000000000000000000342e3414237800000000000000000000000000000000000000000000000000000238135a9c954aaa00000000000000000000000000000000000000000000000003bf3b91c95b001e00000000000000000000000000000000000000000000000168d28e3f002800000000000000000000000000000000000000000000000000000ad31dde0cce000000000000000000000000000000000000000000000000000011ce21b3ced3800000000000000000000000000000000000000000000000000067847f21f5c9aaaa00000000000000000000000000000000000000000000000005bb134a24c61000000000000000000000000000000000000000000000000001022c8dbc268080000000000000000000000000000000000000000000000000003fcf4e72e859be0c00000000000000000000000000000000000000000000000355585d3646c5000000000000000000000000000000000000000000000000000026b81237cb5700000000000000000000000000000000000000000000000000000fce8466eadf1555000000000000000000000000000000000000000000000000124683679e25221800000000000000000000000000000000000000000000000007293344201a0000000000000000000000000000000000000000000000000000067c84ab785d2555";
   data.slice(0, 10);
-  const provider = await getNFTFloorOracleProvider("0x75B3B424fb782dA0e8DCf9E30396001E60e4Cc3B");
+  const provider = await getNFTFloorOracleProvider(
+    "0x75B3B424fb782dA0e8DCf9E30396001E60e4Cc3B"
+  );
   const result = provider.interface.decodeFunctionData(
-      "setMultiplePrices(address[],uint256[],(uint8,bytes32,bytes32))",
-      data,
+    "setMultiplePrices(address[],uint256[],(uint8,bytes32,bytes32))",
+    data
   );
 
   // console.log("--result:", JSON.stringify(result));
-  for (let i=0; i<result[0].length; i++) {
+  for (let i = 0; i < result[0].length; i++) {
     const collection = result[0][i];
     const erc721 = await getERC721(collection);
     const collectionSymbol = await erc721.name();
@@ -293,6 +300,30 @@ const replaceChainlinkOracle = async () => {
   // }
 };
 
+const printAllAssetPrice = async () => {
+  await printPrice(BAYC);
+  await printPrice(PPG);
+  await printPrice(PUNKS);
+  await printPrice(MAYC);
+  await printPrice(OTHR);
+  await printPrice(AZUKI);
+  await printPrice(BAKC);
+  await printPrice(MOONBIRD);
+  await printPrice(CLONEX);
+  await printPrice(DOODLE);
+  await printPrice(MEEBITS);
+  await printPrice(BEANZ);
+  await printPrice(BLOCKS);
+  await printPrice(EXP);
+  await printPrice(VSL);
+  await printPrice(KODA);
+  await printPrice(DEGODS);
+  await printPrice(HVMTL);
+  await printPrice(ELEM);
+  await printPrice(MBEAN);
+  await printPrice(GHOST);
+};
+
 const printPrice = async (asset: string) => {
   if (asset == PUNKS) {
     console.log("asset: punks");
@@ -316,113 +347,134 @@ const feedEmergencyPrice = async () => {
   console.time("ad-hoc");
 
   const collectionPriceMap = new Map<string, BigNumber>();
-  collectionPriceMap.set(BAYC, parseEther("24.99"));
-  collectionPriceMap.set(PPG, parseEther("16.76"));
+  collectionPriceMap.set(BAYC, parseEther("23.67"));
+  collectionPriceMap.set(PPG, parseEther("22.3"));
   collectionPriceMap.set(PUNKS, parseEther("60"));
-  collectionPriceMap.set(MAYC, parseEther("4.29"));
-  collectionPriceMap.set(OTHR, parseEther("0.5"));
-  collectionPriceMap.set(AZUKI, parseEther("6.9"));
-  collectionPriceMap.set(BAKC, parseEther("1.33"));
-  collectionPriceMap.set(MOONBIRD, parseEther("1.2"));
-  collectionPriceMap.set(CLONEX, parseEther("1.15"));
-  collectionPriceMap.set(DOODLE, parseEther("2.12"));
+  collectionPriceMap.set(MAYC, parseEther("4.07"));
+  collectionPriceMap.set(OTHR, parseEther("0.4"));
+  collectionPriceMap.set(AZUKI, parseEther("6.37"));
+  collectionPriceMap.set(BAKC, parseEther("1.19"));
+  collectionPriceMap.set(MOONBIRD, parseEther("1.9"));
+  collectionPriceMap.set(CLONEX, parseEther("1.25"));
+  collectionPriceMap.set(DOODLE, parseEther("3.26"));
   collectionPriceMap.set(MEEBITS, parseEther("1.1"));
-  collectionPriceMap.set(BEANZ, parseEther("0.43"));
-  collectionPriceMap.set(BLOCKS, parseEther("7.94"));
-  collectionPriceMap.set(EXP, parseEther("0.26"));
-  collectionPriceMap.set(VSL, parseEther("0.17"));
-  collectionPriceMap.set(KODA, parseEther("3.79"));
-  collectionPriceMap.set(DEGODS, parseEther("3.09"));
-  collectionPriceMap.set(HVMTL, parseEther("0.245"));
-  collectionPriceMap.set(ELEM, parseEther("0.65"));
-  collectionPriceMap.set(MBEAN, parseEther("1.04"));
-  collectionPriceMap.set(GHOST, parseEther("0.4"));
+  collectionPriceMap.set(BEANZ, parseEther("0.37"));
+  collectionPriceMap.set(BLOCKS, parseEther("6.76"));
+  collectionPriceMap.set(EXP, parseEther("0.22"));
+  collectionPriceMap.set(VSL, parseEther("0.12"));
+  collectionPriceMap.set(KODA, parseEther("3"));
+  collectionPriceMap.set(DEGODS, parseEther("2.93"));
+  collectionPriceMap.set(HVMTL, parseEther("0.18"));
+  collectionPriceMap.set(ELEM, parseEther("0.64"));
+  collectionPriceMap.set(MBEAN, parseEther("0.93"));
+  collectionPriceMap.set(GHOST, parseEther("0.36"));
 
   const nftOracleContract = await getNFTFloorOracle(nftOracle);
-  // for (const entry of collectionPriceMap.entries()) {
-  //   const encodedData = nftOracleContract.interface.encodeFunctionData(
-  //     "setEmergencyPrice",
-  //     [entry[0], entry[1]]
-  //   );
-  //   await dryRunEncodedData(nftOracleContract.address, encodedData);
-  // }
+  const encodedData = nftOracleContract.interface.encodeFunctionData(
+    "setEmergencyPrice",
+    [
+      [
+        BAYC,
+        PPG,
+        PUNKS,
+        MAYC,
+        OTHR,
+        AZUKI,
+        BAKC,
+        MOONBIRD,
+        CLONEX,
+        DOODLE,
+        MEEBITS,
+        BEANZ,
+        BLOCKS,
+        EXP,
+        VSL,
+        KODA,
+        DEGODS,
+        HVMTL,
+        ELEM,
+        MBEAN,
+        GHOST,
+      ],
+      [
+        collectionPriceMap.get(BAYC)!,
+        collectionPriceMap.get(PPG)!,
+        collectionPriceMap.get(PUNKS)!,
+        collectionPriceMap.get(MAYC)!,
+        collectionPriceMap.get(OTHR)!,
+        collectionPriceMap.get(AZUKI)!,
+        collectionPriceMap.get(BAKC)!,
+        collectionPriceMap.get(MOONBIRD)!,
+        collectionPriceMap.get(CLONEX)!,
+        collectionPriceMap.get(DOODLE)!,
+        collectionPriceMap.get(MEEBITS)!,
+        collectionPriceMap.get(BEANZ)!,
+        collectionPriceMap.get(BLOCKS)!,
+        collectionPriceMap.get(EXP)!,
+        collectionPriceMap.get(VSL)!,
+        collectionPriceMap.get(KODA)!,
+        collectionPriceMap.get(DEGODS)!,
+        collectionPriceMap.get(HVMTL)!,
+        collectionPriceMap.get(ELEM)!,
+        collectionPriceMap.get(MBEAN)!,
+        collectionPriceMap.get(GHOST)!,
+      ],
+    ]
+  );
+  await dryRunEncodedData(nftOracleContract.address, encodedData);
 
   // await nftOracleContract.setEmergencyPrice([
   //   BAYC,
   //   PPG,
-  //   PUNKS,
-  //   MAYC,
-  //   OTHR,
-  //   AZUKI,
-  //   BAKC,
-  //   MOONBIRD,
-  //   CLONEX,
-  //   DOODLE,
-  //   MEEBITS,
-  //   BEANZ,
-  //   BLOCKS,
-  //   EXP,
-  //     VSL,
-  //     KODA,
-  //     DEGODS,
-  //     HVMTL,
-  //     ELEM,
-  //     MBEAN,
-  //     GHOST
+  // PUNKS,
+  // MAYC,
+  // OTHR,
+  // AZUKI,
+  // BAKC,
+  // MOONBIRD,
+  // CLONEX,
+  // DOODLE,
+  // MEEBITS,
+  // BEANZ,
+  // BLOCKS,
+  // EXP,
+  //   VSL,
+  //   KODA,
+  //   DEGODS,
+  //   HVMTL,
+  // ELEM,
+  // MBEAN,
+  // GHOST
   // ], [
   //     collectionPriceMap.get(BAYC)!,
   //     collectionPriceMap.get(PPG)!,
-  //     collectionPriceMap.get(PUNKS)!,
-  //     collectionPriceMap.get(MAYC)!,
-  //     collectionPriceMap.get(OTHR)!,
-  //     collectionPriceMap.get(AZUKI)!,
-  //     collectionPriceMap.get(BAKC)!,
-  //     collectionPriceMap.get(MOONBIRD)!,
-  //     collectionPriceMap.get(CLONEX)!,
-  //     collectionPriceMap.get(DOODLE)!,
-  //     collectionPriceMap.get(MEEBITS)!,
-  //     collectionPriceMap.get(BEANZ)!,
-  //     collectionPriceMap.get(BLOCKS)!,
-  //     collectionPriceMap.get(EXP)!,
-  //     collectionPriceMap.get(VSL)!,
-  //     collectionPriceMap.get(KODA)!,
-  //     collectionPriceMap.get(DEGODS)!,
-  //     collectionPriceMap.get(HVMTL)!,
-  //     collectionPriceMap.get(ELEM)!,
-  //     collectionPriceMap.get(MBEAN)!,
-  //     collectionPriceMap.get(GHOST)!,
+  // collectionPriceMap.get(PUNKS)!,
+  // collectionPriceMap.get(MAYC)!,
+  // collectionPriceMap.get(OTHR)!,
+  // collectionPriceMap.get(AZUKI)!,
+  // collectionPriceMap.get(BAKC)!,
+  // collectionPriceMap.get(MOONBIRD)!,
+  // collectionPriceMap.get(CLONEX)!,
+  // collectionPriceMap.get(DOODLE)!,
+  // collectionPriceMap.get(MEEBITS)!,
+  // collectionPriceMap.get(BEANZ)!,
+  // collectionPriceMap.get(BLOCKS)!,
+  // collectionPriceMap.get(EXP)!,
+  // collectionPriceMap.get(VSL)!,
+  // collectionPriceMap.get(KODA)!,
+  // collectionPriceMap.get(DEGODS)!,
+  // collectionPriceMap.get(HVMTL)!,
+  // collectionPriceMap.get(ELEM)!,
+  // collectionPriceMap.get(MBEAN)!,
+  // collectionPriceMap.get(GHOST)!,
   // ]);
-
-  await printPrice(BAYC);
-  await printPrice(PPG);
-  // await printPrice(PUNKS);
-  await printPrice(MAYC);
-  await printPrice(OTHR);
-  await printPrice(AZUKI);
-  await printPrice(BAKC);
-  await printPrice(MOONBIRD);
-  await printPrice(CLONEX);
-  await printPrice(DOODLE);
-  await printPrice(MEEBITS);
-  await printPrice(BEANZ);
-  await printPrice(BLOCKS);
-  await printPrice(EXP);
-  await printPrice(VSL);
-  await printPrice(KODA);
-  await printPrice(DEGODS);
-  await printPrice(HVMTL);
-  await printPrice(ELEM);
-  await printPrice(PPG);
-  await printPrice(ELEM);
-  await printPrice(MBEAN);
-  await printPrice(GHOST);
 
   console.timeEnd("ad-hoc");
 };
 
 async function main() {
   await rawBRE.run("set-DRE");
-  await decodeOnchainPrice();
+  await feedEmergencyPrice();
 }
 
 main()

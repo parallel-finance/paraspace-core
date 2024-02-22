@@ -681,21 +681,19 @@ export const getAggregator = async (
     await getFirstSigner()
   );
 
-export const getERC721OracleWrapper = async (
-    symbol: string
-) =>
-    await ERC721OracleWrapper__factory.connect(
-        (
-            await getDb()
-                .get(
-                    `${eContractid.Aggregator.concat(upperFirst(symbol))}.${
-                        DRE.network.name
-                    }`
-                )
-                .value()
-        ).address,
-        await getFirstSigner()
-    );
+export const getERC721OracleWrapper = async (symbol: string) =>
+  await ERC721OracleWrapper__factory.connect(
+    (
+      await getDb()
+        .get(
+          `${eContractid.Aggregator.concat(upperFirst(symbol))}.${
+            DRE.network.name
+          }`
+        )
+        .value()
+    ).address,
+    await getFirstSigner()
+  );
 
 export const getERC20 = async (address?: tEthereumAddress) =>
   await ERC20__factory.connect(
