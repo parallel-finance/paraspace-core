@@ -6,10 +6,10 @@ import "../dependencies/openzeppelin/upgradeability/Initializable.sol";
 import "../dependencies/openzeppelin/contracts/SafeCast.sol";
 import "../dependencies/openzeppelin/contracts/SafeERC20.sol";
 import "../dependencies/openzeppelin/contracts/IERC20.sol";
-import "../dependencies/chainlink/ccip/interfaces/IRouterClient.sol";
-import "../dependencies/chainlink/ccip/libraries/Client.sol";
 import "./interfaces/INFTFloorOracle.sol";
 import "../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
+import {IRouterClient} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/IRouterClient.sol";
+import {Client} from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.sol";
 
 //we need to deploy 3 oracles at least
 uint8 constant MIN_ORACLES_NUM = 3;
@@ -436,7 +436,7 @@ contract NFTFloorOracleProvider is
             data: data,
             tokenAmounts: tokenAmounts,
             extraArgs: Client._argsToBytes(
-                Client.EVMExtraArgsV1({gasLimit: gasLimit, strict: false}) // Additional arguments, setting gas limit and non-strict sequency mode
+                Client.EVMExtraArgsV1({gasLimit: gasLimit}) // Additional arguments, setting gas limit and non-strict sequency mode
             ),
             feeToken: address(linkToken) // Setting feeToken to LinkToken address, indicating LINK will be used for fees
         });

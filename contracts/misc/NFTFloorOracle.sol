@@ -4,11 +4,12 @@ pragma solidity ^0.8.0;
 import "../dependencies/openzeppelin/contracts/AccessControl.sol";
 import "../dependencies/openzeppelin/contracts/SafeCast.sol";
 import "../dependencies/openzeppelin/contracts/IERC20.sol";
-import "../dependencies/chainlink/ccip/interfaces/IRouterClient.sol";
-import "../dependencies/chainlink/ccip/libraries/Client.sol";
-import "../dependencies/chainlink/ccip/CCIPReceiver.sol";
 import "./interfaces/INFTFloorOracle.sol";
 import "../dependencies/looksrare/contracts/libraries/SignatureChecker.sol";
+import {IRouterClient} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/IRouterClient.sol";
+import {IAny2EVMMessageReceiver} from "@chainlink/contracts-ccip/src/v0.8/ccip/interfaces/IAny2EVMMessageReceiver.sol";
+import {CCIPReceiver} from "@chainlink/contracts-ccip/src/v0.8/ccip/applications/CCIPReceiver.sol";
+import {Client} from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.sol";
 
 //we do not accept price lags behind to much(26h=93600s))
 uint128 constant EXPIRATION_PERIOD = 93600;
@@ -209,7 +210,7 @@ contract NFTFloorOracle is CCIPReceiver, AccessControl, INFTFloorOracle {
 
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(CCIPReceiver, AccessControl) returns (bool) {
+    ) public pure virtual override(CCIPReceiver, AccessControl) returns (bool) {
         return
             interfaceId == type(INFTFloorOracle).interfaceId ||
             interfaceId == type(IAccessControl).interfaceId ||

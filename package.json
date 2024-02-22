@@ -120,5 +120,8 @@
   "repository": {
     "type": "git",
     "url": "git://github.com/para-space/paraspace-core"
+  },
+  "dependencies": {
+    "@chainlink/contracts-ccip": "^1.2.1"
   }
 }
