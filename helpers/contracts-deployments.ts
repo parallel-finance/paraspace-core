@@ -164,6 +164,7 @@ import {
   getAutoYieldApe,
   getBAYCSewerPass,
   getContractFactory,
+  getDelegationRegistry,
   getFirstSigner,
   getHelperContract,
   getInitializableAdminUpgradeabilityProxy,
@@ -2765,6 +2766,7 @@ export const deployP2PPairStakingImpl = async (verify?: boolean) => {
   const apeCoinStaking =
     (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
     (await deployApeCoinStaking(verify)).address;
+  const delegationRegistry = await getDelegationRegistry();
   const args = [
     allTokens.BAYC.address,
     allTokens.MAYC.address,
@@ -2775,6 +2777,7 @@ export const deployP2PPairStakingImpl = async (verify?: boolean) => {
     allTokens.APE.address,
     allTokens.cAPE.address,
     apeCoinStaking,
+    delegationRegistry.address,
   ];
 
   return withSaveAndVerify(

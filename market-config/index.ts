@@ -169,6 +169,11 @@ export const HardhatConfig: IParaSpaceConfiguration = {
   Chainlink: {},
   BendDAO: {},
   Stakefish: {},
+  EnableSeaport: true,
+  EnableLooksrare: true,
+  EnableX2Y2: true,
+  EnableBLUR: true,
+  EnableApeStaking: true,
   // RESERVE ASSETS - CONFIG, ASSETS, BORROW RATES,
   ReservesConfig: {
     DAI: strategyDAI,
