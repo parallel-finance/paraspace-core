@@ -52,10 +52,10 @@ export const step_15 = async (verify = false) => {
     );
     const conduitInstance = await getConduit(conduit);
     await waitForTx(
-      await conduitInstance.initialize(
-        protocolDataProvider.address,
-        GLOBAL_OVERRIDES
-      )
+      await conduitInstance.initialize(protocolDataProvider.address, {
+        gasLimit: 1_000_000,
+        ...GLOBAL_OVERRIDES,
+      })
     );
     const zone = await createZone(pausableZoneController, deployer);
     const seaport = await deploySeaport(conduitController.address, verify);

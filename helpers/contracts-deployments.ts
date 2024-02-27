@@ -168,11 +168,13 @@ import {
   getFirstSigner,
   getHelperContract,
   getInitializableAdminUpgradeabilityProxy,
+  getNonfungiblePositionManager,
   getP2PPairStaking,
   getPoolProxy,
   getProtocolDataProvider,
   getPunks,
   getTimeLockProxy,
+  getUniswapV3Factory,
   getUniswapV3SwapRouter,
   getWETH,
 } from "./contracts-getters";
@@ -1585,13 +1587,29 @@ export const deployAllERC721Tokens = async (verify?: boolean) => {
             ],
             verify
           );
-        const factory = await deployUniswapV3Factory([], verify);
-        await deployUniswapSwapRouter([factory.address, weth.address], verify);
-        const nonfungiblePositionManager =
-          await deployNonfungiblePositionManager(
+        let factory;
+        if (!paraSpaceConfig.Uniswap.V3Factory) {
+          factory = await deployUniswapV3Factory([], verify);
+        } else {
+          factory = await getUniswapV3Factory();
+        }
+
+        if (!paraSpaceConfig.Uniswap.V3Router) {
+          await deployUniswapSwapRouter(
+            [factory.address, weth.address],
+            verify
+          );
+        }
+
+        let nonfungiblePositionManager;
+        if (!paraSpaceConfig.Uniswap.V3NFTPositionManager) {
+          nonfungiblePositionManager = await deployNonfungiblePositionManager(
             [factory.address, weth.address, positionDescriptor.address],
             verify
           );
+        } else {
+          nonfungiblePositionManager = await getNonfungiblePositionManager();
+        }
         tokens[tokenSymbol] = nonfungiblePositionManager;
         continue;
       }
@@ -2766,7 +2784,10 @@ export const deployP2PPairStakingImpl = async (verify?: boolean) => {
   const apeCoinStaking =
     (await getContractAddressInDb(eContractid.ApeCoinStaking)) ||
     (await deployApeCoinStaking(verify)).address;
-  const delegationRegistry = await getDelegationRegistry();
+  const paraSpaceConfig = getParaSpaceConfig();
+  const delegationRegistry =
+    paraSpaceConfig.DelegationRegistry ||
+    (await getDelegationRegistry()).address;
   const args = [
     allTokens.BAYC.address,
     allTokens.MAYC.address,
@@ -2777,7 +2798,7 @@ export const deployP2PPairStakingImpl = async (verify?: boolean) => {
     allTokens.APE.address,
     allTokens.cAPE.address,
     apeCoinStaking,
-    delegationRegistry.address,
+    delegationRegistry,
   ];
 
   return withSaveAndVerify(
