@@ -33,7 +33,7 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
     /**
      * Expressed in PRBMath.SCALE
      **/
-    uint256 internal immutable _minPriceMultiplier;
+    uint256 internal _minPriceMultiplier;
 
     /**
      * Expressed in PRBMath.SCALE
@@ -46,6 +46,8 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
     uint256 internal immutable _stepExp;
 
     uint256 internal immutable _tickLength;
+
+    address public owner;
 
     constructor(
         uint256 maxPriceMultiplier,
@@ -61,6 +63,12 @@ contract DefaultReserveAuctionStrategy is IReserveAuctionStrategy {
         _stepLinear = stepLinear;
         _stepExp = stepExp;
         _tickLength = tickLength;
+        owner = msg.sender;
+    }
+
+    function setMinPriceMultiplier(uint256 minPriceMultiplier) external {
+        require(msg.sender == owner);
+        _minPriceMultiplier = minPriceMultiplier;
     }
 
     function getMaxPriceMultiplier() external view returns (uint256) {
