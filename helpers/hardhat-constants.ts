@@ -26,7 +26,7 @@ export const SEPOLIA_CHAINID = 11155111;
 export const FORK_CHAINID = 522;
 export const MAINNET_CHAINID = 1;
 export const PARALLEL_CHAINID = 1024;
-export const PARALLEL_DEV_CHAINID = 2982896226593698;
+export const PARALLEL_DEV_CHAINID = 9659;
 export const MOONBEAM_CHAINID = 1284;
 export const MOONBASE_CHAINID = 1287;
 export const ARBITRUM_ONE_CHAINID = 42161;
@@ -40,6 +40,8 @@ export const ZKSYNC_CHAINID = 324;
 export const ZKSYNC_GOERLI_CHAINID = 280;
 export const LINEA_GOERLI_CHAINID = 59140;
 export const LINEA_CHAINID = 59144;
+export const MANTA_CHAINID = 169;
+export const MANTA_TEST_CHAINID = 3441005;
 export const NEON_CHAINID = 245022934;
 
 export const INFURA_KEY = process.env.INFURA_KEY || "";
@@ -170,7 +172,7 @@ export const BROWSER_URLS = {
   polygonZkevm: "https://zkevm.polygonscan.com",
   polygonZkevmGoerli: "https://testnet-zkevm.polygonscan.com",
   parallelDev:
-    "https://explorerl2new-surprised-harlequin-bonobo-fvcy2k9oqh.t.conduit.xyz",
+    "https://explorerl2new-accused-coffee-koala-b9fn1dik76.t.conduit.xyz",
   polygon: "https://polygonscan.com",
   matic: "https://polygonscan.com",
   polygonMumbai: "https://mumbai.polygonscan.com",

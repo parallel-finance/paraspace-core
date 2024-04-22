@@ -17,6 +17,8 @@ import {
   LINEA_CHAINID,
   LINEA_GOERLI_CHAINID,
   MAINNET_CHAINID,
+  MANTA_CHAINID,
+  MANTA_TEST_CHAINID,
   MOONBASE_CHAINID,
   MOONBEAM_CHAINID,
   PARALLEL_CHAINID,
@@ -76,7 +78,8 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eEthereumNetwork.ganache]: RPC_URL || "http://localhost:8545",
   [eEthereumNetwork.tenderlyMain]:
     RPC_URL || `https://rpc.tenderly.co/fork/${TENDERLY_FORK_ID}`,
-  [eEthereumNetwork.parallel]: RPC_URL || "https://rpc.parallel.fi",
+  [eEthereumNetwork.parallel]: "https://rpc-parallel-mainnet-0.t.conduit.xyz",
+  [eEthereumNetwork.parallelDev]: `https://rpc-accused-coffee-koala-b9fn1dik76.t.conduit.xyz`,
   [eEthereumNetwork.moonbeam]: "https://rpc.api.moonbeam.network",
   [eEthereumNetwork.moonbase]: "https://rpc.testnet.moonbeam.network",
   [eEthereumNetwork.arbitrum]:
@@ -91,10 +94,6 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
     L2_RPC_URL ||
     RPC_URL ||
     `https://arb-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`,
-  [eEthereumNetwork.parallelDev]:
-    L2_RPC_URL ||
-    RPC_URL ||
-    `https://rpc-surprised-harlequin-bonobo-fvcy2k9oqh.t.conduit.xyz`,
   [eEthereumNetwork.polygon]:
     RPC_URL || `https://polygon-mainnet.g.alchemy.com/v2/${ALCHEMY_KEY}`,
   [eEthereumNetwork.polygonMumbai]:
@@ -123,6 +122,9 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
     (INFURA_KEY
       ? `https://linea-goerli.infura.io/v3/${INFURA_KEY}`
       : `https://rpc.goerli.linea.build`),
+  [eEthereumNetwork.manta]: "https://pacific-rpc.manta.network/http",
+  [eEthereumNetwork.mantaTest]:
+    "https://pacific-rpc.testnet.manta.network/http",
   [eEthereumNetwork.neon]:
     RPC_URL || `https://neon-proxy-mainnet.solana.p2p.org`,
 };
@@ -135,13 +137,13 @@ export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.anvil]: HARDHAT_CHAINID,
   [eEthereumNetwork.ganache]: undefined,
   [eEthereumNetwork.parallel]: PARALLEL_CHAINID,
+  [eEthereumNetwork.parallelDev]: PARALLEL_DEV_CHAINID,
   [eEthereumNetwork.tenderlyMain]: undefined,
   [eEthereumNetwork.moonbeam]: MOONBEAM_CHAINID,
   [eEthereumNetwork.moonbase]: MOONBASE_CHAINID,
   [eEthereumNetwork.arbitrum]: ARBITRUM_ONE_CHAINID,
   [eEthereumNetwork.arbitrumGoerli]: ARBITRUM_GOERLI_CHAINID,
   [eEthereumNetwork.arbitrumSepolia]: ARBITRUM_SEPOLIA_CHAINID,
-  [eEthereumNetwork.parallelDev]: PARALLEL_DEV_CHAINID,
   [eEthereumNetwork.polygon]: POLYGON_CHAINID,
   [eEthereumNetwork.polygonMumbai]: POLYGON_MUMBAI_CHAINID,
   [eEthereumNetwork.polygonZkevm]: POLYGON_ZKEVM_CHAINID,
@@ -150,6 +152,8 @@ export const CHAINS_ID: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.zksyncGoerli]: ZKSYNC_GOERLI_CHAINID,
   [eEthereumNetwork.linea]: LINEA_CHAINID,
   [eEthereumNetwork.lineaGoerli]: LINEA_GOERLI_CHAINID,
+  [eEthereumNetwork.manta]: MANTA_CHAINID,
+  [eEthereumNetwork.mantaTest]: MANTA_TEST_CHAINID,
   [eEthereumNetwork.neon]: NEON_CHAINID,
 };
 
@@ -161,13 +165,13 @@ export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.anvil]: undefined,
   [eEthereumNetwork.ganache]: undefined,
   [eEthereumNetwork.parallel]: undefined,
+  [eEthereumNetwork.parallelDev]: undefined,
   [eEthereumNetwork.tenderlyMain]: undefined,
   [eEthereumNetwork.moonbeam]: undefined,
   [eEthereumNetwork.moonbase]: undefined,
   [eEthereumNetwork.arbitrum]: undefined,
   [eEthereumNetwork.arbitrumGoerli]: undefined,
   [eEthereumNetwork.arbitrumSepolia]: undefined,
-  [eEthereumNetwork.parallelDev]: undefined,
   [eEthereumNetwork.polygon]: undefined,
   [eEthereumNetwork.polygonMumbai]: undefined,
   [eEthereumNetwork.polygonZkevm]: undefined,
@@ -176,5 +180,7 @@ export const BLOCK_TO_FORK: iParamsPerNetwork<number | undefined> = {
   [eEthereumNetwork.zksyncGoerli]: undefined,
   [eEthereumNetwork.linea]: undefined,
   [eEthereumNetwork.lineaGoerli]: undefined,
+  [eEthereumNetwork.manta]: undefined,
+  [eEthereumNetwork.mantaTest]: undefined,
   [eEthereumNetwork.neon]: undefined,
 };

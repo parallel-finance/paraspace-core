@@ -267,6 +267,16 @@ const hardhatConfig: HardhatUserConfig = {
       url: NETWORKS_RPC_URL[eEthereumNetwork.mainnet],
       accounts: DEPLOYER,
     },
+    manta: {
+      chainId: CHAINS_ID[eEthereumNetwork.manta],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.manta],
+      accounts: DEPLOYER,
+    },
+    mantaTest: {
+      chainId: CHAINS_ID[eEthereumNetwork.mantaTest],
+      url: NETWORKS_RPC_URL[eEthereumNetwork.mantaTest],
+      accounts: DEPLOYER,
+    },
   },
   etherscan: {
     apiKey: {
@@ -277,7 +287,6 @@ const hardhatConfig: HardhatUserConfig = {
       arbitrum: ARBITRUM_ETHERSCAN_KEY,
       arbitrumGoerli: ARBITRUM_GOERLI_ETHERSCAN_KEY,
       arbitrumSepolia: ARBITRUM_SEPOLIA_ETHERSCAN_KEY,
-      parallelDev: PARALLEL_DEV_ETHERSCAN_KEY,
       polygon: POLYGON_ETHERSCAN_KEY,
       polygonMumbai: POLYGON_MUMBAI_ETHERSCAN_KEY,
       polygonZkevm: POLYGON_ZKEVM_ETHERSCAN_KEY,
@@ -288,6 +297,7 @@ const hardhatConfig: HardhatUserConfig = {
       lineaGoerli: LINEA_GOERLI_ETHERSCAN_KEY,
       neon: NEON_ETHERSCAN_KEY,
       parallel: PARALLEL_ETHERSCAN_KEY,
+      parallelDev: PARALLEL_DEV_ETHERSCAN_KEY,
     },
     customChains: [
       eEthereumNetwork.localhost,
