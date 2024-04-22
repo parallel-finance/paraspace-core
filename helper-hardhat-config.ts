@@ -79,7 +79,7 @@ export const NETWORKS_RPC_URL: iParamsPerNetwork<string> = {
   [eEthereumNetwork.tenderlyMain]:
     RPC_URL || `https://rpc.tenderly.co/fork/${TENDERLY_FORK_ID}`,
   [eEthereumNetwork.parallel]: "https://rpc-parallel-mainnet-0.t.conduit.xyz",
-  [eEthereumNetwork.parallelDev]: `https://rpc-surprised-harlequin-bonobo-fvcy2k9oqh.t.conduit.xyz`,
+  [eEthereumNetwork.parallelDev]: `https://rpc-accused-coffee-koala-b9fn1dik76.t.conduit.xyz`,
   [eEthereumNetwork.moonbeam]: "https://rpc.api.moonbeam.network",
   [eEthereumNetwork.moonbase]: "https://rpc.testnet.moonbeam.network",
   [eEthereumNetwork.arbitrum]:
