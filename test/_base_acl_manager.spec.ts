@@ -213,7 +213,7 @@ describe("Access Control List Manager", () => {
     expect(await aclManager.isBridge(bridge.address)).to.be.eq(false);
   });
 
-  it("TC-ACLManager-08 DEFAULT_ADMIN_ROLE Add multiple BRIDGEs", async () => {
+  it("TC-ACLManager-08 DEFAULT_ADMIN_ROLE Add multiple BRIDGE", async () => {
     const {
       users,
       aclManager,

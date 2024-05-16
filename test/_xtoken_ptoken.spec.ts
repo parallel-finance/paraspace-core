@@ -202,7 +202,7 @@ describe("Functionalities of ptoken permit", () => {
       preset = await loadFixture(fixture);
     });
 
-    it("TC-ptoken-permit-02: user should submit a permit with maxmium expiration", async () => {
+    it("TC-ptoken-permit-02: user should submit a permit with maximum expiration", async () => {
       const {
         pDai,
         deployer: owner,

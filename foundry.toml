@@ -7,3 +7,4 @@ out                 = 'out'
 remappings          = ["contracts/=contracts/"]
 src                 = 'contracts/'
 test                = 'test'
+solc_version        = '0.8.21'
