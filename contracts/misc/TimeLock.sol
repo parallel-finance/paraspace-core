@@ -57,6 +57,14 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
         _;
     }
 
+    modifier onlyRiskAdmin() {
+        require(
+            ACL_MANAGER.isRiskAdmin(msg.sender),
+            Errors.CALLER_NOT_POOL_OR_EMERGENCY_ADMIN
+        );
+        _;
+    }
+
     modifier onlyPoolAdmin() {
         require(
             ACL_MANAGER.isPoolAdmin(msg.sender),
@@ -302,5 +310,59 @@ contract TimeLock is ITimeLock, ReentrancyGuardUpgradeable, IERC721Receiver {
             res[i] = _whiteList[users[i]];
         }
         return res;
+    }
+
+    function _validateAndDeleteFrozenAgreement(
+        uint256 agreementId,
+        address beneficiary
+    ) internal returns (Agreement memory) {
+        Agreement memory agreement = agreements[agreementId];
+        require(agreement.isFrozen, "Agreement is not frozen");
+        delete agreements[agreementId];
+
+        emit AgreementClaimed(
+            agreementId,
+            agreement.assetType,
+            agreement.actionType,
+            agreement.asset,
+            agreement.tokenIdsOrAmounts,
+            beneficiary
+        );
+
+        return agreement;
+    }
+
+    function claimFrozen(
+        uint256[] calldata agreementIds,
+        address beneficiary
+    ) external nonReentrant onlyRiskAdmin {
+        require(!frozen, "TimeLock is frozen");
+
+        for (uint256 index = 0; index < agreementIds.length; index++) {
+            Agreement memory agreement = _validateAndDeleteFrozenAgreement(
+                agreementIds[index],
+                beneficiary
+            );
+
+            if (agreement.assetType == DataTypes.AssetType.ERC20) {
+                IERC20(agreement.asset).safeTransfer(
+                    beneficiary,
+                    agreement.tokenIdsOrAmounts[0]
+                );
+            } else if (agreement.assetType == DataTypes.AssetType.ERC721) {
+                IERC721 erc721 = IERC721(agreement.asset);
+                for (
+                    uint256 i = 0;
+                    i < agreement.tokenIdsOrAmounts.length;
+                    i++
+                ) {
+                    erc721.safeTransferFrom(
+                        address(this),
+                        beneficiary,
+                        agreement.tokenIdsOrAmounts[i]
+                    );
+                }
+            }
+        }
     }
 }
